@@ -62,7 +62,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				Unirest.config().setObjectMapper(new JacksonObjectMapper());
-
+					
 				serve("/*").with(GuiceContainer.class);
 			}
 		},new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
