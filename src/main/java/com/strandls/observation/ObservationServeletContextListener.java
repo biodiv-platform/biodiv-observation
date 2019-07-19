@@ -12,7 +12,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -60,12 +62,20 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
+				Map<String, String> props = new HashMap<String, String>();
+				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.wadl.disableWadl", "true");
+
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				Unirest.config().setObjectMapper(new JacksonObjectMapper());
-					
-				serve("/*").with(GuiceContainer.class);
+
+				serve("/api/*").with(GuiceContainer.class, props);
+				
+				ObservationBeanConfig beanconfig = new ObservationBeanConfig();
+				beanconfig.config();
+
 			}
-		},new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
+		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
 
 		return injector;
 
@@ -77,7 +87,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			//logger.info(className);
+			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 

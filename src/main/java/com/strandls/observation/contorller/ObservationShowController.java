@@ -10,6 +10,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
 import com.strandls.observation.ApiConstants;
@@ -22,13 +23,16 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.annotations.Tag;
 
 /**
  * @author Abhishek Rudra
  *
  */
 
-@Api
+@Api("Observation Show")
+@SwaggerDefinition(tags = { @Tag(name = "V1 Show", description = "Rest endpoint for Observatin Service") })
 @Path(ApiConstants.V1 + ApiConstants.SHOW)
 public class ObservationShowController {
 
@@ -36,7 +40,7 @@ public class ObservationShowController {
 	private ObservationShowService observationShowSerices;
 
 	@GET
-	@ApiOperation(value = "ping", notes = "validity of war file", response = String.class)
+	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
@@ -48,14 +52,17 @@ public class ObservationShowController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Find Observation by ID", notes = "Returns a pet when 0 < ID <= 10.  ID > 10 or nonintegers will simulate API error conditions", response = Observation.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Invalid ID supplied"),
+	@ApiOperation(value = "Find Observation by ID", notes = "Returns the complete Observation with all the specificaiton", response = Observation.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success"),
 			@ApiResponse(code = 404, message = "Observation not found") })
 	public Response show(
-			@ApiParam(value = "ID of Show that needs to be fetched", required = true)
-			@PathParam("observationId") String id) {
+			@ApiParam(value = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {
+
 		ShowData show = observationShowSerices.findById(id);
-		return Response.ok().entity(show).build();
+		if (show.getObservation() != null || show.getFactValuePair() != null)
+			return Response.status(Status.OK).entity(show).build();
+		else
+			return Response.status(Status.NOT_FOUND).build();
 	}
 
 }
