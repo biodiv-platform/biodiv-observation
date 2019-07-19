@@ -39,7 +39,7 @@ import kong.unirest.Unirest;
  */
 public class ObservationServeletContextListener extends GuiceServletContextListener {
 
-	private final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
 
 	@Override
 	protected Injector getInjector() {
