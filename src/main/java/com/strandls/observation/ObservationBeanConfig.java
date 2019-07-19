@@ -9,7 +9,7 @@ import io.swagger.jaxrs.config.BeanConfig;
  * @author Abhishek Rudra
  *
  */
-public class ObservationBeanConfig extends BeanConfig{
+public class ObservationBeanConfig extends BeanConfig {
 
 	/**
 	 * 
@@ -17,10 +17,10 @@ public class ObservationBeanConfig extends BeanConfig{
 	public ObservationBeanConfig() {
 		super();
 	}
-	
+
 	public void config() {
 		setVersion("1.0");
-		setTitle("ObservationModule MicroServices");
+		setTitle("Observation Module MicroServices");
 		setSchemes(new String[] { "http" });
 		setHost("localhost:8080");
 		setBasePath("/observationModule/api");

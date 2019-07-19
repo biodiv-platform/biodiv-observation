@@ -28,7 +28,7 @@ public class ObservationShowServiceImpl implements ObservationShowService {
 	public ShowData findById(String id) {
 		Observation observation = observationDAOImpl.findById(Long.parseLong(id));
 		
-		List<FactValuePair> response = Unirest.get("http://localhost:8080/traitsModule/v1/factservice/{obvId}")
+		List<FactValuePair> response = Unirest.get("http://localhost:8080/traitsModule/api/v1/factservice/{obvId}")
 									.routeParam("obvId", id)
 									.asObject(new GenericType<List<FactValuePair>>() {})
 									.getBody();
