@@ -17,6 +17,8 @@ import com.strandls.observation.ApiConstants;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationShowService;
+import com.strandls.traits.ApiException;
+import com.strandls.traits.controller.TraitsServiceApi;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -38,13 +40,16 @@ public class ObservationShowController {
 
 	@Inject
 	private ObservationShowService observationShowSerices;
+	
+	@Inject
+	private TraitsServiceApi traitService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
-		return "pong";
+		return "pong Observation";
 	}
 
 	@GET
@@ -63,6 +68,14 @@ public class ObservationShowController {
 			return Response.status(Status.OK).entity(show).build();
 		else
 			return Response.status(Status.NOT_FOUND).build();
+	}
+	
+	@GET
+	@Path("/pingTrait")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String pingTraits() throws ApiException {
+		String t = traitService.ping();
+		return t;
 	}
 
 }

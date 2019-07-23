@@ -23,10 +23,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
+import com.strandls.traits.controller.TraitsServiceApi;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
@@ -73,6 +75,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				
 				ObservationBeanConfig beanconfig = new ObservationBeanConfig();
 				beanconfig.config();
+				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
 
 			}
 		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
