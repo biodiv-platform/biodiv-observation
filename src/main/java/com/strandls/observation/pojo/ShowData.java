@@ -5,10 +5,15 @@ package com.strandls.observation.pojo;
 
 import java.util.List;
 
+import com.strandls.traits.pojo.FactValuePair;
+
+import io.swagger.annotations.ApiModel;
+
 /**
  * @author Abhishek Rudra
  *
  */
+@ApiModel
 public class ShowData {
 
 	private Observation observation;
@@ -19,7 +24,8 @@ public class ShowData {
 	 * @param observation
 	 * @param factValuePair
 	 */
-	public ShowData(Observation observation, List<FactValuePair> factValuePair) {
+	public ShowData(Observation observation, List<FactValuePair> factValuePair) 
+	{
 		this.observation = observation;
 		this.factValuePair = factValuePair;
 	}
