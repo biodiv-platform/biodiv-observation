@@ -67,14 +67,10 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
-
-				
-				serve("/api/*").with(GuiceContainer.class, props);
-
-				ObservationBeanConfig beanconfig = new ObservationBeanConfig();
-				beanconfig.config();
 				bind(ApiClient.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
+
+				serve("/api/*").with(GuiceContainer.class, props);
 
 			}
 		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
