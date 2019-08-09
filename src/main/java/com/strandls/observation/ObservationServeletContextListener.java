@@ -28,8 +28,10 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
-import com.strandls.trait.ApiClient;
-import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.traitsModule.controllers.TraitsServiceApi;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
@@ -67,9 +69,10 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
-				bind(ApiClient.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
-
+				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
+				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
+				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
 
 			}

@@ -16,8 +16,6 @@ import com.google.inject.Inject;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationShowService;
-import com.strandls.trait.ApiException;
-import com.strandls.traits.controller.TraitsServiceApi;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,9 +37,6 @@ public class ObservationShowController {
 
 	@Inject
 	private ObservationShowService observationShowSerices;
-
-	@Inject
-	private TraitsServiceApi traitService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -77,13 +72,5 @@ public class ObservationShowController {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 
-	}
-
-	@GET
-	@Path("pingTrait")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response TraitPing() throws ApiException {
-		String s = traitService.ping();
-		return Response.status(Status.ACCEPTED).entity(s).build();
 	}
 }

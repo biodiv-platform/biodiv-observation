@@ -15,6 +15,8 @@ public class ObservationDAOModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(ObservationDAO.class).in(Scopes.SINGLETON);
+		bind(RecommendationDao.class).in(Scopes.SINGLETON);
+		bind(RecommendationVoteDao.class).in(Scopes.SINGLETON);
 	}
-	
+
 }

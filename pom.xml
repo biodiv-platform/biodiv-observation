@@ -165,8 +165,26 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.strandls.trait</groupId>
-			<artifactId>trait-module</artifactId>
+			<groupId>com.strandls.traits</groupId>
+			<artifactId>traits-module</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.resource</groupId>
+			<artifactId>resource-module</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.taxonomy</groupId>
+			<artifactId>taxonomy-module</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.userGroup</groupId>
+			<artifactId>userGroup-module</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 
