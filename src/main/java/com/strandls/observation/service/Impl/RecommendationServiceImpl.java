@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +25,7 @@ import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 public class RecommendationServiceImpl implements RecommedationService {
 
 	private final Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
-	
+
 	@Inject
 	private RecommendationVoteDao recoVoteDao;
 
@@ -51,24 +53,65 @@ public class RecommendationServiceImpl implements RecommedationService {
 
 		try {
 			if (reco.getTaxonConceptId() != null) {
-				
+
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-				speciesId = taxonomyDefinition.getSpeciesId();		
+				speciesId = taxonomyDefinition.getSpeciesId();
 			}
 			scientificName = scientificName + reco.getName();
 			if (recoVote.getCommonNameRecoId() != null && recoVote.getGivenCommonName() != null) {
 				Recommendation recoCommon = recoDao.findById(recoVote.getCommonNameRecoId());
 				scientificName = scientificName + " " + recoCommon.getName();
 			}
-			
-			ibpData = new RecoIbp(givenName, scientificName, speciesId);
-			
+
+			ibpData = new RecoIbp(givenName, scientificName, speciesId, null, null);
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
 		return ibpData;
+	}
+
+	@Override
+	public RecoIbp fetchRecoName(Long obvId, Long recoId) {
+
+		Long speciesId = null;
+		String commonName = "";
+		String scientificName = "";
+		List<String> breadCrum = null;
+
+		try {
+			List<RecommendationVote> recoVotes = recoVoteDao.findByRecommendationId(obvId, recoId);
+			Integer recoVoteCount = recoVoteDao.findRecoVoteCount(obvId);
+			Recommendation reco = recoDao.findById(recoId);
+			if (reco.getTaxonConceptId() != null) {
+
+				TaxonomyDefinition taxonomyDefinition = taxonomyService
+						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
+				speciesId = taxonomyDefinition.getSpeciesId();
+				breadCrum = taxonomyService.getTaxonomyBreadCrum(reco.getTaxonConceptId().toString());
+				scientificName = taxonomyDefinition.getNormalizedForm();
+
+			} else {
+				scientificName = reco.getName();
+			}
+
+			for (RecommendationVote recoVote : recoVotes) {
+				if (recoVote.getCommonNameRecoId() != null) {
+					commonName = commonName + recoDao.findById(recoVote.getCommonNameRecoId()).getName() + "||";
+				}
+			}
+			if (!(commonName.isEmpty()))
+				commonName = commonName.substring(0, commonName.length() - 3);
+
+			return new RecoIbp(commonName, scientificName, speciesId, breadCrum, recoVoteCount);
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 
 }

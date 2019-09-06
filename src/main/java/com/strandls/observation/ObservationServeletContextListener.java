@@ -25,13 +25,16 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
-import com.strandls.traitsModule.controllers.TraitsServiceApi;
+import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.utility.controller.UtilityServiceApi;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
@@ -73,6 +76,9 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
+				bind(EsServicesApi.class).in(Scopes.SINGLETON) ;
+				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
 
 			}

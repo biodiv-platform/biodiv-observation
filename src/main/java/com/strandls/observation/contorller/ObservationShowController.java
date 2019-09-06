@@ -22,8 +22,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.annotations.Tag;
 
 /**
  * @author Abhishek Rudra
@@ -31,7 +29,6 @@ import io.swagger.annotations.Tag;
  */
 
 @Api("Observation Show")
-@SwaggerDefinition(tags = { @Tag(name = "V1 Show", description = "Rest endpoint for Observatin Service") })
 @Path(ApiConstants.V1 + ApiConstants.SHOW)
 public class ObservationShowController {
 
@@ -52,8 +49,7 @@ public class ObservationShowController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "Find Observation by ID", notes = "Returns the complete Observation with all the specificaiton", response = ShowData.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = ShowData.class),
-			@ApiResponse(code = 404, message = "Observation not found", response = String.class),
+	@ApiResponses(value = { @ApiResponse(code = 404, message = "Observation not found", response = String.class),
 			@ApiResponse(code = 400, message = "Invalid ID", response = String.class) })
 	public Response show(
 			@ApiParam(value = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {

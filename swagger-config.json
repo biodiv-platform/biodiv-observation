@@ -1,0 +1,14 @@
+{
+  "modelPackage": "com.strandls.observation.pojo",
+  "apiPackage": "com.strandls.observation.controller",
+  "invokerPackage": "com.strandls.observation",
+  "groupId": "com.strandls.biodiv",
+  "artifactId": "observation-client",
+  "artifactVersion": "1.0.0-SNAPSHOT",
+  "fullJavaUtil": true,
+  "dateLibrary": "legacy",
+  "library": "jersey1",
+  "developerName": "Abhishek Kumar Rudra",
+  "developerEmail": "abhishek.rudra@strandls.com",
+  "java8": true
+}

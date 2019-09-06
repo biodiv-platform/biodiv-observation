@@ -5,9 +5,13 @@ package com.strandls.observation.pojo;
 
 import java.util.List;
 
+import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.resource.pojo.ObservationResourceUser;
-import com.strandls.traitsModule.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.utility.pojo.Featured;
+import com.strandls.utility.pojo.Flag;
 
 /**
  * @author Abhishek Rudra
@@ -20,20 +24,40 @@ public class ShowData {
 	private List<FactValuePair> factValuePair;
 	private List<ObservationResourceUser> observationResoruce;
 	private List<UserGroupIbp> userGroups;
+	private ObservationLocationInfo layerInfo;
+	private ObservationInfo esLayerInfo;
+	private RecoIbp recoIbp;
+	private Flag flag;
+	private List<String> tags;
+	private List<Featured> fetaured;
 
 	/**
 	 * @param observation
 	 * @param factValuePair
 	 * @param observationResoruce
 	 * @param userGroups
+	 * @param layerInfo
+	 * @param esLayerInfo
+	 * @param recoIbp
+	 * @param flag
+	 * @param tags
+	 * @param fetaured
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
-			List<ObservationResourceUser> observationResoruce, List<UserGroupIbp> userGroups) {
+			List<ObservationResourceUser> observationResoruce, List<UserGroupIbp> userGroups,
+			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag,
+			List<String> tags, List<Featured> fetaured) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
 		this.observationResoruce = observationResoruce;
 		this.userGroups = userGroups;
+		this.layerInfo = layerInfo;
+		this.esLayerInfo = esLayerInfo;
+		this.recoIbp = recoIbp;
+		this.flag = flag;
+		this.tags = tags;
+		this.fetaured = fetaured;
 	}
 
 	public Observation getObservation() {
@@ -66,6 +90,54 @@ public class ShowData {
 
 	public void setUserGroups(List<UserGroupIbp> userGroups) {
 		this.userGroups = userGroups;
+	}
+
+	public ObservationLocationInfo getLayerInfo() {
+		return layerInfo;
+	}
+
+	public void setLayerInfo(ObservationLocationInfo layerInfo) {
+		this.layerInfo = layerInfo;
+	}
+
+	public ObservationInfo getEsLayerInfo() {
+		return esLayerInfo;
+	}
+
+	public void setEsLayerInfo(ObservationInfo esLayerInfo) {
+		this.esLayerInfo = esLayerInfo;
+	}
+
+	public RecoIbp getRecoIbp() {
+		return recoIbp;
+	}
+
+	public void setRecoIbp(RecoIbp recoIbp) {
+		this.recoIbp = recoIbp;
+	}
+
+	public Flag getFlag() {
+		return flag;
+	}
+
+	public void setFlag(Flag flag) {
+		this.flag = flag;
+	}
+
+	public List<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+	}
+
+	public List<Featured> getFetaured() {
+		return fetaured;
+	}
+
+	public void setFetaured(List<Featured> fetaured) {
+		this.fetaured = fetaured;
 	}
 
 }

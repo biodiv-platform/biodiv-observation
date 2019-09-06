@@ -21,8 +21,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.SwaggerDefinition;
-import io.swagger.annotations.Tag;
 
 /**
  * @author Abhishek Rudra
@@ -30,8 +28,6 @@ import io.swagger.annotations.Tag;
  */
 
 @Api("Recommendation Services")
-@SwaggerDefinition(tags = {
-		@Tag(name = "Recommendation Controller", description = "Rest endpoint for Recommendation Service") })
 @Path(ApiConstants.V1 + ApiConstants.RECO)
 public class RecommedationController {
 
@@ -39,12 +35,12 @@ public class RecommedationController {
 	private RecommedationService recoService;
 
 	@GET
-	@Path(ApiConstants.RECOVOTE +ApiConstants.IBP+ "/{recoVoteId}")
+	@Path(ApiConstants.RECOVOTE + ApiConstants.IBP + "/{recoVoteId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "Find RecommendationVote by ID", notes = "Returns the recommendation vote", response = RecoIbp.class)
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = RecoIbp.class),
+	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Recommendation Vote not found", response = String.class),
 			@ApiResponse(code = 400, message = "Invalid ID", response = String.class) })
 
