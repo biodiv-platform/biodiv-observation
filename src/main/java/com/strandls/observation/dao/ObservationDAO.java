@@ -18,7 +18,7 @@ import com.strandls.observation.util.AbstractDAO;
  */
 public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
-	private Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
+	private static final Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
 
 	@Inject
 	protected ObservationDAO(SessionFactory sessionFactory) {

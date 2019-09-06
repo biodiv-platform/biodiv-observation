@@ -12,7 +12,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -21,15 +23,20 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
+import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.utility.controller.UtilityServiceApi;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
-
-import kong.unirest.JacksonObjectMapper;
-import kong.unirest.Unirest;
 
 /**
  * @author Abhishek Rudra
@@ -37,7 +44,7 @@ import kong.unirest.Unirest;
  */
 public class ObservationServeletContextListener extends GuiceServletContextListener {
 
-	private final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
 
 	@Override
 	protected Injector getInjector() {
@@ -60,12 +67,22 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
-				bind(SessionFactory.class).toInstance(sessionFactory);
-				Unirest.config().setObjectMapper(new JacksonObjectMapper());
+				Map<String, String> props = new HashMap<String, String>();
+				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.wadl.disableWadl", "true");
 
-				serve("/*").with(GuiceContainer.class);
+				bind(SessionFactory.class).toInstance(sessionFactory);
+				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
+				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
+				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
+				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
+				bind(EsServicesApi.class).in(Scopes.SINGLETON) ;
+				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
+				serve("/api/*").with(GuiceContainer.class, props);
+
 			}
-		},new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
+		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
 
 		return injector;
 
@@ -77,7 +94,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			//logger.info(className);
+			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 

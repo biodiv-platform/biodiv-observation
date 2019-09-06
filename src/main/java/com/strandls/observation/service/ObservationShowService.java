@@ -10,7 +10,7 @@ import com.strandls.observation.pojo.ShowData;
  *
  */
 public interface ObservationShowService {
-	
-	public ShowData findById(String id);
+
+	public ShowData findById(Long id);
 
 }

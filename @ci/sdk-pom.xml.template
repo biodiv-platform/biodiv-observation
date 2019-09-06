@@ -1,0 +1,28 @@
+<distributionManagement>
+    <repository>
+        <id>central</id>
+        <name>jfrog-releases</name>
+        <url>__ARTIFACTORY__/libs-release-local</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshots</id>
+        <name>jfrog-snapshots</name>
+        <url>__ARTIFACTORY__/libs-snapshot-local</url>
+    </snapshotRepository>
+</distributionManagement>
+<repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>central</id>
+        <name>libs-release</name>
+        <url>__ARTIFACTORY__/libs-release</url>
+    </repository>
+    <repository>
+        <snapshots />
+        <id>snapshots</id>
+        <name>libs-snapshot</name>
+        <url>__ARTIFACTORY__/libs-snapshot</url>
+    </repository>
+</repositories>

@@ -17,5 +17,7 @@
 		<property name="show_sql">true</property>
 		
 		<mapping class="com.strandls.observation.pojo.Observation"/>
+		<mapping class="com.strandls.observation.pojo.Recommendation"/>
+		<mapping class="com.strandls.observation.pojo.RecommendationVote"/>
 	</session-factory>
 </hibernate-configuration>

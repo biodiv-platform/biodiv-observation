@@ -9,13 +9,63 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>observationModule Maven Webapp</name>
 	<url>http://maven.apache.org</url>
+
+	<properties>
+
+		<!-- Plugins property -->
+		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+		<maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
+		<swagger-ui.version>3.23.5</swagger-ui.version>
+		<maven-war-plugin.version>3.2.2</maven-war-plugin.version>
+		<replacer.version>1.5.3</replacer.version>
+		<swagger-maven-plugin.version>3.1.1</swagger-maven-plugin.version>
+		<exec-maven-plugin.version>1.3.2</exec-maven-plugin.version>
+		<openapi-generator-cli.version>4.0.3</openapi-generator-cli.version>
+
+		<!-- Project property -->
+		<war-name>observationModule</war-name>
+		<srcDir>src/main/webapp</srcDir>
+		<base-path>/observationModule/api</base-path>
+		<location>com.strandls.observation</location>
+	</properties>
+
+	<distributionManagement>
+		<repository>
+			<id>central</id>
+			<name>jfrog-releases</name>
+			<url>https://venus.strandls.com/artifactory/libs-release-local</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>jfrog-snapshots</name>
+			<url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>central</id>
+			<name>libs-release</name>
+			<url>https://venus.strandls.com/artifactory/libs-release</url>
+		</repository>
+		<repository>
+			<snapshots />
+			<id>snapshots</id>
+			<name>libs-snapshot</name>
+			<url>https://venus.strandls.com/artifactory/libs-snapshot</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.13</version>
+			<version>1.7.22</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
@@ -28,7 +78,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.13</version>
+			<version>1.7.22</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
@@ -38,6 +88,7 @@
 			<version>4.0.1</version>
 			<scope>provided</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
@@ -52,32 +103,34 @@
 			<version>1.19.4</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-client -->
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>1.19.4</version>
+		</dependency>
+
+
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.8.4</version>
+			<version>2.9.9</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.fasterxml.jackson.jaxrs</groupId>
 			<artifactId>jackson-jaxrs-json-provider</artifactId>
-			<version>2.4.0</version>
+			<version>2.9.9</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310 -->
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-configuration2</artifactId>
-			<version>2.2</version>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.9.9</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils -->
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>1.9.3</version>
-		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
 		<dependency>
@@ -107,30 +160,218 @@
 			<version>42.2.5</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.konghq/unirest-java -->
+		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
 		<dependency>
-			<groupId>com.konghq</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>2.3.08</version>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>1.5.22</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.konghq/unirest-objectmapper-jackson -->
+		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-jaxrs -->
 		<dependency>
-			<groupId>com.konghq</groupId>
-			<artifactId>unirest-objectmapper-jackson</artifactId>
-			<version>2.3.08</version>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jaxrs</artifactId>
+			<version>1.5.22</version>
 		</dependency>
-		
+
+		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-jersey-jaxrs -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jersey-jaxrs</artifactId>
+			<version>1.5.22</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-models -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-models</artifactId>
+			<version>1.5.22</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>traits-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>resource-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>taxonomy-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>userGroup-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>esmodule-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>naksha-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>utility-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<finalName>observationModule</finalName>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<!-- Download Swagger UI webjar. -->
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>${maven-dependency-plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.webjars</groupId>
+									<artifactId>swagger-ui</artifactId>
+									<version>${swagger-ui.version}</version>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory> ${project.build.directory}/swagger-ui</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${maven-war-plugin.version}</version>
+				<configuration>
+					<webResources combine.children="append">
+						<resource>
+							<directory>${project.build.directory}/swagger-ui/META-INF/resources/webjars/swagger-ui/${swagger-ui.version}</directory>
+							<includes>
+								<include>**/*.*</include>
+							</includes>
+							<targetPath>swagger-ui</targetPath>
+						</resource>
+					</webResources>
+					<warName>${war-name}</warName>
+					<warSourceDirectory>${srcDir}</warSourceDirectory>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<!-- Replace the OpenAPI specification example URL with the local one. -->
+				<groupId>com.google.code.maven-replacer-plugin</groupId>
+				<artifactId>replacer</artifactId>
+				<version>${replacer.version}</version>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<file>${project.build.directory}/swagger-ui/META-INF/resources/webjars/swagger-ui/${swagger-ui.version}/index.html</file>
+					<replacements>
+						<replacement>
+							<token>https://petstore.swagger.io/v2/swagger.json</token>
+							<value>../api/swagger.json</value>
+						</replacement>
+					</replacements>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>com.github.kongchen</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>${swagger-maven-plugin.version}</version>
+				<configuration>
+					<apiSources>
+						<apiSource>
+							<springmvc>false</springmvc>
+							<locations>
+								${location}
+							</locations>
+							<schemes>http,https</schemes>
+							<host>localhost:8080</host>
+							<basePath>${base-path}</basePath>
+							<info>
+								<title>Swagger file generation</title>
+								<version>v1</version>
+							</info>
+							<outputPath>${project.basedir}/target</outputPath>
+							<outputFormats>json</outputFormats>
+							<swaggerDirectory>${project.basedir}/target</swaggerDirectory>
+						</apiSource>
+					</apiSources>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>${exec-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>java</executable>
+					<mainClass>org.openapitools.codegen.OpenAPIGenerator</mainClass>
+					<commandlineArgs>
+						generate -i ${project.basedir}/target/swagger.json -g java -o target/sdk --skip-validate-spec -c swagger-config.json
+					</commandlineArgs>
+					<includeProjectDependencies>true</includeProjectDependencies>
+					<includePluginDependencies>true</includePluginDependencies>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.openapitools</groupId>
+						<artifactId>openapi-generator-cli</artifactId>
+						<version>${openapi-generator-cli.version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
