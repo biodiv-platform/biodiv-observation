@@ -23,9 +23,9 @@
 		<openapi-generator-cli.version>4.0.3</openapi-generator-cli.version>
 
 		<!-- Project property -->
-		<war-name>observationModule</war-name>
+		<war-name>observation-api</war-name>
 		<srcDir>src/main/webapp</srcDir>
-		<base-path>/observationModule/api</base-path>
+		<base-path>/observation-api/api</base-path>
 		<location>com.strandls.observation</location>
 	</properties>
 
