@@ -76,11 +76,11 @@ public class ShowData {
 		this.factValuePair = factValuePair;
 	}
 
-	public List<ObservationResourceUser> getObservationResoruce() {
+	public List<ObservationResourceUser> getObservationResource() {
 		return observationResource;
 	}
 
-	public void setObservationResoruce(List<ObservationResourceUser> observationResource) {
+	public void setObservationResource(List<ObservationResourceUser> observationResource) {
 		this.observationResource = observationResource;
 	}
 
