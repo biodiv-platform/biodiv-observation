@@ -25,7 +25,7 @@ public class ShowData {
 
 	private Observation observation;
 	private List<FactValuePair> factValuePair;
-	private List<ObservationResourceUser> observationResoruce;
+	private List<ObservationResourceUser> observationResource;
 	private List<UserGroupIbp> userGroups;
 	private ObservationLocationInfo layerInfo;
 	private ObservationInfo esLayerInfo;
@@ -39,7 +39,7 @@ public class ShowData {
 	/**
 	 * @param observation
 	 * @param factValuePair
-	 * @param observationResoruce
+	 * @param observationResource
 	 * @param userGroups
 	 * @param layerInfo
 	 * @param esLayerInfo
@@ -51,13 +51,13 @@ public class ShowData {
 	 * @param observationNearBy
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
-			List<ObservationResourceUser> observationResoruce, List<UserGroupIbp> userGroups,
+			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag,
 			List<String> tags, List<Featured> fetaured, User user, List<ObservationNearBy> observationNearBy) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
-		this.observationResoruce = observationResoruce;
+		this.observationResource = observationResource;
 		this.userGroups = userGroups;
 		this.layerInfo = layerInfo;
 		this.esLayerInfo = esLayerInfo;
@@ -85,12 +85,12 @@ public class ShowData {
 		this.factValuePair = factValuePair;
 	}
 
-	public List<ObservationResourceUser> getObservationResoruce() {
-		return observationResoruce;
+	public List<ObservationResourceUser> getObservationResource() {
+		return observationResource;
 	}
 
-	public void setObservationResoruce(List<ObservationResourceUser> observationResoruce) {
-		this.observationResoruce = observationResoruce;
+	public void setObservationResource(List<ObservationResourceUser> observationResource) {
+		this.observationResource = observationResource;
 	}
 
 	public List<UserGroupIbp> getUserGroups() {
