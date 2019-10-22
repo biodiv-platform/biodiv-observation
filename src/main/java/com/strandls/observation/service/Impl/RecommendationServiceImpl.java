@@ -16,6 +16,7 @@ import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.service.RecommedationService;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 
 /**
@@ -64,7 +65,7 @@ public class RecommendationServiceImpl implements RecommedationService {
 				scientificName = scientificName + " " + recoCommon.getName();
 			}
 
-			ibpData = new RecoIbp(givenName, scientificName, speciesId, null, null);
+			ibpData = new RecoIbp(givenName, scientificName, speciesId, null, null, null);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -79,7 +80,8 @@ public class RecommendationServiceImpl implements RecommedationService {
 		Long speciesId = null;
 		String commonName = "";
 		String scientificName = "";
-		List<String> breadCrum = null;
+		List<BreadCrumb> breadCrumb = null;
+		String status = null;
 
 		try {
 			List<RecommendationVote> recoVotes = recoVoteDao.findByRecommendationId(obvId, recoId);
@@ -90,8 +92,9 @@ public class RecommendationServiceImpl implements RecommedationService {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 				speciesId = taxonomyDefinition.getSpeciesId();
-				breadCrum = taxonomyService.getTaxonomyBreadCrum(reco.getTaxonConceptId().toString());
+				breadCrumb = taxonomyService.getTaxonomyBreadCrumb(reco.getTaxonConceptId().toString());
 				scientificName = taxonomyDefinition.getNormalizedForm();
+				status = taxonomyDefinition.getStatus();
 
 			} else {
 				scientificName = reco.getName();
@@ -103,9 +106,9 @@ public class RecommendationServiceImpl implements RecommedationService {
 				}
 			}
 			if (!(commonName.isEmpty()))
-				commonName = commonName.substring(0, commonName.length() - 3);
+				commonName = commonName.substring(0, commonName.length() - 2);
 
-			return new RecoIbp(commonName, scientificName, speciesId, breadCrum, recoVoteCount);
+			return new RecoIbp(commonName, scientificName, speciesId, breadCrumb, recoVoteCount, status);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

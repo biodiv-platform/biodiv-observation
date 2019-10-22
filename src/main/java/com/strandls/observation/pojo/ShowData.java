@@ -6,9 +6,12 @@ package com.strandls.observation.pojo;
 import java.util.List;
 
 import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.resource.pojo.ObservationResourceUser;
+
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.user.pojo.User;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.pojo.Featured;
 import com.strandls.utility.pojo.Flag;
@@ -30,6 +33,8 @@ public class ShowData {
 	private Flag flag;
 	private List<String> tags;
 	private List<Featured> fetaured;
+	private User user;
+	private List<ObservationNearBy> observationNearBy;
 
 	/**
 	 * @param observation
@@ -42,11 +47,13 @@ public class ShowData {
 	 * @param flag
 	 * @param tags
 	 * @param fetaured
+	 * @param user
+	 * @param observationNearBy
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResoruce, List<UserGroupIbp> userGroups,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag,
-			List<String> tags, List<Featured> fetaured) {
+			List<String> tags, List<Featured> fetaured, User user, List<ObservationNearBy> observationNearBy) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -58,6 +65,8 @@ public class ShowData {
 		this.flag = flag;
 		this.tags = tags;
 		this.fetaured = fetaured;
+		this.user = user;
+		this.observationNearBy = observationNearBy;
 	}
 
 	public Observation getObservation() {
@@ -138,6 +147,22 @@ public class ShowData {
 
 	public void setFetaured(List<Featured> fetaured) {
 		this.fetaured = fetaured;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public List<ObservationNearBy> getObservationNearBy() {
+		return observationNearBy;
+	}
+
+	public void setObservationNearBy(List<ObservationNearBy> observationNearBy) {
+		this.observationNearBy = observationNearBy;
 	}
 
 }

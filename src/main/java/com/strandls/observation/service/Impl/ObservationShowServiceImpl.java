@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
@@ -22,6 +23,8 @@ import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.User;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -60,6 +63,9 @@ public class ObservationShowServiceImpl implements ObservationShowService {
 	@Inject
 	private UtilityServiceApi utilityServices;
 
+	@Inject
+	private UserServiceApi userService;
+
 	@Override
 	public ShowData findById(Long id) {
 
@@ -69,9 +75,11 @@ public class ObservationShowServiceImpl implements ObservationShowService {
 		ObservationLocationInfo layerInfo;
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
+		User authorUser;
 		Flag flag;
 		List<String> tags;
 		List<Featured> fetaured;
+		List<ObservationNearBy> observationNearBy;
 		Observation observation = observationDao.findById(id);
 
 		try {
@@ -83,13 +91,16 @@ public class ObservationShowServiceImpl implements ObservationShowService {
 			flag = utilityServices.getFlagByObservation("species.participation.Observation", id.toString());
 			tags = utilityServices.getTags("observation", id.toString());
 			fetaured = utilityServices.getAllFeatured("species.participation.Observation", id.toString());
+			observationNearBy = esService.getNearByObservation("observation", "observation",
+					String.valueOf(observation.getLatitude()), String.valueOf(observation.getLongitude()));
+			authorUser = userService.getUser(String.valueOf(observation.getAuthorId()));
 			if (observation.getMaxVotedRecoId() != null) {
 				reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 				esLayerInfo = esService.getObservationInfo("observation", "observation",
 						observation.getMaxVotedRecoId().toString());
 			}
 			ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo, esLayerInfo,
-					reco, flag, tags, fetaured);
+					reco, flag, tags, fetaured, authorUser, observationNearBy);
 			return data;
 		} catch (Exception e) {
 			logger.error(e.getMessage());

@@ -33,6 +33,7 @@ import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -77,8 +78,9 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
 				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
-				bind(EsServicesApi.class).in(Scopes.SINGLETON) ;
+				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
+				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
 
 			}

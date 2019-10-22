@@ -5,6 +5,8 @@ package com.strandls.observation.pojo;
 
 import java.util.List;
 
+import com.strandls.taxonomy.pojo.BreadCrumb;
+
 /**
  * @author Abhishek Rudra
  *
@@ -14,24 +16,27 @@ public class RecoIbp {
 	private String commonName;
 	private String scientificName;
 	private Long speciesId;
-	private List<String> breadCrum;
+	private List<BreadCrumb> breadCrumb;
 	private Integer recoVoteCount;
+	private String status;
 
 	/**
 	 * @param commonName
 	 * @param scientificName
 	 * @param speciesId
-	 * @param breadCrum
+	 * @param breadCrumb
 	 * @param recoVoteCount
+	 * @param status
 	 */
-	public RecoIbp(String commonName, String scientificName, Long speciesId, List<String> breadCrum,
-			Integer recoVoteCount) {
+	public RecoIbp(String commonName, String scientificName, Long speciesId, List<BreadCrumb> breadCrumb,
+			Integer recoVoteCount, String status) {
 		super();
 		this.commonName = commonName;
 		this.scientificName = scientificName;
 		this.speciesId = speciesId;
-		this.breadCrum = breadCrum;
+		this.breadCrumb = breadCrumb;
 		this.recoVoteCount = recoVoteCount;
+		this.status = status;
 	}
 
 	public String getCommonName() {
@@ -58,12 +63,12 @@ public class RecoIbp {
 		this.speciesId = speciesId;
 	}
 
-	public List<String> getBreadCrum() {
-		return breadCrum;
+	public List<BreadCrumb> getBreadCrumb() {
+		return breadCrumb;
 	}
 
-	public void setBreadCrum(List<String> breadCrum) {
-		this.breadCrum = breadCrum;
+	public void setBreadCrumb(List<BreadCrumb> breadCrumb) {
+		this.breadCrumb = breadCrumb;
 	}
 
 	public Integer getRecoVoteCount() {
@@ -72,6 +77,14 @@ public class RecoIbp {
 
 	public void setRecoVoteCount(Integer recoVoteCount) {
 		this.recoVoteCount = recoVoteCount;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 }
