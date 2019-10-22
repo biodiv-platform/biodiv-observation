@@ -16,7 +16,7 @@ public class RecoIbp {
 	private String commonName;
 	private String scientificName;
 	private Long speciesId;
-	private List<BreadCrumb> breadCrumb;
+	private List<BreadCrumb> breadCrumbs;
 	private Integer recoVoteCount;
 	private String status;
 
@@ -24,17 +24,17 @@ public class RecoIbp {
 	 * @param commonName
 	 * @param scientificName
 	 * @param speciesId
-	 * @param breadCrumb
+	 * @param breadCrumbs
 	 * @param recoVoteCount
 	 * @param status
 	 */
-	public RecoIbp(String commonName, String scientificName, Long speciesId, List<BreadCrumb> breadCrumb,
+	public RecoIbp(String commonName, String scientificName, Long speciesId, List<BreadCrumb> breadCrumbs,
 			Integer recoVoteCount, String status) {
 		super();
 		this.commonName = commonName;
 		this.scientificName = scientificName;
 		this.speciesId = speciesId;
-		this.breadCrumb = breadCrumb;
+		this.breadCrumbs = breadCrumbs;
 		this.recoVoteCount = recoVoteCount;
 		this.status = status;
 	}
@@ -63,12 +63,12 @@ public class RecoIbp {
 		this.speciesId = speciesId;
 	}
 
-	public List<BreadCrumb> getBreadCrumb() {
-		return breadCrumb;
+	public List<BreadCrumb> getBreadCrumbs() {
+		return breadCrumbs;
 	}
 
-	public void setBreadCrumb(List<BreadCrumb> breadCrumb) {
-		this.breadCrumb = breadCrumb;
+	public void setBreadCrumbs(List<BreadCrumb> breadCrumbs) {
+		this.breadCrumbs = breadCrumbs;
 	}
 
 	public Integer getRecoVoteCount() {
