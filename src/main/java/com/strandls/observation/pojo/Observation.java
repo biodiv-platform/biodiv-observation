@@ -1,6 +1,4 @@
 package com.strandls.observation.pojo;
-// default package
-// Generated 5 Jul, 2019 1:18:15 PM by Hibernate Tools 5.2.12.Final
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,23 +16,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Entity
 @Table(name = "observation", schema = "public")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Observation implements java.io.Serializable {
+public class Observation implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8040652447273785394L;
-	private long id;
-	private long version;
-	private long authorId;
+	private Long id;
+	private Long version;
+	private Long authorId;
 	private Date createdOn;
-	private long groupId;
-	private double latitude;
-	private double longitude;
+	private Long groupId;
+	private Double latitude;
+	private Double longitude;
 	private String notes;
 	private Date fromDate;
 	private String placeName;
-	private int rating;
+	private Integer rating;
 	private String reverseGeocodedName;
 	private Integer flagCount;
 	private Boolean geoPrivacy;
@@ -46,16 +44,16 @@ public class Observation implements java.io.Serializable {
 	private String searchText;
 	private Long maxVotedRecoId;
 	private Boolean agreeTerms;
-	private boolean isChecklist;
-	private boolean isShowable;
+	private Boolean isChecklist;
+	private Boolean isShowable;
 	private Long sourceId;
 	private Date toDate;
-    private String topology;
+	private String topology;
 	private String checklistAnnotations;
 	private Integer featureCount;
 	private Boolean isLocked;
-	private long licenseId;
-	private long languageId;
+	private Long licenseId;
+	private Long languageId;
 	private String locationScale;
 	private String accessRights;
 	private String catalogNumber;
@@ -73,40 +71,39 @@ public class Observation implements java.io.Serializable {
 	private String viaId;
 	private String protocol;
 	private String basisOfRecord;
-	private int noOfImages;
-	private int noOfVideos;
-	private int noOfAudio;
-	private int noOfIdentifications;
+	private Integer noOfImages;
+	private Integer noOfVideos;
+	private Integer noOfAudio;
+	private Integer noOfIdentifications;
 	private Long dataTableId;
 	private String dateAccuracy;
 	private Serializable traitsJson;
 
-	
 	@Id
 	@Column(name = "id", nullable = false)
-	public long getId() {
+	public Long getId() {
 		return this.id;
 	}
 
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
 	@Column(name = "version", nullable = false)
-	public long getVersion() {
+	public Long getVersion() {
 		return this.version;
 	}
 
-	public void setVersion(long version) {
+	public void setVersion(Long version) {
 		this.version = version;
 	}
 
 	@Column(name = "author_id", nullable = false)
-	public long getAuthorId() {
+	public Long getAuthorId() {
 		return this.authorId;
 	}
 
-	public void setAuthorId(long authorId) {
+	public void setAuthorId(Long authorId) {
 		this.authorId = authorId;
 	}
 
@@ -120,29 +117,29 @@ public class Observation implements java.io.Serializable {
 	}
 
 	@Column(name = "group_id", nullable = false)
-	public long getGroupId() {
+	public Long getGroupId() {
 		return this.groupId;
 	}
 
-	public void setGroupId(long groupId) {
+	public void setGroupId(Long groupId) {
 		this.groupId = groupId;
 	}
 
 	@Column(name = "latitude", nullable = false, precision = 17, scale = 17)
-	public double getLatitude() {
+	public Double getLatitude() {
 		return this.latitude;
 	}
 
-	public void setLatitude(double latitude) {
+	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
 
 	@Column(name = "longitude", nullable = false, precision = 17, scale = 17)
-	public double getLongitude() {
+	public Double getLongitude() {
 		return this.longitude;
 	}
 
-	public void setLongitude(double longitude) {
+	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
 
@@ -174,11 +171,11 @@ public class Observation implements java.io.Serializable {
 	}
 
 	@Column(name = "rating", nullable = false)
-	public int getRating() {
+	public Integer getRating() {
 		return this.rating;
 	}
 
-	public void setRating(int rating) {
+	public void setRating(Integer rating) {
 		this.rating = rating;
 	}
 
@@ -282,20 +279,20 @@ public class Observation implements java.io.Serializable {
 	}
 
 	@Column(name = "is_checklist", nullable = false)
-	public boolean isIsChecklist() {
+	public Boolean isIsChecklist() {
 		return this.isChecklist;
 	}
 
-	public void setIsChecklist(boolean isChecklist) {
+	public void setIsChecklist(Boolean isChecklist) {
 		this.isChecklist = isChecklist;
 	}
 
 	@Column(name = "is_showable", nullable = false)
-	public boolean isIsShowable() {
+	public Boolean isIsShowable() {
 		return this.isShowable;
 	}
 
-	public void setIsShowable(boolean isShowable) {
+	public void setIsShowable(Boolean isShowable) {
 		this.isShowable = isShowable;
 	}
 
@@ -317,7 +314,7 @@ public class Observation implements java.io.Serializable {
 		this.toDate = toDate;
 	}
 
-	//@Type(type = "org.hibernate.spatial.GeometryType")
+	// @Type(type = "org.hibernate.spatial.GeometryType")
 	@Column(name = "topology", nullable = false)
 	public String getTopology() {
 		return this.topology;
@@ -355,20 +352,20 @@ public class Observation implements java.io.Serializable {
 	}
 
 	@Column(name = "license_id", nullable = false)
-	public long getLicenseId() {
+	public Long getLicenseId() {
 		return this.licenseId;
 	}
 
-	public void setLicenseId(long licenseId) {
+	public void setLicenseId(Long licenseId) {
 		this.licenseId = licenseId;
 	}
 
 	@Column(name = "language_id", nullable = false)
-	public long getLanguageId() {
+	public Long getLanguageId() {
 		return this.languageId;
 	}
 
-	public void setLanguageId(long languageId) {
+	public void setLanguageId(Long languageId) {
 		this.languageId = languageId;
 	}
 
@@ -526,38 +523,38 @@ public class Observation implements java.io.Serializable {
 	}
 
 	@Column(name = "no_of_images", nullable = false)
-	public int getNoOfImages() {
+	public Integer getNoOfImages() {
 		return this.noOfImages;
 	}
 
-	public void setNoOfImages(int noOfImages) {
+	public void setNoOfImages(Integer noOfImages) {
 		this.noOfImages = noOfImages;
 	}
 
 	@Column(name = "no_of_videos", nullable = false)
-	public int getNoOfVideos() {
+	public Integer getNoOfVideos() {
 		return this.noOfVideos;
 	}
 
-	public void setNoOfVideos(int noOfVideos) {
+	public void setNoOfVideos(Integer noOfVideos) {
 		this.noOfVideos = noOfVideos;
 	}
 
 	@Column(name = "no_of_audio", nullable = false)
-	public int getNoOfAudio() {
+	public Integer getNoOfAudio() {
 		return this.noOfAudio;
 	}
 
-	public void setNoOfAudio(int noOfAudio) {
+	public void setNoOfAudio(Integer noOfAudio) {
 		this.noOfAudio = noOfAudio;
 	}
 
 	@Column(name = "no_of_identifications", nullable = false)
-	public int getNoOfIdentifications() {
+	public Integer getNoOfIdentifications() {
 		return this.noOfIdentifications;
 	}
 
-	public void setNoOfIdentifications(int noOfIdentifications) {
+	public void setNoOfIdentifications(Integer noOfIdentifications) {
 		this.noOfIdentifications = noOfIdentifications;
 	}
 
@@ -587,7 +584,5 @@ public class Observation implements java.io.Serializable {
 	public void setTraitsJson(Serializable traitsJson) {
 		this.traitsJson = traitsJson;
 	}
-
-
 
 }

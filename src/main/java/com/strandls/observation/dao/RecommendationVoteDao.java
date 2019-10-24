@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -77,11 +78,28 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			query.setParameter("obvId", obvId);
 			recoVoteCount = query.getResultList().size();
 		} catch (Exception e) {
-			// TODO: handle exception
+			logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}
 		return recoVoteCount;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<RecommendationVote> findRecoVoteOnObservation(Long obvId) {
+		String qry = "from RecommendationVote where observationId = :obvId";
+		Session session = sessionFactory.openSession();
+		List<RecommendationVote> recoVoteList = new ArrayList<RecommendationVote>();
+		try {
+			Query<RecommendationVote> query = session.createQuery(qry);
+			query.setParameter("obvId", obvId);
+			recoVoteList = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return recoVoteList;
 	}
 
 }

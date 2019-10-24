@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.service;
 
+import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 
 /**
@@ -13,5 +14,7 @@ public interface RecommedationService {
 
 	public RecoIbp fetchRecoVote(Long id);
 
-	public RecoIbp fetchRecoName(Long obvId,Long recoId);
+	public RecoIbp fetchRecoName(Long obvId, Long recoId);
+
+	public Long createReco(Long observationId, RecoCreate recoCreate);
 }

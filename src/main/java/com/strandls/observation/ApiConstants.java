@@ -14,10 +14,12 @@ public class ApiConstants {
 
 	// ---------- paths ---------------
 
-//	<----- Observation show controller------>
+//	<----- Observation controller------>
+	public static final String OBSERVATION = "/observation";
 	public static final String SHOW = "/show";
 	public static final String PING = "/ping";
-	
+	public static final String CREATE = "/create";
+
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
 	public static final String RECOVOTE = "/recovote";

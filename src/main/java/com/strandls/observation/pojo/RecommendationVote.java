@@ -4,7 +4,7 @@
 package com.strandls.observation.pojo;
 
 import java.io.Serializable;
-import java.sql.Date;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,16 +26,59 @@ public class RecommendationVote implements Serializable {
 	private static final long serialVersionUID = -7166935130639476076L;
 
 	private Long id;
+	private Long version;
 	private Long authorId;
 	private String confidence;
 	private Long observationId;
 	private Long recommendationId;
+	private Integer userWeight;
 	private Date votedOn;
 	private String comment;
 	private Long commonNameRecoId;
 	private String givenCommonName;
 	private String givenSciName;
 	private String originalAuthor;
+
+	/**
+	 * 
+	 */
+	public RecommendationVote() {
+		super();
+	}
+
+	/**
+	 * @param id
+	 * @param version
+	 * @param authorId
+	 * @param confidence
+	 * @param observationId
+	 * @param recommendationId
+	 * @param userWeight
+	 * @param votedOn
+	 * @param comment
+	 * @param commonNameRecoId
+	 * @param givenCommonName
+	 * @param givenSciName
+	 * @param originalAuthor
+	 */
+	public RecommendationVote(Long id, Long version, Long authorId, String confidence, Long observationId,
+			Long recommendationId, Integer userWeight, Date votedOn, String comment, Long commonNameRecoId,
+			String givenCommonName, String givenSciName, String originalAuthor) {
+		super();
+		this.id = id;
+		this.version = version;
+		this.authorId = authorId;
+		this.confidence = confidence;
+		this.observationId = observationId;
+		this.recommendationId = recommendationId;
+		this.userWeight = userWeight;
+		this.votedOn = votedOn;
+		this.comment = comment;
+		this.commonNameRecoId = commonNameRecoId;
+		this.givenCommonName = givenCommonName;
+		this.givenSciName = givenSciName;
+		this.originalAuthor = originalAuthor;
+	}
 
 	@Id
 	@GeneratedValue
@@ -46,6 +89,15 @@ public class RecommendationVote implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	@Column(name = "version")
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 
 	@Column(name = "author_id")
@@ -82,6 +134,15 @@ public class RecommendationVote implements Serializable {
 
 	public void setRecommendationId(Long recommendationId) {
 		this.recommendationId = recommendationId;
+	}
+
+	@Column(name = "user_weight")
+	public Integer getUserWeight() {
+		return userWeight;
+	}
+
+	public void setUserWeight(Integer userWeight) {
+		this.userWeight = userWeight;
 	}
 
 	@Column(name = "voted_on")

@@ -14,7 +14,7 @@ public class ObservationControllerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(ObservationShowController.class).in(Scopes.SINGLETON);
+		bind(ObservationController.class).in(Scopes.SINGLETON);
 		bind(RecommedationController.class).in(Scopes.SINGLETON);
 	}
 

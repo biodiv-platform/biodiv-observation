@@ -5,6 +5,7 @@ package com.strandls.observation.contorller;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -14,11 +15,13 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.service.RecommedationService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -51,6 +54,22 @@ public class RecommedationController {
 			return Response.status(Status.OK).entity(recoIbp).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.CREATE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	public Response createReco(@PathParam("observationId") String observationId,
+			@ApiParam(name = "recoCreate") RecoCreate recoCreate) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			recoService.createReco(obvId, recoCreate);
+			return Response.status(Status.CREATED).entity(null).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 
