@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.service;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ShowData;
 
@@ -14,6 +16,6 @@ public interface ObservationService {
 
 	public ShowData findById(Long id);
 
-	public void createObservation(ObservationCreate observationData);
+	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
 
 }

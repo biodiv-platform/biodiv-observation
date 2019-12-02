@@ -3,9 +3,11 @@
  */
 package com.strandls.observation.contorller;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -15,13 +17,11 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
 import com.strandls.observation.ApiConstants;
-import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
-import com.strandls.observation.service.RecommedationService;
+import com.strandls.observation.service.RecommendationService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiResponses;
 public class RecommedationController {
 
 	@Inject
-	private RecommedationService recoService;
+	private RecommendationService recoService;
 
 	@GET
 	@Path(ApiConstants.RECOVOTE + ApiConstants.IBP + "/{recoVoteId}")
@@ -57,19 +57,20 @@ public class RecommedationController {
 		}
 	}
 
-	@POST
-	@Path(ApiConstants.CREATE + "/{observationId}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@PUT
+	@Path(ApiConstants.CANONICAL)
+	@Produces(MediaType.TEXT_PLAIN)
 
-	public Response createReco(@PathParam("observationId") String observationId,
-			@ApiParam(name = "recoCreate") RecoCreate recoCreate) {
+	@ApiOperation(value = "Update the Canonical field of Recommendation", notes = "Updates the Canonical Field with the help of Name parser", response = Long.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = " Feature Not operable right now", response = String.class) })
+
+	public Response getCanonicalUpdated() {
 		try {
-			Long obvId = Long.parseLong(observationId);
-			recoService.createReco(obvId, recoCreate);
-			return Response.status(Status.CREATED).entity(null).build();
+			List<Long> result = recoService.updateCanonicalName();
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 

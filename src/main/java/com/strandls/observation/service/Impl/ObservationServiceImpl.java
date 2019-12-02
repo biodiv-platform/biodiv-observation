@@ -3,12 +3,20 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.naksha.controller.LayerServiceApi;
@@ -25,11 +33,13 @@ import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.Facts;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Featured;
 import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.TagsMapping;
 
 /**
  * @author Abhishek Rudra
@@ -69,6 +79,15 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public ShowData findById(Long id) {
 
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
+
 		List<FactValuePair> facts;
 		List<ObservationResourceUser> observationResource;
 		List<UserGroupIbp> userGroups;
@@ -79,7 +98,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<String> tags;
 		List<Featured> fetaured;
 		Observation observation = observationDao.findById(id);
-		if (observation != null) {
+		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
@@ -94,6 +113,32 @@ public class ObservationServiceImpl implements ObservationService {
 					esLayerInfo = esService.getObservationInfo("observation", "observation",
 							observation.getMaxVotedRecoId().toString());
 				}
+
+				if (observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						List<Facts> resultList = traitService.getFactsBytaxonId(taxonId.toString());
+						if (resultList != null) {
+							for (Facts fact : resultList) {
+
+								if (fact.getTraitInstanceId() == 14 && fact.getTraitValueId() == 53) {
+									observation.setGeoPrivacy(true);
+									break;
+								}
+							}
+						}
+
+					}
+				}
+
+				if (observation.getGeoPrivacy()) {
+					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
+							observation.getLongitude());
+					observation.setLatitude(latlon.get("lat"));
+					observation.setLongitude(latlon.get("lon"));
+				}
+
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured);
 				return data;
@@ -105,15 +150,17 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public void createObservation(ObservationCreate observationData) {
+	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
-			Observation observation = observationHelper.createObservationMapping(observationData);
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
 			RecoCreate recoCreate = observationHelper.createRecoMapping(observationData);
-			Long maxVotedReco = recoService.createReco(observation.getId(), recoCreate);
+			Long maxVotedReco = recoService.createRecoVote(userId, observation.getId(), recoCreate);
 
-			List<Resource> resources = observationHelper.createResourceMapping(observationData);
+			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData);
 			resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
 			traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
@@ -121,11 +168,13 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
 					observationData.getUserGroupId());
-			utilityServices.createTags("observation", observationData.getTags());
+			TagsMapping tagsMapping = new TagsMapping();
+			tagsMapping.setObjectId(observation.getId());
+			tagsMapping.setTags(observationData.getTags());
+			utilityServices.createTags("observation", tagsMapping);
 
 //			update observaiton object
-			
-			
+
 			observation.setMaxVotedRecoId(maxVotedReco);
 			Integer noOfImages = 0;
 			Integer noOfAudio = 0;
@@ -144,10 +193,14 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setNoOfVideos(noOfVideo);
 
 			observationDao.update(observation);
+
+			return findById(observation.getId());
+
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
+
+		return null;
 
 	}
 

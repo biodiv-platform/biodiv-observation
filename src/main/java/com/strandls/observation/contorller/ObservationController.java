@@ -3,17 +3,20 @@
  */
 package com.strandls.observation.contorller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
+import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ShowData;
@@ -62,7 +65,7 @@ public class ObservationController {
 			obvId = Long.parseLong(id);
 			ShowData show = observationSerices.findById(obvId);
 
-			if (show.getObservation() != null || show.getFactValuePair() != null)
+			if (show != null)
 				return Response.status(Status.OK).entity(show).build();
 			else
 				return Response.status(Status.NOT_FOUND).build();
@@ -78,7 +81,13 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	public Response createObservation(ObservationCreate observationData) {
+	@ValidateUser
+	@ApiOperation(value = "Create a Observation", notes = "Returns the show Page of Observation", response = ShowData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "observation Cannot be created", response = String.class) })
+
+	public Response createObservation(@Context HttpServletRequest request,
+			@ApiParam(name = "observationData") ObservationCreate observationData) {
 		try {
 			if (observationData.getObservedOn() == null)
 				throw new ObservationInputException("Observation Date Cannot be BLANK");
@@ -89,7 +98,9 @@ public class ObservationController {
 			if (observationData.getsGroup() == null)
 				throw new ObservationInputException("Species Group cannot be BLANK");
 
-			return null;
+			ShowData result = observationSerices.createObservation(request, observationData);
+
+			return Response.status(Status.OK).entity(result).build();
 		} catch (ObservationInputException e) {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {

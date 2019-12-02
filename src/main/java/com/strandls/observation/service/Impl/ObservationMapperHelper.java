@@ -3,15 +3,33 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.service.RecommendationService;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.utility.controller.UtilityServiceApi;
+import com.strandls.utility.pojo.ParsedName;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.PrecisionModel;
 
 /**
  * @author Abhishek Rudra
@@ -19,10 +37,25 @@ import com.strandls.resource.pojo.Resource;
  */
 public class ObservationMapperHelper {
 
-	public Observation createObservationMapping(ObservationCreate observationData) {
+	private final Logger logger = LoggerFactory.getLogger(ObservationMapperHelper.class);
+
+	@Inject
+	private RecommendationDao recoDao;
+
+	@Inject
+	private RecommendationService recoSerivce;
+
+	@Inject
+	private UtilityServiceApi utilitySerivce;
+
+//	@Inject
+//	private UtilityServiceApi utilitySerivce;
+
+	public Observation createObservationMapping(Long userId, ObservationCreate observationData) {
 
 		Observation observation = new Observation();
-		observation.setAuthorId(null);// author id remaining
+		observation.setAuthorId(userId);
+		observation.setVersion(0L);
 		observation.setCreatedOn(observationData.getCreatedOn());
 		observation.setGroupId(observationData.getsGroup());
 		observation.setLatitude(observationData.getLatitude());
@@ -30,7 +63,7 @@ public class ObservationMapperHelper {
 		observation.setNotes(observationData.getNotes());
 		observation.setFromDate(observationData.getFromDate());
 		observation.setPlaceName(observationData.getObservedAt()); // place name given by user
-		observation.setRating(null);// what to insert
+		observation.setRating(0);// what to insert
 		observation.setReverseGeocodedName(observationData.getReverseGeocoded()); // google reversed name for the lat
 																					// and long
 		observation.setFlagCount(0);// during creation it should be 0
@@ -43,19 +76,19 @@ public class ObservationMapperHelper {
 		observation.setVisitCount(0L); // updateble field
 		observation.setSearchText(null); // it is not used as of now , maybe in future
 
-//		needs to be calculated at runtime
-//		if (observationData.getRecoVoteId() != null)
-//			observation.setMaxVotedRecoId(null);
-//		else
-//			observation.setMaxVotedRecoId(null);// needs to calculate using recoid and name, 
-
 		observation.setAgreeTerms(true);
-		observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 		observation.setIsShowable(true);
-		observation.setSourceId(null);// observation id in nrml case, used only in GBIF
 		observation.setToDate(observationData.getToDate());
-		observation.setTopology(null);// conversion formula postgis
-		observation.setChecklistAnnotations(null);// from data set
+
+		GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
+		DecimalFormat df = new DecimalFormat("#.####");
+		df.setRoundingMode(RoundingMode.HALF_EVEN);
+		double latitude = Double.parseDouble(df.format(observationData.getLatitude()));
+		double longitude = Double.parseDouble(df.format(observationData.getLongitude()));
+		Coordinate c = new Coordinate(longitude, latitude);
+		Geometry topology = geofactory.createPoint(c);
+		observation.setTopology(topology);
+
 		observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
 										// group
 		observation.setIsLocked(false);// update field , initially false
@@ -63,6 +96,24 @@ public class ObservationMapperHelper {
 		observation.setLanguageId(observationData.getLanguageId());
 		observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
+		observation.setReprImageId(null);
+		observation.setProtocol(observationData.getProtocol());
+		observation.setBasisOfRecord(observationData.getBasisOfRecords());
+		observation.setNoOfImages(0);
+		observation.setNoOfAudio(0);
+		observation.setNoOfVideos(0);
+
+		if (observationData.getHelpIdentified() == true)
+			observation.setNoOfIdentifications(0);// initailly 0-1 but can increase with the no of reco vote
+		else
+			observation.setNoOfIdentifications(1);
+
+		observation.setDataTableId(null);//
+		observation.setDateAccuracy(observationData.getDateAccuracy());
+
+		observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
+		observation.setSourceId(null);// observation id in nrml case, used only in GBIF
+		observation.setChecklistAnnotations(null);// from data set
 		observation.setAccessRights(null);// null for nrml case only used in GBIF
 		observation.setCatalogNumber(null);// null for nrml case only used in GBIF
 		observation.setDatasetId(null);// null for nrml case only used in GBIF
@@ -77,40 +128,145 @@ public class ObservationMapperHelper {
 		observation.setViaCode(null);// null for nrml case only used in GBIF
 		observation.setViaId(null);// null for nrml case only used in GBIF
 
-		observation.setReprImageId(null);
-		observation.setProtocol(observationData.getProtocol());
-		observation.setBasisOfRecord(observationData.getBasisOfRecords());
-		observation.setNoOfImages(null);
-		observation.setNoOfAudio(null);
-		observation.setNoOfVideos(null);
-
-		if (observationData.getHelpIdentified() == true)
-			observation.setNoOfIdentifications(0);// initailly 0-1 but can increase with the no of reco vote
-		else
-			observation.setNoOfIdentifications(1);
-
-		observation.setDataTableId(null);//
-		observation.setDateAccuracy(observationData.getDateAccuracy());
-
 		return observation;
 
 	}
 
 	public RecoCreate createRecoMapping(ObservationCreate observationData) {
+		Long commonNameId = null;
+		String commonName = observationData.getTaxonCommonName();
+		Long scientificNameId = null;
+		String scientificName = observationData.getTaxonScientificName();
+		Map<String, Long> scientificResult = new HashMap<String, Long>();
+
+		if (observationData.getScientificNameTaxonId() != null && scientificName != null) {
+			scientificResult = scientificNameExists(observationData.getScientificNameTaxonId());
+		} else if (observationData.getScientificNameTaxonId() == null && scientificName != null) {
+			scientificResult = scientificNameNotExists(scientificName);
+		}
+
+		if (commonName != null) {
+			commonNameId = commonNameMapper(commonName, observationData.getLanguageId());
+		}
+
+		if (scientificResult != null)
+			scientificNameId = scientificResult.get("recoId");
 
 		RecoCreate recoCreate = new RecoCreate();
 		recoCreate.setConfidence(observationData.getConfidence());
 		recoCreate.setRecoComment(observationData.getRecoComment());
-		recoCreate.setCommonName(observationData.getCommonName());
-		recoCreate.setCommonNameId(observationData.getCommonNameId());
-		recoCreate.setScientificName(observationData.getScientificName());
-		recoCreate.setScientificNameId(observationData.getScientificNameId());
+		recoCreate.setCommonName(commonName);
+		recoCreate.setCommonNameId(commonNameId);
+		recoCreate.setScientificName(scientificName);
+		recoCreate.setScientificNameId(scientificNameId);
+		if (scientificResult != null && scientificResult.isEmpty() == false && scientificResult.get("flag") == 1L)
+			recoCreate.setFlag(true);
+		else
+			recoCreate.setFlag(false);
 
 		return recoCreate;
 
 	}
 
-	public List<Resource> createResourceMapping(ObservationCreate observationData) {
+//	Scientific name has a taxonId
+	private Map<String, Long> scientificNameExists(Long taxonId) {
+		Map<String, Long> result = new HashMap<String, Long>();
+		Recommendation recommendation = recoDao.findRecoByTaxonId(taxonId, true);
+		result.put("recoId", recommendation.getId());
+		result.put("flag", 0L);
+		return result;
+	}
+
+//	COMMON NAME LOGIC IMPLEMENTED
+	private Long commonNameMapper(String commonName, Long languageId) {
+
+		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
+		if (resultCommonName == null)
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, false);
+
+		return resultCommonName.getId();
+
+	}
+
+//	scientific Name DON'T have a taxonId
+	private Map<String, Long> scientificNameNotExists(String providedSciName) {
+		Map<String, Long> result = new HashMap<String, Long>();
+		try {
+			ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
+			String canonicalName = parsedName.getCanonicalName().getSimple();
+			List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
+			if (resultList.isEmpty() || resultList.size() == 1) {
+				if (resultList.isEmpty())
+					resultList.add(recoSerivce.createRecommendation(providedSciName, canonicalName, true));
+				result.put("recoId", resultList.get(0).getId());
+				result.put("flag", 0L);
+			} else {
+				result = taxonIdEqualsAccpetedNameId(resultList, providedSciName);
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return result;
+	}
+
+//	PRIORITY 1 : taxonId == accpetedNameId 
+	private Map<String, Long> taxonIdEqualsAccpetedNameId(List<Recommendation> recommendations,
+			String providedSciName) {
+
+		Map<String, Long> result = new HashMap<String, Long>();
+		List<Recommendation> filteredList = new ArrayList<Recommendation>();
+		for (Recommendation recommendation : recommendations) {
+			if (recommendation.getTaxonConceptId() == recommendation.getAcceptedNameId())
+				filteredList.add(recommendation);
+		}
+		if (filteredList.isEmpty())
+			return taxonIdExists(filteredList, providedSciName);
+		else if (filteredList.size() == 1) {
+			result.put("recoId", filteredList.get(0).getId());
+			result.put("flag", 0L);
+			return result;
+		} else
+			return fullNameSearch(filteredList, providedSciName);
+	}
+
+//	PRIORITY 2 :CHECKS IF TAXON ID EXISTS IF YES PICK IT ELSE SERACH FULL NAME
+	private Map<String, Long> taxonIdExists(List<Recommendation> recommendations, String providedSciName) {
+		Map<String, Long> result = new HashMap<String, Long>();
+		List<Recommendation> filteredList = new ArrayList<Recommendation>();
+		for (Recommendation recommendation : recommendations) {
+			if (recommendation.getTaxonConceptId() != null)
+				filteredList.add(recommendation);
+		}
+		if (filteredList.isEmpty())
+			return fullNameSearch(filteredList, providedSciName);
+		else if (filteredList.size() == 1) {
+			result.put("recoId", filteredList.get(0).getId());
+			result.put("flag", 0L);
+			return result;
+		} else
+			return fullNameSearch(filteredList, providedSciName);
+	}
+
+//	PRIORITY 3
+//	DOES A FULL NAME SEARCH IF MATCHED SENT WITH FLAG 0 , IF NOT SEND 1st ID AND FLAG 1
+	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
+
+		Map<String, Long> result = new HashMap<String, Long>();
+		for (Recommendation recommendation : recommendations) {
+			if (recommendation.getName().equals(providedSciName)) {
+				result.put("recoId", recommendation.getId());
+				result.put("flag", 0L);
+				return result;
+			}
+
+		}
+		result.put("recoId", recommendations.get(0).getId());
+		result.put("flag", 1L);
+		return result;
+	}
+
+	public List<Resource> createResourceMapping(Long userId, ObservationCreate observationData) {
 		List<Resource> resources = new ArrayList<Resource>();
 		for (Entry<String, String> entry : observationData.getResources().entrySet()) {
 			Resource resource = new Resource();
@@ -127,7 +283,7 @@ public class ObservationMapperHelper {
 			resource.setUrl(null);
 			resource.setRating(null);
 			resource.setUploadTime(new Date());
-			resource.setId(1426L);
+			resource.setUploaderId(userId);
 			resource.setContext(null);
 			resource.setLanguageId(205L);
 			resource.setAccessRights(null);
@@ -138,6 +294,45 @@ public class ObservationMapperHelper {
 			resources.add(resource);
 		}
 		return resources;
+	}
+
+//	GETS A RANDOM LAT,LON WITH LOWER LIMIT AS 5KM AND UPPER LIMIT AS 25KM
+	public Map<String, Double> getRandomLatLong(Double lat, Double lon) {
+
+		Map<String, Double> latlon = new HashMap<String, Double>();
+		double x0 = lon;
+		double y0 = lat;
+
+		Random random = new Random();
+
+		// Convert radius from meters to degrees.
+		double innerRadiusInDegrees = 5000D / 111320f;
+		Double radius = 20000D; // taking radius as 20km to make upper limit as 20km + 5Km(innerLimit)
+		double radiusInDegrees = radius / 111320f;
+
+		// Get a random distance and a random angle.
+		double u = random.nextDouble();
+		double v = random.nextDouble();
+		double w = radiusInDegrees * Math.sqrt(u);// random distance from center to radius
+		double new_w = (w + innerRadiusInDegrees);// adding 5Km as innerLimit to make it between 5km and 25km
+		double t = 2 * Math.PI * v;
+		// Get the x and y delta values.
+		double x = new_w * Math.cos(t);
+		double y = new_w * Math.sin(t);
+
+		// Compensate the x value.
+		double new_x = x / Math.cos(Math.toRadians(y0));
+
+		double foundLatitude;
+		double foundLongitude;
+
+		foundLatitude = y0 + y;
+		foundLongitude = x0 + new_x;
+
+		latlon.put("lat", foundLatitude);
+		latlon.put("lon", foundLongitude);
+
+		return latlon;
 	}
 
 }

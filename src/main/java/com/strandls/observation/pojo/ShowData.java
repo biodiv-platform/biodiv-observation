@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.pojo;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.strandls.esmodule.pojo.ObservationInfo;
@@ -18,8 +19,15 @@ import com.strandls.utility.pojo.Flag;
  *
  */
 
-public class ShowData {
+public class ShowData implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3361865148967809245L;
+	/**
+	 * 
+	 */
 	private Observation observation;
 	private List<FactValuePair> factValuePair;
 	private List<ObservationResourceUser> observationResource;
@@ -30,6 +38,13 @@ public class ShowData {
 	private Flag flag;
 	private List<String> tags;
 	private List<Featured> fetaured;
+
+	/**
+	 * 
+	 */
+	public ShowData() {
+		super();
+	}
 
 	/**
 	 * @param observation

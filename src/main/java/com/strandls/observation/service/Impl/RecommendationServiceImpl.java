@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,16 +21,18 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
-import com.strandls.observation.service.RecommedationService;
+import com.strandls.observation.service.RecommendationService;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.utility.controller.UtilityServiceApi;
+import com.strandls.utility.pojo.ParsedName;
 
 /**
  * @author Abhishek Rudra
  *
  */
-public class RecommendationServiceImpl implements RecommedationService {
+public class RecommendationServiceImpl implements RecommendationService {
 
 	private final Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
 
@@ -41,6 +44,9 @@ public class RecommendationServiceImpl implements RecommedationService {
 
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
+
+	@Inject
+	private UtilityServiceApi utilityService;
 
 	@Override
 	public RecoIbp fetchRecoVote(Long id) {
@@ -124,17 +130,18 @@ public class RecommendationServiceImpl implements RecommedationService {
 	}
 
 	@Override
-	public Long createReco(Long observationId, RecoCreate recoCreate) {
+	public Long createRecoVote(Long userId, Long observationId, RecoCreate recoCreate) {
 
 		RecommendationVote recoVote = null;
 		if (recoCreate.getScientificNameId() != null) {
-			recoVote = new RecommendationVote(null, 0L, 822603L, recoCreate.getConfidence(), observationId,
+			recoVote = new RecommendationVote(null, 0L, userId, recoCreate.getConfidence(), observationId,
 					recoCreate.getScientificNameId(), 0, new Date(), recoCreate.getRecoComment(),
-					recoCreate.getCommonNameId(), recoCreate.getCommonName(), recoCreate.getScientificName(), null);
+					recoCreate.getCommonNameId(), recoCreate.getCommonName(), recoCreate.getScientificName(), null,
+					recoCreate.getFlag());
 		} else {
-			recoVote = new RecommendationVote(null, 0L, 822603L, recoCreate.getConfidence(), observationId,
+			recoVote = new RecommendationVote(null, 0L, userId, recoCreate.getConfidence(), observationId,
 					recoCreate.getCommonNameId(), 0, new Date(), recoCreate.getRecoComment(),
-					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, null);
+					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, null, recoCreate.getFlag());
 		}
 		recoVote = recoVoteDao.save(recoVote);
 		Long maxRecoVote = maxRecoVote(observationId);
@@ -161,7 +168,9 @@ public class RecommendationServiceImpl implements RecommedationService {
 
 		for (RecommendationVote recommendationVote : recoVotes) {
 			Long recoId = recommendationVote.getRecommendationId();
-			UniqueRecoVote uniqueRecoVote = mapToUniqueRecoVote(recommendationVote);
+			Recommendation reco = recoDao.findById(recoId);
+
+			UniqueRecoVote uniqueRecoVote = mapToUniqueRecoVote(recommendationVote, reco);
 			if (uniqueRecoVotes.containsKey(recoId)) {
 				UniqueRecoVote originalRecoVote = uniqueRecoVotes.get(recoId);
 				originalRecoVote = updateToUniqueRecoVote(originalRecoVote, uniqueRecoVote);
@@ -186,6 +195,8 @@ public class RecommendationServiceImpl implements RecommedationService {
 			originalRecoVote.setIsTaxon(true);
 		if (uniqueRecoVote.getLastestDate().getTime() > originalRecoVote.getLastestDate().getTime())
 			originalRecoVote.setLastestDate(uniqueRecoVote.getLastestDate());
+		if (uniqueRecoVote.getIsAccepted())
+			originalRecoVote.setIsAccepted(true);
 		originalRecoVote.setVoteCount(originalRecoVote.getVoteCount() + 1);
 		return originalRecoVote;
 	}
@@ -194,7 +205,7 @@ public class RecommendationServiceImpl implements RecommedationService {
 	 * @param recommendationVote
 	 * @return
 	 */
-	private UniqueRecoVote mapToUniqueRecoVote(RecommendationVote recommendationVote) {
+	private UniqueRecoVote mapToUniqueRecoVote(RecommendationVote recommendationVote, Recommendation reco) {
 
 		UniqueRecoVote uniqueRecoVote = new UniqueRecoVote();
 		Long recoId = recommendationVote.getRecommendationId();
@@ -209,17 +220,63 @@ public class RecommendationServiceImpl implements RecommedationService {
 			uniqueRecoVote.setIsScientificName(true);
 			uniqueRecoVote.setIsCommonName(true);
 		}
-		Recommendation reco = recoDao.findById(recoId);
 		if (reco.getTaxonConceptId() != null)
 			uniqueRecoVote.setIsTaxon(true);
 		else
 			uniqueRecoVote.setIsTaxon(false);
-
+		uniqueRecoVote.setIsAccepted(reco.isAcceptedName());
 		uniqueRecoVote.setVoteCount(1);
 		uniqueRecoVote.setLastestDate(recommendationVote.getVotedOn());
 		uniqueRecoVote.setRecoId(recoId);
 
 		return uniqueRecoVote;
+	}
+
+	@Override
+	public Long fetchTaxonId(Long maxRecoVoteId) {
+		Recommendation reco = recoDao.findById(maxRecoVoteId);
+		if (reco.getTaxonConceptId() != null)
+			return reco.getTaxonConceptId();
+		return null;
+	}
+
+	@Override
+	public Recommendation createRecommendation(String name, String canonicalName, Boolean isScientific) {
+		Recommendation reco = new Recommendation(null, new Date(), name, null, isScientific, 205L, name.toLowerCase(),
+				null, false, null, canonicalName);
+
+		Recommendation result = recoDao.save(reco);
+		return result;
+	}
+
+	@Override
+	public List<Long> updateCanonicalName() {
+		List<Recommendation> recoList = recoDao.findAllScientificName();
+		int counter = 0;
+		List<Long> errorList = new ArrayList<Long>();
+		for (Recommendation recommendation : recoList) {
+
+			try {
+				ParsedName parsedName = utilityService.getNameParsed(recommendation.getName());
+				if (parsedName == null)
+					errorList.add(recommendation.getId());
+				else {
+					recommendation.setCanonicalName(parsedName.getCanonicalName().getSimple());
+					recoDao.update(recommendation);
+					counter++;
+					System.out.println("COUNTER :" + counter);
+				}
+
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+
+		}
+
+		if (counter == recoList.size())
+			System.out.println("ALL Reco updated");
+		return errorList;
+
 	}
 
 }

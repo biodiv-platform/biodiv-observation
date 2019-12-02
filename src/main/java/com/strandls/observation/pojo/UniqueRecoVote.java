@@ -15,6 +15,7 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 	private Boolean isCommonName;
 	private Boolean isScientificName;
 	private Boolean isTaxon;
+	private Boolean isAccepted;
 	private Integer voteCount;
 	private Date lastestDate;
 
@@ -30,16 +31,18 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 	 * @param isCommonName
 	 * @param isScientificName
 	 * @param isTaxon
+	 * @param isAccepted
 	 * @param voteCount
 	 * @param lastestDate
 	 */
 	public UniqueRecoVote(Long recoId, Boolean isCommonName, Boolean isScientificName, Boolean isTaxon,
-			Integer voteCount, Date lastestDate) {
+			Boolean isAccepted, Integer voteCount, Date lastestDate) {
 		super();
 		this.recoId = recoId;
 		this.isCommonName = isCommonName;
 		this.isScientificName = isScientificName;
 		this.isTaxon = isTaxon;
+		this.isAccepted = isAccepted;
 		this.voteCount = voteCount;
 		this.lastestDate = lastestDate;
 	}
@@ -76,6 +79,14 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 		this.isTaxon = isTaxon;
 	}
 
+	public Boolean getIsAccepted() {
+		return isAccepted;
+	}
+
+	public void setIsAccepted(Boolean isAccepted) {
+		this.isAccepted = isAccepted;
+	}
+
 	public Integer getVoteCount() {
 		return voteCount;
 	}
@@ -101,9 +112,23 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 
 	private int checkForTaxon(UniqueRecoVote o) {
 		if (this.getIsTaxon() == o.getIsTaxon()) {
+			if (this.getIsTaxon() == true) {
+				return checkForAcceptedName(o);
+			}
 			return checkForScientificName(o);
 		} else
 			return this.isScientificName ? 1 : -1;
+	}
+
+	/**
+	 * @param o
+	 * @return
+	 */
+	private int checkForAcceptedName(UniqueRecoVote o) {
+		if (this.getIsAccepted() == o.getIsAccepted())
+			return checkForScientificName(o);
+		else
+			return this.getIsAccepted() ? 1 : -1;
 	}
 
 	private int checkForScientificName(UniqueRecoVote o) {

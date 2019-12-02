@@ -11,7 +11,6 @@ public class ApiConstants {
 
 	// versioning
 	public static final String V1 = "/v1";
-
 	// ---------- paths ---------------
 
 //	<----- Observation controller------>
@@ -24,6 +23,7 @@ public class ApiConstants {
 	public static final String RECO = "/reco";
 	public static final String RECOVOTE = "/recovote";
 	public static final String IBP = "/ibp";
+	public static final String CANONICAL = "/canonical";
 
 	// Observation List Controller
 	public static final String LIST = "/list";

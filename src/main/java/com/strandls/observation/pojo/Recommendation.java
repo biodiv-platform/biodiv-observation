@@ -4,13 +4,14 @@
 package com.strandls.observation.pojo;
 
 import java.io.Serializable;
-import java.sql.Date;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -39,6 +40,44 @@ public class Recommendation implements Serializable {
 	private String flaggingReason;
 	private Boolean isFlagged;
 	private Long acceptedNameId;
+	private String canonicalName;
+
+	/**
+	 * 
+	 */
+	public Recommendation() {
+		super();
+	}
+
+	/**
+	 * @param id
+	 * @param lastModified
+	 * @param name
+	 * @param taxonConceptId
+	 * @param isScientificName
+	 * @param languageId
+	 * @param lowercaseName
+	 * @param flaggingReason
+	 * @param isFlagged
+	 * @param acceptedNameId
+	 * @param canonicalName
+	 */
+	public Recommendation(Long id, Date lastModified, String name, Long taxonConceptId, Boolean isScientificName,
+			Long languageId, String lowercaseName, String flaggingReason, Boolean isFlagged, Long acceptedNameId,
+			String canonicalName) {
+		super();
+		this.id = id;
+		this.lastModified = lastModified;
+		this.name = name;
+		this.taxonConceptId = taxonConceptId;
+		this.isScientificName = isScientificName;
+		this.languageId = languageId;
+		this.lowercaseName = lowercaseName;
+		this.flaggingReason = flaggingReason;
+		this.isFlagged = isFlagged;
+		this.acceptedNameId = acceptedNameId;
+		this.canonicalName = canonicalName;
+	}
 
 	@Id
 	@GeneratedValue
@@ -131,5 +170,25 @@ public class Recommendation implements Serializable {
 	public void setAcceptedNameId(Long acceptedNameId) {
 		this.acceptedNameId = acceptedNameId;
 	}
+	
+	
+	@Column(name = "canonical_name")
+	public String getCanonicalName() {
+		return canonicalName;
+	}
 
+	public void setCanonicalName(String canonicalName) {
+		this.canonicalName = canonicalName;
+	}
+
+	@Transient
+	public boolean isAcceptedName() {
+		if (this.taxonConceptId != null && this.acceptedNameId != null) {
+			if (taxonConceptId.equals(acceptedNameId))
+				return true;
+			return false;
+		}
+		return false;
+
+	}
 }

@@ -15,6 +15,7 @@ public class RecoCreate {
 	private String commonName;
 	private Long scientificNameId;
 	private String scientificName;
+	private Boolean flag;
 
 	/**
 	 * 
@@ -30,9 +31,10 @@ public class RecoCreate {
 	 * @param commonName
 	 * @param scientificNameId
 	 * @param scientificName
+	 * @param flag
 	 */
 	public RecoCreate(String confidence, String recoComment, Long commonNameId, String commonName,
-			Long scientificNameId, String scientificName) {
+			Long scientificNameId, String scientificName, Boolean flag) {
 		super();
 		this.confidence = confidence;
 		this.recoComment = recoComment;
@@ -40,6 +42,7 @@ public class RecoCreate {
 		this.commonName = commonName;
 		this.scientificNameId = scientificNameId;
 		this.scientificName = scientificName;
+		this.flag = flag;
 	}
 
 	public String getConfidence() {
@@ -89,5 +92,14 @@ public class RecoCreate {
 	public void setScientificName(String scientificName) {
 		this.scientificName = scientificName;
 	}
+
+	public Boolean getFlag() {
+		return flag;
+	}
+
+	public void setFlag(Boolean flag) {
+		this.flag = flag;
+	}
+	
 
 }

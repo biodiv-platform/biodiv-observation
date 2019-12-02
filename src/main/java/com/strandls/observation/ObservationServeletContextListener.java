@@ -25,6 +25,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
@@ -77,12 +78,14 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
 				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
-				bind(EsServicesApi.class).in(Scopes.SINGLETON) ;
+				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
+				filter("/*").through(SwaggerFilter.class);
 
 			}
-		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule());
+		}, new ObservationControllerModule(), new FilterModule(), new ObservationDAOModule(),
+				new ObservationServiceModule());
 
 		return injector;
 

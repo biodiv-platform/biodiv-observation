@@ -9,7 +9,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.strandls.traits.pojo.FactValuePair;
-import com.strandls.utility.pojo.TagsMapping;
+import com.strandls.utility.pojo.Tags;
 
 /**
  * @author Abhishek Rudra
@@ -25,10 +25,9 @@ public class ObservationCreate {
 	private Date createdOn;
 	private Date fromDate;
 	private Date toDate;
-	private Long commonNameId;
-	private String commonName;
-	private Long scientificNameId;
-	private String scientificName;
+	private String taxonCommonName;
+	private Long scientificNameTaxonId;
+	private String taxonScientificName;
 	private String recoComment;
 	private String confidence;
 	private String dateAccuracy;
@@ -52,7 +51,7 @@ public class ObservationCreate {
 
 //	-----Notes and tags-------
 	private String notes;
-	private TagsMapping tags;
+	private List<Tags> tags;
 
 //	-----User Group Data-----
 	private List<Long> userGroupId;
@@ -102,36 +101,28 @@ public class ObservationCreate {
 		this.toDate = toDate;
 	}
 
-	public Long getCommonNameId() {
-		return commonNameId;
+	public String getTaxonCommonName() {
+		return taxonCommonName;
 	}
 
-	public void setCommonNameId(Long commonNameId) {
-		this.commonNameId = commonNameId;
+	public void setTaxonCommonName(String taxonCommonName) {
+		this.taxonCommonName = taxonCommonName;
 	}
 
-	public String getCommonName() {
-		return commonName;
+	public Long getScientificNameTaxonId() {
+		return scientificNameTaxonId;
 	}
 
-	public void setCommonName(String commonName) {
-		this.commonName = commonName;
+	public void setScientificNameTaxonId(Long scientificNameTaxonId) {
+		this.scientificNameTaxonId = scientificNameTaxonId;
 	}
 
-	public Long getScientificNameId() {
-		return scientificNameId;
+	public String getTaxonScientificName() {
+		return taxonScientificName;
 	}
 
-	public void setScientificNameId(Long scientificNameId) {
-		this.scientificNameId = scientificNameId;
-	}
-
-	public String getScientificName() {
-		return scientificName;
-	}
-
-	public void setScientificName(String scientificName) {
-		this.scientificName = scientificName;
+	public void setTaxonScientificName(String taxonScientificName) {
+		this.taxonScientificName = taxonScientificName;
 	}
 
 	public String getRecoComment() {
@@ -270,11 +261,11 @@ public class ObservationCreate {
 		this.notes = notes;
 	}
 
-	public TagsMapping getTags() {
+	public List<Tags> getTags() {
 		return tags;
 	}
 
-	public void setTags(TagsMapping tags) {
+	public void setTags(List<Tags> tags) {
 		this.tags = tags;
 	}
 
