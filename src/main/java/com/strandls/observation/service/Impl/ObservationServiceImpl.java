@@ -193,7 +193,7 @@ public class ObservationServiceImpl implements ObservationService {
 					noOfAudio++;
 				else if (res.getType().equals("IMAGE")) {
 					noOfImages++;
-					if (res.getRating() > rating) {
+					if (res.getRating() != null && res.getRating() > rating) {
 						reprImage = res.getId();
 						rating = res.getRating();
 					}
