@@ -21,6 +21,7 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
 
@@ -51,6 +52,9 @@ public class SwaggerFilter implements Filter {
 
 	@Inject
 	public UtilityServiceApi utilityService;
+
+	@Inject
+	public UserServiceApi userService;
 
 	/**
 	 * 
@@ -84,6 +88,7 @@ public class SwaggerFilter implements Filter {
 		layerService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		esService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		utilityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
+		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 
 		chain.doFilter(request2, response);
 	}

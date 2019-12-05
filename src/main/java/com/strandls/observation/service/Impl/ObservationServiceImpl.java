@@ -35,6 +35,8 @@ import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.Facts;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -75,6 +77,9 @@ public class ObservationServiceImpl implements ObservationService {
 	private UtilityServiceApi utilityServices;
 
 	@Inject
+	private UserServiceApi userService;
+
+	@Inject
 	private ObservationMapperHelper observationHelper;
 
 	@Override
@@ -98,6 +103,7 @@ public class ObservationServiceImpl implements ObservationService {
 		Flag flag;
 		List<String> tags;
 		List<Featured> fetaured;
+		UserIbp userInfo;
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
@@ -108,6 +114,7 @@ public class ObservationServiceImpl implements ObservationService {
 						String.valueOf(observation.getLongitude()));
 				flag = utilityServices.getFlagByObservation("species.participation.Observation", id.toString());
 				tags = utilityServices.getTags("observation", id.toString());
+				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
 				fetaured = utilityServices.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
@@ -141,7 +148,8 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo);
+
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
 				return data;

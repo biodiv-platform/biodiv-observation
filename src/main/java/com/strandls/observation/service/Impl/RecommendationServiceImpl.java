@@ -137,6 +137,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public Long createRecoVote(Long userId, Long observationId, RecoCreate recoCreate) {
 
+		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
+		if (previousVote != null) {
+			recoVoteDao.delete(previousVote);
+		}
+
 		RecommendationVote recoVote = null;
 		if (recoCreate.getScientificNameId() != null) {
 			recoVote = new RecommendationVote(null, 0L, userId, recoCreate.getConfidence(), observationId,
@@ -313,9 +318,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 			scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
 		if (recoSet.getCommonName() != null)
 			commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
-		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
+		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
 				scientificNameReco.getId(), commonNameReco.getId());
 		if (recoVote != null) {
+			RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
+			if (previousVote != null) {
+				recoVoteDao.delete(previousVote);
+			}
 			recoVote.setId(null);
 			recoVote.setAuthorId(userId);
 			recoVoteDao.save(recoVote);
