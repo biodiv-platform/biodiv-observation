@@ -5,6 +5,7 @@ package com.strandls.observation.service.Impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -141,6 +142,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured);
+				observation.setVisitCount(observation.getVisitCount() + 1);
+				observationDao.update(observation);
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
@@ -155,10 +158,13 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
+			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
-			RecoCreate recoCreate = observationHelper.createRecoMapping(observationData);
-			Long maxVotedReco = recoService.createRecoVote(userId, observation.getId(), recoCreate);
+			if (!(observationData.getHelpIdentified())) {
+				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
+				maxVotedReco = recoService.createRecoVote(userId, observation.getId(), recoCreate);
+			}
 
 			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData);
 			resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
@@ -180,17 +186,25 @@ public class ObservationServiceImpl implements ObservationService {
 			Integer noOfAudio = 0;
 			Integer noOfVideo = 0;
 
+			Long reprImage = resources.get(0).getId();
+			int rating = 0;
 			for (Resource res : resources) {
 				if (res.getType().equals("AUDIO"))
 					noOfAudio++;
-				else if (res.getType().equals("IMAGE"))
+				else if (res.getType().equals("IMAGE")) {
 					noOfImages++;
-				else if (res.getType().equals("VIDEO"))
+					if (res.getRating() > rating) {
+						reprImage = res.getId();
+						rating = res.getRating();
+					}
+				} else if (res.getType().equals("VIDEO"))
 					noOfVideo++;
+
 			}
 			observation.setNoOfAudio(noOfAudio);
 			observation.setNoOfImages(noOfImages);
 			observation.setNoOfVideos(noOfVideo);
+			observation.setReprImageId(reprImage);
 
 			observationDao.update(observation);
 
@@ -202,6 +216,26 @@ public class ObservationServiceImpl implements ObservationService {
 
 		return null;
 
+	}
+
+	@Override
+	public Long updateSGroup(Long observationId, Long sGroupId) {
+		Observation observation = observationDao.findById(observationId);
+		observation.setGroupId(sGroupId);
+		observation.setLastRevised(new Date());
+		observation = observationDao.update(observation);
+		return observation.getGroupId();
+	}
+
+	@Override
+	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
+		Observation observation = observationDao.findById(observationId);
+		if (observation.getMaxVotedRecoId() != maxVotedReco) {
+			observation.setMaxVotedRecoId(maxVotedReco);
+			observationDao.update(observation);
+			return maxVotedReco;
+		}
+		return observation.getMaxVotedRecoId();
 	}
 
 }

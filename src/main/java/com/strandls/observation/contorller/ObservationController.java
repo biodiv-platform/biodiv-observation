@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -105,6 +106,29 @@ public class ObservationController {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.SPECIESGROUP + "/{observationId}/{sGroupId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Update the Species group of the observation", notes = "Returns the updated Species group id", response = Long.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to update the Species Group", response = String.class) })
+
+	public Response updateSGroup(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@PathParam("sGroupId") String sGroupId) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			Long sGroup = Long.parseLong(sGroupId);
+
+			Long result = observationSerices.updateSGroup(obvId, sGroup);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 }

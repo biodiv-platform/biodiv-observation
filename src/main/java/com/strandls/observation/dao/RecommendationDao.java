@@ -117,4 +117,23 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		return resultList;
 	}
 
+	@SuppressWarnings("unchecked")
+	public Recommendation findByRecoName(String name, Boolean isScientific) {
+		String qry = "from Recommendation where name = :name and isScientificName = :isScientific";
+		Session session = sessionFactory.openSession();
+		Recommendation result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("name", name);
+			query.setParameter("isScientific", isScientific);
+			result = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+
+	}
+
 }

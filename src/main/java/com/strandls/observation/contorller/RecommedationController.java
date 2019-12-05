@@ -5,23 +5,37 @@ package com.strandls.observation.contorller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.google.inject.Inject;
+import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.service.Impl.ObservationMapperHelper;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -36,6 +50,12 @@ public class RecommedationController {
 
 	@Inject
 	private RecommendationService recoService;
+
+	@Inject
+	private ObservationService observationService;
+
+	@Inject
+	private ObservationMapperHelper observaitonHelper;
 
 	@GET
 	@Path(ApiConstants.RECOVOTE + ApiConstants.IBP + "/{recoVoteId}")
@@ -54,6 +74,78 @@ public class RecommedationController {
 			return Response.status(Status.OK).entity(recoIbp).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.CREATE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Create Reco Vote for a observation", notes = "Returns the RecoVote", response = RecoIbp.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to make a database transaction", response = String.class) })
+
+	public Response createRecoVote(@Context HttpServletRequest request,
+			@PathParam("observationId") String observaitonId, @ApiParam(name = "recoData") RecoData recoData) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long obserId = Long.parseLong(observaitonId);
+			Long userId = Long.parseLong(profile.getId());
+			RecoCreate recoCreate = observaitonHelper.createRecoMapping(recoData);
+			Long maxVotedReco = recoService.createRecoVote(userId, obserId, recoCreate);
+			Long finalMaxVotedReco = observationService.updateMaxVotedReco(obserId, maxVotedReco);
+			RecoIbp result = recoService.fetchRecoName(obserId, finalMaxVotedReco);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.REMOVE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ValidateUser
+	@ApiOperation(value = "Removes a reco Vote", notes = "Return the new RecoVote", response = RecoIbp.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to remove the RecoVote", response = String.class) })
+
+	public Response RemoveRecoVote(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId, @ApiParam(name = "recoSet") RecoSet recoSet) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observationId);
+			RecoIbp result = recoService.removeRecoVote(obvId, userId, recoSet);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.AGREE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Agrees on a recoVote", notes = "Returns the New maxVotedReco Details", response = RecoIbp.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to create a recoVote", response = String.class) })
+
+	public Response agree(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@ApiParam(name = "recoSet") RecoSet recoSet) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			RecoIbp result = recoService.agreeRecoVote(obvId, userId, recoSet);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 

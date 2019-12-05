@@ -25,16 +25,12 @@ public class ObservationCreate {
 	private Date createdOn;
 	private Date fromDate;
 	private Date toDate;
-	private String taxonCommonName;
-	private Long scientificNameTaxonId;
-	private String taxonScientificName;
-	private String recoComment;
-	private String confidence;
+	private RecoData recoData;
 	private String dateAccuracy;
 	private Date observedOn;
-	private Long languageId;
 	private String protocol;
 	private String basisOfRecords;
+	private Long obsvLanguageId;
 
 //	-----Location Data--------
 	private String observedAt;
@@ -101,44 +97,12 @@ public class ObservationCreate {
 		this.toDate = toDate;
 	}
 
-	public String getTaxonCommonName() {
-		return taxonCommonName;
+	public RecoData getRecoData() {
+		return recoData;
 	}
 
-	public void setTaxonCommonName(String taxonCommonName) {
-		this.taxonCommonName = taxonCommonName;
-	}
-
-	public Long getScientificNameTaxonId() {
-		return scientificNameTaxonId;
-	}
-
-	public void setScientificNameTaxonId(Long scientificNameTaxonId) {
-		this.scientificNameTaxonId = scientificNameTaxonId;
-	}
-
-	public String getTaxonScientificName() {
-		return taxonScientificName;
-	}
-
-	public void setTaxonScientificName(String taxonScientificName) {
-		this.taxonScientificName = taxonScientificName;
-	}
-
-	public String getRecoComment() {
-		return recoComment;
-	}
-
-	public void setRecoComment(String recoComment) {
-		this.recoComment = recoComment;
-	}
-
-	public String getConfidence() {
-		return confidence;
-	}
-
-	public void setConfidence(String confidence) {
-		this.confidence = confidence;
+	public void setRecoData(RecoData recoData) {
+		this.recoData = recoData;
 	}
 
 	public String getDateAccuracy() {
@@ -157,14 +121,6 @@ public class ObservationCreate {
 		this.observedOn = observedOn;
 	}
 
-	public Long getLanguageId() {
-		return languageId;
-	}
-
-	public void setLanguageId(Long languageId) {
-		this.languageId = languageId;
-	}
-
 	public String getProtocol() {
 		return protocol;
 	}
@@ -179,6 +135,14 @@ public class ObservationCreate {
 
 	public void setBasisOfRecords(String basisOfRecords) {
 		this.basisOfRecords = basisOfRecords;
+	}
+
+	public Long getObsvLanguageId() {
+		return obsvLanguageId;
+	}
+
+	public void setObsvLanguageId(Long obsvLanguageId) {
+		this.obsvLanguageId = obsvLanguageId;
 	}
 
 	public String getObservedAt() {

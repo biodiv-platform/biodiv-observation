@@ -21,6 +21,7 @@ import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.resource.pojo.Resource;
@@ -93,7 +94,7 @@ public class ObservationMapperHelper {
 										// group
 		observation.setIsLocked(false);// update field , initially false
 		observation.setLicenseId(822L);// default 822
-		observation.setLanguageId(observationData.getLanguageId());
+		observation.setLanguageId(observationData.getObsvLanguageId());
 		observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
 		observation.setReprImageId(null);
@@ -132,29 +133,29 @@ public class ObservationMapperHelper {
 
 	}
 
-	public RecoCreate createRecoMapping(ObservationCreate observationData) {
+	public RecoCreate createRecoMapping(RecoData recoData) {
 		Long commonNameId = null;
-		String commonName = observationData.getTaxonCommonName();
+		String commonName = recoData.getTaxonCommonName();
 		Long scientificNameId = null;
-		String scientificName = observationData.getTaxonScientificName();
+		String scientificName = recoData.getTaxonScientificName();
 		Map<String, Long> scientificResult = new HashMap<String, Long>();
 
-		if (observationData.getScientificNameTaxonId() != null && scientificName != null) {
-			scientificResult = scientificNameExists(observationData.getScientificNameTaxonId());
-		} else if (observationData.getScientificNameTaxonId() == null && scientificName != null) {
+		if (recoData.getScientificNameTaxonId() != null && scientificName != null) {
+			scientificResult = scientificNameExists(recoData.getScientificNameTaxonId());
+		} else if (recoData.getScientificNameTaxonId() == null && scientificName != null) {
 			scientificResult = scientificNameNotExists(scientificName);
 		}
 
 		if (commonName != null) {
-			commonNameId = commonNameMapper(commonName, observationData.getLanguageId());
+			commonNameId = commonNameMapper(commonName, recoData.getLanguageId());
 		}
 
 		if (scientificResult != null)
 			scientificNameId = scientificResult.get("recoId");
 
 		RecoCreate recoCreate = new RecoCreate();
-		recoCreate.setConfidence(observationData.getConfidence());
-		recoCreate.setRecoComment(observationData.getRecoComment());
+		recoCreate.setConfidence(recoData.getConfidence());
+		recoCreate.setRecoComment(recoData.getRecoComment());
 		recoCreate.setCommonName(commonName);
 		recoCreate.setCommonNameId(commonNameId);
 		recoCreate.setScientificName(scientificName);

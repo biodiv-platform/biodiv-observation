@@ -102,4 +102,40 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		return recoVoteList;
 	}
 
+	@SuppressWarnings("unchecked")
+	public RecommendationVote findRecoVoteIdByRecoId(Long observaitonId, Long userId, Long scientificNameId,
+			Long commonNameId) {
+		String qry = "from RecommendaitonVote where observationId = :observationId ";
+		if (userId != null)
+			qry = qry.concat("and authorId = :userId ");
+
+		if (scientificNameId != null && commonNameId != null)
+			qry = qry.concat("and recommendationId = :scientificNameId and commonNameRecoId = :commonNameId");
+		else if (scientificNameId != null) {
+			qry = qry.concat("and recommendationId = :scientificNameId");
+		} else {
+			qry = qry.concat("and recommendationId = :commonNameId and commonNameRecoId = :commonNameId");
+		}
+
+		RecommendationVote result = null;
+		Session session = sessionFactory.openSession();
+		try {
+			Query<RecommendationVote> query = session.createQuery(qry);
+			query.setParameter("observationId", observaitonId);
+			if (userId != null)
+				query.setParameter("userId", userId);
+			if (scientificNameId != null)
+				query.setParameter("scientificNameId", scientificNameId);
+			if (commonNameId != null)
+				query.setParameter("commonNameId", commonNameId);
+
+			result = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
 }

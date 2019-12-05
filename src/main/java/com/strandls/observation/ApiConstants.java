@@ -18,12 +18,16 @@ public class ApiConstants {
 	public static final String SHOW = "/show";
 	public static final String PING = "/ping";
 	public static final String CREATE = "/create";
+	public static final String SPECIESGROUP = "/speciesgroup";
+	public static final String AGREE = "/agree";
+	public static final String DISAGREE = "/disagree";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
 	public static final String RECOVOTE = "/recovote";
 	public static final String IBP = "/ibp";
 	public static final String CANONICAL = "/canonical";
+	public static final String REMOVE = "/remove";
 
 	// Observation List Controller
 	public static final String LIST = "/list";

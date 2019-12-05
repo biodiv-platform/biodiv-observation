@@ -18,9 +18,11 @@ import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
@@ -35,6 +37,9 @@ import com.strandls.utility.pojo.ParsedName;
 public class RecommendationServiceImpl implements RecommendationService {
 
 	private final Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
+
+	@Inject
+	private ObservationService observaitonService;
 
 	@Inject
 	private RecommendationVoteDao recoVoteDao;
@@ -277,6 +282,49 @@ public class RecommendationServiceImpl implements RecommendationService {
 			System.out.println("ALL Reco updated");
 		return errorList;
 
+	}
+
+	@Override
+	public RecoIbp removeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+		Recommendation scientificNameReco = null;
+		Recommendation commonNameReco = null;
+		if (recoSet.getScientificName() != null)
+			scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+		if (recoSet.getCommonName() != null)
+			commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
+				scientificNameReco.getId(), commonNameReco.getId());
+		if (recoVote != null) {
+			recoVoteDao.delete(recoVote);
+		}
+		Long maxRecoVote = maxRecoVote(observationId);
+		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+		RecoIbp result = fetchRecoName(observationId, newMaxRecoVote);
+		return result;
+
+	}
+
+	@Override
+	public RecoIbp agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+
+		Recommendation scientificNameReco = null;
+		Recommendation commonNameReco = null;
+		if (recoSet.getScientificName() != null)
+			scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+		if (recoSet.getCommonName() != null)
+			commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
+				scientificNameReco.getId(), commonNameReco.getId());
+		if (recoVote != null) {
+			recoVote.setId(null);
+			recoVote.setAuthorId(userId);
+			recoVoteDao.save(recoVote);
+		}
+		Long maxRecoVote = maxRecoVote(observationId);
+		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+		RecoIbp result = fetchRecoName(observationId, newMaxRecoVote);
+
+		return result;
 	}
 
 }

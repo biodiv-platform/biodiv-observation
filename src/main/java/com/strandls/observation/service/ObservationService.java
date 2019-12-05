@@ -18,4 +18,8 @@ public interface ObservationService {
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
 
+	public Long updateSGroup(Long observationId, Long sGroupId);
+
+	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco);
+
 }

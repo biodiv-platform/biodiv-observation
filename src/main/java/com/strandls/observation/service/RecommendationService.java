@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.Recommendation;
 
 /**
@@ -26,4 +27,8 @@ public interface RecommendationService {
 	public Recommendation createRecommendation(String name, String canoncialName, Boolean isScientific);
 
 	public List<Long> updateCanonicalName();
+
+	public RecoIbp removeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+
+	public RecoIbp agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
 }
