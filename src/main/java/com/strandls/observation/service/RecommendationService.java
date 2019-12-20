@@ -31,4 +31,8 @@ public interface RecommendationService {
 	public RecoIbp removeRecoVote(Long observationId, Long userId, RecoSet recoSet);
 
 	public RecoIbp agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+
+	public RecoIbp validateReco(Long observationId, Long userId, RecoSet recoSet);
+
+	public RecoIbp unlockReco(Long observationId, Long userId, RecoSet recoSet);
 }

@@ -14,6 +14,7 @@ import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.pojo.Featured;
 import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.Tags;
 
 /**
  * @author Abhishek Rudra
@@ -37,7 +38,7 @@ public class ShowData implements Serializable {
 	private ObservationInfo esLayerInfo;
 	private RecoIbp recoIbp;
 	private Flag flag;
-	private List<String> tags;
+	private List<Tags> tags;
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
 
@@ -63,8 +64,8 @@ public class ShowData implements Serializable {
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
-			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag,
-			List<String> tags, List<Featured> fetaured, UserIbp authorInfo) {
+			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag, List<Tags> tags,
+			List<Featured> fetaured, UserIbp authorInfo) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -143,11 +144,11 @@ public class ShowData implements Serializable {
 		this.flag = flag;
 	}
 
-	public List<String> getTags() {
+	public List<Tags> getTags() {
 		return tags;
 	}
 
-	public void setTags(List<String> tags) {
+	public void setTags(List<Tags> tags) {
 		this.tags = tags;
 	}
 

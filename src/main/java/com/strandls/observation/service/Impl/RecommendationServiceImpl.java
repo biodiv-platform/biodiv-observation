@@ -14,8 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
@@ -40,6 +42,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Inject
 	private ObservationService observaitonService;
+
+	@Inject
+	private ObservationDAO observationDao;
 
 	@Inject
 	private RecommendationVoteDao recoVoteDao;
@@ -82,7 +87,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				scientificName = scientificName + " " + recoCommon.getName();
 			}
 
-			ibpData = new RecoIbp(givenName, scientificName, speciesId, null, null, null);
+			ibpData = new RecoIbp(givenName, scientificName, null, speciesId, null, null, null);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -97,6 +102,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Long speciesId = null;
 		String commonName = "";
 		String scientificName = "";
+		Long taxonId = null;
 		List<BreadCrumb> breadCrumb = null;
 		String status = null;
 
@@ -109,6 +115,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 				speciesId = taxonomyDefinition.getSpeciesId();
+				taxonId = reco.getTaxonConceptId();
 				breadCrumb = taxonomyService.getTaxonomyBreadCrumb(reco.getTaxonConceptId().toString());
 				scientificName = taxonomyDefinition.getNormalizedForm();
 				status = taxonomyDefinition.getStatus();
@@ -125,7 +132,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			if (!(commonName.isEmpty()))
 				commonName = commonName.substring(0, commonName.length() - 2);
 
-			return new RecoIbp(commonName, scientificName, speciesId, breadCrumb, recoVoteCount, status);
+			return new RecoIbp(commonName, scientificName, taxonId, speciesId, breadCrumb, recoVoteCount, status);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -334,6 +341,62 @@ public class RecommendationServiceImpl implements RecommendationService {
 		RecoIbp result = fetchRecoName(observationId, newMaxRecoVote);
 
 		return result;
+	}
+
+	@Override
+	public RecoIbp validateReco(Long observationId, Long userId, RecoSet recoSet) {
+
+		try {
+			Recommendation scientificNameReco = null;
+			Recommendation commonNameReco = null;
+			if (recoSet.getScientificName() != null)
+				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+			if (recoSet.getCommonName() != null)
+				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+			if (taxonomyService.getValidatePermission(scientificNameReco.getTaxonConceptId().toString())) {
+
+				RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
+						scientificNameReco.getId(), commonNameReco.getId());
+				Long maxVotedReco = recoVote.getRecommendationId();
+				Observation observation = observationDao.findById(observationId);
+				observation.setIsLocked(true);
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observation.setLastRevised(new Date());
+				observationDao.update(observation);
+				RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+				return result;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
+	public RecoIbp unlockReco(Long observationId, Long userId, RecoSet recoSet) {
+
+		try {
+			Recommendation scientificNameReco = null;
+			if (recoSet.getScientificName() != null)
+				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+			if (taxonomyService.getValidatePermission(scientificNameReco.getTaxonConceptId().toString())) {
+
+				Long maxVotedReco = maxRecoVote(observationId);
+				Observation observation = observationDao.findById(observationId);
+				observation.setIsLocked(false);
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observation.setLastRevised(new Date());
+				observationDao.update(observation);
+				RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+				return result;
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 
 }

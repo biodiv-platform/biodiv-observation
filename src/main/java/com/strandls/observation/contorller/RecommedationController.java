@@ -166,4 +166,51 @@ public class RecommedationController {
 		}
 	}
 
+	@POST
+	@Path(ApiConstants.VALIDATE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Validates a Observation", notes = "Returns the maxVotedReco", response = RecoIbp.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to lock a Observation", response = String.class) })
+
+	public Response validateReco(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@ApiParam(name = "recoSet") RecoSet recoSet) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observationId);
+			RecoIbp result = recoService.validateReco(obvId, userId, recoSet);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@PUT
+	@Path(ApiConstants.UNLOCK + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Unlocks a Observation", notes = "Returns the new MaxVotedReco", response = RecoIbp.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to unloack a observation", response = String.class) })
+
+	public Response unlockReco(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@ApiParam(name = "recoSet") RecoSet recoSet) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observationId);
+			RecoIbp result = recoService.unlockReco(obvId, userId, recoSet);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 }

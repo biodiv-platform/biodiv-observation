@@ -42,6 +42,7 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Featured;
 import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
 
 /**
@@ -101,7 +102,7 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
 		Flag flag;
-		List<String> tags;
+		List<Tags> tags;
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		Observation observation = observationDao.findById(id);
@@ -240,6 +241,7 @@ public class ObservationServiceImpl implements ObservationService {
 		Observation observation = observationDao.findById(observationId);
 		if (observation.getMaxVotedRecoId() != maxVotedReco) {
 			observation.setMaxVotedRecoId(maxVotedReco);
+			observation.setLastRevised(new Date());
 			observationDao.update(observation);
 			return maxVotedReco;
 		}
