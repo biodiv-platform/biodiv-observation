@@ -105,7 +105,7 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 	@SuppressWarnings("unchecked")
 	public RecommendationVote findRecoVoteIdByRecoId(Long observaitonId, Long userId, Long scientificNameId,
 			Long commonNameId) {
-		String qry = "from RecommendaitonVote where observationId = :observationId ";
+		String qry = "from RecommendationVote where observationId = :observationId ";
 		if (userId != null)
 			qry = qry.concat("and authorId = :userId ");
 
@@ -113,7 +113,7 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			qry = qry.concat("and recommendationId = :scientificNameId and commonNameRecoId = :commonNameId");
 		else if (scientificNameId != null) {
 			qry = qry.concat("and recommendationId = :scientificNameId");
-		} else {
+		} else if (commonNameId != null) {
 			qry = qry.concat("and recommendationId = :commonNameId and commonNameRecoId = :commonNameId");
 		}
 
