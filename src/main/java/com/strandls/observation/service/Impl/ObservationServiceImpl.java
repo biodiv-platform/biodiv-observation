@@ -105,6 +105,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Tags> tags;
 		List<Featured> fetaured;
 		UserIbp userInfo;
+		List<RecoIbp> allRecoVotes = null;
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
@@ -124,6 +125,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				if (observation.getMaxVotedRecoId() != null) {
+					allRecoVotes = recoService.allRecoVote(id);
 					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 					if (taxonId != null) {
 
@@ -149,7 +151,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, allRecoVotes);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);

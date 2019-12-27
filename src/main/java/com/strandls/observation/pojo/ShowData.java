@@ -41,6 +41,7 @@ public class ShowData implements Serializable {
 	private List<Tags> tags;
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
+	private List<RecoIbp> allRecoVotes;
 
 	/**
 	 * 
@@ -61,11 +62,12 @@ public class ShowData implements Serializable {
 	 * @param tags
 	 * @param fetaured
 	 * @param authorInfo
+	 * @param allRecoVotes
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag, List<Tags> tags,
-			List<Featured> fetaured, UserIbp authorInfo) {
+			List<Featured> fetaured, UserIbp authorInfo, List<RecoIbp> allRecoVotes) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -78,6 +80,7 @@ public class ShowData implements Serializable {
 		this.tags = tags;
 		this.fetaured = fetaured;
 		this.authorInfo = authorInfo;
+		this.allRecoVotes = allRecoVotes;
 	}
 
 	public Observation getObservation() {
@@ -166,6 +169,14 @@ public class ShowData implements Serializable {
 
 	public void setAuthorInfo(UserIbp authorInfo) {
 		this.authorInfo = authorInfo;
+	}
+
+	public List<RecoIbp> getAllRecoVotes() {
+		return allRecoVotes;
+	}
+
+	public void setAllRecoVotes(List<RecoIbp> allRecoVotes) {
+		this.allRecoVotes = allRecoVotes;
 	}
 
 }

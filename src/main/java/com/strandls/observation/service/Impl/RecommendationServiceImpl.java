@@ -29,6 +29,8 @@ import com.strandls.observation.service.RecommendationService;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.UserIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 
@@ -58,6 +60,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Inject
 	private UtilityServiceApi utilityService;
 
+	@Inject
+	private UserServiceApi userService;
+
 	@Override
 	public RecoIbp fetchRecoVote(Long id) {
 
@@ -67,6 +72,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 		RecoIbp ibpData = null;
 		RecommendationVote recoVote = recoVoteDao.findById(id);
 
+		if (recoVote == null)
+			return null;
 		if (recoVote.getGivenSciName() != null)
 			givenName = givenName + " " + recoVote.getGivenSciName();
 		if (recoVote.getGivenCommonName() != null)
@@ -87,7 +94,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 				scientificName = scientificName + " " + recoCommon.getName();
 			}
 
-			ibpData = new RecoIbp(givenName, scientificName, null, speciesId, null, null, null);
+			UserIbp user = userService.getUserIbp(recoVote.getAuthorId().toString());
+
+			ibpData = new RecoIbp(givenName, scientificName, null, speciesId, null, null, null, user);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -132,7 +141,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			if (!(commonName.isEmpty()))
 				commonName = commonName.substring(0, commonName.length() - 2);
 
-			return new RecoIbp(commonName, scientificName, taxonId, speciesId, breadCrumb, recoVoteCount, status);
+			return new RecoIbp(commonName, scientificName, taxonId, speciesId, breadCrumb, recoVoteCount, status, null);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -397,6 +406,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<RecoIbp> allRecoVote(Long observationId) {
+		List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
+		List<RecoIbp> allRecoVotes = new ArrayList<RecoIbp>();
+		for (RecommendationVote recoVote : recoVoteList) {
+			allRecoVotes.add(fetchRecoVote(recoVote.getId()));
+		}
+		return allRecoVotes;
 	}
 
 }

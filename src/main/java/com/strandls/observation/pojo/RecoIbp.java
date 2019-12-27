@@ -6,6 +6,7 @@ package com.strandls.observation.pojo;
 import java.util.List;
 
 import com.strandls.taxonomy.pojo.BreadCrumb;
+import com.strandls.user.pojo.UserIbp;
 
 /**
  * @author Abhishek Rudra
@@ -20,6 +21,7 @@ public class RecoIbp {
 	private List<BreadCrumb> breadCrumbs;
 	private Integer recoVoteCount;
 	private String status;
+	private UserIbp userIbp;
 
 	/**
 	 * 
@@ -36,9 +38,10 @@ public class RecoIbp {
 	 * @param breadCrumbs
 	 * @param recoVoteCount
 	 * @param status
+	 * @param userIbp
 	 */
 	public RecoIbp(String commonName, String scientificName, Long taxonId, Long speciesId, List<BreadCrumb> breadCrumbs,
-			Integer recoVoteCount, String status) {
+			Integer recoVoteCount, String status, UserIbp userIbp) {
 		super();
 		this.commonName = commonName;
 		this.scientificName = scientificName;
@@ -47,6 +50,7 @@ public class RecoIbp {
 		this.breadCrumbs = breadCrumbs;
 		this.recoVoteCount = recoVoteCount;
 		this.status = status;
+		this.userIbp = userIbp;
 	}
 
 	public String getCommonName() {
@@ -103,6 +107,14 @@ public class RecoIbp {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public UserIbp getUserIbp() {
+		return userIbp;
+	}
+
+	public void setUserIbp(UserIbp userIbp) {
+		this.userIbp = userIbp;
 	}
 
 }
