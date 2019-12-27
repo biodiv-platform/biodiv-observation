@@ -410,12 +410,43 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public List<RecoIbp> allRecoVote(Long observationId) {
-		List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
-		List<RecoIbp> allRecoVotes = new ArrayList<RecoIbp>();
-		for (RecommendationVote recoVote : recoVoteList) {
-			allRecoVotes.add(fetchRecoVote(recoVote.getId()));
+		try {
+			List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
+			List<RecoIbp> allRecoVotes = new ArrayList<RecoIbp>();
+			for (RecommendationVote recoVote : recoVoteList) {
+				Long speciesId = null;
+				String scientificName = "";
+				String commonName = "";
+				UserIbp user = userService.getUserIbp(recoVote.getAuthorId().toString());
+				Recommendation reco = recoDao.findById(recoVote.getRecommendationId());
+				if (reco.getTaxonConceptId() != null) {
+
+					TaxonomyDefinition taxonomyDefinition = taxonomyService
+							.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
+					speciesId = taxonomyDefinition.getSpeciesId();
+					scientificName = taxonomyDefinition.getNormalizedForm();
+
+				} else {
+					scientificName = reco.getName();
+				}
+
+				if (recoVote.getCommonNameRecoId() != null) {
+					commonName = recoDao.findById(recoVote.getCommonNameRecoId()).getName();
+				}
+				if (!(commonName.isEmpty()))
+					commonName = commonName.substring(0, commonName.length() - 2);
+
+				allRecoVotes.add(new RecoIbp(commonName, scientificName, null, speciesId, null, null, null, user));
+
+			}
+			return allRecoVotes;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
-		return allRecoVotes;
+
+		return null;
+
 	}
 
 }
