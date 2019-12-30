@@ -285,7 +285,7 @@ public class ObservationMapperHelper {
 			resource.setRating(null);
 			resource.setUploadTime(new Date());
 			resource.setUploaderId(userId);
-			resource.setContext(null);
+			resource.setContext("OBSERVATION");
 			resource.setLanguageId(205L);
 			resource.setAccessRights(null);
 			resource.setAnnotations(null);
