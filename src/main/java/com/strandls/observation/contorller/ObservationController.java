@@ -213,7 +213,6 @@ public class ObservationController {
 	@Path(ApiConstants.SPECIES + ApiConstants.ALL)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ValidateUser
 	@ApiOperation(value = "Get all the Specie Group", notes = "Returns all the Species Group", response = SpeciesGroup.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to fetch the UserGroup", response = String.class) })
@@ -233,8 +232,6 @@ public class ObservationController {
 	@Path(ApiConstants.LANGUAGE)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ValidateUser
 
 	@ApiOperation(value = "Find all the Languages based on IsDirty field", notes = "Returns all the Languages Details", response = Language.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Languages Not Found", response = String.class) })
