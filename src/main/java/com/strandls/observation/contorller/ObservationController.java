@@ -3,14 +3,18 @@
  */
 package com.strandls.observation.contorller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,6 +27,16 @@ import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.TraitsValue;
+import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.utility.pojo.Featured;
+import com.strandls.utility.pojo.FeaturedCreate;
+import com.strandls.utility.pojo.Language;
+import com.strandls.utility.pojo.Tags;
+import com.strandls.utility.pojo.TagsMapping;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -131,4 +145,181 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.TAGS)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update tags for the observation", notes = "Returns Tags list", response = Tags.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to update the tags", response = String.class) })
+
+	public Response updateTags(@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
+		try {
+			List<Tags> result = observationSerices.updateTags(tagsMapping);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.TRAITS + "/{observationId}/{traitId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Update the specific Trait with values", notes = "Returns all facts", response = FactValuePair.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to Update the Traits", response = String.class) })
+
+	public Response updateTraits(@PathParam("observationId") String observationId, @PathParam("traitId") String traitId,
+			@ApiParam(name = "valueList") List<Long> valueList) {
+		try {
+			List<FactValuePair> result = observationSerices.updateTraits(observationId, traitId, valueList);
+
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.USERGROUP + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Update the UserGroup linked with a observation", notes = "Returns all the current userGroup Linked", response = UserGroupIbp.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to updated the userGroup of Observaiton", response = String.class) })
+
+	public Response updateUserGroup(@PathParam("observationId") String observationId,
+			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
+		try {
+			List<UserGroupIbp> result = observationSerices.updateUserGroup(observationId, userGroupList);
+
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.SPECIES + ApiConstants.ALL)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Get all the Specie Group", notes = "Returns all the Species Group", response = SpeciesGroup.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to fetch the UserGroup", response = String.class) })
+
+	public Response getAllSpecies() {
+		try {
+
+			List<SpeciesGroup> result = observationSerices.getAllSpeciesGroup();
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.LANGUAGE)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Find all the Languages based on IsDirty field", notes = "Returns all the Languages Details", response = Language.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Languages Not Found", response = String.class) })
+
+	public Response getLanguaes(@QueryParam("isDirty") Boolean isDirty) {
+		try {
+			List<Language> result = observationSerices.getLanguages(isDirty);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.FEATURED)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Posting of Featured to a Group", notes = "Returns the Details of Featured", response = Featured.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "Unable to Feature in a Group", response = String.class) })
+
+	public Response createFeatured(@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
+		try {
+			List<Featured> result = observationSerices.createFeatured(featuredCreate);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.UNFEATURED + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "UnFeatures a Object from a UserGroup", notes = "Returns the Current Featured", response = Featured.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 404, message = "Unable to Unfeature", response = String.class) })
+
+	public Response unFeatured(@PathParam("observationId") String observationId,
+			@QueryParam("userGroupList") String userGroupList) {
+		try {
+			List<Featured> result = observationSerices.unFeatured(observationId, userGroupList);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path("/{traitId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Find the value of Traits", notes = "Returns the values of traits based on trait's ID", response = TraitsValue.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the values", response = String.class) })
+
+	public Response getValuesOfTraits(@PathParam("traitId") String traitId) {
+		try {
+			List<TraitsValue> result = observationSerices.getTraitsValue(traitId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.SPECIES + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
+
+	public Response getTraitList(@PathParam("speciesId") String speciesId) {
+		try {
+			List<TraitsValuePair> result = observationSerices.getTraitList(speciesId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }

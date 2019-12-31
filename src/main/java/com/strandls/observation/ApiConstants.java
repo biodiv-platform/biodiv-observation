@@ -20,6 +20,15 @@ public class ApiConstants {
 	public static final String CREATE = "/create";
 	public static final String SPECIESGROUP = "/speciesgroup";
 	public static final String AGREE = "/agree";
+	public static final String UPDATE = "/update";
+	public static final String TAGS = "/tags";
+	public static final String TRAITS = "/traits";
+	public static final String USERGROUP = "/usergroup";
+	public static final String ALL = "/all";
+	public static final String SPECIES = "/species";
+	public static final String LANGUAGE = "/language";
+	public static final String FEATURED = "/featured";
+	public static final String UNFEATURED = "/unfeatured";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

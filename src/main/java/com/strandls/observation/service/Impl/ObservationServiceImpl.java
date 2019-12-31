@@ -32,16 +32,22 @@ import com.strandls.observation.service.ObservationService;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.Facts;
+import com.strandls.traits.pojo.TraitsValue;
+import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Featured;
+import com.strandls.utility.pojo.FeaturedCreate;
 import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
 
@@ -58,6 +64,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private TraitsServiceApi traitService;
+
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
 
 	@Inject
 	private ResourceServicesApi resourceService;
@@ -248,6 +257,113 @@ public class ObservationServiceImpl implements ObservationService {
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
+	}
+
+	@Override
+	public List<Tags> updateTags(TagsMapping tagsMapping) {
+		List<Tags> result = null;
+		try {
+			result = utilityServices.updateTags("observation", tagsMapping);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<FactValuePair> updateTraits(String observationId, String traitId, List<Long> valueList) {
+
+		List<FactValuePair> facts = null;
+		try {
+			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId, valueList);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return facts;
+	}
+
+	@Override
+	public List<UserGroupIbp> updateUserGroup(String observationId, List<Long> userGroupList) {
+
+		List<UserGroupIbp> result = null;
+		try {
+			result = userGroupService.updateUserGroupMapping(observationId, userGroupList);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return result;
+	}
+
+	@Override
+	public List<SpeciesGroup> getAllSpeciesGroup() {
+
+		List<SpeciesGroup> result = null;
+		try {
+			result = taxonomyService.getAllSpeciesGroup();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<Language> getLanguages(Boolean isDirty) {
+
+		List<Language> result = null;
+		try {
+			result = utilityServices.getAllLanguages(isDirty);
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<Featured> createFeatured(FeaturedCreate featuredCreate) {
+		List<Featured> result = null;
+
+		try {
+			result = utilityServices.createFeatured(featuredCreate);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<Featured> unFeatured(String observaitonId, String userGroupList) {
+		List<Featured> result = null;
+		try {
+			result = utilityServices.unFeatured("observation", observaitonId, userGroupList);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<TraitsValue> getTraitsValue(String traitId) {
+		List<TraitsValue> result = null;
+		try {
+			result = traitService.getTraitsValue(traitId);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<TraitsValuePair> getTraitList(String speciesId) {
+
+		List<TraitsValuePair> result = null;
+		try {
+			result = traitService.getTraitList(speciesId);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
 	}
 
 }
