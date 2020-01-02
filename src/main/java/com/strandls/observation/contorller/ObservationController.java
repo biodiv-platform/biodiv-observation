@@ -156,7 +156,8 @@ public class ObservationController {
 	@ApiOperation(value = "update tags for the observation", notes = "Returns Tags list", response = Tags.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to update the tags", response = String.class) })
 
-	public Response updateTags(@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
+	public Response updateTags(@Context HttpServletRequest request,
+			@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
 		try {
 			List<Tags> result = observationSerices.updateTags(tagsMapping);
 			return Response.status(Status.OK).entity(result).build();
@@ -176,8 +177,8 @@ public class ObservationController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to Update the Traits", response = String.class) })
 
-	public Response updateTraits(@PathParam("observationId") String observationId, @PathParam("traitId") String traitId,
-			@ApiParam(name = "valueList") List<Long> valueList) {
+	public Response updateTraits(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@PathParam("traitId") String traitId, @ApiParam(name = "valueList") List<Long> valueList) {
 		try {
 			List<FactValuePair> result = observationSerices.updateTraits(observationId, traitId, valueList);
 
@@ -198,7 +199,8 @@ public class ObservationController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to updated the userGroup of Observaiton", response = String.class) })
 
-	public Response updateUserGroup(@PathParam("observationId") String observationId,
+	public Response updateUserGroup(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			List<UserGroupIbp> result = observationSerices.updateUserGroup(observationId, userGroupList);
@@ -255,7 +257,8 @@ public class ObservationController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Unable to Feature in a Group", response = String.class) })
 
-	public Response createFeatured(@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
+	public Response createFeatured(@Context HttpServletRequest request,
+			@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
 		try {
 			List<Featured> result = observationSerices.createFeatured(featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
@@ -273,7 +276,7 @@ public class ObservationController {
 	@ApiOperation(value = "UnFeatures a Object from a UserGroup", notes = "Returns the Current Featured", response = Featured.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 404, message = "Unable to Unfeature", response = String.class) })
 
-	public Response unFeatured(@PathParam("observationId") String observationId,
+	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@QueryParam("userGroupList") String userGroupList) {
 		try {
 			List<Featured> result = observationSerices.unFeatured(observationId, userGroupList);
@@ -284,7 +287,7 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path("/{traitId}")
+	@Path(ApiConstants.TRAITS + "/{traitId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -293,7 +296,7 @@ public class ObservationController {
 	@ApiOperation(value = "Find the value of Traits", notes = "Returns the values of traits based on trait's ID", response = TraitsValue.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the values", response = String.class) })
 
-	public Response getValuesOfTraits(@PathParam("traitId") String traitId) {
+	public Response getValuesOfTraits(@Context HttpServletRequest request, @PathParam("traitId") String traitId) {
 		try {
 			List<TraitsValue> result = observationSerices.getTraitsValue(traitId);
 			return Response.status(Status.OK).entity(result).build();
@@ -310,7 +313,7 @@ public class ObservationController {
 	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
 
-	public Response getTraitList(@PathParam("speciesId") String speciesId) {
+	public Response getTraitList(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 		try {
 			List<TraitsValuePair> result = observationSerices.getTraitList(speciesId);
 			return Response.status(Status.OK).entity(result).build();

@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -104,7 +104,7 @@ public class ObservationMapperHelper {
 		observation.setNoOfAudio(0);
 		observation.setNoOfVideos(0);
 
-		if (observationData.getHelpIdentified() == true)
+		if (observationData.getHelpIdentify() == true)
 			observation.setNoOfIdentifications(0);// initailly 0-1 but can increase with the no of reco vote
 		else
 			observation.setNoOfIdentifications(1);
@@ -269,20 +269,22 @@ public class ObservationMapperHelper {
 
 	public List<Resource> createResourceMapping(Long userId, ObservationCreate observationData) {
 		List<Resource> resources = new ArrayList<Resource>();
-		for (Entry<String, String> entry : observationData.getResources().entrySet()) {
+
+		for (ResourceData resourceData : observationData.getResources()) {
 			Resource resource = new Resource();
 			resource.setVersion(0L);
-			resource.setDescription(null);
-			resource.setFileName(entry.getKey());
+			resource.setDescription(
+					(resourceData.getCaption().trim().length() == 0) ? resourceData.getCaption().trim() : null);
+			resource.setFileName(resourceData.getPath());
 			resource.setMimeType(null);
-			if (entry.getValue().startsWith("image"))
+			if (resourceData.getType().startsWith("image"))
 				resource.setType("IMAGE");
-			else if (entry.getValue().startsWith("audio"))
+			else if (resourceData.getType().startsWith("audio"))
 				resource.setType("AUDIO");
-			else if (entry.getValue().startsWith("video"))
+			else if (resourceData.getType().startsWith("video"))
 				resource.setType("VIDEO");
 			resource.setUrl(null);
-			resource.setRating(null);
+			resource.setRating(resourceData.getRating());
 			resource.setUploadTime(new Date());
 			resource.setUploaderId(userId);
 			resource.setContext("OBSERVATION");
@@ -290,7 +292,7 @@ public class ObservationMapperHelper {
 			resource.setAccessRights(null);
 			resource.setAnnotations(null);
 			resource.setGbifId(null);
-			resource.setLicenseId(822L);
+			resource.setLicenseId(resourceData.getLicenceId());
 
 			resources.add(resource);
 		}

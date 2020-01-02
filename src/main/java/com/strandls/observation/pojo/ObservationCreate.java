@@ -5,7 +5,6 @@ package com.strandls.observation.pojo;
 
 import java.sql.Date;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.strandls.traits.pojo.FactValuePair;
@@ -21,7 +20,7 @@ public class ObservationCreate {
 
 //	----Core Observation Data-------
 	private Long sGroup;
-	private Boolean helpIdentified;
+	private Boolean helpIdentify;
 	private Date createdOn;
 	private Date fromDate;
 	private Date toDate;
@@ -53,8 +52,7 @@ public class ObservationCreate {
 	private List<Long> userGroupId;
 
 //	-----Resource Data--------
-	private Map<String, String> resources;
-
+	private List<ResourceData> resources;
 //	-----GETTERS AND SETTERS----
 
 	public Long getsGroup() {
@@ -65,12 +63,12 @@ public class ObservationCreate {
 		this.sGroup = sGroup;
 	}
 
-	public Boolean getHelpIdentified() {
-		return helpIdentified;
+	public Boolean getHelpIdentify() {
+		return helpIdentify;
 	}
 
-	public void setHelpIdentified(Boolean helpIdentified) {
-		this.helpIdentified = helpIdentified;
+	public void setHelpIdentify(Boolean helpIdentify) {
+		this.helpIdentify = helpIdentify;
 	}
 
 	public Date getCreatedOn() {
@@ -241,11 +239,11 @@ public class ObservationCreate {
 		this.userGroupId = userGroupId;
 	}
 
-	public Map<String, String> getResources() {
+	public List<ResourceData> getResources() {
 		return resources;
 	}
 
-	public void setResources(Map<String, String> resources) {
+	public void setResources(List<ResourceData> resources) {
 		this.resources = resources;
 	}
 

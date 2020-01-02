@@ -181,7 +181,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
-			if (!(observationData.getHelpIdentified())) {
+			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
 				maxVotedReco = recoService.createRecoVote(userId, observation.getId(), recoCreate);
 			}
