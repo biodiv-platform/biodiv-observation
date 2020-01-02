@@ -352,7 +352,7 @@
 							<locations>
 								${location}
 							</locations>
-							<schemes>http,https</schemes>
+							<schemes>http</schemes>
 							<host>localhost:8080</host>
 							<basePath>${base-path}</basePath>
 							<info>

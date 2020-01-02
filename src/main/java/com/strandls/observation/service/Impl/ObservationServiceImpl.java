@@ -42,10 +42,10 @@ import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.pojo.Featured;
+import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
-import com.strandls.utility.pojo.Featured;
-import com.strandls.utility.pojo.FeaturedCreate;
 import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
@@ -126,7 +126,7 @@ public class ObservationServiceImpl implements ObservationService {
 				flag = utilityServices.getFlagByObservation("species.participation.Observation", id.toString());
 				tags = utilityServices.getTags("observation", id.toString());
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
-				fetaured = utilityServices.getAllFeatured("species.participation.Observation", id.toString());
+				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo("observation", "observation",
@@ -325,7 +325,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> result = null;
 
 		try {
-			result = utilityServices.createFeatured(featuredCreate);
+			result = userGroupService.createFeatured(featuredCreate);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -336,7 +336,7 @@ public class ObservationServiceImpl implements ObservationService {
 	public List<Featured> unFeatured(String observaitonId, String userGroupList) {
 		List<Featured> result = null;
 		try {
-			result = utilityServices.unFeatured("observation", observaitonId, userGroupList);
+			result = userGroupService.unFeatured("observation", observaitonId, userGroupList);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

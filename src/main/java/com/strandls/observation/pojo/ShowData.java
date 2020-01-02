@@ -11,8 +11,8 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.utility.pojo.Featured;
 import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.Tags;
 
