@@ -24,7 +24,7 @@ public interface RecommendationService {
 
 	public Long fetchTaxonId(Long maxRecoVoteId);
 
-	public Recommendation createRecommendation(String name, String canoncialName, Boolean isScientific);
+	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific);
 
 	public List<Long> updateCanonicalName();
 

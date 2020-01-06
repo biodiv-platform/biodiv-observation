@@ -8,6 +8,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
@@ -51,5 +52,7 @@ public interface ObservationService {
 	public List<TraitsValue> getTraitsValue(String traitId);
 
 	public List<TraitsValuePair> getTraitList(String speciesId);
+
+	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList);
 
 }

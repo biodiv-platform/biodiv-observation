@@ -267,9 +267,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Recommendation createRecommendation(String name, String canonicalName, Boolean isScientific) {
-		Recommendation reco = new Recommendation(null, new Date(), name, null, isScientific, 205L, name.toLowerCase(),
-				null, false, null, canonicalName);
+	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific) {
+		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific, 205L,
+				name.toLowerCase(), null, false, null, canonicalName);
 
 		Recommendation result = recoDao.save(reco);
 		return result;
@@ -362,19 +362,18 @@ public class RecommendationServiceImpl implements RecommendationService {
 				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
 			if (recoSet.getCommonName() != null)
 				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
-			if (taxonomyService.getValidatePermission(scientificNameReco.getTaxonConceptId().toString())) {
 
-				RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
-						scientificNameReco.getId(), commonNameReco.getId());
-				Long maxVotedReco = recoVote.getRecommendationId();
-				Observation observation = observationDao.findById(observationId);
-				observation.setIsLocked(true);
-				observation.setMaxVotedRecoId(maxVotedReco);
-				observation.setLastRevised(new Date());
-				observationDao.update(observation);
-				RecoIbp result = fetchRecoName(observationId, maxVotedReco);
-				return result;
-			}
+			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
+					scientificNameReco.getId(), commonNameReco.getId());
+			Long maxVotedReco = recoVote.getRecommendationId();
+			Observation observation = observationDao.findById(observationId);
+			observation.setIsLocked(true);
+			observation.setMaxVotedRecoId(maxVotedReco);
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
+			RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+			return result;
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -386,20 +385,15 @@ public class RecommendationServiceImpl implements RecommendationService {
 	public RecoIbp unlockReco(Long observationId, Long userId, RecoSet recoSet) {
 
 		try {
-			Recommendation scientificNameReco = null;
-			if (recoSet.getScientificName() != null)
-				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
-			if (taxonomyService.getValidatePermission(scientificNameReco.getTaxonConceptId().toString())) {
 
-				Long maxVotedReco = maxRecoVote(observationId);
-				Observation observation = observationDao.findById(observationId);
-				observation.setIsLocked(false);
-				observation.setMaxVotedRecoId(maxVotedReco);
-				observation.setLastRevised(new Date());
-				observationDao.update(observation);
-				RecoIbp result = fetchRecoName(observationId, maxVotedReco);
-				return result;
-			}
+			Long maxVotedReco = maxRecoVote(observationId);
+			Observation observation = observationDao.findById(observationId);
+			observation.setIsLocked(false);
+			observation.setMaxVotedRecoId(maxVotedReco);
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
+			RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+			return result;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

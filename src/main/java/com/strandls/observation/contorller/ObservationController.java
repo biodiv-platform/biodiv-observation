@@ -20,10 +20,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.google.inject.Inject;
 import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
@@ -317,6 +321,31 @@ public class ObservationController {
 		try {
 			List<TraitsValuePair> result = observationSerices.getTraitList(speciesId);
 			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.PERMISSIONS + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Find all the user Permission for current observation", notes = "Returns list of permission for validate post and feature in a group", response = ObservationUserPermission.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to fetch the permission", response = String.class) })
+
+	public Response getUserPermissions(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
+			@ApiParam("taxonList") @QueryParam("taxonList") String taxonList) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			ObservationUserPermission result = observationSerices.getUserPermissions(observationId, userId, taxonList);
+
+			return Response.status(Status.OK).entity(result).build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

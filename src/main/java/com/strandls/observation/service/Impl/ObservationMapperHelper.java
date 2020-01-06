@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -49,8 +51,8 @@ public class ObservationMapperHelper {
 	@Inject
 	private UtilityServiceApi utilitySerivce;
 
-//	@Inject
-//	private UtilityServiceApi utilitySerivce;
+	@Inject
+	private EsServicesApi esService;
 
 	public Observation createObservationMapping(Long userId, ObservationCreate observationData) {
 
@@ -141,9 +143,9 @@ public class ObservationMapperHelper {
 		Map<String, Long> scientificResult = new HashMap<String, Long>();
 
 		if (recoData.getScientificNameTaxonId() != null && scientificName != null) {
-			scientificResult = scientificNameExists(recoData.getScientificNameTaxonId());
+			scientificResult = scientificNameExists(recoData);
 		} else if (recoData.getScientificNameTaxonId() == null && scientificName != null) {
-			scientificResult = scientificNameNotExists(scientificName);
+			scientificResult = scientificNameNotExists(recoData);
 		}
 
 		if (commonName != null) {
@@ -170,11 +172,22 @@ public class ObservationMapperHelper {
 	}
 
 //	Scientific name has a taxonId
-	private Map<String, Long> scientificNameExists(Long taxonId) {
+	private Map<String, Long> scientificNameExists(RecoData recoData) {
 		Map<String, Long> result = new HashMap<String, Long>();
-		Recommendation recommendation = recoDao.findRecoByTaxonId(taxonId, true);
-		result.put("recoId", recommendation.getId());
-		result.put("flag", 0L);
+		try {
+			Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
+			if (recommendation == null) {
+				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
+				String canonicalName = parsedName.getCanonicalName().getSimple();
+				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
+						recoData.getScientificNameTaxonId(), canonicalName, true);
+			}
+			result.put("recoId", recommendation.getId());
+			result.put("flag", 0L);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 		return result;
 	}
 
@@ -183,27 +196,36 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, false);
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false);
 
 		return resultCommonName.getId();
 
 	}
 
 //	scientific Name DON'T have a taxonId
-	private Map<String, Long> scientificNameNotExists(String providedSciName) {
+	private Map<String, Long> scientificNameNotExists(RecoData recoData) {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
-			ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
-			String canonicalName = parsedName.getCanonicalName().getSimple();
-			List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
-			if (resultList.isEmpty() || resultList.size() == 1) {
-				if (resultList.isEmpty())
-					resultList.add(recoSerivce.createRecommendation(providedSciName, canonicalName, true));
-				result.put("recoId", resultList.get(0).getId());
-				result.put("flag", 0L);
+			ExtendedTaxonDefinition esResult = esService.matchPhrase("etdi", "er", "name",
+					recoData.getTaxonScientificName());
+			if (esResult != null) {
+				recoData.setScientificNameTaxonId((long) esResult.getId());
+				result = scientificNameExists(recoData);
 			} else {
-				result = taxonIdEqualsAccpetedNameId(resultList, providedSciName);
+				String providedSciName = recoData.getTaxonScientificName();
+				ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
+				String canonicalName = parsedName.getCanonicalName().getSimple();
+				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
+				if (resultList.isEmpty() || resultList.size() == 1) {
+					if (resultList.isEmpty())
+						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+					result.put("recoId", resultList.get(0).getId());
+					result.put("flag", 0L);
+				} else {
+					result = taxonIdEqualsAccpetedNameId(resultList, providedSciName);
+				}
 			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

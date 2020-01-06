@@ -5,6 +5,7 @@ package com.strandls.observation.service.Impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
@@ -34,13 +36,17 @@ import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.taxonomy.pojo.TaxonTree;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.Facts;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.SpeciesPermission;
+import com.strandls.user.pojo.UserGroupMemberRole;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.user.pojo.UserPermissions;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
@@ -364,6 +370,58 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList) {
+		try {
+			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
+			List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+			UserPermissions userPermission = userService.getAllUserPermission();
+			List<Long> validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+
+			List<Long> userGroupMember = new ArrayList<Long>();
+			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+				userGroupMember.add(userMemberRole.getUserGroupId());
+			}
+			String s = userGroupMember.toString();
+			List<UserGroupIbp> allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
+
+			List<Long> userGroupFeatureRole = new ArrayList<Long>();
+			for (UserGroupMemberRole userFeatureRole : userPermission.getUserFeatureRole()) {
+				userGroupFeatureRole.add(userFeatureRole.getUserGroupId());
+			}
+			List<UserGroupIbp> featureableGroup = new ArrayList<UserGroupIbp>();
+			for (UserGroupIbp userGroup : associatedUserGroup) {
+				if (userGroupFeatureRole.contains(userGroup.getId()))
+					featureableGroup.add(userGroup);
+
+			}
+
+			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
+					featureableGroup);
+			return permission;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	private List<Long> ValidatePermission(List<TaxonTree> taxonTrees, List<SpeciesPermission> allowedTaxons) {
+
+		List<Long> validateAllowable = new ArrayList<Long>();
+
+		for (SpeciesPermission allowtaxon : allowedTaxons) {
+			for (TaxonTree taxonTree : taxonTrees) {
+				if (taxonTree.getTaxonList().contains(allowtaxon.getTaxonConceptId())) {
+					if (!(validateAllowable.contains(taxonTree.getTaxonId())))
+						validateAllowable.add(taxonTree.getTaxonId());
+				}
+			}
+		}
+		return validateAllowable;
+
 	}
 
 }
