@@ -351,4 +351,21 @@ public class ObservationController {
 		}
 	}
 
+	@GET
+	@Path(ApiConstants.TAGS + ApiConstants.AUTOCOMPLETE)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Find the Sugguestion for tags", notes = "Return list of Top 10 tags matching the phrase", response = Tags.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the tags", response = String.class) })
+
+	public Response getTagsSuggetion(@QueryParam("phrase") String phrase) {
+		try {
+			List<Tags> result = observationSerices.getTagsSugguestions(phrase);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }

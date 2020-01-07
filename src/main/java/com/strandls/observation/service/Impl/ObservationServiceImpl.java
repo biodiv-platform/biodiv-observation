@@ -424,4 +424,16 @@ public class ObservationServiceImpl implements ObservationService {
 
 	}
 
+	@Override
+	public List<Tags> getTagsSugguestions(String phrase) {
+		try {
+			List<Tags> result = utilityServices.getTagsAutoComplete(phrase);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
 }

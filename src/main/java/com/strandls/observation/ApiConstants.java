@@ -30,6 +30,7 @@ public class ApiConstants {
 	public static final String FEATURED = "/featured";
 	public static final String UNFEATURED = "/unfeatured";
 	public static final String PERMISSIONS = "/permissions";
+	public static final String AUTOCOMPLETE = "/autocomplete";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

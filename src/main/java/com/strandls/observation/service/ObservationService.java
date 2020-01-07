@@ -55,4 +55,6 @@ public interface ObservationService {
 
 	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList);
 
+	public List<Tags> getTagsSugguestions(String phrase);
+
 }
