@@ -53,7 +53,7 @@ import io.swagger.annotations.ApiResponses;
  *
  */
 
-@Api("Observation Show")
+@Api("Observation Service")
 @Path(ApiConstants.V1 + ApiConstants.OBSERVATION)
 public class ObservationController {
 
@@ -313,11 +313,10 @@ public class ObservationController {
 	@Path(ApiConstants.SPECIES + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
 	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
 
-	public Response getTraitList(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
+	public Response getTraitList(@PathParam("speciesId") String speciesId) {
 		try {
 			List<TraitsValuePair> result = observationSerices.getTraitList(speciesId);
 			return Response.status(Status.OK).entity(result).build();
