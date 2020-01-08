@@ -57,4 +57,6 @@ public interface ObservationService {
 
 	public List<Tags> getTagsSugguestions(String phrase);
 
+	public List<UserGroupIbp> getUsersGroupList();
+
 }

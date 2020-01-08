@@ -411,10 +411,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 				Long speciesId = null;
 				String scientificName = "";
 				String commonName = "";
+				Long taxon = null;
 				UserIbp user = userService.getUserIbp(recoVote.getAuthorId().toString());
 				Recommendation reco = recoDao.findById(recoVote.getRecommendationId());
 				if (reco.getTaxonConceptId() != null) {
-
+					taxon = reco.getTaxonConceptId();
 					TaxonomyDefinition taxonomyDefinition = taxonomyService
 							.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 					speciesId = taxonomyDefinition.getSpeciesId();
@@ -430,7 +431,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (!(commonName.isEmpty()))
 					commonName = commonName.substring(0, commonName.length() - 2);
 
-				allRecoVotes.add(new RecoIbp(commonName, scientificName, null, speciesId, null, null, null, user));
+				allRecoVotes.add(new RecoIbp(commonName, scientificName, taxon, speciesId, null, null, null, user));
 
 			}
 			return allRecoVotes;

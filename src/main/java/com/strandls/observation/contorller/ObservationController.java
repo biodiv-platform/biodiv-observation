@@ -367,4 +367,20 @@ public class ObservationController {
 		}
 	}
 
+	@GET
+	@Path(ApiConstants.USERGROUP)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Find all the userGroup Associated with a user", notes = "Returns a List of UserGroup", response = UserGroupIbp.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to get the userGroup", response = String.class) })
+	public Response getUsersGroupList(@Context HttpServletRequest request) {
+		try {
+			List<UserGroupIbp> result = observationSerices.getUsersGroupList();
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 }

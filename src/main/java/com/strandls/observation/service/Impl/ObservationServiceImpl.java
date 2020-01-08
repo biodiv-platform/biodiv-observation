@@ -24,6 +24,7 @@ import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationUserPermission;
@@ -121,6 +122,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
+		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
@@ -141,6 +143,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 				if (observation.getMaxVotedRecoId() != null) {
 					allRecoVotes = recoService.allRecoVote(id);
+					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
+
 					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 					if (taxonId != null) {
 
@@ -166,7 +170,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo, allRecoVotes);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
@@ -176,6 +180,58 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 		}
 		return null;
+	}
+
+	private List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote) {
+		List<AllRecoSugguestions> result = new ArrayList<AllRecoSugguestions>();
+		for (RecoIbp reco : allRecoVote) {
+			int updated = 0;
+			for (AllRecoSugguestions recoSuggestions : result) {
+				if (reco.getTaxonId() != null && recoSuggestions.getTaxonId() != null) {
+					if (reco.getTaxonId() == recoSuggestions.getTaxonId()) {
+						result.remove(recoSuggestions);
+						if (recoSuggestions.getCommonName() == null && reco.getCommonName() != null)
+							recoSuggestions.setCommonName(reco.getCommonName());
+						if (recoSuggestions.getScientificName() == null && reco.getScientificName() != null)
+							recoSuggestions.setScientificName(reco.getScientificName());
+						if (recoSuggestions.getSpeciesId() == null && reco.getSpeciesId() != null)
+							recoSuggestions.setSpeciesId(reco.getSpeciesId());
+						List<UserIbp> userList = recoSuggestions.getUserList();
+						userList.add(reco.getUserIbp());
+						recoSuggestions.setUserList(userList);
+						result.add(recoSuggestions);
+						updated = 1;
+					}
+				} else if (reco.getTaxonId() == null && recoSuggestions.getTaxonId() == null) {
+					if (recoSuggestions.getCommonName().equals(reco.getCommonName())
+							|| recoSuggestions.getScientificName().equals(reco.getScientificName())) {
+						if (recoSuggestions.getCommonName() == null && reco.getCommonName() != null)
+							recoSuggestions.setCommonName(reco.getCommonName());
+						if (recoSuggestions.getScientificName() == null && reco.getScientificName() != null)
+							recoSuggestions.setScientificName(reco.getScientificName());
+						if (recoSuggestions.getSpeciesId() == null && reco.getSpeciesId() != null)
+							recoSuggestions.setSpeciesId(reco.getSpeciesId());
+						List<UserIbp> userList = recoSuggestions.getUserList();
+						userList.add(reco.getUserIbp());
+						recoSuggestions.setUserList(userList);
+						result.add(recoSuggestions);
+						updated = 1;
+
+					}
+				}
+
+			}
+			if (updated == 0) {
+				List<UserIbp> userList = new ArrayList<UserIbp>();
+				userList.add(reco.getUserIbp());
+				AllRecoSugguestions suggestion = new AllRecoSugguestions(reco.getCommonName(), reco.getScientificName(),
+						reco.getTaxonId(), reco.getSpeciesId(), userList);
+				result.add(suggestion);
+			}
+		}
+
+		return result;
+
 	}
 
 	@Override
@@ -433,6 +489,24 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 
+		return null;
+	}
+
+	@Override
+	public List<UserGroupIbp> getUsersGroupList() {
+		try {
+			UserPermissions userPermission = userService.getAllUserPermission();
+			List<Long> userGroupMember = new ArrayList<Long>();
+			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+				userGroupMember.add(userMemberRole.getUserGroupId());
+			}
+			String s = userGroupMember.toString();
+			List<UserGroupIbp> allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
+
+			return allowedUserGroup;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		return null;
 	}
 
