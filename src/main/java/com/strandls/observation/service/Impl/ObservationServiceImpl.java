@@ -188,7 +188,7 @@ public class ObservationServiceImpl implements ObservationService {
 			int updated = 0;
 			for (AllRecoSugguestions recoSuggestions : result) {
 				if (reco.getTaxonId() != null && recoSuggestions.getTaxonId() != null) {
-					if (reco.getTaxonId() == recoSuggestions.getTaxonId()) {
+					if (reco.getTaxonId().equals(recoSuggestions.getTaxonId())) {
 						result.remove(recoSuggestions);
 						if (recoSuggestions.getCommonName() == null && reco.getCommonName() != null)
 							recoSuggestions.setCommonName(reco.getCommonName());
