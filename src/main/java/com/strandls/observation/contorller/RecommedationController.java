@@ -30,6 +30,7 @@ import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
@@ -84,7 +85,7 @@ public class RecommedationController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Create Reco Vote for a observation", notes = "Returns the RecoVote", response = RecoIbp.class)
+	@ApiOperation(value = "Create Reco Vote for a observation", notes = "Returns the RecoVote", response = RecoShow.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to make a database transaction", response = String.class) })
 
@@ -97,7 +98,8 @@ public class RecommedationController {
 			RecoCreate recoCreate = observaitonHelper.createRecoMapping(recoData);
 			Long maxVotedReco = recoService.createRecoVote(userId, obserId, recoCreate);
 			Long finalMaxVotedReco = observationService.updateMaxVotedReco(obserId, maxVotedReco);
-			RecoIbp result = recoService.fetchRecoName(obserId, finalMaxVotedReco);
+			RecoShow result = recoService.fetchCurrentRecoState(obserId, finalMaxVotedReco);
+
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -110,7 +112,7 @@ public class RecommedationController {
 	@Produces(MediaType.TEXT_PLAIN)
 
 	@ValidateUser
-	@ApiOperation(value = "Removes a reco Vote", notes = "Return the new RecoVote", response = RecoIbp.class)
+	@ApiOperation(value = "Removes a reco Vote", notes = "Return the new RecoVote", response = RecoShow.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to remove the RecoVote", response = String.class) })
 
@@ -122,7 +124,7 @@ public class RecommedationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
 			RecoSet recoSet = new RecoSet(commonName, scientificName);
-			RecoIbp result = recoService.removeRecoVote(obvId, userId, recoSet);
+			RecoShow result = recoService.removeRecoVote(obvId, userId, recoSet);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -135,7 +137,7 @@ public class RecommedationController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Agrees on a recoVote", notes = "Returns the New maxVotedReco Details", response = RecoIbp.class)
+	@ApiOperation(value = "Agrees on a recoVote", notes = "Returns the New maxVotedReco Details", response = RecoShow.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to create a recoVote", response = String.class) })
 
@@ -145,7 +147,7 @@ public class RecommedationController {
 			Long obvId = Long.parseLong(observationId);
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			RecoIbp result = recoService.agreeRecoVote(obvId, userId, recoSet);
+			RecoShow result = recoService.agreeRecoVote(obvId, userId, recoSet);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -175,7 +177,7 @@ public class RecommedationController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Validates a Observation", notes = "Returns the maxVotedReco", response = RecoIbp.class)
+	@ApiOperation(value = "Validates a Observation", notes = "Returns the maxVotedReco", response = RecoShow.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to lock a Observation", response = String.class) })
 
@@ -185,7 +187,7 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			RecoIbp result = recoService.validateReco(obvId, userId, recoSet);
+			RecoShow result = recoService.validateReco(obvId, userId, recoSet);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -199,7 +201,7 @@ public class RecommedationController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Unlocks a Observation", notes = "Returns the new MaxVotedReco", response = RecoIbp.class)
+	@ApiOperation(value = "Unlocks a Observation", notes = "Returns the new MaxVotedReco", response = RecoShow.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to unloack a observation", response = String.class) })
 
@@ -210,7 +212,7 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			RecoIbp result = recoService.unlockReco(obvId, userId, recoSet);
+			RecoShow result = recoService.unlockReco(obvId, userId, recoSet);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

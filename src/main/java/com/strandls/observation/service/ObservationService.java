@@ -7,8 +7,10 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationUserPermission;
+import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
@@ -58,5 +60,7 @@ public interface ObservationService {
 	public List<Tags> getTagsSugguestions(String phrase);
 
 	public List<UserGroupIbp> getUsersGroupList();
+
+	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
 
 }

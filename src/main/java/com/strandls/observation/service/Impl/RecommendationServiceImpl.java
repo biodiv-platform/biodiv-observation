@@ -17,10 +17,12 @@ import com.google.inject.Inject;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
@@ -306,7 +308,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoIbp removeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow removeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
 		Recommendation scientificNameReco = null;
 		Recommendation commonNameReco = null;
 		if (recoSet.getScientificName() != null)
@@ -320,13 +322,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		Long maxRecoVote = maxRecoVote(observationId);
 		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-		RecoIbp result = fetchRecoName(observationId, newMaxRecoVote);
+		RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 		return result;
 
 	}
 
 	@Override
-	public RecoIbp agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
 
 		Recommendation scientificNameReco = null;
 		Recommendation commonNameReco = null;
@@ -347,13 +349,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		Long maxRecoVote = maxRecoVote(observationId);
 		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-		RecoIbp result = fetchRecoName(observationId, newMaxRecoVote);
+		RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 
 		return result;
 	}
 
 	@Override
-	public RecoIbp validateReco(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow validateReco(Long observationId, Long userId, RecoSet recoSet) {
 
 		try {
 			Recommendation scientificNameReco = null;
@@ -371,7 +373,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
-			RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+			RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 			return result;
 
 		} catch (Exception e) {
@@ -382,7 +384,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoIbp unlockReco(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet) {
 
 		try {
 
@@ -392,7 +394,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
-			RecoIbp result = fetchRecoName(observationId, maxVotedReco);
+			RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 			return result;
 
 		} catch (Exception e) {
@@ -440,6 +442,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		return null;
 
+	}
+
+	@Override
+	public RecoShow fetchCurrentRecoState(Long observationId, Long maxVotedReco) {
+
+		RecoIbp recoIbp = fetchRecoName(observationId, maxVotedReco);
+		List<RecoIbp> recoVoteList = allRecoVote(observationId);
+		List<AllRecoSugguestions> allReco = observaitonService.aggregateAllRecoSuggestions(recoVoteList);
+		RecoShow recoShow = new RecoShow(recoIbp, allReco);
+		return recoShow;
 	}
 
 }

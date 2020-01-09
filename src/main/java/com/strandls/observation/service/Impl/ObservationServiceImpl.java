@@ -182,7 +182,8 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 	}
 
-	private List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote) {
+	@Override
+	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote) {
 		List<AllRecoSugguestions> result = new ArrayList<AllRecoSugguestions>();
 		for (RecoIbp reco : allRecoVote) {
 			int updated = 0;
@@ -208,6 +209,7 @@ public class ObservationServiceImpl implements ObservationService {
 				} else if (reco.getTaxonId() == null && recoSuggestions.getTaxonId() == null) {
 					if (recoSuggestions.getCommonName().equals(reco.getCommonName())
 							|| recoSuggestions.getScientificName().equals(reco.getScientificName())) {
+						result.remove(recoSuggestions);
 						if (recoSuggestions.getCommonName().trim().length() == 0
 								&& reco.getCommonName().trim().length() != 0)
 							recoSuggestions.setCommonName(reco.getCommonName());

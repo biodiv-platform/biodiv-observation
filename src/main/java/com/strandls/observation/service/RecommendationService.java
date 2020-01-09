@@ -8,6 +8,7 @@ import java.util.List;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
 
 /**
@@ -28,13 +29,15 @@ public interface RecommendationService {
 
 	public List<Long> updateCanonicalName();
 
-	public RecoIbp removeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow removeRecoVote(Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoIbp agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoIbp validateReco(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow validateReco(Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoIbp unlockReco(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet);
 
 	public List<RecoIbp> allRecoVote(Long observationId);
+
+	public RecoShow fetchCurrentRecoState(Long observationId, Long maxVotedReco);
 }
