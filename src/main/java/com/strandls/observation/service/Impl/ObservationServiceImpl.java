@@ -432,9 +432,13 @@ public class ObservationServiceImpl implements ObservationService {
 	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList) {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
-			List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
 			UserPermissions userPermission = userService.getAllUserPermission();
-			List<Long> validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+			List<Long> validateAllowed = null;
+			if (taxonList.trim().length() != 0) {
+				List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+				validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+
+			}
 
 			List<Long> userGroupMember = new ArrayList<Long>();
 			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
