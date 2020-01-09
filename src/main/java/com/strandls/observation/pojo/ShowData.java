@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.traits.pojo.FactValuePair;
@@ -42,6 +43,7 @@ public class ShowData implements Serializable {
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
 	private List<AllRecoSugguestions> allRecoVotes;
+	private List<ObservationNearBy> observationNearBy;
 
 	/**
 	 * 
@@ -63,11 +65,13 @@ public class ShowData implements Serializable {
 	 * @param fetaured
 	 * @param authorInfo
 	 * @param allRecoVotes
+	 * @param observationNearBy
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag, List<Tags> tags,
-			List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes) {
+			List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes,
+			List<ObservationNearBy> observationNearBy) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -81,6 +85,7 @@ public class ShowData implements Serializable {
 		this.fetaured = fetaured;
 		this.authorInfo = authorInfo;
 		this.allRecoVotes = allRecoVotes;
+		this.observationNearBy = observationNearBy;
 	}
 
 	public Observation getObservation() {
@@ -177,6 +182,14 @@ public class ShowData implements Serializable {
 
 	public void setAllRecoVotes(List<AllRecoSugguestions> allRecoVotes) {
 		this.allRecoVotes = allRecoVotes;
+	}
+
+	public List<ObservationNearBy> getObservationNearBy() {
+		return observationNearBy;
+	}
+
+	public void setObservationNearBy(List<ObservationNearBy> observationNearBy) {
+		this.observationNearBy = observationNearBy;
 	}
 
 }

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
@@ -169,8 +170,10 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
+				List<ObservationNearBy> observationNearBy = esService.getNearByObservation("observation", "observation",
+						observation.getLatitude().toString(), observation.getLongitude().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
