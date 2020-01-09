@@ -395,7 +395,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Featured> unFeatured(String observaitonId, String userGroupList) {
+	public List<Featured> unFeatured(String observaitonId, List<Long> userGroupList) {
 		List<Featured> result = null;
 		try {
 			result = userGroupService.unFeatured("observation", observaitonId, userGroupList);

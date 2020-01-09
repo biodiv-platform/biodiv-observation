@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -271,9 +270,9 @@ public class ObservationController {
 		}
 	}
 
-	@DELETE
+	@PUT
 	@Path(ApiConstants.UNFEATURED + "/{observationId}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
@@ -281,7 +280,7 @@ public class ObservationController {
 	@ApiResponses(value = { @ApiResponse(code = 404, message = "Unable to Unfeature", response = String.class) })
 
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@QueryParam("userGroupList") String userGroupList) {
+			@ApiParam("userGroupList") List<Long> userGroupList) {
 		try {
 			List<Featured> result = observationSerices.unFeatured(observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();

@@ -47,7 +47,7 @@ public interface ObservationService {
 
 	public List<Featured> createFeatured(FeaturedCreate featuredCreate);
 
-	public List<Featured> unFeatured(String observaitonId, String userGroupList);
+	public List<Featured> unFeatured(String observaitonId, List<Long> userGroupList);
 
 	public List<TraitsValue> getTraitsValue(String traitId);
 
