@@ -428,8 +428,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (recoVote.getCommonNameRecoId() != null) {
 					commonName = recoDao.findById(recoVote.getCommonNameRecoId()).getName();
 				}
-				if (!(commonName.isEmpty()))
-					commonName = commonName.substring(0, commonName.length() - 2);
 
 				allRecoVotes.add(new RecoIbp(commonName, scientificName, taxon, speciesId, null, null, null, user));
 

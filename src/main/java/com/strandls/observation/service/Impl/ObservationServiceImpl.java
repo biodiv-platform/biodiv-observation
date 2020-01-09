@@ -190,9 +190,11 @@ public class ObservationServiceImpl implements ObservationService {
 				if (reco.getTaxonId() != null && recoSuggestions.getTaxonId() != null) {
 					if (reco.getTaxonId().equals(recoSuggestions.getTaxonId())) {
 						result.remove(recoSuggestions);
-						if (recoSuggestions.getCommonName() == null && reco.getCommonName() != null)
+						if (recoSuggestions.getCommonName().trim().length() == 0
+								&& reco.getCommonName().trim().length() != 0)
 							recoSuggestions.setCommonName(reco.getCommonName());
-						if (recoSuggestions.getScientificName() == null && reco.getScientificName() != null)
+						if (recoSuggestions.getScientificName().trim().length() == 0
+								&& reco.getScientificName().trim().length() != 0)
 							recoSuggestions.setScientificName(reco.getScientificName());
 						if (recoSuggestions.getSpeciesId() == null && reco.getSpeciesId() != null)
 							recoSuggestions.setSpeciesId(reco.getSpeciesId());
@@ -201,13 +203,16 @@ public class ObservationServiceImpl implements ObservationService {
 						recoSuggestions.setUserList(userList);
 						result.add(recoSuggestions);
 						updated = 1;
+						break;
 					}
 				} else if (reco.getTaxonId() == null && recoSuggestions.getTaxonId() == null) {
 					if (recoSuggestions.getCommonName().equals(reco.getCommonName())
 							|| recoSuggestions.getScientificName().equals(reco.getScientificName())) {
-						if (recoSuggestions.getCommonName() == null && reco.getCommonName() != null)
+						if (recoSuggestions.getCommonName().trim().length() == 0
+								&& reco.getCommonName().trim().length() != 0)
 							recoSuggestions.setCommonName(reco.getCommonName());
-						if (recoSuggestions.getScientificName() == null && reco.getScientificName() != null)
+						if (recoSuggestions.getScientificName().trim().length() == 0
+								&& reco.getScientificName().trim().length() != 0)
 							recoSuggestions.setScientificName(reco.getScientificName());
 						if (recoSuggestions.getSpeciesId() == null && reco.getSpeciesId() != null)
 							recoSuggestions.setSpeciesId(reco.getSpeciesId());
@@ -216,6 +221,7 @@ public class ObservationServiceImpl implements ObservationService {
 						recoSuggestions.setUserList(userList);
 						result.add(recoSuggestions);
 						updated = 1;
+						break;
 
 					}
 				}
