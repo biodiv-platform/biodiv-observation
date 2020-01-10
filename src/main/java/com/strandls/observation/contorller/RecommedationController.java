@@ -7,14 +7,12 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -106,10 +104,10 @@ public class RecommedationController {
 		}
 	}
 
-	@DELETE
+	@PUT
 	@Path(ApiConstants.REMOVE + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
 	@ApiOperation(value = "Removes a reco Vote", notes = "Return the new RecoVote", response = RecoShow.class)
@@ -117,13 +115,11 @@ public class RecommedationController {
 			@ApiResponse(code = 400, message = "Unable to remove the RecoVote", response = String.class) })
 
 	public Response RemoveRecoVote(@Context HttpServletRequest request,
-			@PathParam("observationId") String observationId, @QueryParam("commonName") String commonName,
-			@QueryParam("scientificName") String scientificName) {
+			@PathParam("observationId") String observationId, @ApiParam("recoSet") RecoSet recoSet) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			RecoSet recoSet = new RecoSet(commonName, scientificName);
 			RecoShow result = recoService.removeRecoVote(obvId, userId, recoSet);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {

@@ -5,9 +5,9 @@ package com.strandls.observation.pojo;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.utility.pojo.Tags;
 
 /**
@@ -42,7 +42,8 @@ public class ObservationCreate {
 	private Boolean hidePreciseLocation;
 
 //	-----Traits Data---------
-	private List<FactValuePair> facts;
+	private Map<String, List<Long>> facts;
+//	traitId:[valueId list] patter
 
 //	-----Notes and tags-------
 	private String notes;
@@ -207,11 +208,11 @@ public class ObservationCreate {
 		this.hidePreciseLocation = hidePreciseLocation;
 	}
 
-	public List<FactValuePair> getFacts() {
+	public Map<String, List<Long>> getFacts() {
 		return facts;
 	}
 
-	public void setFacts(List<FactValuePair> facts) {
+	public void setFacts(Map<String, List<Long>> facts) {
 		this.facts = facts;
 	}
 
