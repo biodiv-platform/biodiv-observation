@@ -115,6 +115,8 @@ public class ObservationController {
 				throw new ObservationInputException("Observation LOCATION cannot be BLANK");
 			if (observationData.getsGroup() == null)
 				throw new ObservationInputException("Species Group cannot be BLANK");
+			if(observationData.getHidePreciseLocation()==null)
+				throw new ObservationInputException("GeoPrivacy cannot be BLANK");
 
 			ShowData result = observationSerices.createObservation(request, observationData);
 

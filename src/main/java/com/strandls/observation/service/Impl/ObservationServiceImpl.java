@@ -267,10 +267,13 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
 					observationData.getUserGroupId());
-			TagsMapping tagsMapping = new TagsMapping();
-			tagsMapping.setObjectId(observation.getId());
-			tagsMapping.setTags(observationData.getTags());
-			utilityServices.createTags("observation", tagsMapping);
+			if (!(observationData.getTags().isEmpty())) {
+				TagsMapping tagsMapping = new TagsMapping();
+				tagsMapping.setObjectId(observation.getId());
+				tagsMapping.setTags(observationData.getTags());
+				utilityServices.createTags("observation", tagsMapping);
+
+			}
 
 //			update observaiton object
 
