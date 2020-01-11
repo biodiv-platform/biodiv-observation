@@ -129,6 +129,7 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			if (commonNameId != null)
 				query.setParameter("commonNameId", commonNameId);
 
+			query.setMaxResults(1);
 			result = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());

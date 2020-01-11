@@ -121,6 +121,8 @@ public class RecommedationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
 			RecoShow result = recoService.removeRecoVote(obvId, userId, recoSet);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE).entity("Observation is Locked").build();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -144,6 +146,8 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			RecoShow result = recoService.agreeRecoVote(obvId, userId, recoSet);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE).entity("Observation id Locked").build();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -184,6 +188,8 @@ public class RecommedationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
 			RecoShow result = recoService.validateReco(obvId, userId, recoSet);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE).entity("User Not allowed to validate").build();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -209,6 +215,10 @@ public class RecommedationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
 			RecoShow result = recoService.unlockReco(obvId, userId, recoSet);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE)
+						.entity("Observation is Not Locked or User dont have permission").build();
+
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -19,6 +19,7 @@ import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
@@ -309,72 +310,114 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public RecoShow removeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
-		Recommendation scientificNameReco = null;
-		Recommendation commonNameReco = null;
-		if (recoSet.getScientificName() != null)
-			scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
-		if (recoSet.getCommonName() != null)
-			commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
-		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
-				scientificNameReco.getId(), commonNameReco.getId());
-		if (recoVote != null) {
-			recoVoteDao.delete(recoVote);
+
+		Observation observation = observationDao.findById(observationId);
+		if (!(observation.getIsLocked())) {
+			Recommendation scientificNameReco = new Recommendation();
+			Recommendation commonNameReco = new Recommendation();
+
+			if (recoSet.getTaxonId() != null) {
+				scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+			}
+
+			if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
+					&& scientificNameReco.getId() == null)
+				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+			if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
+				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
+					scientificNameReco.getId(), commonNameReco.getId());
+			if (recoVote != null) {
+				recoVoteDao.delete(recoVote);
+			}
+			Long maxRecoVote = maxRecoVote(observationId);
+			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+			return result;
+
 		}
-		Long maxRecoVote = maxRecoVote(observationId);
-		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-		RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
-		return result;
+		return null;
 
 	}
 
 	@Override
 	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
 
-		Recommendation scientificNameReco = null;
-		Recommendation commonNameReco = null;
-		if (recoSet.getScientificName() != null)
-			scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
-		if (recoSet.getCommonName() != null)
-			commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
-		RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
-				scientificNameReco.getId(), commonNameReco.getId());
-		if (recoVote != null) {
-			RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
-			if (previousVote != null) {
-				recoVoteDao.delete(previousVote);
-			}
-			recoVote.setId(null);
-			recoVote.setAuthorId(userId);
-			recoVoteDao.save(recoVote);
-		}
-		Long maxRecoVote = maxRecoVote(observationId);
-		Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-		RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+		Observation observation = observationDao.findById(observationId);
+		if (!(observation.getIsDeleted())) {
+			Recommendation scientificNameReco = new Recommendation();
+			Recommendation commonNameReco = new Recommendation();
 
-		return result;
+			if (recoSet.getTaxonId() != null) {
+				scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+			}
+
+			if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
+					&& scientificNameReco.getId() == null)
+				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+			if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
+				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+
+			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
+					scientificNameReco.getId(), commonNameReco.getId());
+			if (recoVote != null) {
+				RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
+				if (previousVote != null) {
+					recoVoteDao.delete(previousVote);
+				}
+				recoVote.setId(null);
+				recoVote.setAuthorId(userId);
+				recoVoteDao.save(recoVote);
+			}
+			Long maxRecoVote = maxRecoVote(observationId);
+			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+
+			return result;
+
+		}
+		return null;
+
 	}
 
 	@Override
 	public RecoShow validateReco(Long observationId, Long userId, RecoSet recoSet) {
 
 		try {
-			Recommendation scientificNameReco = null;
-			Recommendation commonNameReco = null;
-			if (recoSet.getScientificName() != null)
-				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
-			if (recoSet.getCommonName() != null)
-				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
 
-			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
-					scientificNameReco.getId(), commonNameReco.getId());
-			Long maxVotedReco = recoVote.getRecommendationId();
-			Observation observation = observationDao.findById(observationId);
-			observation.setIsLocked(true);
-			observation.setMaxVotedRecoId(maxVotedReco);
-			observation.setLastRevised(new Date());
-			observationDao.update(observation);
-			RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
-			return result;
+			ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
+					userId, recoSet.getTaxonId().toString());
+			List<Long> permissionList = new ArrayList<Long>();
+			if (permission.getValidatePermissionTaxon() != null)
+				permissionList = permission.getValidatePermissionTaxon();
+
+			if (permissionList.contains(recoSet.getTaxonId())) {
+
+				agreeRecoVote(observationId, userId, recoSet);
+				Recommendation scientificNameReco = new Recommendation();
+				Recommendation commonNameReco = new Recommendation();
+
+				if (recoSet.getTaxonId() != null) {
+					scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+				}
+
+				if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
+						&& scientificNameReco.getId() == null)
+					scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+				if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
+					commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+
+				RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
+						scientificNameReco.getId(), commonNameReco.getId());
+				Long maxVotedReco = recoVote.getRecommendationId();
+				Observation observation = observationDao.findById(observationId);
+				observation.setIsLocked(true);
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observation.setLastRevised(new Date());
+				observationDao.update(observation);
+				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
+				return result;
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -386,21 +429,26 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet) {
 
-		try {
+		Observation observation = observationDao.findById(observationId);
+		if (observation.getIsLocked()) {
 
-			Long maxVotedReco = maxRecoVote(observationId);
-			Observation observation = observationDao.findById(observationId);
-			observation.setIsLocked(false);
-			observation.setMaxVotedRecoId(maxVotedReco);
-			observation.setLastRevised(new Date());
-			observationDao.update(observation);
-			RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
-			return result;
+			ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
+					userId, recoSet.getTaxonId().toString());
+			List<Long> permissionList = new ArrayList<Long>();
+			if (permission.getValidatePermissionTaxon() != null)
+				permissionList = permission.getValidatePermissionTaxon();
 
-		} catch (Exception e) {
-			logger.error(e.getMessage());
+			if (permissionList.contains(recoSet.getTaxonId())) {
+
+				Long maxVotedReco = maxRecoVote(observationId);
+				observation.setIsLocked(false);
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observation.setLastRevised(new Date());
+				observationDao.update(observation);
+				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
+				return result;
+			}
 		}
-
 		return null;
 	}
 
