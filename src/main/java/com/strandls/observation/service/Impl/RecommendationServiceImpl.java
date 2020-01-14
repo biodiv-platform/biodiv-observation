@@ -330,19 +330,42 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
 			Recommendation scientificNameReco = new Recommendation();
-			Recommendation commonNameReco = new Recommendation();
-
+			List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
+			List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
 			if (recoSet.getTaxonId() != null) {
 				scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+				scientificNameRecoList.add(scientificNameReco);
 			}
 
 			if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
 					&& scientificNameReco.getId() == null)
-				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+				scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
 			if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
-				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
-			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId,
-					scientificNameReco.getId(), commonNameReco.getId());
+				commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
+
+			List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
+			List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
+			for (RecommendationVote recoVote : recoVoteList) {
+				for (Recommendation reco : scientificNameRecoList) {
+					if (recoVote.getRecommendationId().equals(reco.getId())) {
+						filteredList.add(recoVote);
+					}
+				}
+			}
+			RecommendationVote recoVote = new RecommendationVote();
+			if (filteredList.size() == 1) {
+				recoVote = filteredList.get(0);
+			} else {
+				List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
+				for (RecommendationVote rVote : filteredList) {
+					for (Recommendation reco : commonNameRecoList) {
+						if (rVote.getCommonNameRecoId().equals(reco.getId()))
+							finalFilteredList.add(rVote);
+					}
+				}
+				recoVote = finalFilteredList.get(0);
+			}
+
 			if (recoVote != null) {
 				recoVoteDao.delete(recoVote);
 			}
@@ -373,45 +396,74 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
-			Recommendation scientificNameReco = new Recommendation();
-			Recommendation commonNameReco = new Recommendation();
 
+			Recommendation scientificNameReco = new Recommendation();
+			List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
+			List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
 			if (recoSet.getTaxonId() != null) {
 				scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+				scientificNameRecoList.add(scientificNameReco);
 			}
 
 			if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
 					&& scientificNameReco.getId() == null)
-				scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+				scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
 			if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
-				commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+				commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
 
-			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
-					scientificNameReco.getId(), commonNameReco.getId());
+			List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
+			List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
+			for (RecommendationVote recoVote : recoVoteList) {
+				for (Recommendation reco : scientificNameRecoList) {
+					if (recoVote.getRecommendationId().equals(reco.getId())) {
+						filteredList.add(recoVote);
+					}
+				}
+			}
+			RecommendationVote recoVote = new RecommendationVote();
+			if (filteredList.size() == 1) {
+				recoVote = filteredList.get(0);
+			} else {
+				List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
+				for (RecommendationVote rVote : filteredList) {
+					for (Recommendation reco : commonNameRecoList) {
+						if (rVote.getCommonNameRecoId().equals(reco.getId()))
+							finalFilteredList.add(rVote);
+					}
+				}
+				recoVote = finalFilteredList.get(0);
+			}
+
 			if (recoVote != null) {
 				RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
-				if (previousVote != null) {
-					recoVoteDao.delete(previousVote);
+
+				if (previousVote == null
+						|| !(previousVote.getRecommendationId().equals(recoVote.getRecommendationId()))) {
+					if (previousVote != null)
+						recoVoteDao.delete(previousVote);
+
+					recoVote.setId(null);
+					recoVote.setAuthorId(userId);
+					recoVote = recoVoteDao.save(recoVote);
+					String description = "";
+					if (recoSet.getScientificName().trim().length() != 0)
+						description = "<i>" + recoSet.getScientificName() + "</i>";
+					else
+						description = "<i>" + recoSet.getCommonName() + "</i>";
+					if (recoSet.getTaxonId() != null)
+						description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/"
+								+ recoSet.getTaxonId() + "?userGroupWebaddress=\"><i>" + recoSet.getScientificName()
+								+ "</i></a>\"";
+
+					logActivities.LogActivity(description, observationId, observationId, "observation",
+							recoVote.getId(), "Agreed on species name");
+
 				}
-				recoVote.setId(null);
-				recoVote.setAuthorId(userId);
-				recoVote = recoVoteDao.save(recoVote);
+
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
-
-			String description = "";
-			if (recoSet.getScientificName().trim().length() != 0)
-				description = "<i>" + recoSet.getScientificName() + "</i>";
-			else
-				description = "<i>" + recoSet.getCommonName() + "</i>";
-			if (recoSet.getTaxonId() != null)
-				description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
-						+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
-
-			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-					"Agreed on species name");
 
 			return result;
 
@@ -435,20 +487,42 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				agreeRecoVote(observationId, userId, recoSet);
 				Recommendation scientificNameReco = new Recommendation();
-				Recommendation commonNameReco = new Recommendation();
+				List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
+				List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
 
 				if (recoSet.getTaxonId() != null) {
 					scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+					scientificNameRecoList.add(scientificNameReco);
 				}
 
 				if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
 						&& scientificNameReco.getId() == null)
-					scientificNameReco = recoDao.findByRecoName(recoSet.getScientificName(), true);
+					scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
 				if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
-					commonNameReco = recoDao.findByRecoName(recoSet.getCommonName(), false);
+					commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
 
-				RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, null,
-						scientificNameReco.getId(), commonNameReco.getId());
+				List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
+				List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
+				for (RecommendationVote recoVote : recoVoteList) {
+					for (Recommendation reco : scientificNameRecoList) {
+						if (recoVote.getRecommendationId().equals(reco.getId())) {
+							filteredList.add(recoVote);
+						}
+					}
+				}
+				RecommendationVote recoVote = new RecommendationVote();
+				if (filteredList.size() == 1) {
+					recoVote = filteredList.get(0);
+				} else {
+					List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
+					for (RecommendationVote rVote : filteredList) {
+						for (Recommendation reco : commonNameRecoList) {
+							if (rVote.getCommonNameRecoId().equals(reco.getId()))
+								finalFilteredList.add(rVote);
+						}
+					}
+					recoVote = finalFilteredList.get(0);
+				}
 				Long maxVotedReco = recoVote.getRecommendationId();
 				Observation observation = observationDao.findById(observationId);
 				observation.setIsLocked(true);
