@@ -55,6 +55,7 @@ import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -121,7 +122,7 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationLocationInfo layerInfo;
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
-		Flag flag;
+		List<Flag> flag = new ArrayList<Flag>();
 		List<Tags> tags;
 		List<Featured> fetaured;
 		UserIbp userInfo;
@@ -135,7 +136,8 @@ public class ObservationServiceImpl implements ObservationService {
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
-				flag = utilityServices.getFlagByObservation("species.participation.Observation", id.toString());
+				if (observation.getFlagCount() > 0)
+					flag = utilityServices.getFlagByObjectType("observation", id.toString());
 				tags = utilityServices.getTags("observation", id.toString());
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
@@ -543,6 +545,78 @@ public class ObservationServiceImpl implements ObservationService {
 			List<UserGroupIbp> allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
 
 			return allowedUserGroup;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public String removeObservation(Long userId, Long observationId) {
+
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+			Long adminId = Long.parseLong(properties.getProperty("adminId"));
+
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getAuthorId().equals(userId) || userId.equals(adminId)) {
+				observation.setIsDeleted(true);
+				observationDao.save(observation);
+				return "Observation Deleted Succesfully";
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<Flag> createFlag(Long userId, Long observationId, FlagIbp flagIbp) {
+		try {
+			List<Flag> flagList = utilityServices.createFlag("observation", observationId.toString(), flagIbp);
+			if (flagList.size() != 0) {
+				for (Flag flag : flagList) {
+					if (flag.getAuthorId().equals(userId)) {
+						Observation observation = observationDao.findById(observationId);
+						observation.setFlagCount(observation.getFlagCount() + 1);
+						observationDao.update(observation);
+						break;
+					}
+				}
+			}
+			return flagList;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<Flag> unFlag(Long userId, Long observationId) {
+		try {
+			List<Flag> result = utilityServices.unFlag("observation", observationId.toString());
+			if (result.size() != 0) {
+				for (Flag flag : result) {
+					if (flag.getAuthorId().equals(userId)) {
+						Observation observation = observationDao.findById(observationId);
+						observation.setFlagCount(observation.getFlagCount() + 1);
+						observationDao.update(observation);
+						break;
+					}
+				}
+			}
+			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

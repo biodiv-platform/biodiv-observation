@@ -38,7 +38,7 @@ public class ShowData implements Serializable {
 	private ObservationLocationInfo layerInfo;
 	private ObservationInfo esLayerInfo;
 	private RecoIbp recoIbp;
-	private Flag flag;
+	private List<Flag> flag;
 	private List<Tags> tags;
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
@@ -69,8 +69,8 @@ public class ShowData implements Serializable {
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
-			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, Flag flag, List<Tags> tags,
-			List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes,
+			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, List<Flag> flag,
+			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes,
 			List<ObservationNearBy> observationNearBy) {
 		super();
 		this.observation = observation;
@@ -144,11 +144,11 @@ public class ShowData implements Serializable {
 		this.recoIbp = recoIbp;
 	}
 
-	public Flag getFlag() {
+	public List<Flag> getFlag() {
 		return flag;
 	}
 
-	public void setFlag(Flag flag) {
+	public void setFlag(List<Flag> flag) {
 		this.flag = flag;
 	}
 

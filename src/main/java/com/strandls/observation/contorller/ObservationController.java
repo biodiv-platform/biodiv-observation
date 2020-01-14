@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -37,6 +38,8 @@ import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -115,7 +118,7 @@ public class ObservationController {
 				throw new ObservationInputException("Observation LOCATION cannot be BLANK");
 			if (observationData.getsGroup() == null)
 				throw new ObservationInputException("Species Group cannot be BLANK");
-			if(observationData.getHidePreciseLocation()==null)
+			if (observationData.getHidePreciseLocation() == null)
 				throw new ObservationInputException("GeoPrivacy cannot be BLANK");
 
 			ShowData result = observationSerices.createObservation(request, observationData);
@@ -125,6 +128,34 @@ public class ObservationController {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.DELETE + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ValidateUser
+
+	@ApiOperation(value = "Delete the Observaiton", notes = "Return the Success or Failure Message", response = String.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Observation Cannot be Deleted", response = String.class),
+			@ApiResponse(code = 406, message = "User not allowed to delete the Observation", response = String.class) })
+
+	public Response deleteObservation(@Context HttpServletRequest request,
+			@PathParam("observationId") String observaitonId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observaitonId);
+			String result = observationSerices.removeObservation(userId, obvId);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE).entity("User not Allowed to Delete the Observation")
+						.build();
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity("Observation Cannot be Deleted").build();
 		}
 	}
 
@@ -379,6 +410,57 @@ public class ObservationController {
 	public Response getUsersGroupList(@Context HttpServletRequest request) {
 		try {
 			List<UserGroupIbp> result = observationSerices.getUsersGroupList();
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.CREATE + ApiConstants.FLAG + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Flag a Observaiton", notes = "Return a list of flag to the Observaiton", response = Flag.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to flag a Observation", response = String.class),
+			@ApiResponse(code = 406, message = "User has already flagged", response = String.class) })
+
+	public Response createFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
+			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obsId = Long.parseLong(observationId);
+			List<Flag> result = observationSerices.createFlag(userId, obsId, flagIbp);
+			if (result.isEmpty())
+				return Response.status(Status.NOT_ACCEPTABLE).entity("User Allowed Flagged").build();
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.UNFLAG + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Unflag a Observation", notes = "Return a list of flag to the Observation", response = Flag.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to unflag a Observation", response = String.class),
+			@ApiResponse(code = 406, message = "User is not allowed to unflag", response = String.class) })
+
+	public Response unFlag(@Context HttpServletRequest request, @PathParam("observaitonId") String observationId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obsId = Long.parseLong(observationId);
+			List<Flag> result = observationSerices.unFlag(userId, obsId);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE).entity("User not allowed to Unflag").build();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

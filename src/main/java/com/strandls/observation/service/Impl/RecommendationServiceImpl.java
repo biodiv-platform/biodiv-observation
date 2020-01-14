@@ -196,16 +196,19 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	private Long maxRecoVote(Long observationId) {
 		List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
-
-		Map<Long, UniqueRecoVote> resultMap = prepareUniqueRecord(recoVoteList);
-		UniqueRecoVote maxRecoVote = null;
-		for (Entry<Long, UniqueRecoVote> entry : resultMap.entrySet()) {
-			int value = entry.getValue().compareTo(maxRecoVote);
-			if (value > 0) {
-				maxRecoVote = entry.getValue();
+		if (!(recoVoteList.isEmpty())) {
+			Map<Long, UniqueRecoVote> resultMap = prepareUniqueRecord(recoVoteList);
+			UniqueRecoVote maxRecoVote = null;
+			for (Entry<Long, UniqueRecoVote> entry : resultMap.entrySet()) {
+				int value = entry.getValue().compareTo(maxRecoVote);
+				if (value > 0) {
+					maxRecoVote = entry.getValue();
+				}
 			}
+			return maxRecoVote.getRecoId();
 		}
-		return maxRecoVote.getRecoId();
+		return null;
+
 	}
 
 	private Map<Long, UniqueRecoVote> prepareUniqueRecord(List<RecommendationVote> recoVotes) {
@@ -370,8 +373,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 				recoVoteDao.delete(recoVote);
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
-			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+			RecoShow result = null;
+			if (maxRecoVote != null) {
+				Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+				result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+			}
 			String description = "";
 			if (recoSet.getScientificName().trim().length() != 0)
 				description = "<i>" + recoSet.getScientificName() + "</i>";

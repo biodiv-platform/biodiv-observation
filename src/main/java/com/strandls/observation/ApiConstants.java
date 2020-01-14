@@ -31,6 +31,9 @@ public class ApiConstants {
 	public static final String UNFEATURED = "/unfeatured";
 	public static final String PERMISSIONS = "/permissions";
 	public static final String AUTOCOMPLETE = "/autocomplete";
+	public static final String DELETE = "/delete";
+	public static final String FLAG = "/flag";
+	public static final String UNFLAG = "/unflag";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

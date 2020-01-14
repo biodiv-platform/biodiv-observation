@@ -19,6 +19,8 @@ import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -32,6 +34,8 @@ public interface ObservationService {
 	public ShowData findById(Long id);
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
+
+	public String removeObservation(Long userId, Long observationId);
 
 	public Long updateSGroup(Long observationId, Long sGroupId);
 
@@ -62,5 +66,9 @@ public interface ObservationService {
 	public List<UserGroupIbp> getUsersGroupList();
 
 	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
+
+	public List<Flag> createFlag(Long userId, Long observationId, FlagIbp flagIbp);
+
+	public List<Flag> unFlag(Long userId, Long observationId);
 
 }
