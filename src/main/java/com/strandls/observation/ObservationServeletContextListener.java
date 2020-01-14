@@ -25,6 +25,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.naksha.controller.LayerServiceApi;
@@ -82,6 +83,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
+				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
 				filter("/*").through(SwaggerFilter.class);
 

@@ -19,5 +19,6 @@ public class ObservationServiceModule extends AbstractModule {
 		bind(ObservationService.class).to(ObservationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(RecommendationService.class).to(RecommendationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(ObservationMapperHelper.class).in(Scopes.SINGLETON);
+		bind(LogActivities.class).in(Scopes.SINGLETON);
 	}
 }

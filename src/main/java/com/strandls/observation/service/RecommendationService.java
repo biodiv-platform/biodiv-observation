@@ -21,7 +21,7 @@ public interface RecommendationService {
 
 	public RecoIbp fetchRecoName(Long obvId, Long recoId);
 
-	public Long createRecoVote(Long userId, Long observationId, RecoCreate recoCreate);
+	public Long createRecoVote(Long userId, Long observationId, Long taxonId, RecoCreate recoCreate);
 
 	public Long fetchTaxonId(Long maxRecoVoteId);
 

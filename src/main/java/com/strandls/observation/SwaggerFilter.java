@@ -16,6 +16,7 @@ import javax.ws.rs.core.HttpHeaders;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -56,6 +57,9 @@ public class SwaggerFilter implements Filter {
 	@Inject
 	public UserServiceApi userService;
 
+	@Inject
+	public ActivitySerivceApi activityService;
+
 	/**
 	 * 
 	 */
@@ -89,6 +93,7 @@ public class SwaggerFilter implements Filter {
 		esService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		utilityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
+		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 
 		chain.doFilter(request2, response);
 	}

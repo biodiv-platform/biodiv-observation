@@ -68,6 +68,9 @@ public class ObservationServiceImpl implements ObservationService {
 	private static final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
 
 	@Inject
+	private LogActivities logActivity;
+
+	@Inject
 	private ObservationDAO observationDao;
 
 	@Inject
@@ -254,9 +257,14 @@ public class ObservationServiceImpl implements ObservationService {
 			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
+
+			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
+					"Observation created");
+
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(userId, observation.getId(), recoCreate);
+				maxVotedReco = recoService.createRecoVote(userId, observation.getId(),
+						observationData.getRecoData().getScientificNameTaxonId(), recoCreate);
 			}
 
 			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData);
@@ -317,9 +325,22 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public Long updateSGroup(Long observationId, Long sGroupId) {
 		Observation observation = observationDao.findById(observationId);
+		Long previousGroupId = observation.getGroupId();
 		observation.setGroupId(sGroupId);
 		observation.setLastRevised(new Date());
 		observation = observationDao.update(observation);
+		List<SpeciesGroup> SpeciesGroupList = getAllSpeciesGroup();
+		String previousGroupName = "";
+		String newGroupName = "";
+		for (SpeciesGroup speciesGroup : SpeciesGroupList) {
+			if (speciesGroup.getId().equals(previousGroupId))
+				previousGroupName = speciesGroup.getName();
+			if (speciesGroup.getId().equals(sGroupId))
+				newGroupName = speciesGroup.getName();
+		}
+		String description = previousGroupName + " to " + newGroupName;
+		logActivity.LogActivity(description, observationId, observationId, "observation", observationId,
+				"Observation species group updated");
 		return observation.getGroupId();
 	}
 

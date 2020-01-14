@@ -94,7 +94,8 @@ public class RecommedationController {
 			Long obserId = Long.parseLong(observaitonId);
 			Long userId = Long.parseLong(profile.getId());
 			RecoCreate recoCreate = observaitonHelper.createRecoMapping(recoData);
-			Long maxVotedReco = recoService.createRecoVote(userId, obserId, recoCreate);
+			Long maxVotedReco = recoService.createRecoVote(userId, obserId, recoData.getScientificNameTaxonId(),
+					recoCreate);
 			Long finalMaxVotedReco = observationService.updateMaxVotedReco(obserId, maxVotedReco);
 			RecoShow result = recoService.fetchCurrentRecoState(obserId, finalMaxVotedReco);
 

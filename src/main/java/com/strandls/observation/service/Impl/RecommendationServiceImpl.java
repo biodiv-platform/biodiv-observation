@@ -49,6 +49,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 	private ObservationService observaitonService;
 
 	@Inject
+	private LogActivities logActivities;
+
+	@Inject
 	private ObservationDAO observationDao;
 
 	@Inject
@@ -154,7 +157,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Long createRecoVote(Long userId, Long observationId, RecoCreate recoCreate) {
+	public Long createRecoVote(Long userId, Long observationId, Long taxonid, RecoCreate recoCreate) {
 
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
@@ -174,6 +177,19 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		recoVote = recoVoteDao.save(recoVote);
 		Long maxRecoVote = maxRecoVote(observationId);
+
+		String description = "";
+		if (recoCreate.getScientificName().trim().length() != 0)
+			description = "<i>" + recoCreate.getScientificName() + "</i>";
+		else
+			description = "<i>" + recoCreate.getCommonName() + "</i>";
+		if (taxonid != null)
+			description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + taxonid
+					+ "?userGroupWebaddress=\"><i>" + recoCreate.getScientificName() + "</i></a>\"";
+
+		logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
+				"Suggested species name");
+
 		return maxRecoVote;
 
 	}
@@ -333,6 +349,18 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Long maxRecoVote = maxRecoVote(observationId);
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+			String description = "";
+			if (recoSet.getScientificName().trim().length() != 0)
+				description = "<i>" + recoSet.getScientificName() + "</i>";
+			else
+				description = "<i>" + recoSet.getCommonName() + "</i>";
+			if (recoSet.getTaxonId() != null)
+				description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
+						+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+
+			logActivities.LogActivity(description, observationId, observationId, "observation", observationId,
+					"Suggestion removed");
+
 			return result;
 
 		}
@@ -344,7 +372,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
 
 		Observation observation = observationDao.findById(observationId);
-		if (!(observation.getIsDeleted())) {
+		if (!(observation.getIsLocked())) {
 			Recommendation scientificNameReco = new Recommendation();
 			Recommendation commonNameReco = new Recommendation();
 
@@ -367,11 +395,23 @@ public class RecommendationServiceImpl implements RecommendationService {
 				}
 				recoVote.setId(null);
 				recoVote.setAuthorId(userId);
-				recoVoteDao.save(recoVote);
+				recoVote = recoVoteDao.save(recoVote);
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
+
+			String description = "";
+			if (recoSet.getScientificName().trim().length() != 0)
+				description = "<i>" + recoSet.getScientificName() + "</i>";
+			else
+				description = "<i>" + recoSet.getCommonName() + "</i>";
+			if (recoSet.getTaxonId() != null)
+				description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
+						+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+
+			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
+					"Agreed on species name");
 
 			return result;
 
@@ -416,6 +456,19 @@ public class RecommendationServiceImpl implements RecommendationService {
 				observation.setLastRevised(new Date());
 				observationDao.update(observation);
 				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
+
+				String description = "";
+				if (recoSet.getScientificName().trim().length() != 0)
+					description = "<i>" + recoSet.getScientificName() + "</i>";
+				else
+					description = "<i>" + recoSet.getCommonName() + "</i>";
+				if (recoSet.getTaxonId() != null)
+					description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
+							+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+
+				logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
+						"obv locked");
+
 				return result;
 			}
 
@@ -446,6 +499,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 				observation.setLastRevised(new Date());
 				observationDao.update(observation);
 				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
+				String descrption = "";
+				if (recoSet.getScientificName().trim().length() != 0)
+					descrption = "<i>" + recoSet.getScientificName() + "</i>";
+				else
+					descrption = "<i>" + recoSet.getCommonName() + "</i>";
+				if (recoSet.getTaxonId() != null)
+					descrption = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
+							+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+				logActivities.LogActivity(descrption, observationId, observationId, "observation",
+						observation.getMaxVotedRecoId(), "obv unlocked");
 				return result;
 			}
 		}
