@@ -35,6 +35,7 @@ import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -120,6 +121,11 @@ public class ObservationController {
 				throw new ObservationInputException("Species Group cannot be BLANK");
 			if (observationData.getHidePreciseLocation() == null)
 				throw new ObservationInputException("GeoPrivacy cannot be BLANK");
+			if (observationData.getHelpIdentify() == false) {
+				if (observationData.getRecoData().getTaxonScientificName() == null
+						&& observationData.getRecoData().getTaxonCommonName() == null)
+					throw new ObservationInputException("No Recommendation found");
+			}
 
 			ShowData result = observationSerices.createObservation(request, observationData);
 
@@ -466,4 +472,50 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@POST
+	@Path(ApiConstants.FOLLOW + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Marks follow for a User", notes = "Returnt the follow details", response = Follow.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to mark follow", response = String.class) })
+
+	public Response followObservation(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observationId);
+			Follow result = observationSerices.followRequest(userId, obvId);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UNFOLLOW + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+
+	@ApiOperation(value = "Marks unfollow for a User", notes = "Returnt the unfollow details", response = Follow.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to mark unfollow", response = String.class) })
+
+	public Response unfollow(@Context HttpServletRequest request, @PathParam("observationId") String observationId) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Long obvId = Long.parseLong(observationId);
+			Follow result = observationSerices.unFollowRequest(userId, obvId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }

@@ -45,6 +45,7 @@ import com.strandls.traits.pojo.Facts;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.Follow;
 import com.strandls.user.pojo.SpeciesPermission;
 import com.strandls.user.pojo.UserGroupMemberRole;
 import com.strandls.user.pojo.UserIbp;
@@ -469,7 +470,7 @@ public class ObservationServiceImpl implements ObservationService {
 	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList) {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
-			UserPermissions userPermission = userService.getAllUserPermission();
+			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
 			List<Long> validateAllowed = null;
 			if (taxonList.trim().length() != 0) {
 				List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
@@ -496,7 +497,7 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
-					featureableGroup);
+					featureableGroup, userPermission.getFollowing());
 			return permission;
 
 		} catch (Exception e) {
@@ -536,7 +537,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public List<UserGroupIbp> getUsersGroupList() {
 		try {
-			UserPermissions userPermission = userService.getAllUserPermission();
+			UserPermissions userPermission = userService.getUserGroupPermissions();
 			List<Long> userGroupMember = new ArrayList<Long>();
 			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
 				userGroupMember.add(userMemberRole.getUserGroupId());
@@ -616,6 +617,28 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 				}
 			}
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Follow followRequest(Long userId, Long observationId) {
+		try {
+			Follow result = userService.updateFollow("observation", observationId.toString());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Follow unFollowRequest(Long userId, Long observationId) {
+		try {
+			Follow result = userService.unfollow("observation", observationId.toString());
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());

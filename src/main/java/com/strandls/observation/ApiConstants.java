@@ -34,6 +34,8 @@ public class ApiConstants {
 	public static final String DELETE = "/delete";
 	public static final String FLAG = "/flag";
 	public static final String UNFLAG = "/unflag";
+	public static final String FOLLOW = "/follow";
+	public static final String UNFOLLOW = "/unfollow";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

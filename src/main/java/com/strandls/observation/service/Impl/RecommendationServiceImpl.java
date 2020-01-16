@@ -374,8 +374,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
 			RecoShow result = null;
+			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			if (maxRecoVote != null) {
-				Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 				result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 			}
 			String description = "";

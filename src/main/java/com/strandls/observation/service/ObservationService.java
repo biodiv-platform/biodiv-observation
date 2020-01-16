@@ -16,6 +16,7 @@ import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -70,5 +71,9 @@ public interface ObservationService {
 	public List<Flag> createFlag(Long userId, Long observationId, FlagIbp flagIbp);
 
 	public List<Flag> unFlag(Long userId, Long observationId);
+
+	public Follow followRequest(Long userId, Long observationId);
+
+	public Follow unFollowRequest(Long userId, Long observationId);
 
 }

@@ -13,9 +13,10 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
  */
 public class ObservationUserPermission {
 
-	List<Long> validatePermissionTaxon;
-	List<UserGroupIbp> userGroupMember;
-	List<UserGroupIbp> userGroupFeature;
+	private List<Long> validatePermissionTaxon;
+	private List<UserGroupIbp> userGroupMember;
+	private List<UserGroupIbp> userGroupFeature;
+	private Boolean following;
 
 	/**
 	 * 
@@ -28,13 +29,15 @@ public class ObservationUserPermission {
 	 * @param validatePermissionTaxon
 	 * @param userGroupMember
 	 * @param userGroupFeature
+	 * @param following
 	 */
 	public ObservationUserPermission(List<Long> validatePermissionTaxon, List<UserGroupIbp> userGroupMember,
-			List<UserGroupIbp> userGroupFeature) {
+			List<UserGroupIbp> userGroupFeature, Boolean following) {
 		super();
 		this.validatePermissionTaxon = validatePermissionTaxon;
 		this.userGroupMember = userGroupMember;
 		this.userGroupFeature = userGroupFeature;
+		this.following = following;
 	}
 
 	public List<Long> getValidatePermissionTaxon() {
@@ -59,6 +62,14 @@ public class ObservationUserPermission {
 
 	public void setUserGroupFeature(List<UserGroupIbp> userGroupFeature) {
 		this.userGroupFeature = userGroupFeature;
+	}
+
+	public Boolean getFollowing() {
+		return following;
+	}
+
+	public void setFollowing(Boolean following) {
+		this.following = following;
 	}
 
 }
