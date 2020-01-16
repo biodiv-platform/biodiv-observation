@@ -206,15 +206,16 @@ public class ObservationMapperHelper {
 	private Map<String, Long> scientificNameNotExists(RecoData recoData) {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
-			ExtendedTaxonDefinition esResult = esService.matchPhrase("etdi", "er", "name",
-					recoData.getTaxonScientificName());
+			String providedSciName = recoData.getTaxonScientificName();
+			ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
+			String canonicalName = parsedName.getCanonicalName().getSimple();
+			ExtendedTaxonDefinition esResult = esService.matchPhrase("etdi", "er", "name", providedSciName,
+					"canonical_form", canonicalName);
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
 				result = scientificNameExists(recoData);
 			} else {
-				String providedSciName = recoData.getTaxonScientificName();
-				ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
-				String canonicalName = parsedName.getCanonicalName().getSimple();
+
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
