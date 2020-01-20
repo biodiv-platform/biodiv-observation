@@ -13,7 +13,9 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.strandls.activity.pojo.RecoVoteActivity;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
@@ -44,6 +46,9 @@ import com.strandls.utility.pojo.ParsedName;
 public class RecommendationServiceImpl implements RecommendationService {
 
 	private final Logger logger = LoggerFactory.getLogger(RecommendationServiceImpl.class);
+
+	@Inject
+	private ObjectMapper objectMapper;
 
 	@Inject
 	private ObservationService observaitonService;
@@ -179,13 +184,24 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Long maxRecoVote = maxRecoVote(observationId);
 
 		String description = "";
-		if (recoCreate.getScientificName().trim().length() != 0)
-			description = "<i>" + recoCreate.getScientificName() + "</i>";
-		else
-			description = "<i>" + recoCreate.getCommonName() + "</i>";
-		if (taxonid != null)
-			description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + taxonid
-					+ "?userGroupWebaddress=\"><i>" + recoCreate.getScientificName() + "</i></a>\"";
+		RecoVoteActivity rvActivity = new RecoVoteActivity();
+		try {
+			if (taxonid != null) {
+				TaxonomyDefinition taxonomyDef = taxonomyService.getTaxonomyConceptName(taxonid.toString());
+				rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
+				rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+
+			}
+			if (recoCreate.getCommonName().trim().length() > 0)
+				rvActivity.setCommonName(recoCreate.getCommonName());
+			if (recoCreate.getScientificName().trim().length() > 0)
+				rvActivity.setGivenName(recoCreate.getScientificName());
+
+			description = objectMapper.writeValueAsString(rvActivity);
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 		logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
 				"Suggested species name");
@@ -379,13 +395,27 @@ public class RecommendationServiceImpl implements RecommendationService {
 				result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 			}
 			String description = "";
-			if (recoSet.getScientificName().trim().length() != 0)
-				description = "<i>" + recoSet.getScientificName() + "</i>";
-			else
-				description = "<i>" + recoSet.getCommonName() + "</i>";
-			if (recoSet.getTaxonId() != null)
-				description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
-						+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+
+			try {
+				RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+				if (recoSet.getTaxonId() != null) {
+					TaxonomyDefinition taxonomyDef = taxonomyService
+							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
+					rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
+					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+
+				}
+				if (recoSet.getCommonName().trim().length() > 0)
+					rvActivity.setCommonName(recoSet.getCommonName());
+				if (recoSet.getScientificName().trim().length() > 0)
+					rvActivity.setGivenName(recoSet.getScientificName());
+
+				description = objectMapper.writeValueAsString(rvActivity);
+
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
 
 			logActivities.LogActivity(description, observationId, observationId, "observation", observationId,
 					"Suggestion removed");
@@ -452,14 +482,25 @@ public class RecommendationServiceImpl implements RecommendationService {
 					recoVote.setAuthorId(userId);
 					recoVote = recoVoteDao.save(recoVote);
 					String description = "";
-					if (recoSet.getScientificName().trim().length() != 0)
-						description = "<i>" + recoSet.getScientificName() + "</i>";
-					else
-						description = "<i>" + recoSet.getCommonName() + "</i>";
-					if (recoSet.getTaxonId() != null)
-						description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/"
-								+ recoSet.getTaxonId() + "?userGroupWebaddress=\"><i>" + recoSet.getScientificName()
-								+ "</i></a>\"";
+					try {
+						RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+						if (recoSet.getTaxonId() != null) {
+							TaxonomyDefinition taxonomyDef = taxonomyService
+									.getTaxonomyConceptName(recoSet.getTaxonId().toString());
+							rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
+							rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+
+						}
+						if (recoSet.getCommonName().trim().length() > 0)
+							rvActivity.setCommonName(recoSet.getCommonName());
+						if (recoSet.getScientificName().trim().length() > 0)
+							rvActivity.setGivenName(recoSet.getScientificName());
+
+						description = objectMapper.writeValueAsString(rvActivity);
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+					}
 
 					logActivities.LogActivity(description, observationId, observationId, "observation",
 							recoVote.getId(), "Agreed on species name");
@@ -538,13 +579,22 @@ public class RecommendationServiceImpl implements RecommendationService {
 				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 
 				String description = "";
-				if (recoSet.getScientificName().trim().length() != 0)
-					description = "<i>" + recoSet.getScientificName() + "</i>";
-				else
-					description = "<i>" + recoSet.getCommonName() + "</i>";
-				if (recoSet.getTaxonId() != null)
-					description = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
-							+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
+
+				RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+				if (recoSet.getTaxonId() != null) {
+					TaxonomyDefinition taxonomyDef = taxonomyService
+							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
+					rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
+					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+
+				}
+				if (recoSet.getCommonName().trim().length() > 0)
+					rvActivity.setCommonName(recoSet.getCommonName());
+				if (recoSet.getScientificName().trim().length() > 0)
+					rvActivity.setGivenName(recoSet.getScientificName());
+
+				description = objectMapper.writeValueAsString(rvActivity);
 
 				logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
 						"obv locked");
@@ -561,38 +611,53 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet) {
+		try {
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getIsLocked()) {
 
-		Observation observation = observationDao.findById(observationId);
-		if (observation.getIsLocked()) {
+				ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
+						userId, recoSet.getTaxonId().toString());
+				List<Long> permissionList = new ArrayList<Long>();
+				if (permission.getValidatePermissionTaxon() != null)
+					permissionList = permission.getValidatePermissionTaxon();
 
-			ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
-					userId, recoSet.getTaxonId().toString());
-			List<Long> permissionList = new ArrayList<Long>();
-			if (permission.getValidatePermissionTaxon() != null)
-				permissionList = permission.getValidatePermissionTaxon();
+				if (permissionList.contains(recoSet.getTaxonId())) {
 
-			if (permissionList.contains(recoSet.getTaxonId())) {
+					Long maxVotedReco = maxRecoVote(observationId);
+					observation.setIsLocked(false);
+					observation.setMaxVotedRecoId(maxVotedReco);
+					observation.setLastRevised(new Date());
+					observationDao.update(observation);
+					RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
+					String description = "";
 
-				Long maxVotedReco = maxRecoVote(observationId);
-				observation.setIsLocked(false);
-				observation.setMaxVotedRecoId(maxVotedReco);
-				observation.setLastRevised(new Date());
-				observationDao.update(observation);
-				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
-				String descrption = "";
-				if (recoSet.getScientificName().trim().length() != 0)
-					descrption = "<i>" + recoSet.getScientificName() + "</i>";
-				else
-					descrption = "<i>" + recoSet.getCommonName() + "</i>";
-				if (recoSet.getTaxonId() != null)
-					descrption = "\"<a href=\"http://indiabiodiversity.org/species/" + "show/" + recoSet.getTaxonId()
-							+ "?userGroupWebaddress=\"><i>" + recoSet.getScientificName() + "</i></a>\"";
-				logActivities.LogActivity(descrption, observationId, observationId, "observation",
-						observation.getMaxVotedRecoId(), "obv unlocked");
-				return result;
+					RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+					if (recoSet.getTaxonId() != null) {
+						TaxonomyDefinition taxonomyDef = taxonomyService
+								.getTaxonomyConceptName(recoSet.getTaxonId().toString());
+						rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
+						rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+
+					}
+					if (recoSet.getCommonName().trim().length() > 0)
+						rvActivity.setCommonName(recoSet.getCommonName());
+					if (recoSet.getScientificName().trim().length() > 0)
+						rvActivity.setGivenName(recoSet.getScientificName());
+
+					description = objectMapper.writeValueAsString(rvActivity);
+
+					logActivities.LogActivity(description, observationId, observationId, "observation",
+							observation.getMaxVotedRecoId(), "obv unlocked");
+					return result;
+				}
 			}
+			return null;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 		return null;
+
 	}
 
 	@Override
