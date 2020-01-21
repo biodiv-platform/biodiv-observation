@@ -59,6 +59,12 @@ public class ApplicationConfig extends Application {
 		beanConfig.setPrettyPrint(new Boolean(properties.getProperty("prettyPrint")));
 		beanConfig.setScan(new Boolean(properties.getProperty("scan")));
 
+		try {
+			in.close();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 	}
 
 	@Override

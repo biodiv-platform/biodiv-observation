@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationUserPermission;
@@ -36,7 +38,7 @@ public interface ObservationService {
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
 
-	public String removeObservation(Long userId, Long observationId);
+	public String removeObservation(CommonProfile profile, Long userId, Long observationId);
 
 	public Long updateSGroup(Long observationId, Long sGroupId);
 
@@ -60,7 +62,8 @@ public interface ObservationService {
 
 	public List<TraitsValuePair> getTraitList(String speciesId);
 
-	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList);
+	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
+			String taxonList);
 
 	public List<Tags> getTagsSugguestions(String phrase);
 
@@ -75,5 +78,7 @@ public interface ObservationService {
 	public Follow followRequest(Long userId, Long observationId);
 
 	public Follow unFollowRequest(Long userId, Long observationId);
+
+	public Long getObservationAuthor(Long observationId);
 
 }

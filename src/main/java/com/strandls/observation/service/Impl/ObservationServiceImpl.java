@@ -61,6 +61,8 @@ import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
 
+import net.minidev.json.JSONArray;
+
 /**
  * @author Abhishek Rudra
  *
@@ -467,28 +469,44 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUserPermission getUserPermissions(String observationId, Long userId, String taxonList) {
+	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
+			String taxonList) {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
-			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
-			List<Long> validateAllowed = null;
-			if (taxonList.trim().length() != 0) {
-				List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
-				validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
-
-			}
-
-			List<Long> userGroupMember = new ArrayList<Long>();
-			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
-				userGroupMember.add(userMemberRole.getUserGroupId());
-			}
-			String s = userGroupMember.toString();
-			List<UserGroupIbp> allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
-
+			List<Long> validateAllowed = new ArrayList<Long>();
+			List<UserGroupIbp> allowedUserGroup = null;
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
-			for (UserGroupMemberRole userFeatureRole : userPermission.getUserFeatureRole()) {
-				userGroupFeatureRole.add(userFeatureRole.getUserGroupId());
+			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
+
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				for (String s : taxonList.split(",")) {
+					validateAllowed.add(Long.parseLong(s));
+				}
+				allowedUserGroup = userGroupService.getAllUserGroup();
+				for (UserGroupIbp ug : allowedUserGroup) {
+					userGroupFeatureRole.add(ug.getId());
+				}
+
+			} else {
+				if (taxonList.trim().length() != 0) {
+					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+
+				}
+
+				List<Long> userGroupMember = new ArrayList<Long>();
+				for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+					userGroupMember.add(userMemberRole.getUserGroupId());
+				}
+				String s = userGroupMember.toString();
+				allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
+
+				for (UserGroupMemberRole userFeatureRole : userPermission.getUserFeatureRole()) {
+					userGroupFeatureRole.add(userFeatureRole.getUserGroupId());
+				}
 			}
+
 			List<UserGroupIbp> featureableGroup = new ArrayList<UserGroupIbp>();
 			for (UserGroupIbp userGroup : associatedUserGroup) {
 				if (userGroupFeatureRole.contains(userGroup.getId()))
@@ -553,29 +571,14 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public String removeObservation(Long userId, Long observationId) {
+	public String removeObservation(CommonProfile profile, Long userId, Long observationId) {
 
-		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
-
-		Properties properties = new Properties();
-		try {
-			properties.load(in);
-			Long adminId = Long.parseLong(properties.getProperty("adminId"));
-
-			Observation observation = observationDao.findById(observationId);
-			if (observation.getAuthorId().equals(userId) || userId.equals(adminId)) {
-				observation.setIsDeleted(true);
-				observationDao.save(observation);
-				return "Observation Deleted Succesfully";
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-				logger.error(e.getMessage());
-			}
+		JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+		Observation observation = observationDao.findById(observationId);
+		if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
+			observation.setIsDeleted(true);
+			observationDao.save(observation);
+			return "Observation Deleted Succesfully";
 		}
 
 		return null;
@@ -644,6 +647,13 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public Long getObservationAuthor(Long observationId) {
+		Observation observation = observationDao.findById(observationId);
+		Long authorId = observation.getAuthorId();
+		return authorId;
 	}
 
 }

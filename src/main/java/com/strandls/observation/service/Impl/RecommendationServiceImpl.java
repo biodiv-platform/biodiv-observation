@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -520,12 +521,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow validateReco(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow validateReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet) {
 
 		try {
 
-			ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
-					userId, recoSet.getTaxonId().toString());
+			ObservationUserPermission permission = observaitonService.getUserPermissions(profile,
+					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
 			if (permission.getValidatePermissionTaxon() != null)
 				permissionList = permission.getValidatePermissionTaxon();
@@ -610,13 +611,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow unlockReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet) {
 		try {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked()) {
 
-				ObservationUserPermission permission = observaitonService.getUserPermissions(observationId.toString(),
-						userId, recoSet.getTaxonId().toString());
+				ObservationUserPermission permission = observaitonService.getUserPermissions(profile,
+						observationId.toString(), userId, recoSet.getTaxonId().toString());
 				List<Long> permissionList = new ArrayList<Long>();
 				if (permission.getValidatePermissionTaxon() != null)
 					permissionList = permission.getValidatePermissionTaxon();

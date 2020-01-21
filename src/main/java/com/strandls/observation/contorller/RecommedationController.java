@@ -188,7 +188,7 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			RecoShow result = recoService.validateReco(obvId, userId, recoSet);
+			RecoShow result = recoService.validateReco(profile, obvId, userId, recoSet);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User Not allowed to validate").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -215,7 +215,7 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			RecoShow result = recoService.unlockReco(obvId, userId, recoSet);
+			RecoShow result = recoService.unlockReco(profile, obvId, userId, recoSet);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE)
 						.entity("Observation is Not Locked or User dont have permission").build();

@@ -154,7 +154,8 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observaitonId);
-			String result = observationSerices.removeObservation(userId, obvId);
+
+			String result = observationSerices.removeObservation(profile, userId, obvId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not Allowed to Delete the Observation")
 						.build();
@@ -379,7 +380,9 @@ public class ObservationController {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			ObservationUserPermission result = observationSerices.getUserPermissions(observationId, userId, taxonList);
+
+			ObservationUserPermission result = observationSerices.getUserPermissions(profile, observationId, userId,
+					taxonList);
 
 			return Response.status(Status.OK).entity(result).build();
 
@@ -515,6 +518,25 @@ public class ObservationController {
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.AUTHOR + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ApiOperation(value = "Finds the authorId of the observation", notes = "Returns the authorid of a observation", response = Long.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to fetch the authorid", response = String.class) })
+
+	public Response getObservationAuthor(@PathParam("observationId") String observationId) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			Long result = observationSerices.getObservationAuthor(obvId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity("Cannot find the Author").build();
 		}
 	}
 

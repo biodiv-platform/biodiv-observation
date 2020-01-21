@@ -5,6 +5,8 @@ package com.strandls.observation.service;
 
 import java.util.List;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
@@ -33,9 +35,9 @@ public interface RecommendationService {
 
 	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoShow validateReco(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow validateReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoShow unlockReco(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow unlockReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet);
 
 	public List<RecoIbp> allRecoVote(Long observationId);
 
