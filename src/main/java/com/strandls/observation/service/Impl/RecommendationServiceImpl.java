@@ -203,7 +203,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-
+		Observation observation = observationDao.findById(observationId);
+		observation.setLastRevised(new Date());
+		observationDao.update(observation);
 		logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
 				"Suggested species name");
 
@@ -349,6 +351,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 			Recommendation scientificNameReco = new Recommendation();
 			List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
 			List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
@@ -433,6 +437,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
+
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 
 			Recommendation scientificNameReco = new Recommendation();
 			List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();

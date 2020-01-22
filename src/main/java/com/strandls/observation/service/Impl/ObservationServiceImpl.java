@@ -366,6 +366,9 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Tags> result = null;
 		try {
 			result = utilityServices.updateTags("observation", tagsMapping);
+			Observation observation = observationDao.findById(tagsMapping.getObjectId());
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -378,6 +381,9 @@ public class ObservationServiceImpl implements ObservationService {
 		List<FactValuePair> facts = null;
 		try {
 			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId, valueList);
+			Observation observation = observationDao.findById(Long.parseLong(observationId));
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -390,6 +396,9 @@ public class ObservationServiceImpl implements ObservationService {
 		List<UserGroupIbp> result = null;
 		try {
 			result = userGroupService.updateUserGroupMapping(observationId, userGroupList);
+			Observation observation = observationDao.findById(Long.parseLong(observationId));
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -428,6 +437,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 		try {
 			result = userGroupService.createFeatured(featuredCreate);
+			Observation observation = observationDao.findById(featuredCreate.getObjectId());
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -439,6 +451,9 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> result = null;
 		try {
 			result = userGroupService.unFeatured("observation", observaitonId, userGroupList);
+			Observation observation = observationDao.findById(Long.parseLong(observaitonId));
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -592,6 +607,7 @@ public class ObservationServiceImpl implements ObservationService {
 				for (Flag flag : flagList) {
 					if (flag.getAuthorId().equals(userId)) {
 						Observation observation = observationDao.findById(observationId);
+						observation.setLastRevised(new Date());
 						observation.setFlagCount(observation.getFlagCount() + 1);
 						observationDao.update(observation);
 						break;
@@ -614,6 +630,7 @@ public class ObservationServiceImpl implements ObservationService {
 				for (Flag flag : result) {
 					if (flag.getAuthorId().equals(userId)) {
 						Observation observation = observationDao.findById(observationId);
+						observation.setLastRevised(new Date());
 						observation.setFlagCount(observation.getFlagCount() + 1);
 						observationDao.update(observation);
 						break;
