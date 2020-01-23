@@ -11,6 +11,7 @@ import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
@@ -37,6 +38,11 @@ public interface ObservationService {
 	public ShowData findById(Long id);
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
+
+	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId);
+
+	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
+			ObservationUpdateData observationUpdate);
 
 	public String removeObservation(CommonProfile profile, Long userId, Long observationId);
 

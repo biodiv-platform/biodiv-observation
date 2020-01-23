@@ -27,6 +27,7 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
@@ -134,6 +135,55 @@ public class ObservationController {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.EDIT + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Get the data for  Observation core part Update ", notes = "Returns the user the update page data", response = ObservationUpdateData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to edit the observation", response = String.class) })
+
+	public Response getEditPageData(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long obvId = Long.parseLong(observationId);
+			ObservationUpdateData result = observationSerices.getObservationEditPageData(profile, obvId);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Update the Observation core part", notes = "Returns the user the complete show page", response = ShowData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to edit the observation", response = String.class) })
+
+	public Response updateObservation(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
+			@ApiParam(name = "observationUpdateData") ObservationUpdateData observationUpdate) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long obvId = Long.parseLong(observationId);
+			ShowData result = observationSerices.editObservaitonCore(profile, obvId, observationUpdate);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity("User not allowed to edit the observation").build();
 		}
 	}
 

@@ -21,6 +21,7 @@ public class ApiConstants {
 	public static final String SPECIESGROUP = "/speciesgroup";
 	public static final String AGREE = "/agree";
 	public static final String UPDATE = "/update";
+	public static final String EDIT = "/edit";
 	public static final String TAGS = "/tags";
 	public static final String TRAITS = "/traits";
 	public static final String USERGROUP = "/usergroup";

@@ -26,6 +26,7 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
@@ -290,10 +291,10 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
-	public List<Resource> createResourceMapping(Long userId, ObservationCreate observationData) {
+	public List<Resource> createResourceMapping(Long userId, List<ResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 
-		for (ResourceData resourceData : observationData.getResources()) {
+		for (ResourceData resourceData : resourceDataList) {
 			Resource resource = new Resource();
 			resource.setVersion(0L);
 			resource.setDescription(
@@ -359,6 +360,18 @@ public class ObservationMapperHelper {
 		latlon.put("lon", foundLongitude);
 
 		return latlon;
+	}
+
+	public List<ResourceData> createEditResourceMapping(List<ObservationResourceUser> resources) {
+		List<ResourceData> editResource = new ArrayList<ResourceData>();
+		for (ObservationResourceUser resourceUser : resources) {
+			Resource resource = resourceUser.getResource();
+			editResource.add(new ResourceData(resource.getFileName(), resource.getMimeType(), resource.getDescription(),
+					resource.getRating(), resource.getLicenseId()));
+
+		}
+		return editResource;
+
 	}
 
 }

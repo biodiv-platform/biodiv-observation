@@ -28,11 +28,13 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
@@ -272,7 +274,7 @@ public class ObservationServiceImpl implements ObservationService {
 						observationData.getRecoData().getScientificNameTaxonId(), recoCreate);
 			}
 
-			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData);
+			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData.getResources());
 			resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
 			traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
@@ -671,6 +673,114 @@ public class ObservationServiceImpl implements ObservationService {
 		Observation observation = observationDao.findById(observationId);
 		Long authorId = observation.getAuthorId();
 		return authorId;
+	}
+
+	@Override
+	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
+			ObservationUpdateData observationUpdate) {
+
+		try {
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+			Long userId = Long.parseLong(profile.getId());
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
+//				location data
+				observation.setPlaceName(observationUpdate.getObservedAt());
+				observation.setReverseGeocodedName(observationUpdate.getReverseGeocoded());
+				observation.setLocationScale(observationUpdate.getLocationScale());
+				observation.setLatitude(observationUpdate.getLatitude());
+				observation.setLongitude(observationUpdate.getLongitude());
+				observation.setGeoPrivacy(observationUpdate.getHidePreciseLocation());
+//				notes
+				observation.setNotes(observationUpdate.getNotes());
+//				date data
+				observation.setFromDate(observationUpdate.getObservedOn());
+				observation.setToDate(observationUpdate.getObservedOn());
+				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
+				observation.setLastRevised(new Date());
+//				resource data
+
+				List<Resource> resources = observationHelper.createResourceMapping(userId,
+						observationUpdate.getResources());
+				resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()), resources);
+
+//				calculate reprImageof observation
+
+				Integer noOfImages = 0;
+				Integer noOfAudio = 0;
+				Integer noOfVideo = 0;
+
+				Long reprImage = resources.get(0).getId();
+				int rating = 0;
+				for (Resource res : resources) {
+					if (res.getType().equals("AUDIO"))
+						noOfAudio++;
+					else if (res.getType().equals("IMAGE")) {
+						noOfImages++;
+						if (res.getRating() != null && res.getRating() > rating) {
+							reprImage = res.getId();
+							rating = res.getRating();
+						}
+					} else if (res.getType().equals("VIDEO"))
+						noOfVideo++;
+
+				}
+				observation.setNoOfAudio(noOfAudio);
+				observation.setNoOfImages(noOfImages);
+				observation.setNoOfVideos(noOfVideo);
+				observation.setReprImageId(reprImage);
+
+				observationDao.update(observation);
+				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+						"Observation updated");
+				return findById(observationId);
+			} else {
+				try {
+					throw new ObservationInputException("USER NOT ALLOWED TO UPDATE THE OBSERVATION");
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+			}
+			return null;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
+	@Override
+	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) {
+		ObservationUpdateData editData = new ObservationUpdateData();
+		try {
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+			Long userId = Long.parseLong(profile.getId());
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
+//				notes data
+				editData.setNotes(observation.getNotes());
+//				Date data
+				editData.setDateAccuracy(observation.getDateAccuracy());
+				editData.setObservedOn(observation.getFromDate());
+//				location data
+				editData.setObservedAt(observation.getPlaceName());
+				editData.setReverseGeocoded(observation.getReverseGeocodedName());
+				editData.setLocationScale(observation.getLocationScale());
+				editData.setLatitude(observation.getLatitude());
+				editData.setLongitude(observation.getLongitude());
+				editData.setHidePreciseLocation(observation.getGeoPrivacy());
+
+//				resources Data
+				List<ObservationResourceUser> resourceData = resourceService.getImageResource(observationId.toString());
+				editData.setResources(observationHelper.createEditResourceMapping(resourceData));
+
+			} else {
+				throw new ObservationInputException("USER NOT ALLOWED TO EDIT THE PAGE");
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return editData;
 	}
 
 }
