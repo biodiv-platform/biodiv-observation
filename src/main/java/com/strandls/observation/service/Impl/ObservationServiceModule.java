@@ -20,5 +20,6 @@ public class ObservationServiceModule extends AbstractModule {
 		bind(RecommendationService.class).to(RecommendationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(ObservationMapperHelper.class).in(Scopes.SINGLETON);
 		bind(LogActivities.class).in(Scopes.SINGLETON);
+		bind(UserGroupFilterThread.class).in(Scopes.SINGLETON);
 	}
 }

@@ -3,8 +3,11 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,15 +33,34 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		Session session = sessionFactory.openSession();
 		Observation entity = null;
 		try {
-			entity = session.get(Observation.class, id);	
+			entity = session.get(Observation.class, id);
 		} catch (Exception e) {
 			logger.info(e.getMessage());
 			logger.error(e.toString());
-		}
-		finally {
+		} finally {
 			session.close();
 		}
 		return entity;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Observation> fetchInBatch(int startPoint) {
+		List<Observation> result = null;
+		Session session = sessionFactory.openSession();
+		String qry = "from Observation where isDeleted = false order by id";
+		try {
+			Query<Observation> query = session.createQuery(qry);
+			query.setMaxResults(50000);
+			query.setFirstResult(startPoint);
+			result = query.getResultList();
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+
+		return result;
 	}
 
 }

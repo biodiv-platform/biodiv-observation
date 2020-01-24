@@ -31,6 +31,7 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.service.Impl.UserGroupFilterThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
@@ -51,6 +52,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
@@ -587,6 +589,30 @@ public class ObservationController {
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Cannot find the Author").build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.APPLYFILTER)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ValidateUser
+
+	public Response applyNewFilter(@Context HttpServletRequest request, @QueryParam("groupIds") String groupIds) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+
+			if (userRole.contains("ROLE_ADMIN")) {
+				UserGroupFilterThread groupFilterThread = new UserGroupFilterThread(observationSerices, groupIds);
+				Thread thread = new Thread(groupFilterThread);
+				thread.start();
+				return Response.status(Status.OK).entity("Process has started to apply the new filter Rule").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity("Filter cannot be started").build();
 		}
 	}
 

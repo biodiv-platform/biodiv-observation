@@ -87,4 +87,6 @@ public interface ObservationService {
 
 	public Long getObservationAuthor(Long observationId);
 
+	public void applyFilterObservation(String userGroupIds);
+
 }

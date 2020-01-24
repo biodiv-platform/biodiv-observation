@@ -55,6 +55,7 @@ import com.strandls.user.pojo.UserPermissions;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
+import com.strandls.userGroup.pojo.ObservationLatLon;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Flag;
@@ -319,6 +320,11 @@ public class ObservationServiceImpl implements ObservationService {
 
 			observationDao.update(observation);
 
+			ObservationLatLon latlon = new ObservationLatLon();
+			latlon.setLatitude(observation.getLatitude());
+			latlon.setLongitude(observation.getLongitude());
+			latlon.setObservationId(observation.getId());
+			userGroupService.getFilterRule(latlon);
 			return findById(observation.getId());
 
 		} catch (Exception e) {
@@ -781,6 +787,38 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return editData;
+	}
+
+	@Override
+	public void applyFilterObservation(String userGroupIds) {
+		try {
+
+			Boolean hasNext = true;
+			int totalObservation = 0;
+			int startPoint = 0;
+			while (hasNext) {
+				List<Observation> observationList = observationDao.fetchInBatch(startPoint);
+				if (observationList.size() != 50000)
+					hasNext = false;
+				totalObservation = totalObservation + observationList.size();
+				startPoint = totalObservation + 1;
+				List<ObservationLatLon> latlonList = new ArrayList<ObservationLatLon>();
+				ObservationLatLon latlon = new ObservationLatLon();
+				for (Observation observation : observationList) {
+					latlon.setObservationId(observation.getId());
+					latlon.setLatitude(observation.getLatitude());
+					latlon.setLongitude(observation.getLongitude());
+					latlonList.add(latlon);
+				}
+				userGroupService.bulkFilterRule(userGroupIds, latlonList);
+			}
+
+			System.out.println("Filter Rule Process Completed");
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 	}
 
 }
