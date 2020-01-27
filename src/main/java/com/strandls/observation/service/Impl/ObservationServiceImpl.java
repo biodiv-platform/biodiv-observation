@@ -151,27 +151,8 @@ public class ObservationServiceImpl implements ObservationService {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo("observation", "observation",
 							observation.getMaxVotedRecoId().toString());
-				}
-
-				if (observation.getMaxVotedRecoId() != null) {
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
-
-					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
-					if (taxonId != null) {
-
-						List<Facts> resultList = traitService.getFactsBytaxonId(taxonId.toString());
-						if (resultList != null) {
-							for (Facts fact : resultList) {
-
-								if (fact.getTraitInstanceId() == 14 && fact.getTraitValueId() == 53) {
-									observation.setGeoPrivacy(true);
-									break;
-								}
-							}
-						}
-
-					}
 				}
 
 				if (observation.getGeoPrivacy()) {
@@ -317,9 +298,15 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setNoOfImages(noOfImages);
 			observation.setNoOfVideos(noOfVideo);
 			observation.setReprImageId(reprImage);
-
 			observationDao.update(observation);
+//			----------------POST CREATE ACTIONS------------
 
+//			----------------GEO PRIVACY CHECK-------------
+			List<Observation> observationList = new ArrayList<Observation>();
+			observationList.add(observation);
+			updateGeoPrivacy(observationList);
+
+//			---------------USER GROUP FILTER RULE----------
 			ObservationLatLon latlon = new ObservationLatLon();
 			latlon.setLatitude(observation.getLatitude());
 			latlon.setLongitude(observation.getLongitude());
@@ -364,6 +351,9 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			List<Observation> observationList = new ArrayList<Observation>();
+			observationList.add(observation);
+			updateGeoPrivacy(observationList);
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
@@ -735,8 +725,13 @@ public class ObservationServiceImpl implements ObservationService {
 				observation.setNoOfImages(noOfImages);
 				observation.setNoOfVideos(noOfVideo);
 				observation.setReprImageId(reprImage);
-
 				observationDao.update(observation);
+
+//				---------GEO PRIVACY CHECK------------
+				List<Observation> observationList = new ArrayList<Observation>();
+				observationList.add(observation);
+				updateGeoPrivacy(observationList);
+
 				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
 						"Observation updated");
 				return findById(observationId);
@@ -814,6 +809,76 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			System.out.println("Filter Rule Process Completed");
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
+	@Override
+	public void applyGeoPrivacyObservaiton() {
+		try {
+
+			Boolean hasNext = true;
+			int totalObservation = 0;
+			int startPoint = 0;
+			while (hasNext) {
+				List<Observation> observationList = observationDao.fetchInBatch(startPoint);
+				if (observationList.size() != 50000)
+					hasNext = false;
+				totalObservation = totalObservation + observationList.size();
+				startPoint = totalObservation + 1;
+				updateGeoPrivacy(observationList);
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
+	private void updateGeoPrivacy(List<Observation> observationList) {
+
+		try {
+
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
+			in.close();
+			List<Long> geoPrivacyValues = new ArrayList<Long>();
+			for (String s : geoPrivacyTraitsValue.split(","))
+				geoPrivacyValues.add(Long.parseLong(s));
+
+			for (Observation observation : observationList) {
+				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						List<Facts> resultList = traitService.getFactsBytaxonId(taxonId.toString());
+						if (!(resultList.isEmpty())) {
+							for (Facts fact : resultList) {
+
+								if (geoPrivacyValues.contains(fact.getTraitValueId())) {
+									System.out.println("---------BEGIN----------");
+									System.out.println("Observation Id : " + observation.getId());
+									observation.setGeoPrivacy(true);
+									observationDao.update(observation);
+									System.out.println("----------END------------");
+									break;
+								}
+							}
+						}
+
+					}
+				}
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

@@ -89,4 +89,6 @@ public interface ObservationService {
 
 	public void applyFilterObservation(String userGroupIds);
 
+	public void applyGeoPrivacyObservaiton();
+
 }

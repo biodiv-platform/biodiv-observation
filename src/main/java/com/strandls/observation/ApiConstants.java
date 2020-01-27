@@ -38,7 +38,8 @@ public class ApiConstants {
 	public static final String FOLLOW = "/follow";
 	public static final String UNFOLLOW = "/unfollow";
 	public static final String AUTHOR = "/author";
-	public static final String APPLYFILTER = "/applyfilter";
+	public static final String APPLYFILTER = "/applyFilter";
+	public static final String APPLYGEOPRIVACY = "/applyGeoPrivacy";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

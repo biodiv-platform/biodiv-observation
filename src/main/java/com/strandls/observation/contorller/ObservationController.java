@@ -31,6 +31,7 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.UserGroupFilterThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
@@ -65,6 +66,9 @@ public class ObservationController {
 
 	@Inject
 	private ObservationService observationSerices;
+
+	@Inject
+	private GeoPrivacyBulkThread geoPrivacyThread;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -179,6 +183,16 @@ public class ObservationController {
 			@PathParam("observationId") String observationId,
 			@ApiParam(name = "observationUpdateData") ObservationUpdateData observationUpdate) {
 		try {
+
+			if (observationUpdate.getObservedOn() == null)
+				throw new ObservationInputException("Observation Date Cannot be BLANK");
+			if (observationUpdate.getLatitude() == null || observationUpdate.getLongitude() == null)
+				throw new ObservationInputException("Observation LATITUDE/LONGITUDE MISSING");
+			if (observationUpdate.getObservedAt() == null)
+				throw new ObservationInputException("Observation LOCATION cannot be BLANK");
+			if (observationUpdate.getHidePreciseLocation() == null)
+				throw new ObservationInputException("GeoPrivacy cannot be BLANK");
+
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
 			ShowData result = observationSerices.editObservaitonCore(profile, obvId, observationUpdate);
@@ -597,6 +611,9 @@ public class ObservationController {
 	@Produces(MediaType.TEXT_PLAIN)
 
 	@ValidateUser
+	@ApiOperation(value = "Apply the new Filter Rule to the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to start the process", response = String.class) })
 
 	public Response applyNewFilter(@Context HttpServletRequest request, @QueryParam("groupIds") String groupIds) {
 		try {
@@ -613,6 +630,32 @@ public class ObservationController {
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Filter cannot be started").build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.APPLYGEOPRIVACY)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Bulk update the geoPrivate traits in all observation", notes = "Starts a process to update the geoPrivacy Field", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to start the process", response = String.class),
+			@ApiResponse(code = 406, message = "User not allowed to perform the task", response = String.class) })
+
+	public Response applyGeoPrivacy(@Context HttpServletRequest request) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userProfile = (JSONArray) profile.getAttribute("roles");
+			if (userProfile.contains("ROLE_ADMIN")) {
+				Thread thread = new Thread(geoPrivacyThread);
+				thread.start();
+				return Response.status(Status.OK).entity("GeoPrivacy Migration has started").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity("Unable to Start the process").build();
 		}
 	}
 
