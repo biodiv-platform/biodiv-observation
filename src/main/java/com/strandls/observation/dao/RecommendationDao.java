@@ -55,6 +55,7 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 			Query<Recommendation> query = session.createQuery(qry);
 			query.setParameter("taxonId", taxonId);
 			query.setParameter("isScientific", isScientific);
+			query.setMaxResults(1);
 			result = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());

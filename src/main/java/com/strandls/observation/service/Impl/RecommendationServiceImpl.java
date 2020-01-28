@@ -193,9 +193,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 				rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 			}
-			if (recoCreate.getCommonName().trim().length() > 0)
+			if (recoCreate.getCommonName() != null && recoCreate.getCommonName().trim().length() > 0)
 				rvActivity.setCommonName(recoCreate.getCommonName());
-			if (recoCreate.getScientificName().trim().length() > 0)
+			if (recoCreate.getScientificName() != null && recoCreate.getScientificName().trim().length() > 0)
 				rvActivity.setGivenName(recoCreate.getScientificName());
 
 			description = objectMapper.writeValueAsString(rvActivity);
