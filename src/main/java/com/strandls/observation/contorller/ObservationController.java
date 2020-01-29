@@ -386,7 +386,7 @@ public class ObservationController {
 	@ApiResponses(value = { @ApiResponse(code = 404, message = "Unable to Unfeature", response = String.class) })
 
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@ApiParam("userGroupList") List<Long> userGroupList) {
+			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			List<Featured> result = observationSerices.unFeatured(observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
@@ -606,8 +606,9 @@ public class ObservationController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.APPLYFILTER)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 
 	@ValidateUser
@@ -633,7 +634,7 @@ public class ObservationController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.APPLYGEOPRIVACY)
 	@Produces(MediaType.TEXT_PLAIN)
 

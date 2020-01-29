@@ -116,7 +116,7 @@ public class RecommedationController {
 			@ApiResponse(code = 400, message = "Unable to remove the RecoVote", response = String.class) })
 
 	public Response RemoveRecoVote(@Context HttpServletRequest request,
-			@PathParam("observationId") String observationId, @ApiParam("recoSet") RecoSet recoSet) {
+			@PathParam("observationId") String observationId, @ApiParam(name = "recoSet") RecoSet recoSet) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
