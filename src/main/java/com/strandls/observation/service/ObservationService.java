@@ -77,13 +77,13 @@ public interface ObservationService {
 
 	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
 
-	public List<Flag> createFlag(Long userId, Long observationId, FlagIbp flagIbp);
+	public List<Flag> createFlag(Long observationId, FlagIbp flagIbp);
 
-	public List<Flag> unFlag(Long userId, Long observationId);
+	public List<Flag> unFlag(Long observationId, Flag flag);
 
-	public Follow followRequest(Long userId, Long observationId);
+	public Follow followRequest(Long observationId);
 
-	public Follow unFollowRequest(Long userId, Long observationId);
+	public Follow unFollowRequest(Long observationId);
 
 	public Long getObservationAuthor(Long observationId);
 

@@ -504,10 +504,8 @@ public class ObservationController {
 	public Response createFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
 			Long obsId = Long.parseLong(observationId);
-			List<Flag> result = observationSerices.createFlag(userId, obsId, flagIbp);
+			List<Flag> result = observationSerices.createFlag(obsId, flagIbp);
 			if (result.isEmpty())
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User Allowed Flagged").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -528,12 +526,11 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to unflag a Observation", response = String.class),
 			@ApiResponse(code = 406, message = "User is not allowed to unflag", response = String.class) })
 
-	public Response unFlag(@Context HttpServletRequest request, @PathParam("observaitonId") String observationId) {
+	public Response unFlag(@Context HttpServletRequest request, @PathParam("observaitonId") String observationId,
+			@ApiParam(name = "flag") Flag flag) {
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
 			Long obsId = Long.parseLong(observationId);
-			List<Flag> result = observationSerices.unFlag(userId, obsId);
+			List<Flag> result = observationSerices.unFlag(obsId, flag);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not allowed to Unflag").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -554,10 +551,8 @@ public class ObservationController {
 	public Response followObservation(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId) {
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationSerices.followRequest(userId, obvId);
+			Follow result = observationSerices.followRequest(obvId);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -577,10 +572,8 @@ public class ObservationController {
 	public Response unfollow(@Context HttpServletRequest request, @PathParam("observationId") String observationId) {
 
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationSerices.unFollowRequest(userId, obvId);
+			Follow result = observationSerices.unFollowRequest(obvId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -598,20 +598,17 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Flag> createFlag(Long userId, Long observationId, FlagIbp flagIbp) {
+	public List<Flag> createFlag(Long observationId, FlagIbp flagIbp) {
 		try {
 			List<Flag> flagList = utilityServices.createFlag("observation", observationId.toString(), flagIbp);
-			if (flagList.size() != 0) {
-				for (Flag flag : flagList) {
-					if (flag.getAuthorId().equals(userId)) {
-						Observation observation = observationDao.findById(observationId);
-						observation.setLastRevised(new Date());
-						observation.setFlagCount(observation.getFlagCount() + 1);
-						observationDao.update(observation);
-						break;
-					}
-				}
-			}
+			int flagCount = 0;
+			if (flagList != null)
+				flagCount = flagList.size();
+
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observation.setFlagCount(flagCount);
+			observationDao.update(observation);
 			return flagList;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -621,20 +618,17 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Flag> unFlag(Long userId, Long observationId) {
+	public List<Flag> unFlag(Long observationId, Flag flag) {
 		try {
-			List<Flag> result = utilityServices.unFlag("observation", observationId.toString());
-			if (result.size() != 0) {
-				for (Flag flag : result) {
-					if (flag.getAuthorId().equals(userId)) {
-						Observation observation = observationDao.findById(observationId);
-						observation.setLastRevised(new Date());
-						observation.setFlagCount(observation.getFlagCount() + 1);
-						observationDao.update(observation);
-						break;
-					}
-				}
-			}
+			List<Flag> result = utilityServices.unFlag("observation", observationId.toString(), flag);
+			int flagCount = 0;
+			if (result != null)
+				flagCount = result.size();
+
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observation.setFlagCount(flagCount);
+			observationDao.update(observation);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -643,7 +637,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Follow followRequest(Long userId, Long observationId) {
+	public Follow followRequest(Long observationId) {
 		try {
 			Follow result = userService.updateFollow("observation", observationId.toString());
 			return result;
@@ -654,7 +648,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Follow unFollowRequest(Long userId, Long observationId) {
+	public Follow unFollowRequest(Long observationId) {
 		try {
 			Follow result = userService.unfollow("observation", observationId.toString());
 			return result;
