@@ -23,9 +23,7 @@ import java.util.Map;
 import javax.servlet.ServletContextEvent;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,11 +152,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 
 		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
-
-		ServiceRegistry serviceRegistry = injector.getInstance(ServiceRegistry.class);
-		if (serviceRegistry != null) {
-			StandardServiceRegistryBuilder.destroy(serviceRegistry);
-		}
 
 		SessionFactory sessionFactory = injector.getInstance(SessionFactory.class);
 		sessionFactory.close();
