@@ -492,7 +492,7 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.CREATE + ApiConstants.FLAG + "/{observationId}")
+	@Path(ApiConstants.FLAG + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
@@ -515,7 +515,7 @@ public class ObservationController {
 		}
 	}
 
-	@DELETE
+	@PUT
 	@Path(ApiConstants.UNFLAG + "/{observationId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)

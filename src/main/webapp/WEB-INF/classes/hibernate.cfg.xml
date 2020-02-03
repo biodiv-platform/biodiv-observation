@@ -28,14 +28,12 @@
 		<property name="hibernate.hikari.maximumPoolSize">30</property>
 
 		<!-- Maximum time that a connection is allowed to sit ideal in the pool -->
-		<property name="hibernate.hikari.idleTimeout">2000</property>
+		<property name="hibernate.hikari.idleTimeout">10000</property>
 
-		<property name="connectionTestQuery">SELECT 1</property>
-
+		<property name="hibernate.jdbc.lob.non_contextual_creation">true</property>
 
 		<mapping class="com.strandls.observation.pojo.Observation" />
 		<mapping class="com.strandls.observation.pojo.Recommendation" />
-		<mapping
-			class="com.strandls.observation.pojo.RecommendationVote" />
+		<mapping class="com.strandls.observation.pojo.RecommendationVote" />
 	</session-factory>
 </hibernate-configuration>
