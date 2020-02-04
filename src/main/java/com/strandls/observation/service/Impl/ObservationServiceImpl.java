@@ -25,6 +25,7 @@ import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -109,6 +110,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationMapperHelper observationHelper;
+
+	@Inject
+	private RecommendationVoteDao recoVoteDao;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -350,6 +354,7 @@ public class ObservationServiceImpl implements ObservationService {
 		if (observation.getMaxVotedRecoId() != maxVotedReco) {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
+			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
 			observationDao.update(observation);
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
@@ -590,7 +595,7 @@ public class ObservationServiceImpl implements ObservationService {
 		Observation observation = observationDao.findById(observationId);
 		if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
 			observation.setIsDeleted(true);
-			observationDao.save(observation);
+			observationDao.update(observation);
 			return "Observation Deleted Succesfully";
 		}
 

@@ -351,45 +351,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
-			observation.setLastRevised(new Date());
-			observationDao.update(observation);
-			Recommendation scientificNameReco = new Recommendation();
-			List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
-			List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
-			if (recoSet.getTaxonId() != null) {
-				scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
-				scientificNameRecoList.add(scientificNameReco);
-			}
 
-			if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
-					&& scientificNameReco.getId() == null)
-				scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
-			if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
-				commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
-
-			List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
-			List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
-			for (RecommendationVote recoVote : recoVoteList) {
-				for (Recommendation reco : scientificNameRecoList) {
-					if (recoVote.getRecommendationId().equals(reco.getId())) {
-						filteredList.add(recoVote);
-					}
-				}
-			}
-			RecommendationVote recoVote = new RecommendationVote();
-			if (filteredList.size() == 1) {
-				recoVote = filteredList.get(0);
-			} else {
-				List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
-				for (RecommendationVote rVote : filteredList) {
-					for (Recommendation reco : commonNameRecoList) {
-						if (rVote.getCommonNameRecoId().equals(reco.getId()))
-							finalFilteredList.add(rVote);
-					}
-				}
-				recoVote = finalFilteredList.get(0);
-			}
-
+			RecommendationVote recoVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 			if (recoVote != null) {
 				recoVoteDao.delete(recoVote);
 			}
@@ -583,6 +546,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				observation.setIsLocked(true);
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observation.setLastRevised(new Date());
+				observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
 				observationDao.update(observation);
 				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 
@@ -635,6 +599,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 					observation.setIsLocked(false);
 					observation.setMaxVotedRecoId(maxVotedReco);
 					observation.setLastRevised(new Date());
+					observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
 					observationDao.update(observation);
 					RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 					String description = "";

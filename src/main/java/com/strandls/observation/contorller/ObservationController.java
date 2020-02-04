@@ -517,7 +517,7 @@ public class ObservationController {
 
 	@PUT
 	@Path(ApiConstants.UNFLAG + "/{observationId}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
 
@@ -526,7 +526,7 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to unflag a Observation", response = String.class),
 			@ApiResponse(code = 406, message = "User is not allowed to unflag", response = String.class) })
 
-	public Response unFlag(@Context HttpServletRequest request, @PathParam("observaitonId") String observationId,
+	public Response unFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@ApiParam(name = "flag") Flag flag) {
 		try {
 			Long obsId = Long.parseLong(observationId);
@@ -560,9 +560,9 @@ public class ObservationController {
 		}
 	}
 
-	@PUT
+	@POST
 	@Path(ApiConstants.UNFOLLOW + "/{observationId}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
 
