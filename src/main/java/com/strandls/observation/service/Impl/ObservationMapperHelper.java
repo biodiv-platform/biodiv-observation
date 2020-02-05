@@ -366,7 +366,7 @@ public class ObservationMapperHelper {
 		List<ResourceData> editResource = new ArrayList<ResourceData>();
 		for (ObservationResourceUser resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
-			editResource.add(new ResourceData(resource.getFileName(), resource.getMimeType(), resource.getDescription(),
+			editResource.add(new ResourceData(resource.getFileName(), resource.getType(), resource.getDescription(),
 					resource.getRating(), resource.getLicenseId()));
 
 		}

@@ -827,7 +827,7 @@ public class ObservationServiceImpl implements ObservationService {
 				System.out.println("total Observation till this point : " + totalObservation);
 				System.out.println("---------END-----------");
 				List<Observation> observationList = observationDao.fetchInBatch(startPoint);
-				if (observationList.size() != 50000)
+				if (observationList.size() != 20000)
 					hasNext = false;
 				totalObservation = totalObservation + observationList.size();
 				startPoint = totalObservation + 1;

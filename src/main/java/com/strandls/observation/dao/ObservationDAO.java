@@ -50,7 +50,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "from Observation where isDeleted = false and geoPrivacy = false and maxVotedRecoId is not NULL  order by id";
 		try {
 			Query<Observation> query = session.createQuery(qry);
-			query.setMaxResults(50000);
+			query.setMaxResults(20000);
 			query.setFirstResult(startPoint);
 			result = query.getResultList();
 
