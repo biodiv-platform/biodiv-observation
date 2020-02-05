@@ -821,6 +821,11 @@ public class ObservationServiceImpl implements ObservationService {
 			int totalObservation = 0;
 			int startPoint = 0;
 			while (hasNext) {
+
+				System.out.println("--------START----------");
+				System.out.println("START POINT : " + startPoint);
+				System.out.println("total Observation till this point : " + totalObservation);
+				System.out.println("---------END-----------");
 				List<Observation> observationList = observationDao.fetchInBatch(startPoint);
 				if (observationList.size() != 50000)
 					hasNext = false;
@@ -853,6 +858,10 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
 
 			for (Observation observation : observationList) {
+				System.out.println("--------START---------");
+				System.out.println("Observation Id : " + observation.getId());
+				System.out.println("---------END----------");
+
 				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
 					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 					if (taxonId != null) {
