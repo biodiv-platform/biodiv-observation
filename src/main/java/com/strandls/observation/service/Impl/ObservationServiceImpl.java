@@ -44,7 +44,6 @@ import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonTree;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
-import com.strandls.traits.pojo.Facts;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
@@ -818,7 +817,6 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public void applyGeoPrivacyObservaiton() {
 		try {
-
 			Boolean hasNext = true;
 			int totalObservation = 0;
 			int startPoint = 0;
@@ -851,28 +849,20 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
-			List<Long> geoPrivacyValues = new ArrayList<Long>();
-			for (String s : geoPrivacyTraitsValue.split(","))
-				geoPrivacyValues.add(Long.parseLong(s));
+
+			List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
 
 			for (Observation observation : observationList) {
 				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
 					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 					if (taxonId != null) {
 
-						List<Facts> resultList = traitService.getFactsBytaxonId(taxonId.toString());
-						if (!(resultList.isEmpty())) {
-							for (Facts fact : resultList) {
-
-								if (geoPrivacyValues.contains(fact.getTraitValueId())) {
-									System.out.println("---------BEGIN----------");
-									System.out.println("Observation Id : " + observation.getId());
-									observation.setGeoPrivacy(true);
-									observationDao.update(observation);
-									System.out.println("----------END------------");
-									break;
-								}
-							}
+						if (geoPrivateTaxonId.contains(taxonId)) {
+							System.out.println("---------BEGIN----------");
+							System.out.println("Observation Id : " + observation.getId());
+							observation.setGeoPrivacy(true);
+							observationDao.update(observation);
+							System.out.println("----------END------------");
 						}
 
 					}

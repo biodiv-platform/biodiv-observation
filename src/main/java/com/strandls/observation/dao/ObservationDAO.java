@@ -47,7 +47,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	public List<Observation> fetchInBatch(int startPoint) {
 		List<Observation> result = null;
 		Session session = sessionFactory.openSession();
-		String qry = "from Observation where isDeleted = false order by id";
+		String qry = "from Observation where isDeleted = false and geoPrivacy = false and maxVotedRecoId is not NULL  order by id";
 		try {
 			Query<Observation> query = session.createQuery(qry);
 			query.setMaxResults(50000);
