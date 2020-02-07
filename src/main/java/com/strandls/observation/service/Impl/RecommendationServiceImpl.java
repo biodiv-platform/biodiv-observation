@@ -434,7 +434,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
 				for (RecommendationVote rVote : filteredList) {
 					for (Recommendation reco : commonNameRecoList) {
-						if (rVote.getCommonNameRecoId().equals(reco.getId()))
+						if (rVote.getCommonNameRecoId() != null && rVote.getCommonNameRecoId().equals(reco.getId()))
 							finalFilteredList.add(rVote);
 					}
 				}
@@ -535,7 +535,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 					List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
 					for (RecommendationVote rVote : filteredList) {
 						for (Recommendation reco : commonNameRecoList) {
-							if (rVote.getCommonNameRecoId().equals(reco.getId()))
+							if (rVote.getCommonNameRecoId() != null && rVote.getCommonNameRecoId().equals(reco.getId()))
 								finalFilteredList.add(rVote);
 						}
 					}

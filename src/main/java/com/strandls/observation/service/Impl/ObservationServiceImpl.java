@@ -140,6 +140,7 @@ public class ObservationServiceImpl implements ObservationService {
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
+				in.close();
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
@@ -244,6 +245,7 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
+
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;

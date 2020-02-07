@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -26,6 +29,7 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -33,6 +37,7 @@ import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
 /**
@@ -56,83 +61,124 @@ public class ObservationMapperHelper {
 	private EsServicesApi esService;
 
 	public Observation createObservationMapping(Long userId, ObservationCreate observationData) {
+		try {
 
-		Observation observation = new Observation();
-		observation.setAuthorId(userId);
-		observation.setVersion(0L);
-		observation.setCreatedOn(observationData.getCreatedOn());
-		observation.setGroupId(observationData.getsGroup());
-		observation.setLatitude(observationData.getLatitude());
-		observation.setLongitude(observationData.getLongitude());
-		observation.setNotes(observationData.getNotes());
-		observation.setFromDate(observationData.getFromDate());
-		observation.setPlaceName(observationData.getObservedAt()); // place name given by user
-		observation.setRating(0);// what to insert
-		observation.setReverseGeocodedName(observationData.getReverseGeocoded()); // google reversed name for the lat
-																					// and long
-		observation.setFlagCount(0);// during creation it should be 0
-		observation.setGeoPrivacy(observationData.getHidePreciseLocation());
-		observation.setHabitatId(null);// has to Depricate , default to all
-		observation.setIsDeleted(false);
-		observation.setLastRevised(observationData.getCreatedOn());// initially same as date of creation of object later
-																	// when updated
-		observation.setLocationAccuracy(null); // what to insert
-		observation.setVisitCount(0L); // updateble field
-		observation.setSearchText(null); // it is not used as of now , maybe in future
+			String topleft = "";
+			String bottomright = "";
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
 
-		observation.setAgreeTerms(true);
-		observation.setIsShowable(true);
-		observation.setToDate(observationData.getToDate());
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
 
-		GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
-		DecimalFormat df = new DecimalFormat("#.####");
-		df.setRoundingMode(RoundingMode.HALF_EVEN);
-		double latitude = Double.parseDouble(df.format(observationData.getLatitude()));
-		double longitude = Double.parseDouble(df.format(observationData.getLongitude()));
-		Coordinate c = new Coordinate(longitude, latitude);
-		Geometry topology = geofactory.createPoint(c);
-		observation.setTopology(topology);
+			topleft = properties.getProperty("topLeft");
+			bottomright = properties.getProperty("bottomRight");
+			in.close();
 
-		observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
-										// group
-		observation.setIsLocked(false);// update field , initially false
-		observation.setLicenseId(822L);// default 822
-		observation.setLanguageId(observationData.getObsvLanguageId());
-		observation.setLocationScale(observationData.getLocationScale()); // 5 options
+			String point1[] = topleft.split(",");
+			String point2[] = bottomright.split(",");
 
-		observation.setReprImageId(null);
-		observation.setProtocol(observationData.getProtocol());
-		observation.setBasisOfRecord(observationData.getBasisOfRecords());
-		observation.setNoOfImages(0);
-		observation.setNoOfAudio(0);
-		observation.setNoOfVideos(0);
+			Coordinate[] cords = new Coordinate[] {
+					new Coordinate(Double.parseDouble(point1[0]), Double.parseDouble(point1[1])),
+					new Coordinate(Double.parseDouble(point2[0]), Double.parseDouble(point1[1])),
+					new Coordinate(Double.parseDouble(point2[0]), Double.parseDouble(point2[1])),
+					new Coordinate(Double.parseDouble(point1[0]), Double.parseDouble(point2[1])),
+					new Coordinate(Double.parseDouble(point1[0]), Double.parseDouble(point1[1])), };
 
-		if (observationData.getHelpIdentify() == true)
-			observation.setNoOfIdentifications(0);// initailly 0-1 but can increase with the no of reco vote
-		else
-			observation.setNoOfIdentifications(1);
+			GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
 
-		observation.setDataTableId(null);//
-		observation.setDateAccuracy(observationData.getDateAccuracy());
+			Polygon indiaBounds = geofactory.createPolygon(geofactory.createLinearRing(cords));
 
-		observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
-		observation.setSourceId(null);// observation id in nrml case, used only in GBIF
-		observation.setChecklistAnnotations(null);// from data set
-		observation.setAccessRights(null);// null for nrml case only used in GBIF
-		observation.setCatalogNumber(null);// null for nrml case only used in GBIF
-		observation.setDatasetId(null);// null for nrml case only used in GBIF
-		observation.setExternalDatasetKey(null);// null for nrml case only used in GBIF
-		observation.setExternalId(null);// null for nrml case only used in GBIF
-		observation.setExternalUrl(null);// null for nrml case only used in GBIF
-		observation.setInformationWithheld(null);// null for nrml case only used in GBIF
-		observation.setLastCrawled(null);// null for nrml case only used in GBIF
-		observation.setLastInterpreted(null);// null for nrml case only used in GBIF
-		observation.setOriginalAuthor(null);// null for nrml case only used in GBIF
-		observation.setPublishingCountry(null);// from IP address
-		observation.setViaCode(null);// null for nrml case only used in GBIF
-		observation.setViaId(null);// null for nrml case only used in GBIF
+			DecimalFormat df = new DecimalFormat("#.####");
+			df.setRoundingMode(RoundingMode.HALF_EVEN);
+			double latitude = Double.parseDouble(df.format(observationData.getLatitude()));
+			double longitude = Double.parseDouble(df.format(observationData.getLongitude()));
+			Coordinate c = new Coordinate(longitude, latitude);
+			Geometry topology = geofactory.createPoint(c);
+			Boolean withinIndia = indiaBounds.intersects(topology);
+			if (withinIndia == false) {
+				throw new ObservationInputException("Observation not within India");
+			}
 
-		return observation;
+			Observation observation = new Observation();
+			observation.setAuthorId(userId);
+			observation.setVersion(0L);
+			observation.setCreatedOn(observationData.getCreatedOn());
+			observation.setGroupId(observationData.getsGroup());
+			observation.setLatitude(observationData.getLatitude());
+			observation.setLongitude(observationData.getLongitude());
+			observation.setNotes(observationData.getNotes());
+			observation.setFromDate(observationData.getFromDate());
+			observation.setPlaceName(observationData.getObservedAt()); // place name given by user
+			observation.setRating(0);// what to insert
+			observation.setReverseGeocodedName(observationData.getReverseGeocoded()); // google reversed name for the
+																						// lat
+																						// and long
+			observation.setFlagCount(0);// during creation it should be 0
+			observation.setGeoPrivacy(observationData.getHidePreciseLocation());
+			observation.setHabitatId(null);// has to Depricate , default to all
+			observation.setIsDeleted(false);
+			observation.setLastRevised(observationData.getCreatedOn());// initially same as date of creation of object
+																		// later
+																		// when updated
+			observation.setLocationAccuracy(null); // what to insert
+			observation.setVisitCount(0L); // updateble field
+			observation.setSearchText(null); // it is not used as of now , maybe in future
+
+			observation.setAgreeTerms(true);
+			observation.setIsShowable(true);
+			observation.setToDate(observationData.getToDate());
+
+			observation.setTopology(topology);
+
+			observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
+											// group
+			observation.setIsLocked(false);// update field , initially false
+			observation.setLicenseId(822L);// default 822
+			observation.setLanguageId(observationData.getObsvLanguageId());
+			observation.setLocationScale(observationData.getLocationScale()); // 5 options
+
+			observation.setReprImageId(null);
+			observation.setProtocol(observationData.getProtocol());
+			observation.setBasisOfRecord(observationData.getBasisOfRecords());
+			observation.setNoOfImages(0);
+			observation.setNoOfAudio(0);
+			observation.setNoOfVideos(0);
+
+			if (observationData.getHelpIdentify() == true)
+				observation.setNoOfIdentifications(0);// initailly 0-1 but can increase with the no of reco vote
+			else
+				observation.setNoOfIdentifications(1);
+
+			observation.setDataTableId(null);//
+			observation.setDateAccuracy(observationData.getDateAccuracy());
+
+			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
+			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
+			observation.setChecklistAnnotations(null);// from data set
+			observation.setAccessRights(null);// null for nrml case only used in GBIF
+			observation.setCatalogNumber(null);// null for nrml case only used in GBIF
+			observation.setDatasetId(null);// null for nrml case only used in GBIF
+			observation.setExternalDatasetKey(null);// null for nrml case only used in GBIF
+			observation.setExternalId(null);// null for nrml case only used in GBIF
+			observation.setExternalUrl(null);// null for nrml case only used in GBIF
+			observation.setInformationWithheld(null);// null for nrml case only used in GBIF
+			observation.setLastCrawled(null);// null for nrml case only used in GBIF
+			observation.setLastInterpreted(null);// null for nrml case only used in GBIF
+			observation.setOriginalAuthor(null);// null for nrml case only used in GBIF
+			observation.setPublishingCountry(null);// from IP address
+			observation.setViaCode(null);// null for nrml case only used in GBIF
+			observation.setViaId(null);// null for nrml case only used in GBIF
+
+			return observation;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 
 	}
 
