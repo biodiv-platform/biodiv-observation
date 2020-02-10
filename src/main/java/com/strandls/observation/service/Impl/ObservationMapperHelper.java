@@ -60,9 +60,8 @@ public class ObservationMapperHelper {
 	@Inject
 	private EsServicesApi esService;
 
-	public Observation createObservationMapping(Long userId, ObservationCreate observationData) {
+	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
-
 			String topleft = "";
 			String bottomright = "";
 			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
@@ -100,8 +99,18 @@ public class ObservationMapperHelper {
 			Geometry topology = geofactory.createPoint(c);
 			Boolean withinIndia = indiaBounds.intersects(topology);
 			if (withinIndia == false) {
-				throw new ObservationInputException("Observation not within India");
+				return false;
 			}
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
+	public Observation createObservationMapping(Long userId, ObservationCreate observationData) {
+		try {
 
 			Observation observation = new Observation();
 			observation.setAuthorId(userId);
@@ -131,6 +140,14 @@ public class ObservationMapperHelper {
 			observation.setAgreeTerms(true);
 			observation.setIsShowable(true);
 			observation.setToDate(observationData.getToDate());
+
+			GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
+			DecimalFormat df = new DecimalFormat("#.####");
+			df.setRoundingMode(RoundingMode.HALF_EVEN);
+			double latitude = Double.parseDouble(df.format(observationData.getLatitude()));
+			double longitude = Double.parseDouble(df.format(observationData.getLongitude()));
+			Coordinate c = new Coordinate(longitude, latitude);
+			Geometry topology = geofactory.createPoint(c);
 
 			observation.setTopology(topology);
 

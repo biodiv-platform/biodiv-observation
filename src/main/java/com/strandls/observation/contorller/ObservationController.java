@@ -32,6 +32,7 @@ import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
+import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.UserGroupFilterThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
@@ -69,6 +70,9 @@ public class ObservationController {
 
 	@Inject
 	private GeoPrivacyBulkThread geoPrivacyThread;
+
+	@Inject
+	private ObservationMapperHelper observationHelper;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -133,6 +137,9 @@ public class ObservationController {
 						&& observationData.getRecoData().getTaxonCommonName() == null)
 					throw new ObservationInputException("No Recommendation found");
 			}
+			if (observationHelper.checkIndiaBounds(observationData) == false) {
+				throw new ObservationInputException("Observation Not within India Bounds");
+			}
 
 			ShowData result = observationSerices.createObservation(request, observationData);
 
@@ -140,7 +147,7 @@ public class ObservationController {
 		} catch (ObservationInputException e) {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).build();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 
