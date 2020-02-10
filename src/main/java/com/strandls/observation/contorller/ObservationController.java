@@ -592,7 +592,7 @@ public class ObservationController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 
-	@ApiOperation(value = "Finds the authorId of the observation", notes = "Returns the authorid of a observation", response = Long.class)
+	@ApiOperation(value = "Finds the authorId of the observation", notes = "Returns the authorid of a observation", response = String.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to fetch the authorid", response = String.class) })
 
@@ -600,7 +600,7 @@ public class ObservationController {
 		try {
 			Long obvId = Long.parseLong(observationId);
 			Long result = observationSerices.getObservationAuthor(obvId);
-			return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.OK).entity(result.toString()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Cannot find the Author").build();
 		}

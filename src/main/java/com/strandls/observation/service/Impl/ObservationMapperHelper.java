@@ -29,7 +29,6 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
-import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.utility.controller.UtilityServiceApi;
