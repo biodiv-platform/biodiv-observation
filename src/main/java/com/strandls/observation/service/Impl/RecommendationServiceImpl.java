@@ -358,7 +358,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				recoVoteDao.delete(recoVote);
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
-			RecoShow result = null;
+			RecoShow result = new RecoShow();
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			if (maxRecoVote != null) {
 				result = fetchCurrentRecoState(observationId, newMaxRecoVote);
@@ -429,11 +429,20 @@ public class RecommendationServiceImpl implements RecommendationService {
 			List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
 			List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
 			for (RecommendationVote recoVote : recoVoteList) {
-				for (Recommendation reco : scientificNameRecoList) {
-					if (recoVote.getRecommendationId().equals(reco.getId())) {
-						filteredList.add(recoVote);
+				if (scientificNameRecoList.isEmpty()) {
+					for (Recommendation reco : commonNameRecoList) {
+						if (recoVote.getRecommendationId().equals(reco.getId())) {
+							filteredList.add(recoVote);
+						}
+					}
+				} else {
+					for (Recommendation reco : scientificNameRecoList) {
+						if (recoVote.getRecommendationId().equals(reco.getId())) {
+							filteredList.add(recoVote);
+						}
 					}
 				}
+
 			}
 			RecommendationVote recoVote = new RecommendationVote();
 			if (filteredList.size() == 1) {
@@ -446,7 +455,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 							finalFilteredList.add(rVote);
 					}
 				}
-				recoVote = finalFilteredList.get(0);
+				if (finalFilteredList.isEmpty())
+					recoVote = filteredList.get(0);
+				else
+					recoVote = finalFilteredList.get(0);
 			}
 
 			if (recoVote != null) {
@@ -530,9 +542,17 @@ public class RecommendationServiceImpl implements RecommendationService {
 				List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observationId);
 				List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
 				for (RecommendationVote recoVote : recoVoteList) {
-					for (Recommendation reco : scientificNameRecoList) {
-						if (recoVote.getRecommendationId().equals(reco.getId())) {
-							filteredList.add(recoVote);
+					if (scientificNameRecoList.isEmpty()) {
+						for (Recommendation reco : commonNameRecoList) {
+							if (recoVote.getRecommendationId().equals(reco.getId())) {
+								filteredList.add(recoVote);
+							}
+						}
+					} else {
+						for (Recommendation reco : scientificNameRecoList) {
+							if (recoVote.getRecommendationId().equals(reco.getId())) {
+								filteredList.add(recoVote);
+							}
 						}
 					}
 				}
@@ -547,7 +567,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 								finalFilteredList.add(rVote);
 						}
 					}
-					recoVote = finalFilteredList.get(0);
+					if (finalFilteredList.isEmpty())
+						recoVote = filteredList.get(0);
+					else
+						recoVote = finalFilteredList.get(0);
 				}
 				Long maxVotedReco = recoVote.getRecommendationId();
 				Observation observation = observationDao.findById(observationId);
