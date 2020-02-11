@@ -503,9 +503,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
-				for (String s : taxonList.split(",")) {
-					validateAllowed.add(Long.parseLong(s));
+				if (taxonList.trim().length() != 0) {
+					for (String s : taxonList.split(",")) {
+						validateAllowed.add(Long.parseLong(s));
+					}
 				}
+
 				allowedUserGroup = userGroupService.getAllUserGroup();
 				for (UserGroupIbp ug : allowedUserGroup) {
 					userGroupFeatureRole.add(ug.getId());
