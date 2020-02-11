@@ -23,8 +23,8 @@ import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagIbp;
+import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -77,9 +77,9 @@ public interface ObservationService {
 
 	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
 
-	public List<Flag> createFlag(Long observationId, FlagIbp flagIbp);
+	public List<FlagShow> createFlag(Long observationId, FlagIbp flagIbp);
 
-	public List<Flag> unFlag(Long observationId, Flag flag);
+	public List<FlagShow> unFlag(Long observationId, String flagId);
 
 	public Follow followRequest(Long observationId);
 

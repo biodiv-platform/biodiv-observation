@@ -32,6 +32,7 @@ import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.util.ObservationInputException;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -390,7 +391,14 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 			return result;
 
+		} else {
+			try {
+				throw new ObservationInputException("Observaiton Is locked");
+			} catch (ObservationInputException e) {
+				logger.error(e.getMessage());
+			}
 		}
+
 		return null;
 
 	}

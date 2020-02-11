@@ -43,8 +43,8 @@ import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagIbp;
+import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -504,7 +504,7 @@ public class ObservationController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
 
-	@ApiOperation(value = "Flag a Observaiton", notes = "Return a list of flag to the Observaiton", response = Flag.class, responseContainer = "List")
+	@ApiOperation(value = "Flag a Observaiton", notes = "Return a list of flag to the Observaiton", response = FlagShow.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to flag a Observation", response = String.class),
 			@ApiResponse(code = 406, message = "User has already flagged", response = String.class) })
 
@@ -512,7 +512,7 @@ public class ObservationController {
 			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<Flag> result = observationSerices.createFlag(obsId, flagIbp);
+			List<FlagShow> result = observationSerices.createFlag(obsId, flagIbp);
 			if (result.isEmpty())
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User Allowed Flagged").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -523,21 +523,21 @@ public class ObservationController {
 	}
 
 	@PUT
-	@Path(ApiConstants.UNFLAG + "/{observationId}")
+	@Path(ApiConstants.UNFLAG + "/{observationId}/{flagId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
 
-	@ApiOperation(value = "Unflag a Observation", notes = "Return a list of flag to the Observation", response = Flag.class, responseContainer = "List")
+	@ApiOperation(value = "Unflag a Observation", notes = "Return a list of flag to the Observation", response = FlagShow.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to unflag a Observation", response = String.class),
 			@ApiResponse(code = 406, message = "User is not allowed to unflag", response = String.class) })
 
 	public Response unFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@ApiParam(name = "flag") Flag flag) {
+			@PathParam("flagId") String flagId) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<Flag> result = observationSerices.unFlag(obsId, flag);
+			List<FlagShow> result = observationSerices.unFlag(obsId, flagId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not allowed to Unflag").build();
 			return Response.status(Status.OK).entity(result).build();

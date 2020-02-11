@@ -53,13 +53,14 @@ import com.strandls.user.pojo.UserGroupMemberRole;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.user.pojo.UserPermissions;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.ObservationLatLon;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
-import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagIbp;
+import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -128,10 +129,11 @@ public class ObservationServiceImpl implements ObservationService {
 		List<FactValuePair> facts;
 		List<ObservationResourceUser> observationResource;
 		List<UserGroupIbp> userGroups;
+		List<CustomFieldObservationData> customField = null;
 		ObservationLocationInfo layerInfo;
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
-		List<Flag> flag = new ArrayList<Flag>();
+		List<FlagShow> flag = new ArrayList<FlagShow>();
 		List<Tags> tags;
 		List<Featured> fetaured;
 		UserIbp userInfo;
@@ -144,6 +146,7 @@ public class ObservationServiceImpl implements ObservationService {
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
+				customField = userGroupService.getObservationCustomFields(id.toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -168,8 +171,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation("observation", "observation",
 						observation.getLatitude().toString(), observation.getLongitude().toString());
-				ShowData data = new ShowData(observation, facts, observationResource, userGroups, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy);
+				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
+						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated,
+						observationNearBy);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
@@ -604,9 +608,9 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Flag> createFlag(Long observationId, FlagIbp flagIbp) {
+	public List<FlagShow> createFlag(Long observationId, FlagIbp flagIbp) {
 		try {
-			List<Flag> flagList = utilityServices.createFlag("observation", observationId.toString(), flagIbp);
+			List<FlagShow> flagList = utilityServices.createFlag("observation", observationId.toString(), flagIbp);
 			int flagCount = 0;
 			if (flagList != null)
 				flagCount = flagList.size();
@@ -624,9 +628,9 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Flag> unFlag(Long observationId, Flag flag) {
+	public List<FlagShow> unFlag(Long observationId, String flagId) {
 		try {
-			List<Flag> result = utilityServices.unFlag("observation", observationId.toString(), flag);
+			List<FlagShow> result = utilityServices.unFlag("observation", observationId.toString(), flagId);
 			int flagCount = 0;
 			if (result != null)
 				flagCount = result.size();

@@ -12,9 +12,10 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.utility.pojo.Flag;
+import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Tags;
 
 /**
@@ -35,10 +36,11 @@ public class ShowData implements Serializable {
 	private List<FactValuePair> factValuePair;
 	private List<ObservationResourceUser> observationResource;
 	private List<UserGroupIbp> userGroups;
+	private List<CustomFieldObservationData> customField;
 	private ObservationLocationInfo layerInfo;
 	private ObservationInfo esLayerInfo;
 	private RecoIbp recoIbp;
-	private List<Flag> flag;
+	private List<FlagShow> flag;
 	private List<Tags> tags;
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
@@ -57,6 +59,7 @@ public class ShowData implements Serializable {
 	 * @param factValuePair
 	 * @param observationResource
 	 * @param userGroups
+	 * @param customField
 	 * @param layerInfo
 	 * @param esLayerInfo
 	 * @param recoIbp
@@ -69,14 +72,15 @@ public class ShowData implements Serializable {
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
-			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, List<Flag> flag,
-			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes,
-			List<ObservationNearBy> observationNearBy) {
+			List<CustomFieldObservationData> customField, ObservationLocationInfo layerInfo,
+			ObservationInfo esLayerInfo, RecoIbp recoIbp, List<FlagShow> flag, List<Tags> tags, List<Featured> fetaured,
+			UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
 		this.observationResource = observationResource;
 		this.userGroups = userGroups;
+		this.customField = customField;
 		this.layerInfo = layerInfo;
 		this.esLayerInfo = esLayerInfo;
 		this.recoIbp = recoIbp;
@@ -120,6 +124,14 @@ public class ShowData implements Serializable {
 		this.userGroups = userGroups;
 	}
 
+	public List<CustomFieldObservationData> getCustomField() {
+		return customField;
+	}
+
+	public void setCustomField(List<CustomFieldObservationData> customField) {
+		this.customField = customField;
+	}
+
 	public ObservationLocationInfo getLayerInfo() {
 		return layerInfo;
 	}
@@ -144,11 +156,11 @@ public class ShowData implements Serializable {
 		this.recoIbp = recoIbp;
 	}
 
-	public List<Flag> getFlag() {
+	public List<FlagShow> getFlag() {
 		return flag;
 	}
 
-	public void setFlag(List<Flag> flag) {
+	public void setFlag(List<FlagShow> flag) {
 		this.flag = flag;
 	}
 

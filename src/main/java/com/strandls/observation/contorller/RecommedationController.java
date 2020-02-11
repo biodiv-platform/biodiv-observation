@@ -122,8 +122,6 @@ public class RecommedationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observationId);
 			RecoShow result = recoService.removeRecoVote(obvId, userId, recoSet);
-			if (result == null)
-				return Response.status(Status.NOT_ACCEPTABLE).entity("Observation is Locked").build();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
