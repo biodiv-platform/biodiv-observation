@@ -29,6 +29,7 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -198,7 +199,8 @@ public class ObservationMapperHelper {
 
 	}
 
-	public RecoCreate createRecoMapping(RecoData recoData) {
+	public RecoCreate createRecoMapping(RecoData recoData) throws Exception {
+
 		Long commonNameId = null;
 		String commonName = recoData.getTaxonCommonName();
 		Long scientificNameId = null;
@@ -266,11 +268,15 @@ public class ObservationMapperHelper {
 	}
 
 //	scientific Name DON'T have a taxonId
-	private Map<String, Long> scientificNameNotExists(RecoData recoData) {
+	private Map<String, Long> scientificNameNotExists(RecoData recoData) throws Exception {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
 			String providedSciName = recoData.getTaxonScientificName();
 			ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
+
+			if (parsedName.getCanonicalName() == null)
+				throw new ObservationInputException("Scientific Name Cannot start with Small letter");
+
 			String canonicalName = parsedName.getCanonicalName().getSimple();
 			ExtendedTaxonDefinition esResult = esService.matchPhrase("etdi", "er", "name", providedSciName,
 					"canonical_form", canonicalName);
@@ -292,6 +298,7 @@ public class ObservationMapperHelper {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			throw e;
 		}
 
 		return result;

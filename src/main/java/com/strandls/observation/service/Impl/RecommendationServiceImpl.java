@@ -710,7 +710,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 		RecoIbp recoIbp = fetchRecoName(observationId, maxVotedReco);
 		List<RecoIbp> recoVoteList = allRecoVote(observationId);
 		List<AllRecoSugguestions> allReco = observaitonService.aggregateAllRecoSuggestions(recoVoteList);
-		RecoShow recoShow = new RecoShow(recoIbp, allReco);
+		Boolean isLocked = observationDao.findById(observationId).getIsLocked();
+		RecoShow recoShow = new RecoShow(recoIbp, allReco, isLocked);
 		return recoShow;
 	}
 
