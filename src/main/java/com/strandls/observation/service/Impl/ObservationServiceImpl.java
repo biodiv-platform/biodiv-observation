@@ -139,6 +139,7 @@ public class ObservationServiceImpl implements ObservationService {
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
 		List<AllRecoSugguestions> recoaggregated = null;
+		Map<String, Object> userScore = null;
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
@@ -147,6 +148,7 @@ public class ObservationServiceImpl implements ObservationService {
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = userGroupService.getObservationCustomFields(id.toString());
+				userScore = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -172,8 +174,8 @@ public class ObservationServiceImpl implements ObservationService {
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation("observation", "observation",
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
-						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated,
-						observationNearBy);
+						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy,
+						userScore);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
