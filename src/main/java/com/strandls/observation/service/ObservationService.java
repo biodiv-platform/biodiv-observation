@@ -39,10 +39,10 @@ public interface ObservationService {
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
 
-	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId);
+	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) throws Exception;
 
 	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
-			ObservationUpdateData observationUpdate);
+			ObservationUpdateData observationUpdate) throws Exception;
 
 	public String removeObservation(CommonProfile profile, Long userId, Long observationId);
 
@@ -69,7 +69,7 @@ public interface ObservationService {
 	public List<TraitsValuePair> getTraitList(String speciesId);
 
 	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
-			String taxonList);
+			String taxonList) throws Exception;
 
 	public List<Tags> getTagsSugguestions(String phrase);
 

@@ -266,7 +266,7 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData.getResources());
-			resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
+			resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
 			traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
 					observationData.getFacts());
@@ -493,11 +493,11 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
-			String taxonList) {
+			String taxonList) throws Exception {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
 			List<Long> validateAllowed = new ArrayList<Long>();
-			List<UserGroupIbp> allowedUserGroup = null;
+			List<UserGroupIbp> allowedUserGroup = new ArrayList<UserGroupIbp>();
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
 			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
 
@@ -526,7 +526,8 @@ public class ObservationServiceImpl implements ObservationService {
 					userGroupMember.add(userMemberRole.getUserGroupId());
 				}
 				String s = userGroupMember.toString();
-				allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
+				if (s.substring(1, s.length() - 1).trim().length() != 0)
+					allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
 
 				for (UserGroupMemberRole userFeatureRole : userPermission.getUserFeatureRole()) {
 					userGroupFeatureRole.add(userFeatureRole.getUserGroupId());
@@ -546,8 +547,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			throw e;
 		}
-		return null;
 	}
 
 	private List<Long> ValidatePermission(List<TaxonTree> taxonTrees, List<SpeciesPermission> allowedTaxons) {
@@ -680,7 +681,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
-			ObservationUpdateData observationUpdate) {
+			ObservationUpdateData observationUpdate) throws Exception {
 
 		try {
 			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
@@ -705,7 +706,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 				List<Resource> resources = observationHelper.createResourceMapping(userId,
 						observationUpdate.getResources());
-				resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()), resources);
+				resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
+						resources);
 
 //				calculate reprImageof observation
 
@@ -746,19 +748,19 @@ public class ObservationServiceImpl implements ObservationService {
 				try {
 					throw new ObservationInputException("USER NOT ALLOWED TO UPDATE THE OBSERVATION");
 				} catch (Exception e) {
-					logger.error(e.getMessage());
+					throw e;
 				}
 			}
-			return null;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			throw e;
 		}
-		return null;
 
 	}
 
 	@Override
-	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) {
+	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId)
+			throws Exception {
 		ObservationUpdateData editData = new ObservationUpdateData();
 		try {
 			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
@@ -787,6 +789,7 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			throw e;
 		}
 		return editData;
 	}

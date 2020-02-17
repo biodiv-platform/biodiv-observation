@@ -370,11 +370,11 @@ public class ObservationMapperHelper {
 					(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 			resource.setFileName(resourceData.getPath());
 			resource.setMimeType(null);
-			if (resourceData.getType().startsWith("image"))
+			if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
 				resource.setType("IMAGE");
-			else if (resourceData.getType().startsWith("audio"))
+			else if (resourceData.getType().startsWith("audio") || resourceData.getType().equalsIgnoreCase("audio"))
 				resource.setType("AUDIO");
-			else if (resourceData.getType().startsWith("video"))
+			else if (resourceData.getType().startsWith("video") || resourceData.getType().equalsIgnoreCase("video"))
 				resource.setType("VIDEO");
 			resource.setUrl(null);
 			resource.setRating(resourceData.getRating());
