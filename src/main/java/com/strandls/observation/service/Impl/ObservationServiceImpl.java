@@ -153,10 +153,8 @@ public class ObservationServiceImpl implements ObservationService {
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
-				System.out.println("before naksha");
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
-				System.out.println("after naksha");
 				if (observation.getFlagCount() > 0)
 					flag = utilityServices.getFlagByObjectType("observation", id.toString());
 				tags = utilityServices.getTags("observation", id.toString());
