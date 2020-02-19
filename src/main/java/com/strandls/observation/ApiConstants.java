@@ -40,6 +40,9 @@ public class ApiConstants {
 	public static final String AUTHOR = "/author";
 	public static final String APPLYFILTER = "/applyFilter";
 	public static final String APPLYGEOPRIVACY = "/applyGeoPrivacy";
+	public static final String CUSTOMFIELD = "/customField";
+	public static final String OPTIONS = "/options";
+	public static final String INSERT = "/insert";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

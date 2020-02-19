@@ -52,8 +52,11 @@ import com.strandls.user.pojo.SpeciesPermission;
 import com.strandls.user.pojo.UserGroupMemberRole;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.user.pojo.UserPermissions;
+import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.ObservationLatLon;
@@ -92,6 +95,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private UserGroupSerivceApi userGroupService;
+
+	@Inject
+	private CustomFieldServiceApi cfService;
 
 	@Inject
 	private LayerServiceApi layerService;
@@ -146,7 +152,7 @@ public class ObservationServiceImpl implements ObservationService {
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
-				customField = userGroupService.getObservationCustomFields(id.toString());
+				customField = cfService.getObservationCustomFields(id.toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -894,6 +900,28 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 
+	}
+
+	@Override
+	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData) {
+		try {
+			List<CustomFieldObservationData> result = cfService.addUpdateCustomFieldData(factsCreateData);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<CustomFieldValues> getCustomFieldOptions(String observationId, String userGroupId, String cfId) {
+		try {
+			List<CustomFieldValues> result = cfService.getCustomFieldOptions(observationId, userGroupId, cfId);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 	}
 
 }

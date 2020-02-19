@@ -40,6 +40,9 @@ import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.pojo.Follow;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -657,6 +660,51 @@ public class ObservationController {
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Unable to Start the process").build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.CUSTOMFIELD + ApiConstants.OPTIONS + "/{observationId}/{userGroupId}/{cfId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Finds the set of Values for a Custom Field", notes = "Returns the Set of Values of Custom Field", response = CustomFieldValues.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to get the value list", response = String.class) })
+
+	public Response getCustomFieldOptions(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId, @PathParam("userGroupId") String userGroupId,
+			@PathParam("cfId") String cfId) {
+		try {
+			List<CustomFieldValues> result = observationSerices.getCustomFieldOptions(observationId, userGroupId, cfId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@POST
+	@Path(ApiConstants.CUSTOMFIELD + ApiConstants.INSERT)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Insert/Update custom field Data", notes = "Return a complete customField Data for the Observaiton", response = CustomFieldObservationData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to add/Update the data", response = String.class) })
+
+	public Response addUpdateCustomFieldData(@Context HttpServletRequest request,
+			@ApiParam(name = "factsCreateData") CustomFieldFactsInsert factsCreateData) {
+		try {
+			List<CustomFieldObservationData> result = observationSerices.addUpdateCustomFieldData(factsCreateData);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 

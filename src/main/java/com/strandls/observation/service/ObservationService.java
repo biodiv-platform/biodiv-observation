@@ -20,6 +20,9 @@ import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.pojo.Follow;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -90,5 +93,9 @@ public interface ObservationService {
 	public void applyFilterObservation(String userGroupIds);
 
 	public void applyGeoPrivacyObservaiton();
+
+	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData);
+
+	public List<CustomFieldValues> getCustomFieldOptions(String observationId, String userGroupId, String cfId);
 
 }

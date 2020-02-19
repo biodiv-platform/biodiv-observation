@@ -23,6 +23,7 @@ import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
 
@@ -44,6 +45,9 @@ public class SwaggerFilter implements Filter {
 
 	@Inject
 	public UserGroupSerivceApi userGroupService;
+
+	@Inject
+	public CustomFieldServiceApi cfService;
 
 	@Inject
 	public LayerServiceApi layerService;
@@ -94,6 +98,7 @@ public class SwaggerFilter implements Filter {
 		utilityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
+		cfService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 
 		chain.doFilter(request2, response);
 	}
