@@ -56,6 +56,7 @@ import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.CustomFieldPermission;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
@@ -540,15 +541,20 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			}
 
+			List<Long> userGroupIdList = new ArrayList<Long>();
 			List<UserGroupIbp> featureableGroup = new ArrayList<UserGroupIbp>();
 			for (UserGroupIbp userGroup : associatedUserGroup) {
+				userGroupIdList.add(userGroup.getId());
 				if (userGroupFeatureRole.contains(userGroup.getId()))
 					featureableGroup.add(userGroup);
 
 			}
 
+			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId);
+
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
-					featureableGroup, userPermission.getFollowing());
+					featureableGroup, cfPermission, userPermission.getFollowing());
+
 			return permission;
 
 		} catch (Exception e) {
