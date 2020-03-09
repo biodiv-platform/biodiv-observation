@@ -26,6 +26,10 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.es.util.ESCreateThread;
+import com.strandls.observation.es.util.ESUpdate;
+import com.strandls.observation.es.util.ObservationIndex;
+import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -120,6 +124,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private RecommendationVoteDao recoVoteDao;
+
+	@Inject
+	private RabbitMQProducer producer;
+
+	@Inject
+	private ESUpdate esUpdate;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -328,6 +338,11 @@ public class ObservationServiceImpl implements ObservationService {
 			latlon.setLongitude(observation.getLongitude());
 			latlon.setObservationId(observation.getId());
 			userGroupService.getFilterRule(latlon);
+
+			ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
+			Thread thread = new Thread(esCreateThread);
+			thread.start();
+
 			return findById(observation.getId());
 
 		} catch (Exception e) {
@@ -355,6 +370,8 @@ public class ObservationServiceImpl implements ObservationService {
 				newGroupName = speciesGroup.getName();
 		}
 		String description = previousGroupName + " to " + newGroupName;
+
+		produceToRabbitMQ(observationId.toString(), "Species Group");
 		logActivity.LogActivity(description, observationId, observationId, "observation", observationId,
 				"Observation species group updated");
 		return observation.getGroupId();
@@ -371,6 +388,7 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
 			updateGeoPrivacy(observationList);
+			produceToRabbitMQ(observationId.toString(), "Recommendation");
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
@@ -384,6 +402,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(tagsMapping.getObjectId());
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			produceToRabbitMQ(tagsMapping.getObjectId().toString(), "Tags");
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -399,6 +418,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			produceToRabbitMQ(observationId, "Traits");
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -414,6 +434,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			produceToRabbitMQ(observationId, "UserGroups");
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -455,6 +476,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(featuredCreate.getObjectId());
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			produceToRabbitMQ(observation.getId().toString(), "Featured");
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -469,6 +491,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(Long.parseLong(observaitonId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
+			produceToRabbitMQ(observation.getId().toString(), "Featured");
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -611,13 +634,20 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public String removeObservation(CommonProfile profile, Long userId, Long observationId) {
+		try {
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
+				observation.setIsDeleted(true);
+				observationDao.update(observation);
 
-		JSONArray userRole = (JSONArray) profile.getAttribute("roles");
-		Observation observation = observationDao.findById(observationId);
-		if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
-			observation.setIsDeleted(true);
-			observationDao.update(observation);
-			return "Observation Deleted Succesfully";
+				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+						observationId.toString());
+
+				return "Observation Deleted Succesfully";
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 
 		return null;
@@ -635,6 +665,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setLastRevised(new Date());
 			observation.setFlagCount(flagCount);
 			observationDao.update(observation);
+			produceToRabbitMQ(observationId.toString(), "Flags");
 			return flagList;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -655,6 +686,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setLastRevised(new Date());
 			observation.setFlagCount(flagCount);
 			observationDao.update(observation);
+			produceToRabbitMQ(observationId.toString(), "Flags");
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -753,6 +785,8 @@ public class ObservationServiceImpl implements ObservationService {
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
 
+				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
+
 				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
 						"Observation updated");
 				return findById(observationId);
@@ -795,7 +829,6 @@ public class ObservationServiceImpl implements ObservationService {
 //				resources Data
 				List<ObservationResourceUser> resourceData = resourceService.getImageResource(observationId.toString());
 				editData.setResources(observationHelper.createEditResourceMapping(resourceData));
-
 			} else {
 				throw new ObservationInputException("USER NOT ALLOWED TO EDIT THE PAGE");
 			}
@@ -895,6 +928,7 @@ public class ObservationServiceImpl implements ObservationService {
 							System.out.println("Observation Id : " + observation.getId());
 							observation.setGeoPrivacy(true);
 							observationDao.update(observation);
+							produceToRabbitMQ(observation.getId().toString(), "Observation Core");
 							System.out.println("----------END------------");
 						}
 
@@ -912,6 +946,8 @@ public class ObservationServiceImpl implements ObservationService {
 	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData) {
 		try {
 			List<CustomFieldObservationData> result = cfService.addUpdateCustomFieldData(factsCreateData);
+			if (result != null && !result.isEmpty())
+				produceToRabbitMQ(factsCreateData.getObservationId().toString(), "Custom Field");
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -928,6 +964,16 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public void produceToRabbitMQ(String observationId, String updateType) {
+		try {
+			producer.setMessage("esmodule", observationId, updateType);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 	}
 
 }

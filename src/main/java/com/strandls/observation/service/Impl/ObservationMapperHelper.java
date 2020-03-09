@@ -366,8 +366,9 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceData : resourceDataList) {
 			Resource resource = new Resource();
 			resource.setVersion(0L);
-			resource.setDescription(
-					(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
+			if (resourceData.getCaption() != null)
+				resource.setDescription(
+						(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 			resource.setFileName(resourceData.getPath());
 			resource.setMimeType(null);
 			if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))

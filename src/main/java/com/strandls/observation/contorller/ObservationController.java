@@ -3,11 +3,16 @@
  */
 package com.strandls.observation.contorller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -17,19 +22,31 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.pac4j.core.profile.CommonProfile;
 
 import com.google.inject.Inject;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.pojo.MapBoundParams;
+import com.strandls.esmodule.pojo.MapBounds;
+import com.strandls.esmodule.pojo.MapGeoPoint;
+import com.strandls.esmodule.pojo.MapSearchParams;
+import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
+import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
@@ -69,13 +86,19 @@ import net.minidev.json.JSONArray;
 public class ObservationController {
 
 	@Inject
-	private ObservationService observationSerices;
+	private ObservationService observationService;
 
 	@Inject
 	private GeoPrivacyBulkThread geoPrivacyThread;
 
 	@Inject
 	private ObservationMapperHelper observationHelper;
+
+	@Inject
+	private ESUtility esUtility;
+
+	@Inject
+	private ObservationListService observationListService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -99,7 +122,7 @@ public class ObservationController {
 		Long obvId;
 		try {
 			obvId = Long.parseLong(id);
-			ShowData show = observationSerices.findById(obvId);
+			ShowData show = observationService.findById(obvId);
 
 			if (show != null)
 				return Response.status(Status.OK).entity(show).build();
@@ -144,7 +167,7 @@ public class ObservationController {
 				throw new ObservationInputException("Observation Not within India Bounds");
 			}
 
-			ShowData result = observationSerices.createObservation(request, observationData);
+			ShowData result = observationService.createObservation(request, observationData);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (ObservationInputException e) {
@@ -170,7 +193,7 @@ public class ObservationController {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
-			ObservationUpdateData result = observationSerices.getObservationEditPageData(profile, obvId);
+			ObservationUpdateData result = observationService.getObservationEditPageData(profile, obvId);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -205,7 +228,7 @@ public class ObservationController {
 
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
-			ShowData result = observationSerices.editObservaitonCore(profile, obvId, observationUpdate);
+			ShowData result = observationService.editObservaitonCore(profile, obvId, observationUpdate);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -231,7 +254,7 @@ public class ObservationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observaitonId);
 
-			String result = observationSerices.removeObservation(profile, userId, obvId);
+			String result = observationService.removeObservation(profile, userId, obvId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not Allowed to Delete the Observation")
 						.build();
@@ -240,6 +263,105 @@ public class ObservationController {
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Observation Cannot be Deleted").build();
 		}
+	}
+
+	@GET
+	@Path(ApiConstants.LIST + "/{index}/{type}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	public Response observationList(@PathParam("index") String index, @PathParam("type") String type,
+			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
+			@DefaultValue("") @QueryParam("user") String user,
+			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
+			@DefaultValue("") @QueryParam("webaddress") String webaddress,
+			@DefaultValue("") @QueryParam("speciesName") String speciesName,
+			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
+			@DefaultValue("") @QueryParam("months") String months,
+			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
+			@DefaultValue("lastrevised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
+			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
+			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
+			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
+			@QueryParam("recoName") String recoName,
+			@DefaultValue("265799") @QueryParam("classifdication") String classificationid,
+			@DefaultValue("10") @QueryParam("max") Integer max, @DefaultValue("0") @QueryParam("offset") Integer offset,
+			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
+			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
+			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
+			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
+			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
+			@QueryParam("termsAggregationField") String termsAggregationField, @QueryParam("view") String view,
+			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
+			@QueryParam("district") String district, @QueryParam("state") String state, @Context UriInfo uriInfo) {
+
+		try {
+
+			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+			// System.out.println(queryParams.get);
+			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("trait"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+			Map<String, List<String>> customParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("custom"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+			MapBounds bounds = null;
+			if (top != null || bottom != null || left != null || right != null) {
+				bounds = new MapBounds();
+				bounds.setBottom(bottom);
+				bounds.setLeft(left);
+				bounds.setRight(right);
+				bounds.setTop(top);
+			}
+			List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
+			if (location != null) {
+				double[] point = Stream.of(location.split(",")).mapToDouble(Double::parseDouble).toArray();
+				for (int i = 0; i < point.length; i = i + 2) {
+					String singlePoint = point[i + 1] + "," + point[i];
+
+					int comma = singlePoint.indexOf(',');
+					if (comma != -1) {
+						MapGeoPoint geoPoint = new MapGeoPoint();
+						geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
+						geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
+						polygon.add(geoPoint);
+					}
+				}
+			}
+
+			MapBoundParams mapBoundsParams = new MapBoundParams();
+			mapBoundsParams.setBounds(bounds);
+			mapBoundsParams.setPolygon(polygon);
+
+			MapSearchParams mapSearchParams = new MapSearchParams();
+			mapSearchParams.setFrom(offset);
+			mapSearchParams.setLimit(max);
+			mapSearchParams.setSortOn(sortOn);
+			mapSearchParams.setSortType(SortTypeEnum.DESC);
+			mapSearchParams.setMapBoundParams(mapBoundsParams);
+
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state);
+
+			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
+					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+					validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
+					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
+					district, state);
+
+			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
+					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
+					aggregationResult, view);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
 	}
 
 	@PUT
@@ -258,7 +380,7 @@ public class ObservationController {
 			Long obvId = Long.parseLong(observationId);
 			Long sGroup = Long.parseLong(sGroupId);
 
-			Long result = observationSerices.updateSGroup(obvId, sGroup);
+			Long result = observationService.updateSGroup(obvId, sGroup);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -278,7 +400,7 @@ public class ObservationController {
 	public Response updateTags(@Context HttpServletRequest request,
 			@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
 		try {
-			List<Tags> result = observationSerices.updateTags(tagsMapping);
+			List<Tags> result = observationService.updateTags(tagsMapping);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -299,7 +421,7 @@ public class ObservationController {
 	public Response updateTraits(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@PathParam("traitId") String traitId, @ApiParam(name = "valueList") List<Long> valueList) {
 		try {
-			List<FactValuePair> result = observationSerices.updateTraits(observationId, traitId, valueList);
+			List<FactValuePair> result = observationService.updateTraits(observationId, traitId, valueList);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -322,7 +444,7 @@ public class ObservationController {
 			@PathParam("observationId") String observationId,
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
-			List<UserGroupIbp> result = observationSerices.updateUserGroup(observationId, userGroupList);
+			List<UserGroupIbp> result = observationService.updateUserGroup(observationId, userGroupList);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -341,7 +463,7 @@ public class ObservationController {
 	public Response getAllSpecies() {
 		try {
 
-			List<SpeciesGroup> result = observationSerices.getAllSpeciesGroup();
+			List<SpeciesGroup> result = observationService.getAllSpeciesGroup();
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -359,7 +481,7 @@ public class ObservationController {
 
 	public Response getLanguaes(@QueryParam("isDirty") Boolean isDirty) {
 		try {
-			List<Language> result = observationSerices.getLanguages(isDirty);
+			List<Language> result = observationService.getLanguages(isDirty);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -379,7 +501,7 @@ public class ObservationController {
 	public Response createFeatured(@Context HttpServletRequest request,
 			@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
 		try {
-			List<Featured> result = observationSerices.createFeatured(featuredCreate);
+			List<Featured> result = observationService.createFeatured(featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -398,7 +520,7 @@ public class ObservationController {
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
-			List<Featured> result = observationSerices.unFeatured(observationId, userGroupList);
+			List<Featured> result = observationService.unFeatured(observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -417,7 +539,7 @@ public class ObservationController {
 
 	public Response getValuesOfTraits(@Context HttpServletRequest request, @PathParam("traitId") String traitId) {
 		try {
-			List<TraitsValue> result = observationSerices.getTraitsValue(traitId);
+			List<TraitsValue> result = observationService.getTraitsValue(traitId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -433,7 +555,7 @@ public class ObservationController {
 
 	public Response getTraitList(@PathParam("speciesId") String speciesId) {
 		try {
-			List<TraitsValuePair> result = observationSerices.getTraitList(speciesId);
+			List<TraitsValuePair> result = observationService.getTraitList(speciesId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -457,7 +579,7 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			ObservationUserPermission result = observationSerices.getUserPermissions(profile, observationId, userId,
+			ObservationUserPermission result = observationService.getUserPermissions(profile, observationId, userId,
 					taxonList);
 
 			return Response.status(Status.OK).entity(result).build();
@@ -477,7 +599,7 @@ public class ObservationController {
 
 	public Response getTagsSuggetion(@QueryParam("phrase") String phrase) {
 		try {
-			List<Tags> result = observationSerices.getTagsSugguestions(phrase);
+			List<Tags> result = observationService.getTagsSugguestions(phrase);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -494,7 +616,7 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to get the userGroup", response = String.class) })
 	public Response getUsersGroupList(@Context HttpServletRequest request) {
 		try {
-			List<UserGroupIbp> result = observationSerices.getUsersGroupList();
+			List<UserGroupIbp> result = observationService.getUsersGroupList();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -515,7 +637,7 @@ public class ObservationController {
 			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<FlagShow> result = observationSerices.createFlag(obsId, flagIbp);
+			List<FlagShow> result = observationService.createFlag(obsId, flagIbp);
 			if (result.isEmpty())
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User Allowed Flagged").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -540,7 +662,7 @@ public class ObservationController {
 			@PathParam("flagId") String flagId) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<FlagShow> result = observationSerices.unFlag(obsId, flagId);
+			List<FlagShow> result = observationService.unFlag(obsId, flagId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not allowed to Unflag").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -562,7 +684,7 @@ public class ObservationController {
 			@PathParam("observationId") String observationId) {
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationSerices.followRequest(obvId);
+			Follow result = observationService.followRequest(obvId);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -583,7 +705,7 @@ public class ObservationController {
 
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationSerices.unFollowRequest(obvId);
+			Follow result = observationService.unFollowRequest(obvId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -602,7 +724,7 @@ public class ObservationController {
 	public Response getObservationAuthor(@PathParam("observationId") String observationId) {
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Long result = observationSerices.getObservationAuthor(obvId);
+			Long result = observationService.getObservationAuthor(obvId);
 			return Response.status(Status.OK).entity(result.toString()).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Cannot find the Author").build();
@@ -625,7 +747,7 @@ public class ObservationController {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 
 			if (userRole.contains("ROLE_ADMIN")) {
-				UserGroupFilterThread groupFilterThread = new UserGroupFilterThread(observationSerices, groupIds);
+				UserGroupFilterThread groupFilterThread = new UserGroupFilterThread(observationService, groupIds);
 				Thread thread = new Thread(groupFilterThread);
 				thread.start();
 				return Response.status(Status.OK).entity("Process has started to apply the new filter Rule").build();
@@ -678,7 +800,7 @@ public class ObservationController {
 			@PathParam("observationId") String observationId, @PathParam("userGroupId") String userGroupId,
 			@PathParam("cfId") String cfId) {
 		try {
-			List<CustomFieldValues> result = observationSerices.getCustomFieldOptions(observationId, userGroupId, cfId);
+			List<CustomFieldValues> result = observationService.getCustomFieldOptions(observationId, userGroupId, cfId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -700,9 +822,27 @@ public class ObservationController {
 	public Response addUpdateCustomFieldData(@Context HttpServletRequest request,
 			@ApiParam(name = "factsCreateData") CustomFieldFactsInsert factsCreateData) {
 		try {
-			List<CustomFieldObservationData> result = observationSerices.addUpdateCustomFieldData(factsCreateData);
+			List<CustomFieldObservationData> result = observationService.addUpdateCustomFieldData(factsCreateData);
 			return Response.status(Status.OK).entity(result).build();
 
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.PRODUCE + "/{updateType}/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Publish the observationId to RabbitMQ", notes = "Return the result", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to push to rabbitMQ", response = String.class) })
+
+	public Response pushToRabbitMQ(@PathParam("updateType") String updateType,
+			@PathParam("observationId") String observationId) {
+		try {
+			observationService.produceToRabbitMQ(observationId, updateType);
+			return Response.status(Status.OK).entity("Published to RabbitMQ").build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

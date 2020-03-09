@@ -26,21 +26,16 @@ public class UserGroupFilterThread implements Runnable {
 	 * @param service
 	 * @param userGroupIds
 	 */
+	public UserGroupFilterThread(ObservationService service, String userGroupIds) {
+		super();
+		this.service = service;
+		this.userGroupIds = userGroupIds;
+	}
 
 	@Override
 	public void run() {
 		service.applyFilterObservation(userGroupIds);
 
-	}
-
-	/**
-	 * @param service
-	 * @param userGroupIds
-	 */
-	public UserGroupFilterThread(ObservationService service, String userGroupIds) {
-		super();
-		this.service = service;
-		this.userGroupIds = userGroupIds;
 	}
 
 }

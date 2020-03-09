@@ -1,0 +1,68 @@
+/**
+ * 
+ */
+package com.strandls.observation.es.util;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.MapDocument;
+import com.strandls.esmodule.pojo.MapQueryResponse;
+
+/**
+ * @author Abhishek Rudra
+ *
+ */
+public class ESUpdate {
+
+	private final Logger logger = LoggerFactory.getLogger(ESUpdate.class);
+
+	@Inject
+	private EsServicesApi esService;
+
+	@Inject
+	private ConstructESDocument constructESDocument;
+
+	@Inject
+	private ObjectMapper om;
+
+	public void pushToElastic(String observationId) {
+		try {
+			System.out.println("Observation getting pushed to elastic, ID:" + observationId);
+			ObservationESDocument result = constructESDocument.getESDocumentStub(observationId);
+//			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//			om.setDateFormat(df);
+			String resultString = om.writeValueAsString(result);
+			MapDocument doc = new MapDocument();
+			doc.setDocument(resultString);
+			MapQueryResponse response = esService.create(ObservationIndex.index.getValue(),
+					ObservationIndex.type.getValue(), observationId, doc);
+			System.out.println(response.getResult());
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+	}
+
+	public void updateESInstance(String observationId) {
+		try {
+			System.out.println("Observation getting UPDATED to elastic, ID:" + observationId);
+			ObservationESDocument result = constructESDocument.getESDocumentStub(observationId);
+//			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//			om.setDateFormat(df);
+			String resultString = om.writeValueAsString(result);
+			MapDocument doc = new MapDocument();
+			doc.setDocument(resultString);
+			MapQueryResponse response = esService.create(ObservationIndex.index.getValue(),
+					ObservationIndex.type.getValue(), observationId, doc);
+			System.out.println(response.getResult());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
+}

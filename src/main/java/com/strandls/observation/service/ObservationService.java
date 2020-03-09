@@ -98,4 +98,6 @@ public interface ObservationService {
 
 	public List<CustomFieldValues> getCustomFieldOptions(String observationId, String userGroupId, String cfId);
 
+	public void produceToRabbitMQ(String observationId, String updateType);
+
 }

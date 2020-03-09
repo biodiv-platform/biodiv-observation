@@ -579,6 +579,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				observation.setLastRevised(new Date());
 				observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
 				observationDao.update(observation);
+				observaitonService.produceToRabbitMQ(observation.getId().toString(), "Recommendation");
 				RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 
 				String description = "";
@@ -632,6 +633,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 					observation.setLastRevised(new Date());
 					observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
 					observationDao.update(observation);
+					observaitonService.produceToRabbitMQ(observation.getId().toString(), "Recommendation");
 					RecoShow result = fetchCurrentRecoState(observationId, maxVotedReco);
 					String description = "";
 

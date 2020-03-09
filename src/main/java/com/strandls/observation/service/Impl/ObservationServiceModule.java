@@ -5,6 +5,7 @@ package com.strandls.observation.service.Impl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 
@@ -18,6 +19,7 @@ public class ObservationServiceModule extends AbstractModule {
 	protected void configure() {
 		bind(ObservationService.class).to(ObservationServiceImpl.class).in(Scopes.SINGLETON);
 		bind(RecommendationService.class).to(RecommendationServiceImpl.class).in(Scopes.SINGLETON);
+		bind(ObservationListService.class).to(ObservationListServiceImpl.class).in(Scopes.SINGLETON);
 		bind(ObservationMapperHelper.class).in(Scopes.SINGLETON);
 		bind(LogActivities.class).in(Scopes.SINGLETON);
 		bind(UserGroupFilterThread.class).in(Scopes.SINGLETON);

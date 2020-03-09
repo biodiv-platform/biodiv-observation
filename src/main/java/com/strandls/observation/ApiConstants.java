@@ -43,6 +43,7 @@ public class ApiConstants {
 	public static final String CUSTOMFIELD = "/customField";
 	public static final String OPTIONS = "/options";
 	public static final String INSERT = "/insert";
+	public static final String PRODUCE = "/produce";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
@@ -55,5 +56,6 @@ public class ApiConstants {
 
 	// Observation List Controller
 	public static final String LIST = "/list";
+	public static final String AGGREGATE = "/aggregate";
 
 }

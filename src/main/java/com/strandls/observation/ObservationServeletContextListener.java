@@ -32,12 +32,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
+import com.strandls.observation.es.util.ESUtilModule;
+import com.strandls.observation.es.util.RabbitMQConsumer;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -78,6 +81,17 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
+//				Rabbit MQ initialization
+				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
+				Channel channel = null;
+				try {
+					channel = rabbitConnetion.setRabbitMQConnetion();
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				bind(Channel.class).toInstance(channel);
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.wadl.disableWadl", "true");
@@ -101,7 +115,13 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 			}
 		}, new ObservationControllerModule(), new FilterModule(), new ObservationDAOModule(),
-				new ObservationServiceModule());
+				new ObservationServiceModule(), new ESUtilModule());
+
+		try {
+			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 		return injector;
 

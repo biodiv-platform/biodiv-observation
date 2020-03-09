@@ -223,6 +223,22 @@
 			<artifactId>jackson-datatype-jts</artifactId>
 			<version>2.4</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
+		<dependency>
+		    <groupId>com.rabbitmq</groupId>
+		    <artifactId>amqp-client</artifactId>
+		    <version>5.8.0</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.vladmihalcea/hibernate-types-52 -->
+		<dependency>
+		    <groupId>com.vladmihalcea</groupId>
+		    <artifactId>hibernate-types-52</artifactId>
+		    <version>2.9.4</version>
+		</dependency>
+		
+
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
