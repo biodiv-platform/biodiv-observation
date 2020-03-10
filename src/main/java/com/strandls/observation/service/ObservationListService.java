@@ -6,6 +6,7 @@ package com.strandls.observation.service;
 import java.util.List;
 import java.util.Map;
 
+import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.pojo.MapAggregationResponse;
@@ -27,5 +28,7 @@ public interface ObservationListService {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
 			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state);
+
+	public FilterPanelData getAllFilter();
 
 }

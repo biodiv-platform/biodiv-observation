@@ -32,6 +32,7 @@ import org.pac4j.core.profile.CommonProfile;
 import com.google.inject.Inject;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapBounds;
 import com.strandls.esmodule.pojo.MapGeoPoint;
@@ -266,6 +267,23 @@ public class ObservationController {
 	}
 
 	@GET
+	@Path(ApiConstants.LIST + ApiConstants.ALL)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Get all the dynamic filters", notes = "Return all the filter", response = FilterPanelData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
+
+	public Response getAllFilters() {
+		try {
+			FilterPanelData result = observationListService.getAllFilter();
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -284,7 +302,7 @@ public class ObservationController {
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
 			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
 			@QueryParam("recoName") String recoName,
-			@DefaultValue("265799") @QueryParam("classifdication") String classificationid,
+			@DefaultValue("265799") @QueryParam("classification") String classificationid,
 			@DefaultValue("10") @QueryParam("max") Integer max, @DefaultValue("0") @QueryParam("offset") Integer offset,
 			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
 			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,

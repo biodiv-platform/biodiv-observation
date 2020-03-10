@@ -22,6 +22,7 @@ import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
+import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.ObservationDAO;
@@ -155,11 +156,14 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
+		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
+				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
+				authorScore = score.getRecord().get(0).get("observation");
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
@@ -189,7 +193,7 @@ public class ObservationServiceImpl implements ObservationService {
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation("observation", "observation",
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
-						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated,
+						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);

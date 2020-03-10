@@ -18,12 +18,15 @@ import com.google.inject.Inject;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
+import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.GeoHashAggregationData;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationIndex;
+import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapTraitsAggregation;
@@ -57,6 +60,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		try {
 			Map<String, Long> geoHashResult = null;
 			List<ObservationListPageMapper> observationList = new ArrayList<ObservationListPageMapper>();
+			List<ObservationListMinimalData> observationListMinimal = new ArrayList<ObservationListMinimalData>();
 			Long totalCount = null;
 			if (view.equalsIgnoreCase("map")) {
 				GeoHashAggregationData geoHashAggregationData = esService.getGeoHashAggregation(index, type,
@@ -72,18 +76,33 @@ public class ObservationListServiceImpl implements ObservationListService {
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
 
-				for (MapDocument document : documents) {
-					try {
+				if (view.equalsIgnoreCase("list_minimal")) {
+					for (MapDocument document : documents) {
+						try {
 
-						observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
-								ObservationListPageMapper.class));
-					} catch (IOException e) {
-						logger.error(e.getMessage());
+							observationListMinimal.add(objectMapper.readValue(String.valueOf(document.getDocument()),
+									ObservationListMinimalData.class));
+						} catch (IOException e) {
+							logger.error(e.getMessage());
+						}
 					}
+
+				} else {
+					for (MapDocument document : documents) {
+						try {
+
+							observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
+									ObservationListPageMapper.class));
+						} catch (IOException e) {
+							logger.error(e.getMessage());
+						}
+					}
+
 				}
+
 			}
 
-			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult);
+			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult,observationListMinimal);
 
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
@@ -156,26 +175,23 @@ public class ObservationListServiceImpl implements ObservationListService {
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, omiter, tahsil, district, state);
-			aggregationResponse.setGroupRank(
-					getAggregate(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
+			aggregationResponse.setGroupRank(getAggregate(index, type, "max_voted_reco.ranktext.keyword",
+					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 		} else {
 			aggregationResponse.setGroupRank(
 					getAggregate(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery)
 							.getGroupAggregation());
 		}
-		
-		if(state!=null) {
+
+		if (state != null) {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, omiter);
-			aggregationResponse.setGroupRank(
-					getAggregate(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-			
-		}
-		else {
+			aggregationResponse.setGroupRank(getAggregate(index, type, "location_information.state.keyword",
+					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
+
+		} else {
 			aggregationResponse.setGroupRank(
 					getAggregate(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQuery)
 							.getGroupAggregation());
@@ -471,6 +487,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 		return traitsAgg;
 
+	}
+
+	@Override
+	public FilterPanelData getAllFilter() {
+		FilterPanelData result = null;
+		try {
+			result = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
 	}
 
 }

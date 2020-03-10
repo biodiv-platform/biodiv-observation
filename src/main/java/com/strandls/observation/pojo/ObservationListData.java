@@ -6,6 +6,7 @@ package com.strandls.observation.pojo;
 import java.util.List;
 import java.util.Map;
 
+import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 
 /**
@@ -18,6 +19,7 @@ public class ObservationListData {
 	private Long totalCount;
 	private Map<String, Long> geohashAggregation;
 	private MapAggregationResponse aggregationData;
+	private List<ObservationListMinimalData> observationListMinimal;
 
 	/**
 	 * 
@@ -31,14 +33,17 @@ public class ObservationListData {
 	 * @param totalCount
 	 * @param geohashAggregation
 	 * @param aggregationData
+	 * @param observationListMinimal
 	 */
 	public ObservationListData(List<ObservationListPageMapper> observationList, Long totalCount,
-			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData) {
+			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData,
+			List<ObservationListMinimalData> observationListMinimal) {
 		super();
 		this.observationList = observationList;
 		this.totalCount = totalCount;
 		this.geohashAggregation = geohashAggregation;
 		this.aggregationData = aggregationData;
+		this.observationListMinimal = observationListMinimal;
 	}
 
 	public List<ObservationListPageMapper> getObservationList() {
@@ -71,6 +76,14 @@ public class ObservationListData {
 
 	public void setAggregationData(MapAggregationResponse aggregationData) {
 		this.aggregationData = aggregationData;
+	}
+
+	public List<ObservationListMinimalData> getObservationListMinimal() {
+		return observationListMinimal;
+	}
+
+	public void setObservationListMinimal(List<ObservationListMinimalData> observationListMinimal) {
+		this.observationListMinimal = observationListMinimal;
 	}
 
 }
