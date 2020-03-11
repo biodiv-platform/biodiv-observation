@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -470,6 +471,37 @@ public class ESUtility {
 			}
 		}
 
+//		custom Field code to be implemented
+
+		if (!customParams.isEmpty()) {
+
+			for (Entry<String, List<String>> entry : customParams.entrySet()) {
+				try {
+					String key = entry.getKey();
+					String fieldType = key.split("\\.")[1];
+					if (fieldType.equalsIgnoreCase("field_text")) {
+
+					} else if (fieldType.equalsIgnoreCase("single_categorical")
+							|| fieldType.equalsIgnoreCase("multiple_categorical")) {
+
+					} else if (fieldType.equalsIgnoreCase("Range")) {
+
+					} else if (fieldType.equalsIgnoreCase("options")) {
+//						String value = entry.getValue().get(0);
+//						if()
+//						andMatchPhraseQueries.add(assignAndMatchPhrase(ObservationIndex., value.toLowerCase()));
+//						
+						
+					}
+
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+
+			}
+
+		}
+
 		/**
 		 * General conditions
 		 * 
@@ -481,8 +513,6 @@ public class ESUtility {
 		if (!ischecklist.isEmpty()) {
 			boolAndLists.add(assignBoolAndQuery(ObservationIndex.isChecklist.getValue(), ischecklist));
 		}
-
-//		custom Field code to be implemented
 
 //		Unknown Checks		
 		List<Object> userGroupName = cSTSOT(webaddress);

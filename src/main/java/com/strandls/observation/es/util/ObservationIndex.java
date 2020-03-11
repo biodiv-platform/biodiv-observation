@@ -17,7 +17,8 @@ public enum ObservationIndex {
 	path("max_voted_reco.hierarchy.taxon_id"), traitId("facts.trait_id"), traitValue("facts.trait_value.value"),
 	status("max_voted_reco.taxonstatus"), no_of_identifications("no_of_identifications"),
 	tahsil("location_information.tahsil"), state("location_information.state"),
-	district("location_information.district"), rank("max_voted_reco.ranktext");
+	district("location_information.district"), rank("max_voted_reco.ranktext"),
+	customFieldId("custom_fields.custom_field.custom_field_id");
 
 	private String field;
 

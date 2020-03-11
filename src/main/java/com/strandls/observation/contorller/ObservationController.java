@@ -288,6 +288,9 @@ public class ObservationController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
+	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
 	public Response observationList(@PathParam("index") String index, @PathParam("type") String type,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
 			@DefaultValue("") @QueryParam("user") String user,
@@ -316,7 +319,6 @@ public class ObservationController {
 		try {
 
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-			// System.out.println(queryParams.get);
 			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("trait"))
 					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
