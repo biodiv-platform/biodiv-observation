@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.es.util;
 
+import java.text.SimpleDateFormat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,8 @@ public class ESUpdate {
 		try {
 			System.out.println("Observation getting pushed to elastic, ID:" + observationId);
 			ObservationESDocument result = constructESDocument.getESDocumentStub(observationId);
-//			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//			om.setDateFormat(df);
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+			om.setDateFormat(df);
 			String resultString = om.writeValueAsString(result);
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);
@@ -51,8 +53,8 @@ public class ESUpdate {
 		try {
 			System.out.println("Observation getting UPDATED to elastic, ID:" + observationId);
 			ObservationESDocument result = constructESDocument.getESDocumentStub(observationId);
-//			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//			om.setDateFormat(df);
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+			om.setDateFormat(df);
 			String resultString = om.writeValueAsString(result);
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);

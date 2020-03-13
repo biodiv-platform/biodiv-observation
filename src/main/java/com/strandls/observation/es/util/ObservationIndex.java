@@ -18,7 +18,13 @@ public enum ObservationIndex {
 	status("max_voted_reco.taxonstatus"), no_of_identifications("no_of_identifications"),
 	tahsil("location_information.tahsil"), state("location_information.state"),
 	district("location_information.district"), rank("max_voted_reco.ranktext"),
-	customFieldId("custom_fields.custom_field.custom_field_id");
+	customFieldId("custom_fields.custom_field.custom_field_id"),
+	customFieldTextValue("custom_fields.custom_field.custom_field_values.field_text_data"),
+	customFieldAggregation("custom_fields.custom_field.custom_field_values.custom_field_aggregation"),
+	customFieldSingleCategoricalValue("custom_fields.custom_field.custom_field_values.single_categorical_data"),
+	customFieldMultipleCategoricalValue("custom_fields.custom_field.custom_field_values.multiple_categorical_data"),
+	customFieldRangeMinValue("custom_fields.custom_field.custom_field_values.min_range"),
+	customFieldRangeMaxValue("custom_fields.custom_field.custom_field_values.max_range");
 
 	private String field;
 

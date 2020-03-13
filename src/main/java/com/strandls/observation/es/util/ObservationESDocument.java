@@ -74,7 +74,7 @@ import com.vladmihalcea.hibernate.type.json.JsonStringType;
 public class ObservationESDocument {
 
 	@Id
-	private Integer observation_id;
+	private Long observation_id;
 	private Long author_id;
 	private String created_by;
 	private String profile_pic;
@@ -84,6 +84,9 @@ public class ObservationESDocument {
 	@Type(type = "json")
 	@Column(columnDefinition = "json")
 	private Location location;
+	@Type(type = "json")
+	@Column(columnDefinition = "json")
+	private LocationInformation location_information;
 	private String notes;
 	private Date from_date;
 	private String observed_in_month;
@@ -101,6 +104,7 @@ public class ObservationESDocument {
 	private Long dataset_id;
 	private String dataset_title;
 	private Long repr_image_id;
+	private String repr_image_url;
 	private String protocol;
 	private Integer no_of_images;
 	private Integer no_of_videos;
@@ -153,6 +157,7 @@ public class ObservationESDocument {
 	 * @param group_id
 	 * @param group_name
 	 * @param location
+	 * @param location_information
 	 * @param notes
 	 * @param from_date
 	 * @param observed_in_month
@@ -170,6 +175,7 @@ public class ObservationESDocument {
 	 * @param dataset_id
 	 * @param dataset_title
 	 * @param repr_image_id
+	 * @param repr_image_url
 	 * @param protocol
 	 * @param no_of_images
 	 * @param no_of_videos
@@ -188,17 +194,17 @@ public class ObservationESDocument {
 	 * @param featured
 	 * @param facts
 	 */
-	public ObservationESDocument(Integer observation_id, Long author_id, String created_by, String profile_pic,
-			Date created_on, Long group_id, String group_name, Location location, String notes, Date from_date,
-			String observed_in_month, String place_name, String reverse_geocoded_name, Long flag_count,
-			Boolean geo_privacy, Date last_revised, Long visit_count, Boolean is_checklist, Date to_date,
-			Boolean is_locked, Integer language_id, String location_scale, Long dataset_id, String dataset_title,
-			Long repr_image_id, String protocol, Integer no_of_images, Integer no_of_videos, Integer no_of_audio,
-			Integer no_media, Integer no_of_identifications, Long data_table_id, String date_accuracy,
-			Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
-			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
-			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
-			List<Featured> featured, List<Facts> facts) {
+	public ObservationESDocument(Long observation_id, Long author_id, String created_by, String profile_pic,
+			Date created_on, Long group_id, String group_name, Location location,
+			LocationInformation location_information, String notes, Date from_date, String observed_in_month,
+			String place_name, String reverse_geocoded_name, Long flag_count, Boolean geo_privacy, Date last_revised,
+			Long visit_count, Boolean is_checklist, Date to_date, Boolean is_locked, Integer language_id,
+			String location_scale, Long dataset_id, String dataset_title, Long repr_image_id, String repr_image_url,
+			String protocol, Integer no_of_images, Integer no_of_videos, Integer no_of_audio, Integer no_media,
+			Integer no_of_identifications, Long data_table_id, String date_accuracy, Max_voted_reco max_voted_reco,
+			List<All_reco_vote> all_reco_vote, List<Observation_resource> observation_resource,
+			List<Custom_fields> custom_fields, List<User_group_observations> user_group_observations, List<Tags> tags,
+			List<Flags> flags, List<Featured> featured, List<Facts> facts) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -208,6 +214,7 @@ public class ObservationESDocument {
 		this.group_id = group_id;
 		this.group_name = group_name;
 		this.location = location;
+		this.location_information = location_information;
 		this.notes = notes;
 		this.from_date = from_date;
 		this.observed_in_month = observed_in_month;
@@ -225,6 +232,7 @@ public class ObservationESDocument {
 		this.dataset_id = dataset_id;
 		this.dataset_title = dataset_title;
 		this.repr_image_id = repr_image_id;
+		this.repr_image_url = repr_image_url;
 		this.protocol = protocol;
 		this.no_of_images = no_of_images;
 		this.no_of_videos = no_of_videos;
@@ -244,11 +252,11 @@ public class ObservationESDocument {
 		this.facts = facts;
 	}
 
-	public Integer getObservation_id() {
+	public Long getObservation_id() {
 		return observation_id;
 	}
 
-	public void setObservation_id(Integer observation_id) {
+	public void setObservation_id(Long observation_id) {
 		this.observation_id = observation_id;
 	}
 
@@ -308,12 +316,28 @@ public class ObservationESDocument {
 		this.location = location;
 	}
 
+	public LocationInformation getLocation_information() {
+		return location_information;
+	}
+
+	public void setLocation_information(LocationInformation location_information) {
+		this.location_information = location_information;
+	}
+
 	public String getNotes() {
 		return notes;
 	}
 
 	public void setNotes(String notes) {
 		this.notes = notes;
+	}
+
+	public Date getFrom_date() {
+		return from_date;
+	}
+
+	public void setFrom_date(Date from_date) {
+		this.from_date = from_date;
 	}
 
 	public String getObserved_in_month() {
@@ -380,14 +404,6 @@ public class ObservationESDocument {
 		this.is_checklist = is_checklist;
 	}
 
-	public Date getFrom_date() {
-		return from_date;
-	}
-
-	public void setFrom_date(Date from_date) {
-		this.from_date = from_date;
-	}
-
 	public Date getTo_date() {
 		return to_date;
 	}
@@ -442,6 +458,14 @@ public class ObservationESDocument {
 
 	public void setRepr_image_id(Long repr_image_id) {
 		this.repr_image_id = repr_image_id;
+	}
+
+	public String getRepr_image_url() {
+		return repr_image_url;
+	}
+
+	public void setRepr_image_url(String repr_image_url) {
+		this.repr_image_url = repr_image_url;
 	}
 
 	public String getProtocol() {
@@ -915,6 +939,8 @@ class Trait_value {
 	private String description;
 	private String icon;
 	private String value;
+	private String trait_aggregation;
+	private String trait_filter;
 
 	/**
 	 * 
@@ -934,9 +960,12 @@ class Trait_value {
 	 * @param description
 	 * @param icon
 	 * @param value
+	 * @param trait_aggregation
+	 * @param trait_filter
 	 */
 	public Trait_value(Long fact_id, Long contributor_id, String from_value, String to_value, Date from_date,
-			Date to_date, Long trait_value_id, String description, String icon, String value) {
+			Date to_date, Long trait_value_id, String description, String icon, String value, String trait_aggregation,
+			String trait_filter) {
 		super();
 		this.fact_id = fact_id;
 		this.contributor_id = contributor_id;
@@ -948,6 +977,8 @@ class Trait_value {
 		this.description = description;
 		this.icon = icon;
 		this.value = value;
+		this.trait_aggregation = trait_aggregation;
+		this.trait_filter = trait_filter;
 	}
 
 	public Long getFact_id() {
@@ -966,20 +997,12 @@ class Trait_value {
 		this.contributor_id = contributor_id;
 	}
 
-	public String getValue() {
-		return value;
+	public String getFrom_value() {
+		return from_value;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
+	public void setFrom_value(String from_value) {
+		this.from_value = from_value;
 	}
 
 	public String getTo_value() {
@@ -988,14 +1011,6 @@ class Trait_value {
 
 	public void setTo_value(String to_value) {
 		this.to_value = to_value;
-	}
-
-	public Long getTrait_value_id() {
-		return trait_value_id;
-	}
-
-	public void setTrait_value_id(Long trait_value_id) {
-		this.trait_value_id = trait_value_id;
 	}
 
 	public Date getFrom_date() {
@@ -1014,12 +1029,20 @@ class Trait_value {
 		this.to_date = to_date;
 	}
 
-	public String getFrom_value() {
-		return from_value;
+	public Long getTrait_value_id() {
+		return trait_value_id;
 	}
 
-	public void setFrom_value(String from_value) {
-		this.from_value = from_value;
+	public void setTrait_value_id(Long trait_value_id) {
+		this.trait_value_id = trait_value_id;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public String getIcon() {
@@ -1028,6 +1051,30 @@ class Trait_value {
 
 	public void setIcon(String icon) {
 		this.icon = icon;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public String getTrait_aggregation() {
+		return trait_aggregation;
+	}
+
+	public void setTrait_aggregation(String trait_aggregation) {
+		this.trait_aggregation = trait_aggregation;
+	}
+
+	public String getTrait_filter() {
+		return trait_filter;
+	}
+
+	public void setTrait_filter(String trait_filter) {
+		this.trait_filter = trait_filter;
 	}
 
 }
@@ -1042,7 +1089,7 @@ class Facts {
 	private String units;
 	private String trait_types;
 	private String data_types;
-	private Trait_value trait_value;
+	private List<Trait_value> trait_value;
 
 	/**
 	 * 
@@ -1064,7 +1111,8 @@ class Facts {
 	 * @param trait_value
 	 */
 	public Facts(Long trait_id, String description, Long field_id, String trait_icon, String name,
-			Boolean is_participatory, String units, String trait_types, String data_types, Trait_value trait_value) {
+			Boolean is_participatory, String units, String trait_types, String data_types,
+			List<Trait_value> trait_value) {
 		super();
 		this.trait_id = trait_id;
 		this.description = description;
@@ -1078,36 +1126,12 @@ class Facts {
 		this.trait_value = trait_value;
 	}
 
-	public String getData_types() {
-		return data_types;
+	public Long getTrait_id() {
+		return trait_id;
 	}
 
-	public void setData_types(String data_types) {
-		this.data_types = data_types;
-	}
-
-	public Long getField_id() {
-		return field_id;
-	}
-
-	public void setField_id(Long field_id) {
-		this.field_id = field_id;
-	}
-
-	public String getTrait_types() {
-		return trait_types;
-	}
-
-	public void setTrait_types(String trait_types) {
-		this.trait_types = trait_types;
-	}
-
-	public Trait_value getTrait_value() {
-		return trait_value;
-	}
-
-	public void setTrait_value(Trait_value trait_value) {
-		this.trait_value = trait_value;
+	public void setTrait_id(Long trait_id) {
+		this.trait_id = trait_id;
 	}
 
 	public String getDescription() {
@@ -1118,12 +1142,12 @@ class Facts {
 		this.description = description;
 	}
 
-	public Boolean getIs_participatory() {
-		return is_participatory;
+	public Long getField_id() {
+		return field_id;
 	}
 
-	public void setIs_participatory(Boolean is_participatory) {
-		this.is_participatory = is_participatory;
+	public void setField_id(Long field_id) {
+		this.field_id = field_id;
 	}
 
 	public String getTrait_icon() {
@@ -1134,6 +1158,22 @@ class Facts {
 		this.trait_icon = trait_icon;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Boolean getIs_participatory() {
+		return is_participatory;
+	}
+
+	public void setIs_participatory(Boolean is_participatory) {
+		this.is_participatory = is_participatory;
+	}
+
 	public String getUnits() {
 		return units;
 	}
@@ -1142,21 +1182,30 @@ class Facts {
 		this.units = units;
 	}
 
-	public Long getTrait_id() {
-		return trait_id;
+	public String getTrait_types() {
+		return trait_types;
 	}
 
-	public void setTrait_id(Long trait_id) {
-		this.trait_id = trait_id;
+	public void setTrait_types(String trait_types) {
+		this.trait_types = trait_types;
 	}
 
-	public String getName() {
-		return name;
+	public String getData_types() {
+		return data_types;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setData_types(String data_types) {
+		this.data_types = data_types;
 	}
+
+	public List<Trait_value> getTrait_value() {
+		return trait_value;
+	}
+
+	public void setTrait_value(List<Trait_value> trait_value) {
+		this.trait_value = trait_value;
+	}
+
 }
 
 class Authors_voted {
@@ -1743,9 +1792,11 @@ class Custom_field_values {
 
 	private String field_text_data;
 	private String single_categorical_data;
-	private String multiple_categorical_data;
+	private List<String> multiple_categorical_data;
 	private String min_range;
 	private String max_range;
+	private List<String> custom_field_aggregation;
+	private List<String> custom_field_filter;
 
 	/**
 	 * 
@@ -1760,56 +1811,78 @@ class Custom_field_values {
 	 * @param multiple_categorical_data
 	 * @param min_range
 	 * @param max_range
+	 * @param custom_field_aggregation
+	 * @param custom_field_filter
 	 */
-	public Custom_field_values(String field_text_data, String single_categorical_data, String multiple_categorical_data,
-			String min_range, String max_range) {
+	public Custom_field_values(String field_text_data, String single_categorical_data,
+			List<String> multiple_categorical_data, String min_range, String max_range,
+			List<String> custom_field_aggregation, List<String> custom_field_filter) {
 		super();
 		this.field_text_data = field_text_data;
 		this.single_categorical_data = single_categorical_data;
 		this.multiple_categorical_data = multiple_categorical_data;
 		this.min_range = min_range;
 		this.max_range = max_range;
+		this.custom_field_aggregation = custom_field_aggregation;
+		this.custom_field_filter = custom_field_filter;
 	}
 
-	public void setMultiple_categorical_data(String multiple_categorical_data) {
-		this.multiple_categorical_data = multiple_categorical_data;
-	}
-
-	public String getMultiple_categorical_data() {
-		return this.multiple_categorical_data;
+	public String getField_text_data() {
+		return field_text_data;
 	}
 
 	public void setField_text_data(String field_text_data) {
 		this.field_text_data = field_text_data;
 	}
 
-	public String getField_text_data() {
-		return this.field_text_data;
-	}
-
-	public void setMax_range(String max_range) {
-		this.max_range = max_range;
-	}
-
-	public String getMax_range() {
-		return this.max_range;
+	public String getSingle_categorical_data() {
+		return single_categorical_data;
 	}
 
 	public void setSingle_categorical_data(String single_categorical_data) {
 		this.single_categorical_data = single_categorical_data;
 	}
 
-	public String getSingle_categorical_data() {
-		return this.single_categorical_data;
+	public List<String> getMultiple_categorical_data() {
+		return multiple_categorical_data;
+	}
+
+	public void setMultiple_categorical_data(List<String> multiple_categorical_data) {
+		this.multiple_categorical_data = multiple_categorical_data;
+	}
+
+	public String getMin_range() {
+		return min_range;
 	}
 
 	public void setMin_range(String min_range) {
 		this.min_range = min_range;
 	}
 
-	public String getMin_range() {
-		return this.min_range;
+	public String getMax_range() {
+		return max_range;
 	}
+
+	public void setMax_range(String max_range) {
+		this.max_range = max_range;
+	}
+
+	public List<String> getCustom_field_aggregation() {
+		return custom_field_aggregation;
+	}
+
+	public void setCustom_field_aggregation(List<String> custom_field_aggregation) {
+		this.custom_field_aggregation = custom_field_aggregation;
+	}
+
+	public List<String> getCustom_field_filter() {
+		return custom_field_filter;
+	}
+
+	public void setCustom_field_filter(List<String> custom_field_filter) {
+		this.custom_field_filter = custom_field_filter;
+	}
+
 }
 
 class Custom_field {
@@ -2082,6 +2155,56 @@ class Flags {
 
 	public void setFlag(String flag) {
 		this.flag = flag;
+	}
+
+}
+
+class LocationInformation {
+	private String tahsil;
+	private String state;
+	private String district;
+
+	/**
+	 * 
+	 */
+	public LocationInformation() {
+		super();
+	}
+
+	/**
+	 * @param tahsil
+	 * @param state
+	 * @param district
+	 */
+	public LocationInformation(String tahsil, String state, String district) {
+		super();
+		this.tahsil = tahsil;
+		this.state = state;
+		this.district = district;
+	}
+
+	public String getTahsil() {
+		return tahsil;
+	}
+
+	public void setTahsil(String tahsil) {
+		this.tahsil = tahsil;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getDistrict() {
+		return district;
+	}
+
+	public void setDistrict(String district) {
+		this.district = district;
 	}
 
 }

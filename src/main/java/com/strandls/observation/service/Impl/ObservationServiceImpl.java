@@ -34,11 +34,14 @@ import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.observationMailData;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -59,6 +62,7 @@ import com.strandls.user.pojo.UserIbp;
 import com.strandls.user.pojo.UserPermissions;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.pojo.CustomFieldDetails;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldPermission;
@@ -67,6 +71,7 @@ import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.ObservationLatLon;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupSpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
@@ -177,8 +182,8 @@ public class ObservationServiceImpl implements ObservationService {
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
-					esLayerInfo = esService.getObservationInfo("observation", "observation",
-							observation.getMaxVotedRecoId().toString());
+					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -190,7 +195,8 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
-				List<ObservationNearBy> observationNearBy = esService.getNearByObservation("observation", "observation",
+				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
+						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
@@ -980,4 +986,81 @@ public class ObservationServiceImpl implements ObservationService {
 
 	}
 
+	@Override
+	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(Long userGroupId) {
+		try {
+			UserPermissions userGroupPermission = userService.getUserGroupPermissions();
+			List<UserGroupMemberRole> memberRole = userGroupPermission.getUserMemberRole();
+			int flag = 0;
+			for (UserGroupMemberRole ugMemberRole : memberRole) {
+				if (ugMemberRole.getUserGroupId().equals(userGroupId)) {
+					flag = 1;
+					break;
+				}
+			}
+
+			if (flag == 1) {
+				List<UserGroupSpeciesGroup> sGroup = userGroupService.getUserGroupSGroup(userGroupId.toString());
+
+				List<CustomFieldDetails> customFields = cfService.getUserGroupCustomFields(userGroupId.toString());
+				ObservationUGContextCreatePageData observationCreateData = new ObservationUGContextCreatePageData(
+						sGroup, customFields);
+				return observationCreateData;
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+
+	}
+
+	@Override
+	public ShowData creteObservationUGContext(HttpServletRequest request,
+			ObservationCreateUGContext observationUGContext) {
+		try {
+			ShowData observationData = createObservation(request, observationUGContext.getObservationData());
+			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
+				cfInsert.setObservationId(observationData.getObservation().getId());
+				cfService.addUpdateCustomFieldData(cfInsert);
+			}
+
+			return findById(observationData.getObservation().getId());
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
+	public observationMailData getMailData(Long obvId) {
+		Observation observation = observationDao.findById(obvId);
+		try {
+			RecoIbp reco = new RecoIbp();
+			String iconurl = null;
+			if (observation.getMaxVotedRecoId() != null) {
+				reco = recoService.fetchRecoName(obvId, observation.getMaxVotedRecoId());
+			}
+			List<ObservationResourceUser> resources = null;
+			;
+			if (observation.getReprImageId() != null)
+				resources = resourceService.getImageResource(observation.getId().toString());
+
+			for (ObservationResourceUser resource : resources) {
+				if (observation.getReprImageId().equals(resource.getResource().getId()))
+					iconurl = resource.getResource().getFileName();
+			}
+
+			observationMailData mailData = new observationMailData(observation.getId(),
+					observation.getReverseGeocodedName(), observation.getFromDate(), iconurl, reco.getScientificName(),
+					reco.getCommonName());
+			return mailData;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
 }

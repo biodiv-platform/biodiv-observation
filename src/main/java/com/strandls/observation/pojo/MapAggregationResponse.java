@@ -16,9 +16,10 @@ public class MapAggregationResponse {
 	private Long groupImages;
 	private Long groupNoMedia;
 	private Map<String, Long> groupMonth;
-	private MapTraitsAggregation traits;
+	private Map<String, Map<String, Long>> groupTraits;
 	private Map<String, Long> groupState;
 	private Map<String, Long> groupRank;
+	private Map<String, Map<String, Long>> groupCustomField;
 
 	public Map<String, Long> getGroupSpeciesName() {
 		return groupSpeciesName;
@@ -116,12 +117,12 @@ public class MapAggregationResponse {
 		this.groupMonth = groupMonth;
 	}
 
-	public MapTraitsAggregation getTraits() {
-		return traits;
+	public Map<String, Map<String, Long>> getGroupTraits() {
+		return groupTraits;
 	}
 
-	public void setTraits(MapTraitsAggregation traits) {
-		this.traits = traits;
+	public void setGroupTraits(Map<String, Map<String, Long>> groupTraits) {
+		this.groupTraits = groupTraits;
 	}
 
 	public Map<String, Long> getGroupState() {
@@ -138,6 +139,14 @@ public class MapAggregationResponse {
 
 	public void setGroupRank(Map<String, Long> groupRank) {
 		this.groupRank = groupRank;
+	}
+
+	public Map<String, Map<String, Long>> getGroupCustomField() {
+		return groupCustomField;
+	}
+
+	public void setGroupCustomField(Map<String, Map<String, Long>> groupCustomField) {
+		this.groupCustomField = groupCustomField;
 	}
 
 }

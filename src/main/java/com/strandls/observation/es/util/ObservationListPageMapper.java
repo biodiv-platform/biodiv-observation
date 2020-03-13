@@ -42,6 +42,14 @@ public class ObservationListPageMapper {
 	private String authorName;
 	@JsonProperty("profile_pic")
 	private String authorProfilePic;
+	@JsonProperty("repr_image_url")
+	private String reprImageUrl;
+	@JsonProperty("all_reco_vote")
+	private List<All_reco_vote> allRecoVote;
+	@JsonProperty("facts")
+	private List<Facts> facts;
+	@JsonProperty("user_group_observations")
+	private List<User_group_observations> userGroup;
 
 	/**
 	 * 
@@ -64,10 +72,15 @@ public class ObservationListPageMapper {
 	 * @param authorId
 	 * @param authorName
 	 * @param authorProfilePic
+	 * @param reprImageUrl
+	 * @param allRecoVote
+	 * @param facts
+	 * @param userGroup
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, String geocodedPlaceName, String groupName,
 			List<Flags> flags, List<Observation_resource> resources, Long noOfImages, Long noOfAudios, Long noOfVideos,
-			Max_voted_reco maxVotedReco, Long authorId, String authorName, String authorProfilePic) {
+			Max_voted_reco maxVotedReco, Long authorId, String authorName, String authorProfilePic, String reprImageUrl,
+			List<All_reco_vote> allRecoVote, List<Facts> facts, List<User_group_observations> userGroup) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -82,6 +95,10 @@ public class ObservationListPageMapper {
 		this.authorId = authorId;
 		this.authorName = authorName;
 		this.authorProfilePic = authorProfilePic;
+		this.reprImageUrl = reprImageUrl;
+		this.allRecoVote = allRecoVote;
+		this.facts = facts;
+		this.userGroup = userGroup;
 	}
 
 	public Long getObservationId() {
@@ -186,6 +203,38 @@ public class ObservationListPageMapper {
 
 	public void setAuthorProfilePic(String authorProfilePic) {
 		this.authorProfilePic = authorProfilePic;
+	}
+
+	public String getReprImageUrl() {
+		return reprImageUrl;
+	}
+
+	public void setReprImageUrl(String reprImageUrl) {
+		this.reprImageUrl = reprImageUrl;
+	}
+
+	public List<All_reco_vote> getAllRecoVote() {
+		return allRecoVote;
+	}
+
+	public void setAllRecoVote(List<All_reco_vote> allRecoVote) {
+		this.allRecoVote = allRecoVote;
+	}
+
+	public List<Facts> getFacts() {
+		return facts;
+	}
+
+	public void setFacts(List<Facts> facts) {
+		this.facts = facts;
+	}
+
+	public List<User_group_observations> getUserGroup() {
+		return userGroup;
+	}
+
+	public void setUserGroup(List<User_group_observations> userGroup) {
+		this.userGroup = userGroup;
 	}
 
 }

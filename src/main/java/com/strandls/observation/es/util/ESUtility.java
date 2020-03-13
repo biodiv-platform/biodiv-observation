@@ -478,28 +478,79 @@ public class ESUtility {
 			for (Entry<String, List<String>> entry : customParams.entrySet()) {
 				try {
 					String key = entry.getKey();
+					String cfId = key.split("\\.")[0].split("_")[1];
+					List<Object> cfidObject = cSTSOT(cfId);
 					String fieldType = key.split("\\.")[1];
+					boolAndLists.add(assignBoolAndQuery(ObservationIndex.customFieldId.getValue(), cfidObject));
 					if (fieldType.equalsIgnoreCase("field_text")) {
+//						 match phrase
+						String value = entry.getValue().get(0);
+						andMatchPhraseQueries.add(assignAndMatchPhrase(ObservationIndex.customFieldTextValue.getValue(),
+								value.toLowerCase()));
 
-					} else if (fieldType.equalsIgnoreCase("single_categorical")
-							|| fieldType.equalsIgnoreCase("multiple_categorical")) {
+					}
+					if (fieldType.equalsIgnoreCase("single_categorical")) {
+//						 bool and query
+						String value = entry.getValue().get(0);
+						List<Object> valueObject = cSTSOT(value);
+						boolAndLists.add(assignBoolAndQuery(
+								ObservationIndex.customFieldSingleCategoricalValue.getValue(), valueObject));
+					}
+					if (fieldType.equalsIgnoreCase("multiple_categorical")) {
+//						bool and query
+						String value = entry.getValue().get(0);
+						List<Object> valueObject = cSTSOT(value);
+						boolAndLists.add(assignBoolAndQuery(
+								ObservationIndex.customFieldMultipleCategoricalValue.getValue(), valueObject));
 
-					} else if (fieldType.equalsIgnoreCase("Range")) {
+					}
+					if (fieldType.equalsIgnoreCase("Range")) {
+//						 range and query
+						String value = entry.getValue().get(0);
+						String values[] = value.split("-");
+						rangeAndLists.add(assignAndRange(ObservationIndex.customFieldRangeMinValue.getValue(),
+								values[0], Long.MAX_VALUE, null));
+						rangeAndLists.add(assignAndRange(ObservationIndex.customFieldRangeMaxValue.getValue(),
+								Long.MIN_VALUE, values[1], null));
+					}
+					if (fieldType.equalsIgnoreCase("field_content")) {
+//						 exist query
+						String value = entry.getValue().get(0);
+						List<Object> valueObject = cSTSOT(value);
+						if (valueObject.size() < 2) {
+							String first = (String) valueObject.toArray()[0];
+							if (first.equalsIgnoreCase("0")) {
+								andMapExistQueries.add(assignExistsQuery(
+										ObservationIndex.customFieldTextValue.getValue(), false, null));
+							} else {
+								andMapExistQueries.add(assignExistsQuery(
+										ObservationIndex.customFieldTextValue.getValue(), true, null));
+							}
+						}
+					}
+					if (fieldType.equalsIgnoreCase("categorical_content")
+							|| fieldType.equalsIgnoreCase("range_content")) {
+//						exist query
+						String value = entry.getValue().get(0);
+						List<Object> valueObject = cSTSOT(value);
+						if (valueObject.size() < 2) {
+							String first = (String) valueObject.toArray()[0];
+							if (first.equalsIgnoreCase("0")) {
+								andMapExistQueries.add(assignExistsQuery(
+										ObservationIndex.customFieldAggregation.getValue(), false, null));
+							} else {
+								andMapExistQueries.add(assignExistsQuery(
+										ObservationIndex.customFieldAggregation.getValue(), true, null));
+							}
 
-					} else if (fieldType.equalsIgnoreCase("options")) {
-//						String value = entry.getValue().get(0);
-//						if()
-//						andMatchPhraseQueries.add(assignAndMatchPhrase(ObservationIndex., value.toLowerCase()));
-//						
-						
+						}
+
 					}
 
 				} catch (Exception e) {
-					// TODO: handle exception
+					logger.error(e.getMessage());
 				}
-
 			}
-
 		}
 
 		/**

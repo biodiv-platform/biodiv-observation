@@ -44,6 +44,9 @@ public class ApiConstants {
 	public static final String OPTIONS = "/options";
 	public static final String INSERT = "/insert";
 	public static final String PRODUCE = "/produce";
+	public static final String CREATEOBSERVATION = "/createObservation";
+	public static final String UGCONTEXT = "/ugContext";
+	public static final String MAIL = "/mail";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

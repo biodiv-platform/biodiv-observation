@@ -40,13 +40,17 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationListData;
+import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.observationMailData;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -101,11 +105,16 @@ public class ObservationController {
 	@Inject
 	private ObservationListService observationListService;
 
+	@Inject
+	private ESUpdate es;
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
+
+		es.pushToElastic("14770174");
 		return "pong Observation";
 	}
 
@@ -317,6 +326,9 @@ public class ObservationController {
 			@QueryParam("district") String district, @QueryParam("state") String state, @Context UriInfo uriInfo) {
 
 		try {
+
+			if (max > 50)
+				max = 50;
 
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
 			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
@@ -863,6 +875,71 @@ public class ObservationController {
 		try {
 			observationService.produceToRabbitMQ(observationId, updateType);
 			return Response.status(Status.OK).entity("Published to RabbitMQ").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.USERGROUP + ApiConstants.CREATEOBSERVATION + "/{userGroupId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Get the observation create page data for ug context", notes = "Returns the create page data", response = ObservationUGContextCreatePageData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
+
+	public Response getUGContextObservaitonCreate(@Context HttpServletRequest request,
+			@PathParam("userGroupId") String userGroupId) {
+		try {
+			Long ugId = Long.parseLong(userGroupId);
+			ObservationUGContextCreatePageData result = observationService.getUGContextObservationCreateDetails(ugId);
+			if (result == null)
+				return Response.status(Status.NOT_ACCEPTABLE)
+						.entity("USER NOT ALLOWED TO CREATE OBSERVATION IN A GROUP").build();
+
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@POST
+	@Path(ApiConstants.CREATE + ApiConstants.UGCONTEXT)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "create observation on UG context", notes = "Returns the user the complete show page", response = ShowData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to create the observation", response = String.class) })
+
+	public Response createObservationUGContext(@Context HttpServletRequest request,
+			@ApiParam(name = "observationUGContext") ObservationCreateUGContext observationUGContext) {
+		try {
+			ShowData result = observationService.creteObservationUGContext(request, observationUGContext);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.MAIL + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Get the data for mail Observation Object", notes = "Return the mail Observation Object", response = observationMailData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the data", response = String.class) })
+
+	public Response getObservationMailData(@PathParam("observationId") String observationId) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			observationMailData result = observationService.getMailData(obvId);
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

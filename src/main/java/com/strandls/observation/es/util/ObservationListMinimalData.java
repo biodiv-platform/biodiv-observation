@@ -17,6 +17,7 @@ public class ObservationListMinimalData {
 	private Long observationId;
 	@JsonProperty("group_name")
 	private String groupName;
+	@JsonProperty("repr_image_url")
 	private String thumbnail;
 	private String name;
 
