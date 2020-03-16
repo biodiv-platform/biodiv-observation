@@ -168,7 +168,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				in.close();
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
-				authorScore = score.getRecord().get(0).get("observation");
+				authorScore = score.getRecord().get(0).get("details");
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
@@ -1062,5 +1062,20 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public Boolean updateLastRevised(Long observationId) {
+		try {
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observationDao.save(observation);
+			produceToRabbitMQ(observationId.toString(), "Comment");
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
 	}
 }

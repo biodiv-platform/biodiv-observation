@@ -110,4 +110,6 @@ public interface ObservationService {
 
 	public observationMailData getMailData(Long obvId);
 
+	public Boolean updateLastRevised(Long observationId);
+
 }

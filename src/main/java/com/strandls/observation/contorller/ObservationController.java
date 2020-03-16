@@ -275,6 +275,27 @@ public class ObservationController {
 		}
 	}
 
+	@POST
+	@Path(ApiConstants.UPDATE + ApiConstants.LASTREVISED + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Updates the last revised of Observation", notes = "Updates the last revised of observation", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to update the Obsevation", response = String.class) })
+
+	public Response updateLastRevised(@PathParam("observationId") String observationId) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			Boolean result = observationService.updateLastRevised(obvId);
+			if (result)
+				return Response.status(Status.OK).entity("Observation updated").build();
+			return Response.status(Status.NOT_FOUND).entity("Not Found").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 	@GET
 	@Path(ApiConstants.LIST + ApiConstants.ALL)
 	@Consumes(MediaType.APPLICATION_JSON)
