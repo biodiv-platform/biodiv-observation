@@ -1069,7 +1069,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			Observation observation = observationDao.findById(observationId);
 			observation.setLastRevised(new Date());
-			observationDao.save(observation);
+			observationDao.update(observation);
 			produceToRabbitMQ(observationId.toString(), "Comment");
 			return true;
 		} catch (Exception e) {
