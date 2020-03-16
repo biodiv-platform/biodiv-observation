@@ -288,9 +288,7 @@ public class ObservationController {
 		try {
 			Long obvId = Long.parseLong(observationId);
 			Boolean result = observationService.updateLastRevised(obvId);
-			if (result)
-				return Response.status(Status.OK).entity("Observation updated").build();
-			return Response.status(Status.NOT_FOUND).entity("Not Found").build();
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
