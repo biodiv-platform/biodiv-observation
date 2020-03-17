@@ -49,6 +49,9 @@ public class ESUpdate {
 
 	public void updateESInstance(String observationId) {
 		try {
+			System.out.println("--------------------observation es Update---------");
+			System.out.println();
+			System.out.println("------started----------");
 			System.out.println("Observation getting UPDATED to elastic, ID:" + observationId);
 			ObservationESDocument result = constructESDocument.getESDocumentStub(observationId);
 //			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -58,7 +61,11 @@ public class ESUpdate {
 			doc.setDocument(resultString);
 			MapQueryResponse response = esService.create(ObservationIndex.index.getValue(),
 					ObservationIndex.type.getValue(), observationId, doc);
+			System.out.println();
+			System.out.println();
+			System.out.println("-----------updated----------");
 			System.out.println(response.getResult());
+			System.out.println("--------------completed-------------observationId :" + observationId);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

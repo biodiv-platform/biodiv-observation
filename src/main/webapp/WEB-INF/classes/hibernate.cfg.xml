@@ -6,8 +6,8 @@
 	<session-factory>
 		<property name="dialect">org.hibernate.spatial.dialect.postgis.PostgisDialect</property>
 		<property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-		<property name="hibernate.connection.username">postgres</property>
-		<property name="hibernate.connection.password">postgres123</property>
+		<property name="hibernate.connection.username">biodiv</property>
+		<property name="hibernate.connection.password">prharasr</property>
 		<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/biodiv</property>
 
 		<property name="connection_pool_size">1</property>
@@ -16,6 +16,7 @@
 
 		<property name="show_sql">true</property>
 
+		<property name="hibernate.current_session_context_class">thread</property>
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
 
 		<!-- Maximum waiting time for a connection from the pool -->
@@ -34,6 +35,7 @@
 
 		<mapping class="com.strandls.observation.pojo.Observation" />
 		<mapping class="com.strandls.observation.pojo.Recommendation" />
-		<mapping class="com.strandls.observation.pojo.RecommendationVote" />
+		<mapping
+			class="com.strandls.observation.pojo.RecommendationVote" />
 	</session-factory>
 </hibernate-configuration>

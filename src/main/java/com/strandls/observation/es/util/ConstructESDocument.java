@@ -330,11 +330,16 @@ public class ConstructESDocument {
 				+ "		GROUP BY observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types ) F GROUP BY  "
 				+ "		observation_fact_id)FA ON FA.observation_id = O.id;";
 
-		Session session = sessionFactory.openSession();
+		Session session = sessionFactory.getCurrentSession();
+		session.beginTransaction();
 		ObservationESDocument result = null;
 		try {
+			System.out.println();
+			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
 			result = query.getSingleResult();
+			System.out.println();
+			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

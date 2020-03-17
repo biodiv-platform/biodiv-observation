@@ -40,7 +40,6 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
-import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -105,16 +104,16 @@ public class ObservationController {
 	@Inject
 	private ObservationListService observationListService;
 
-	@Inject
-	private ESUpdate es;
-
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 
-		es.pushToElastic("14770174");
+//		observationService.produceToRabbitMQ("840821", "dummy");
+//		observationService.produceToRabbitMQ("343265", "dummy");
+//		observationService.produceToRabbitMQ("840821", "dummy");
+
 		return "pong Observation";
 	}
 
