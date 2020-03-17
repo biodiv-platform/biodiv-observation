@@ -342,7 +342,8 @@ public class ObservationController {
 			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
 			@QueryParam("termsAggregationField") String termsAggregationField, @QueryParam("view") String view,
 			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
-			@QueryParam("district") String district, @QueryParam("state") String state, @Context UriInfo uriInfo) {
+			@QueryParam("district") String district, @QueryParam("state") String state, @QueryParam("tags") String tags,
+			@Context UriInfo uriInfo) {
 
 		try {
 
@@ -396,13 +397,13 @@ public class ObservationController {
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state);
+					taxonId, recoName, rank, tahsil, district, state, tags);
 
 			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
 					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 					validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
 					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-					district, state);
+					district, state, tags);
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,

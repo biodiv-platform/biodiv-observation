@@ -126,7 +126,7 @@ public class ESUtility {
 			String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String rank, String tahsil, String district, String state) {
+			String recoName, String rank, String tahsil, String district, String state, String tags) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -190,14 +190,25 @@ public class ESUtility {
 		}
 
 //		tahsil
-		if (tahsil != null) {
-			andMatchPhraseQueries.add(assignAndMatchPhrase(ObservationIndex.tahsil.getValue(), tahsil.toLowerCase()));
+		List<Object> tahsilList = cSTSOT(tahsil);
+		if (!tahsilList.isEmpty()) {
+			List<Object> lowerCaseList = new ArrayList<Object>();
+			for (Object o : tahsilList) {
+				String result = o.toString().toLowerCase();
+				lowerCaseList.add(result);
+			}
+			boolAndLists.add(assignBoolAndQuery(ObservationIndex.tahsil.getValue(), lowerCaseList));
 		}
 
 //		district
-		if (district != null) {
-			andMatchPhraseQueries
-					.add(assignAndMatchPhrase(ObservationIndex.district.getValue(), district.toLowerCase()));
+		List<Object> districtList = cSTSOT(district);
+		if (!tahsilList.isEmpty()) {
+			List<Object> lowerCaseList = new ArrayList<Object>();
+			for (Object o : districtList) {
+				String result = o.toString().toLowerCase();
+				lowerCaseList.add(result);
+			}
+			boolAndLists.add(assignBoolAndQuery(ObservationIndex.district.getValue(), lowerCaseList));
 		}
 
 //		state
@@ -209,6 +220,18 @@ public class ESUtility {
 				lowerCaseList.add(result);
 			}
 			boolAndLists.add(assignBoolAndQuery(ObservationIndex.state.getValue(), lowerCaseList));
+		}
+
+//		tags
+		List<Object> tagsList = cSTSOT(tags);
+		if (!tagsList.isEmpty()) {
+			List<Object> lowerCaseList = new ArrayList<Object>();
+			for (Object o : tagsList) {
+				String result = o.toString().toLowerCase();
+				lowerCaseList.add(result);
+			}
+			boolAndLists.add(assignBoolAndQuery(ObservationIndex.tags.getValue(), lowerCaseList));
+
 		}
 
 //		user Group

@@ -27,7 +27,8 @@ public interface ObservationListService {
 			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state);
+			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state,
+			String tags);
 
 	public FilterPanelData getAllFilter();
 
