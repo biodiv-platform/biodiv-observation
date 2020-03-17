@@ -29,6 +29,7 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
+import com.strandls.observation.es.util.ESUpdateThread;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
@@ -979,7 +980,11 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public void produceToRabbitMQ(String observationId, String updateType) {
 		try {
-			producer.setMessage("esmodule", observationId, updateType);
+			ESUpdateThread updateThread = new ESUpdateThread(esUpdate, observationId);
+			Thread thread = new Thread(updateThread);
+			thread.start();
+			
+//			producer.setMessage("esmodule", observationId, updateType);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
