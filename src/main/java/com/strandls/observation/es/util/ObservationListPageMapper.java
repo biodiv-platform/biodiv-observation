@@ -52,6 +52,8 @@ public class ObservationListPageMapper {
 	private List<User_group_observations> userGroup;
 	@JsonProperty("tags")
 	private List<Tags> tags;
+	@JsonProperty("last_revised")
+	private Date lastRevised;
 
 	/**
 	 * 
@@ -79,12 +81,13 @@ public class ObservationListPageMapper {
 	 * @param facts
 	 * @param userGroup
 	 * @param tags
+	 * @param lastRevised
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, String geocodedPlaceName, String groupName,
 			List<Flags> flags, List<Observation_resource> resources, Long noOfImages, Long noOfAudios, Long noOfVideos,
 			Max_voted_reco maxVotedReco, Long authorId, String authorName, String authorProfilePic, String reprImageUrl,
 			List<All_reco_vote> allRecoVote, List<Facts> facts, List<User_group_observations> userGroup,
-			List<Tags> tags) {
+			List<Tags> tags, Date lastRevised) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -104,6 +107,7 @@ public class ObservationListPageMapper {
 		this.facts = facts;
 		this.userGroup = userGroup;
 		this.tags = tags;
+		this.lastRevised = lastRevised;
 	}
 
 	public Long getObservationId() {
@@ -248,6 +252,14 @@ public class ObservationListPageMapper {
 
 	public void setTags(List<Tags> tags) {
 		this.tags = tags;
+	}
+
+	public Date getLastRevised() {
+		return lastRevised;
+	}
+
+	public void setLastRevised(Date lastRevised) {
+		this.lastRevised = lastRevised;
 	}
 
 }
