@@ -30,7 +30,10 @@ public class RabbitMQConsumer {
 			System.out.println("----[RABBIT MQ CONSUMER]---");
 			System.out.println("consuming observation Id :" + message);
 			System.out.println("Updating :" + updateType);
-			esUpdate.updateESInstance(message);
+
+			ESUpdateThread updateThread = new ESUpdateThread(esUpdate, message);
+			Thread thread = new Thread(updateThread);
+			thread.start();
 
 		};
 		channel.basicConsume(QUEUE_ELASTIC, true, deliverCallback, consumerTag -> {
