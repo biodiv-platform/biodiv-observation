@@ -3,11 +3,11 @@
  */
 package com.strandls.observation.es.util;
 
-import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -16,6 +16,8 @@ import com.google.inject.Inject;
  *
  */
 public class ConstructESDocument {
+
+	private Logger logger = LoggerFactory.getLogger(ConstructESDocument.class);
 
 	@Inject
 	private SessionFactory sessionFactory;
@@ -329,79 +331,17 @@ public class ConstructESDocument {
 				+ "		observation_fact_id)FA ON FA.observation_id = O.id;";
 
 		Session session = sessionFactory.openSession();
+		ObservationESDocument result = null;
+		try {
+			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
+			result = query.getSingleResult();
 
-		Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
-		ObservationESDocument result = query.getSingleResult();
-		return result;
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<Observation_resource> constructObservationResource(String observationId) {
-
-		String qry = "SELECT observation_resource FROM " + "(" + "SELECT  observation_id , " + "jsonb_agg( DISTINCT "
-				+ "to_jsonb((row_to_json((SELECT t FROM (SELECT resource_id id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id) t )) "
-				+ ")))\\:\\:json observation_resource " + "FROM "
-				+ "(SELECT resource_id or_resource_id, observation_id FROM observation_resource ) EO " + "INNER JOIN "
-				+ "(SELECT id resource_id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id FROM resource ) extended_resource "
-				+ "ON or_resource_id = resource_id GROUP BY observation_id" + ") obr WHERE observation_id = "
-				+ observationId;
-
-		Session session = sessionFactory.openSession();
-		Query<Object[]> query = session.createNativeQuery(qry);
-		Object[] result = query.getSingleResult();
-		for (Object o : result) {
-			System.out.println(o.toString());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
-		return null;
-	}
 
-	public Tags constructTags(String observaitonId) {
-
-		String qry = "SELECT * FROM ( " + "SELECT tag_ref as observation_id, "
-				+ "jsonb_agg(DISTINCT (to_jsonb(row_to_json((SELECT t FROM (SELECT tag_id id, tag_name AS name)t)))))\\:\\:json tags "
-				+ "FROM " + "(SELECT id tag_id , name tag_name FROM tags) extended_tags " + "INNER JOIN "
-				+ "(SELECT id tl_id, tag_id tl_tag_id, tag_ref FROM tag_links where type = 'observation')extended_tag_links "
-				+ "ON tag_id = tl_tag_id GROUP BY tag_ref " + ") T WHERE observation_id = " + observaitonId;
-
-		Session session = sessionFactory.openSession();
-		Query<Tags> query = session.createNativeQuery(qry, Tags.class);
-		Tags result = query.getSingleResult();
-		return result;
-	}
-
-	public Facts constructFacts(String observationId) {
-		String qry = "SELECT * FROM " + "(" + "SELECT observation_fact_id observation_id, "
-				+ "jsonb_agg(DISTINCT row_to_json(( SELECT t FROM (SELECT trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types, trait_instance->0 AS trait_value)t ))\\:\\:jsonb) facts "
-				+ "FROM "
-				+ "(SELECT  observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types, "
-				+ "jsonb_agg(DISTINCT etrait_instance) trait_instance " + "FROM " + "("
-				+ "	SELECT observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types, "
-				+ "	row_to_json(( SELECT t FROM (SELECT fact_id fact_id, contributor_id, fact_value from_value, to_value, from_date, "
-				+ "	to_date, tv_id trait_value_id, tv_description description, tv_icon icon, value)t))\\:\\:jsonb etrait_instance "
-				+ "	FROM " + "	(" + "		(SELECT id fact_id, object_id observation_fact_id, contributor_id, "
-				+ "		trait_instance_id, trait_value_id, value fact_value, to_value, from_date, to_date "
-				+ "		FROM fact WHERE object_type = 'species.participation.Observation' and is_deleted = false "
-				+ "		) F  " + "		LEFT OUTER JOIN "
-				+ "		(SELECT id trait_id, description, field_id, icon trait_icon, name, is_participatory, units, trait_types, data_types FROM  trait) T "
-				+ "		ON  trait_instance_id = trait_id " + "		LEFT OUTER JOIN "
-				+ "		(SELECT id tv_id, description tv_description, icon tv_icon, trait_instance_id, value  FROM trait_value) TV "
-				+ "		ON tv_id = trait_value_id " + "	) F " + ")F	"
-				+ "GROUP BY observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types ) F GROUP BY "
-				+ "observation_fact_id)FA WHERE observation_id = " + observationId;
-
-		Session session = sessionFactory.openSession();
-		Query<Facts> query = session.createNativeQuery(qry, Facts.class);
-		Facts result = query.getSingleResult();
-		return result;
-
-	}
-
-	public List<Flags> constructFlags(String observationId) {
-		String qry = "";
-
-		Session session = sessionFactory.openSession();
-		Query<Flags> query = session.createNativeQuery(qry, Flags.class);
-		List<Flags> result = query.getResultList();
 		return result;
 	}
 
