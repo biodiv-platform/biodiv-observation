@@ -44,10 +44,13 @@ public class ObservationListMinimalData {
 	private void unpackMaxName(Max_voted_reco maxVoted) {
 		if (maxVoted != null) {
 			String commonName = "";
-			for (Common_names cn : maxVoted.getCommon_names()) {
-				commonName = commonName + cn.getCommon_name()+ "||";
+			if(maxVoted.getCommon_names()!=null) {
+				for (Common_names cn : maxVoted.getCommon_names()) {
+					commonName = commonName + cn.getCommon_name() + "||";
+				}
+				commonName = commonName.substring(0, commonName.length() - 2);
 			}
-			commonName = commonName.substring(0, commonName.length() - 2);
+			
 			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
 					maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;

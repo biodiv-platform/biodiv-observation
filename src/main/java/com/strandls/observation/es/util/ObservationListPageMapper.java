@@ -102,17 +102,22 @@ public class ObservationListPageMapper {
 
 	@JsonProperty(value = "author_id")
 	private void unpackAuthorId(Long author_id) {
-		user = new UserIbp();
+		if (user == null)
+			user = new UserIbp();
 		user.setId(author_id);
 	}
 
 	@JsonProperty(value = "created_by")
 	private void unpackAuthorName(String created_by) {
+		if (user == null)
+			user = new UserIbp();
 		user.setName(created_by);
 	}
 
 	@JsonProperty(value = "profile_pic")
 	private void unpackAuthorPic(String profile_pic) {
+		if (user == null)
+			user = new UserIbp();
 		user.setProfilePic(profile_pic);
 	}
 
@@ -122,23 +127,23 @@ public class ObservationListPageMapper {
 	private void unpackFacts(List<Facts> facts) {
 		factValuePair = new ArrayList<FactValuePair>();
 		FactValuePair fvp = new FactValuePair();
-		if(facts!=null) {
+		if (facts != null) {
 			for (Facts fact : facts) {
 				fvp.setNameId(fact.getTrait_id());
 				fvp.setName(fact.getName());
 				fvp.setType(fact.getTrait_types());
 				fvp.setIsParticipatry(fact.getIs_participatory());
-				if(fact.getTrait_value()!=null) {
+				if (fact.getTrait_value() != null) {
 					for (Trait_value value : fact.getTrait_value()) {
 						fvp.setValue(value.getValue());
 						fvp.setValueId(value.getTrait_value_id());
 						factValuePair.add(fvp);
 					}
 				}
-				
+
 			}
 		}
-		
+
 	}
 
 //	------------FLAG SHOW--------------
@@ -175,7 +180,8 @@ public class ObservationListPageMapper {
 //	---------------IS LOCKED------------------
 	@JsonProperty(value = "is_locked")
 	private void unpackIsLocked(Boolean isLocked) {
-		recoShow = new RecoShow();
+		if (recoShow == null)
+			recoShow = new RecoShow();
 		recoShow.setIsLocked(isLocked);
 	}
 
@@ -184,10 +190,13 @@ public class ObservationListPageMapper {
 	private void unpackMaxName(Max_voted_reco maxVoted) {
 		if (maxVoted != null) {
 			String commonName = "";
-			for (Common_names cn : maxVoted.getCommon_names()) {
-				commonName = commonName + cn.getCommon_name() + "||";
+			if (maxVoted.getCommon_names() != null) {
+				for (Common_names cn : maxVoted.getCommon_names()) {
+					commonName = commonName + cn.getCommon_name() + "||";
+				}
+				commonName = commonName.substring(0, commonName.length() - 2);
 			}
-			commonName = commonName.substring(0, commonName.length() - 2);
+
 			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
 					maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;
@@ -198,6 +207,8 @@ public class ObservationListPageMapper {
 			}
 
 			recoIbp.setTaxonId(taxonId);
+			if (recoShow == null)
+				recoShow = new RecoShow();
 			recoShow.setRecoIbp(recoIbp);
 		}
 
@@ -212,23 +223,44 @@ public class ObservationListPageMapper {
 		if (allRecoVote != null) {
 			for (All_reco_vote allreco : allRecoVote) {
 				String commonName = "";
-				for (Common_names cn : allreco.getCommon_names()) {
-					commonName = commonName + "||" + cn.getCommon_name();
+				if (allreco.getCommon_names() != null) {
+					for (Common_names cn : allreco.getCommon_names()) {
+						commonName = commonName + cn.getCommon_name() + "||";
+					}
+					commonName = commonName.substring(0, commonName.length() - 2);
 				}
 				List<UserIbp> userList = new ArrayList<UserIbp>();
 				UserIbp useribp = new UserIbp();
-				for (Authors_voted author : allreco.getAuthors_voted()) {
-					useribp.setId(author.getId());
-					useribp.setName(author.getName());
-					useribp.setProfilePic(author.getProfile_pic());
+				if (allreco.getAuthors_voted() != null) {
+					for (Authors_voted author : allreco.getAuthors_voted()) {
+						useribp.setId(author.getId());
+						useribp.setName(author.getName());
+						useribp.setProfilePic(author.getProfile_pic());
+						userList.add(useribp);
+					}
 				}
-				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, allreco.getScientific_name().getName(),
-						allreco.getScientific_name().getTaxon_detail().getId(),
-						Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id()), userList);
+
+				String scientificName = null;
+				Long taxonId = null;
+				Long speciesId = null;
+				if (allreco.getScientific_name() != null) {
+					scientificName = allreco.getScientific_name().getName();
+					if (allreco.getScientific_name().getTaxon_detail() != null) {
+						taxonId = allreco.getScientific_name().getTaxon_detail().getId();
+						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
+							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
+						}
+					}
+				}
+
+				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
+						userList);
 				allRecoList.add(allRecoSuggeSugguestions);
 			}
 		}
 
+		if (recoShow == null)
+			recoShow = new RecoShow();
 		recoShow.setAllRecoVotes(allRecoList);
 	}
 
