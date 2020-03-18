@@ -284,7 +284,7 @@ public class ConstructESDocument {
 				+ "			) U ON U. observation_id =  UGO.observation_id) UG ON UG.observation_id = O.id "
 				+ "LEFT OUTER JOIN " + "		( " + "		SELECT object_id AS observation_id, "
 				+ "		jsonb_agg( DISTINCT (to_jsonb(row_to_json(( SELECT t FROM (SELECT flag_id id,  "
-				+ "		author_id, author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags " + "		FROM "
+				+ "		author_id,notes,author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags " + "		FROM "
 				+ "		(SELECT id flag_id, object_id, author_id, notes, created_on, flag   "
 				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id = "
 				+ observationId + ") F " + "		LEFT OUTER JOIN "

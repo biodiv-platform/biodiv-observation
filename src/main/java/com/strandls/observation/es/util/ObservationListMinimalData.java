@@ -5,6 +5,7 @@ package com.strandls.observation.es.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.strandls.observation.pojo.RecoIbp;
 
 /**
  * @author Abhishek Rudra
@@ -13,20 +14,51 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListMinimalData {
 
-	@JsonProperty("observation_id")
 	private Long observationId;
-	@JsonProperty("group_name")
-	private String groupName;
-	@JsonProperty("repr_image_url")
+	private Long sGroupId;
+	private String sGroup;
 	private String thumbnail;
-	private String name;
+	private RecoIbp recoIbp;
 
-	@JsonProperty("max_voted_reco")
-	private void unpackName(Max_voted_reco maxVotedReco) {
-		if (maxVotedReco != null)
-			name = maxVotedReco.getScientific_name();
-		else
-			name = "unknown";
+	@JsonProperty("observation_id")
+	private void unpackName(Long observation_id) {
+		observationId = observation_id;
+	}
+
+	@JsonProperty(value = "group_id")
+	private void unpackSGroupId(Long group_id) {
+		sGroupId = group_id;
+	}
+
+	@JsonProperty(value = "group_name")
+	private void unpacksGroup(String group_name) {
+		sGroup = group_name;
+	}
+
+	@JsonProperty(value = "repr_image_url")
+	private void unpackReprImage(String reprImage) {
+		thumbnail = reprImage;
+	}
+
+	@JsonProperty(value = "max_voted_reco")
+	private void unpackMaxName(Max_voted_reco maxVoted) {
+		if (maxVoted != null) {
+			String commonName = "";
+			for (Common_names cn : maxVoted.getCommon_names()) {
+				commonName = commonName + cn.getCommon_name()+ "||";
+			}
+			commonName = commonName.substring(0, commonName.length() - 2);
+			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
+					maxVoted.getTaxonstatus(), null);
+			Long taxonId = null;
+			for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
+				taxonId = hierarchy.getTaxon_id();
+			}
+			recoIbp.setTaxonId(taxonId);
+			this.recoIbp = recoIbp;
+
+		}
+
 	}
 
 	/**
@@ -38,16 +70,19 @@ public class ObservationListMinimalData {
 
 	/**
 	 * @param observationId
-	 * @param groupName
+	 * @param sGroupId
+	 * @param sGroup
 	 * @param thumbnail
-	 * @param name
+	 * @param recoIbp
 	 */
-	public ObservationListMinimalData(Long observationId, String groupName, String thumbnail, String name) {
+	public ObservationListMinimalData(Long observationId, Long sGroupId, String sGroup, String thumbnail,
+			RecoIbp recoIbp) {
 		super();
 		this.observationId = observationId;
-		this.groupName = groupName;
+		this.sGroupId = sGroupId;
+		this.sGroup = sGroup;
 		this.thumbnail = thumbnail;
-		this.name = name;
+		this.recoIbp = recoIbp;
 	}
 
 	public Long getObservationId() {
@@ -58,12 +93,20 @@ public class ObservationListMinimalData {
 		this.observationId = observationId;
 	}
 
-	public String getGroupName() {
-		return groupName;
+	public Long getsGroupId() {
+		return sGroupId;
 	}
 
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
+	public void setsGroupId(Long sGroupId) {
+		this.sGroupId = sGroupId;
+	}
+
+	public String getsGroup() {
+		return sGroup;
+	}
+
+	public void setsGroup(String sGroup) {
+		this.sGroup = sGroup;
 	}
 
 	public String getThumbnail() {
@@ -74,12 +117,12 @@ public class ObservationListMinimalData {
 		this.thumbnail = thumbnail;
 	}
 
-	public String getName() {
-		return name;
+	public RecoIbp getRecoIbp() {
+		return recoIbp;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setRecoIbp(RecoIbp recoIbp) {
+		this.recoIbp = recoIbp;
 	}
 
 }

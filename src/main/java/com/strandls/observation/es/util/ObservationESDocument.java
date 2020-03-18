@@ -2078,6 +2078,7 @@ class Custom_fields {
 
 class Flags {
 	private Long id;
+	private String notes;
 	private Long author_id;
 	private String author_name;
 	private String profile_pic;
@@ -2093,15 +2094,18 @@ class Flags {
 
 	/**
 	 * @param id
+	 * @param notes
 	 * @param author_id
 	 * @param author_name
 	 * @param profile_pic
 	 * @param created_on
 	 * @param flag
 	 */
-	public Flags(Long id, Long author_id, String author_name, String profile_pic, Date created_on, String flag) {
+	public Flags(Long id, String notes, Long author_id, String author_name, String profile_pic, Date created_on,
+			String flag) {
 		super();
 		this.id = id;
+		this.notes = notes;
 		this.author_id = author_id;
 		this.author_name = author_name;
 		this.profile_pic = profile_pic;
@@ -2109,12 +2113,20 @@ class Flags {
 		this.flag = flag;
 	}
 
-	public String getProfile_pic() {
-		return profile_pic;
+	public Long getId() {
+		return id;
 	}
 
-	public void setProfile_pic(String profile_pic) {
-		this.profile_pic = profile_pic;
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 	public Long getAuthor_id() {
@@ -2133,12 +2145,12 @@ class Flags {
 		this.author_name = author_name;
 	}
 
-	public Long getId() {
-		return id;
+	public String getProfile_pic() {
+		return profile_pic;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setProfile_pic(String profile_pic) {
+		this.profile_pic = profile_pic;
 	}
 
 	public Date getCreated_on() {
