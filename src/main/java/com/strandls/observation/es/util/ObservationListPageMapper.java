@@ -33,8 +33,8 @@ public class ObservationListPageMapper {
 	private Date createdOn;
 	private Date lastRevised;
 	private String reverseGeocodedName;
-	private Long sGroupId;
-	private String sGroup;
+	private Long speciesGroupId;
+	private String speciesGroup;
 	private Long noOfImages;
 	private Long noOfAudios;
 	private Long noOfVideos;
@@ -70,12 +70,12 @@ public class ObservationListPageMapper {
 
 	@JsonProperty(value = "group_id")
 	private void unpackSGroupId(Long group_id) {
-		sGroupId = group_id;
+		speciesGroupId = group_id;
 	}
 
 	@JsonProperty(value = "group_name")
 	private void unpacksGroup(String group_name) {
-		sGroup = group_name;
+		speciesGroup = group_name;
 	}
 
 	@JsonProperty(value = "no_of_images")
@@ -361,8 +361,8 @@ public class ObservationListPageMapper {
 	 * @param createdOn
 	 * @param lastRevised
 	 * @param reverseGeocodedName
-	 * @param sGroupId
-	 * @param sGroup
+	 * @param speciesGroupId
+	 * @param speciesGroup
 	 * @param noOfImages
 	 * @param noOfAudios
 	 * @param noOfVideos
@@ -376,16 +376,16 @@ public class ObservationListPageMapper {
 	 * @param tags
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, String reverseGeocodedName,
-			Long sGroupId, String sGroup, Long noOfImages, Long noOfAudios, Long noOfVideos, String reprImageUrl,
-			UserIbp user, List<FactValuePair> factValuePair, List<FlagShow> flagShow, RecoShow recoShow,
-			List<Long> userGroup, List<CustomFieldObservationData> customField, List<Tags> tags) {
+			Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios, Long noOfVideos,
+			String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair, List<FlagShow> flagShow,
+			RecoShow recoShow, List<Long> userGroup, List<CustomFieldObservationData> customField, List<Tags> tags) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
 		this.lastRevised = lastRevised;
 		this.reverseGeocodedName = reverseGeocodedName;
-		this.sGroupId = sGroupId;
-		this.sGroup = sGroup;
+		this.speciesGroupId = speciesGroupId;
+		this.speciesGroup = speciesGroup;
 		this.noOfImages = noOfImages;
 		this.noOfAudios = noOfAudios;
 		this.noOfVideos = noOfVideos;
@@ -431,20 +431,20 @@ public class ObservationListPageMapper {
 		this.reverseGeocodedName = reverseGeocodedName;
 	}
 
-	public Long getsGroupId() {
-		return sGroupId;
+	public Long getSpeciesGroupId() {
+		return speciesGroupId;
 	}
 
-	public void setsGroupId(Long sGroupId) {
-		this.sGroupId = sGroupId;
+	public void setSpeciesGroupId(Long speciesGroupId) {
+		this.speciesGroupId = speciesGroupId;
 	}
 
-	public String getsGroup() {
-		return sGroup;
+	public String getSpeciesGroup() {
+		return speciesGroup;
 	}
 
-	public void setsGroup(String sGroup) {
-		this.sGroup = sGroup;
+	public void setSpeciesGroup(String speciesGroup) {
+		this.speciesGroup = speciesGroup;
 	}
 
 	public Long getNoOfImages() {

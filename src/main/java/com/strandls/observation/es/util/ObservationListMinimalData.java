@@ -15,8 +15,8 @@ import com.strandls.observation.pojo.RecoIbp;
 public class ObservationListMinimalData {
 
 	private Long observationId;
-	private Long sGroupId;
-	private String sGroup;
+	private Long speciesGroupId;
+	private String speciesGroup;
 	private String thumbnail;
 	private RecoIbp recoIbp;
 
@@ -27,12 +27,12 @@ public class ObservationListMinimalData {
 
 	@JsonProperty(value = "group_id")
 	private void unpackSGroupId(Long group_id) {
-		sGroupId = group_id;
+		speciesGroupId = group_id;
 	}
 
 	@JsonProperty(value = "group_name")
 	private void unpacksGroup(String group_name) {
-		sGroup = group_name;
+		speciesGroup = group_name;
 	}
 
 	@JsonProperty(value = "repr_image_url")
@@ -44,13 +44,13 @@ public class ObservationListMinimalData {
 	private void unpackMaxName(Max_voted_reco maxVoted) {
 		if (maxVoted != null) {
 			String commonName = "";
-			if(maxVoted.getCommon_names()!=null) {
+			if (maxVoted.getCommon_names() != null) {
 				for (Common_names cn : maxVoted.getCommon_names()) {
 					commonName = commonName + cn.getCommon_name() + "||";
 				}
 				commonName = commonName.substring(0, commonName.length() - 2);
 			}
-			
+
 			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
 					maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;
@@ -73,17 +73,17 @@ public class ObservationListMinimalData {
 
 	/**
 	 * @param observationId
-	 * @param sGroupId
-	 * @param sGroup
+	 * @param speciesGroupId
+	 * @param speciesGroup
 	 * @param thumbnail
 	 * @param recoIbp
 	 */
-	public ObservationListMinimalData(Long observationId, Long sGroupId, String sGroup, String thumbnail,
+	public ObservationListMinimalData(Long observationId, Long speciesGroupId, String speciesGroup, String thumbnail,
 			RecoIbp recoIbp) {
 		super();
 		this.observationId = observationId;
-		this.sGroupId = sGroupId;
-		this.sGroup = sGroup;
+		this.speciesGroupId = speciesGroupId;
+		this.speciesGroup = speciesGroup;
 		this.thumbnail = thumbnail;
 		this.recoIbp = recoIbp;
 	}
@@ -96,20 +96,20 @@ public class ObservationListMinimalData {
 		this.observationId = observationId;
 	}
 
-	public Long getsGroupId() {
-		return sGroupId;
+	public Long getSpeciesGroupId() {
+		return speciesGroupId;
 	}
 
-	public void setsGroupId(Long sGroupId) {
-		this.sGroupId = sGroupId;
+	public void setSpeciesGroupId(Long speciesGroupId) {
+		this.speciesGroupId = speciesGroupId;
 	}
 
-	public String getsGroup() {
-		return sGroup;
+	public String getSpeciesGroup() {
+		return speciesGroup;
 	}
 
-	public void setsGroup(String sGroup) {
-		this.sGroup = sGroup;
+	public void setSpeciesGroup(String speciesGroup) {
+		this.speciesGroup = speciesGroup;
 	}
 
 	public String getThumbnail() {
