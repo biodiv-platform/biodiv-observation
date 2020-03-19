@@ -966,7 +966,7 @@ public class ObservationController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + ApiConstants.MAXVOTEDRECO)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

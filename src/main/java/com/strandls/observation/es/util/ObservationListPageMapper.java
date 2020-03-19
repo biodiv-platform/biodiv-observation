@@ -205,6 +205,17 @@ public class ObservationListPageMapper {
 					taxonId = hierarchy.getTaxon_id();
 				}
 			}
+
+			if (maxVoted.getTaxonstatus().equalsIgnoreCase("SYNONYM")) {
+				if (recoShow != null && recoShow.getAllRecoVotes() != null) {
+					List<AllRecoSugguestions> allrecoVote = recoShow.getAllRecoVotes();
+					for (AllRecoSugguestions allreco : allrecoVote) {
+						if (allreco.getScientificName() != null
+								&& allreco.getScientificName().equalsIgnoreCase(maxVoted.getScientific_name()))
+							taxonId = allreco.getTaxonId();
+					}
+				}
+			}
 			recoIbp.setTaxonId(taxonId);
 			if (recoShow == null)
 				recoShow = new RecoShow();
@@ -212,8 +223,6 @@ public class ObservationListPageMapper {
 		}
 
 	}
-
-
 
 //	------------ALL RECO VOTE SUGGESTIONS--------------------
 	@JsonProperty(value = "all_reco_vote")
@@ -255,6 +264,11 @@ public class ObservationListPageMapper {
 				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
 						userList);
 				allRecoList.add(allRecoSuggeSugguestions);
+				if (recoShow != null && recoShow.getRecoIbp() != null
+						&& recoShow.getRecoIbp().getStatus().equalsIgnoreCase("SYNONYM")) {
+					recoShow.getRecoIbp().setTaxonId(taxonId);
+				}
+
 			}
 		}
 
