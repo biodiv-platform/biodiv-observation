@@ -42,6 +42,7 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationListData;
@@ -667,7 +668,8 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to get the userGroup", response = String.class) })
 	public Response getUsersGroupList(@Context HttpServletRequest request) {
 		try {
-			List<UserGroupIbp> result = observationService.getUsersGroupList();
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			List<UserGroupIbp> result = observationService.getUsersGroupList(profile);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -958,6 +960,28 @@ public class ObservationController {
 		try {
 			Long obvId = Long.parseLong(observationId);
 			observationMailData result = observationService.getMailData(obvId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + ApiConstants.MAXVOTEDRECO)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "find the the maxvoted reco permission for list page", notes = "Return list of observationId with boolean value for permission", response = MaxVotedRecoPermission.class, responseContainer = "list")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the result", response = String.class) })
+
+	public Response getPermissionListMaxVotedRecos(@Context HttpServletRequest request,
+			@ApiParam(name = "observationTaxonId") Map<Long, Long> observationTaxonId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			List<MaxVotedRecoPermission> result = observationService.listMaxRecoVotePermissions(profile,
+					observationTaxonId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

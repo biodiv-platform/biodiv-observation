@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +33,7 @@ import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -532,6 +534,36 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
+	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
+			Map<Long, Long> observationTaxonId) {
+
+		try {
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			List<MaxVotedRecoPermission> result = new ArrayList<MaxVotedRecoPermission>();
+			if (userRole.contains("ROLE_ADMIN")) {
+				for (Entry<Long, Long> entry : observationTaxonId.entrySet()) {
+					result.add(new MaxVotedRecoPermission(entry.getKey(), true));
+				}
+			} else {
+				for (Entry<Long, Long> entry : observationTaxonId.entrySet()) {
+					UserPermissions userPermission = userService.getAllUserPermission("observation",
+							entry.getKey().toString());
+					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
+					List<Long> validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+					if (validateAllowed.contains(entry.getValue()))
+						result.add(new MaxVotedRecoPermission(entry.getKey(), true));
+					else
+						result.add(new MaxVotedRecoPermission(entry.getKey(), false));
+				}
+			}
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
 	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
 			String taxonList) throws Exception {
 		try {
@@ -625,15 +657,21 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<UserGroupIbp> getUsersGroupList() {
+	public List<UserGroupIbp> getUsersGroupList(CommonProfile profile) {
 		try {
-			UserPermissions userPermission = userService.getUserGroupPermissions();
-			List<Long> userGroupMember = new ArrayList<Long>();
-			for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
-				userGroupMember.add(userMemberRole.getUserGroupId());
+			List<UserGroupIbp> allowedUserGroup = null;
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				allowedUserGroup = userGroupService.getAllUserGroup();
+			} else {
+				UserPermissions userPermission = userService.getUserGroupPermissions();
+				List<Long> userGroupMember = new ArrayList<Long>();
+				for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+					userGroupMember.add(userMemberRole.getUserGroupId());
+				}
+				String s = userGroupMember.toString();
+				allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
 			}
-			String s = userGroupMember.toString();
-			List<UserGroupIbp> allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
 
 			return allowedUserGroup;
 		} catch (Exception e) {
@@ -1078,4 +1116,5 @@ public class ObservationServiceImpl implements ObservationService {
 		return false;
 
 	}
+
 }

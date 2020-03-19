@@ -4,12 +4,14 @@
 package com.strandls.observation.service;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -79,7 +81,7 @@ public interface ObservationService {
 
 	public List<Tags> getTagsSugguestions(String phrase);
 
-	public List<UserGroupIbp> getUsersGroupList();
+	public List<UserGroupIbp> getUsersGroupList(CommonProfile profile);
 
 	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
 
@@ -111,5 +113,8 @@ public interface ObservationService {
 	public observationMailData getMailData(Long obvId);
 
 	public Boolean updateLastRevised(Long observationId);
+
+	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
+			Map<Long, Long> observationTaxonId);
 
 }

@@ -81,6 +81,7 @@ public class ObservationESDocument {
 	private Date created_on;
 	private Long group_id;
 	private String group_name;
+	private String sgroup_filter;
 	@Type(type = "json")
 	@Column(columnDefinition = "json")
 	private Location location;
@@ -156,6 +157,7 @@ public class ObservationESDocument {
 	 * @param created_on
 	 * @param group_id
 	 * @param group_name
+	 * @param sgroup_filter
 	 * @param location
 	 * @param location_information
 	 * @param notes
@@ -195,7 +197,7 @@ public class ObservationESDocument {
 	 * @param facts
 	 */
 	public ObservationESDocument(Long observation_id, Long author_id, String created_by, String profile_pic,
-			Date created_on, Long group_id, String group_name, Location location,
+			Date created_on, Long group_id, String group_name, String sgroup_filter, Location location,
 			LocationInformation location_information, String notes, Date from_date, String observed_in_month,
 			String place_name, String reverse_geocoded_name, Long flag_count, Boolean geo_privacy, Date last_revised,
 			Long visit_count, Boolean is_checklist, Date to_date, Boolean is_locked, Integer language_id,
@@ -213,6 +215,7 @@ public class ObservationESDocument {
 		this.created_on = created_on;
 		this.group_id = group_id;
 		this.group_name = group_name;
+		this.sgroup_filter = sgroup_filter;
 		this.location = location;
 		this.location_information = location_information;
 		this.notes = notes;
@@ -306,6 +309,14 @@ public class ObservationESDocument {
 
 	public void setGroup_name(String group_name) {
 		this.group_name = group_name;
+	}
+
+	public String getSgroup_filter() {
+		return sgroup_filter;
+	}
+
+	public void setSgroup_filter(String sgroup_filter) {
+		this.sgroup_filter = sgroup_filter;
 	}
 
 	public Location getLocation() {
@@ -1733,6 +1744,7 @@ class User_group_observations {
 	private String icon;
 	private String name;
 	private String webaddress;
+	private String ug_filter;
 
 	/**
 	 * 
@@ -1746,13 +1758,15 @@ class User_group_observations {
 	 * @param icon
 	 * @param name
 	 * @param webaddress
+	 * @param ug_filter
 	 */
-	public User_group_observations(Long id, String icon, String name, String webaddress) {
+	public User_group_observations(Long id, String icon, String name, String webaddress, String ug_filter) {
 		super();
 		this.id = id;
 		this.icon = icon;
 		this.name = name;
 		this.webaddress = webaddress;
+		this.ug_filter = ug_filter;
 	}
 
 	public Long getId() {
@@ -1761,6 +1775,14 @@ class User_group_observations {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public String getIcon() {
+		return icon;
+	}
+
+	public void setIcon(String icon) {
+		this.icon = icon;
 	}
 
 	public String getName() {
@@ -1779,13 +1801,14 @@ class User_group_observations {
 		this.webaddress = webaddress;
 	}
 
-	public String getIcon() {
-		return icon;
+	public String getUg_filter() {
+		return ug_filter;
 	}
 
-	public void setIcon(String icon) {
-		this.icon = icon;
+	public void setUg_filter(String ug_filter) {
+		this.ug_filter = ug_filter;
 	}
+
 }
 
 class Custom_field_values {

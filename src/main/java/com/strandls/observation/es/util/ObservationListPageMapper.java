@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.strandls.utility.pojo.Tags;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.strandls.observation.pojo.AllRecoSugguestions;
@@ -21,6 +20,7 @@ import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.CustomFieldValuesData;
 import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagShow;
+import com.strandls.utility.pojo.Tags;
 
 /**
  * @author Abhishek Rudra
@@ -205,7 +205,6 @@ public class ObservationListPageMapper {
 					taxonId = hierarchy.getTaxon_id();
 				}
 			}
-
 			recoIbp.setTaxonId(taxonId);
 			if (recoShow == null)
 				recoShow = new RecoShow();
@@ -213,6 +212,8 @@ public class ObservationListPageMapper {
 		}
 
 	}
+
+
 
 //	------------ALL RECO VOTE SUGGESTIONS--------------------
 	@JsonProperty(value = "all_reco_vote")
@@ -239,7 +240,6 @@ public class ObservationListPageMapper {
 						userList.add(useribp);
 					}
 				}
-
 				String scientificName = null;
 				Long taxonId = null;
 				Long speciesId = null;
@@ -252,7 +252,6 @@ public class ObservationListPageMapper {
 						}
 					}
 				}
-
 				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
 						userList);
 				allRecoList.add(allRecoSuggeSugguestions);

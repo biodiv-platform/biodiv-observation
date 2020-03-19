@@ -48,6 +48,7 @@ public class ApiConstants {
 	public static final String UGCONTEXT = "/ugContext";
 	public static final String MAIL = "/mail";
 	public static final String LASTREVISED = "/lastrevised";
+	public static final String MAXVOTEDRECO = "/maxVotedReco";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
