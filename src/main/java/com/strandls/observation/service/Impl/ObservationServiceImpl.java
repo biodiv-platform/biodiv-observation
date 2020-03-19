@@ -1044,7 +1044,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observation.getMaxVotedRecoId() != null) {
 				reco = recoService.fetchRecoName(obvId, observation.getMaxVotedRecoId());
 			}
-			List<ObservationResourceUser> resources = null;
+			List<ObservationResourceUser> resources = new ArrayList<ObservationResourceUser>();
 			;
 			if (observation.getReprImageId() != null)
 				resources = resourceService.getImageResource(observation.getId().toString());
