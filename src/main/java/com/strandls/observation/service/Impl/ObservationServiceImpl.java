@@ -33,6 +33,7 @@ import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -557,6 +558,35 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			}
 			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public ListPagePermissions getListPagePermissions(CommonProfile profile, Long observationId, String taxonList) {
+		try {
+			List<Long> validateAllowed = new ArrayList<Long>();
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				if (taxonList.trim().length() != 0) {
+					for (String s : taxonList.split(",")) {
+						validateAllowed.add(Long.parseLong(s));
+					}
+				}
+			} else {
+				UserPermissions userPermission = userService.getAllUserPermission("observation",
+						observationId.toString());
+
+				if (taxonList.trim().length() != 0) {
+					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+				}
+			}
+			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId.toString());
+			ListPagePermissions permissions = new ListPagePermissions(validateAllowed, cfPermission);
+			return permissions;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

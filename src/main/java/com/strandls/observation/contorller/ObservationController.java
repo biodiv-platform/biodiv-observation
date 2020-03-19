@@ -41,6 +41,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -982,6 +983,29 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			List<MaxVotedRecoPermission> result = observationService.listMaxRecoVotePermissions(profile,
 					observationTaxonId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "search for the permission in list page for a user", notes = "Returns the permission details for the user", response = ListPagePermissions.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to fetch the details", response = String.class) })
+	public Response getLisPagePermissions(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
+			@ApiParam("taxonList") @QueryParam("taxonList") String taxonList) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long obvId = Long.parseLong(observationId);
+			ListPagePermissions result = observationService.getListPagePermissions(profile, obvId, taxonList);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

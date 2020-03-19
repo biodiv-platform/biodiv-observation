@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -116,5 +117,7 @@ public interface ObservationService {
 
 	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
 			Map<Long, Long> observationTaxonId);
+
+	public ListPagePermissions getListPagePermissions(CommonProfile profile, Long observationId, String taxonList);
 
 }
