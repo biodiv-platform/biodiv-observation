@@ -18,6 +18,7 @@ import com.strandls.userGroup.pojo.CustomFieldData;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.CustomFieldValuesData;
+import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Tags;
@@ -44,7 +45,7 @@ public class ObservationListPageMapper {
 	private List<FactValuePair> factValuePair;
 	private List<FlagShow> flagShow;
 	private RecoShow recoShow;
-	private List<Long> userGroup;
+	private List<UserGroupIbp> userGroup;
 	private List<CustomFieldObservationData> customField;
 	private List<Tags> tags;
 
@@ -282,10 +283,19 @@ public class ObservationListPageMapper {
 
 	@JsonProperty(value = "user_group_observations")
 	private void unpackUserGroup(List<User_group_observations> ugObservation) {
-		userGroup = new ArrayList<Long>();
+		userGroup = new ArrayList<UserGroupIbp>();
+		UserGroupIbp ugIbp;
 		if (ugObservation != null) {
 			for (User_group_observations ug : ugObservation) {
-				userGroup.add(ug.getId());
+				ugIbp = new UserGroupIbp();
+				ugIbp.setId(ug.getId());
+				ugIbp.setName(ug.getName());
+				ugIbp.setIcon(ug.getIcon());
+				if (ug.getDomain_name() != null)
+					ugIbp.setWebAddress(ug.getDomain_name());
+				else
+					ugIbp.setWebAddress("/group/" + ug.getWebaddress());
+				userGroup.add(ugIbp);
 			}
 		}
 
@@ -392,7 +402,8 @@ public class ObservationListPageMapper {
 	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, String reverseGeocodedName,
 			Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios, Long noOfVideos,
 			String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair, List<FlagShow> flagShow,
-			RecoShow recoShow, List<Long> userGroup, List<CustomFieldObservationData> customField, List<Tags> tags) {
+			RecoShow recoShow, List<UserGroupIbp> userGroup, List<CustomFieldObservationData> customField,
+			List<Tags> tags) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -525,11 +536,11 @@ public class ObservationListPageMapper {
 		this.recoShow = recoShow;
 	}
 
-	public List<Long> getUserGroup() {
+	public List<UserGroupIbp> getUserGroup() {
 		return userGroup;
 	}
 
-	public void setUserGroup(List<Long> userGroup) {
+	public void setUserGroup(List<UserGroupIbp> userGroup) {
 		this.userGroup = userGroup;
 	}
 

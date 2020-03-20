@@ -1745,6 +1745,7 @@ class User_group_observations {
 	private String name;
 	private String ug_filter;
 	private String webaddress;
+	private String domain_name;
 
 	/**
 	 * 
@@ -1759,14 +1760,17 @@ class User_group_observations {
 	 * @param name
 	 * @param ug_filter
 	 * @param webaddress
+	 * @param domain_name
 	 */
-	public User_group_observations(Long id, String icon, String name, String ug_filter, String webaddress) {
+	public User_group_observations(Long id, String icon, String name, String ug_filter, String webaddress,
+			String domain_name) {
 		super();
 		this.id = id;
 		this.icon = icon;
 		this.name = name;
 		this.ug_filter = ug_filter;
 		this.webaddress = webaddress;
+		this.domain_name = domain_name;
 	}
 
 	public Long getId() {
@@ -1807,6 +1811,14 @@ class User_group_observations {
 
 	public void setWebaddress(String webaddress) {
 		this.webaddress = webaddress;
+	}
+
+	public String getDomain_name() {
+		return domain_name;
+	}
+
+	public void setDomain_name(String domain_name) {
+		this.domain_name = domain_name;
 	}
 
 }
