@@ -159,7 +159,7 @@ public class ConstructESDocument {
 				+ "		(SELECT id resource_id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id FROM resource ) extended_resource "
 				+ "		ON or_resource_id = resource_id GROUP BY observation_id "
 				+ "		) obr ON obr.observation_id = O.id  " + "LEFT OUTER JOIN "
-				+ "		(SELECT UGO.observation_id, custom_fields, user_group_observations " + "		FROM "
+				+ "		(SELECT U.observation_id, custom_fields, user_group_observations " + "		FROM "
 				+ "			(SELECT ugo_observation_id observation_id,  "
 				+ "				jsonb_agg(DISTINCT to_jsonb(row_to_json((SELECT t FROM  "
 				+ "				(SELECT ugo_user_group_id user_group_id,  "
@@ -275,7 +275,7 @@ public class ConstructESDocument {
 				+ "				u_allowed_participation, u_deafult_value,  "
 				+ "				u_display_order, cf_author_id, cf_data_type, cf_field_type, cf_icon_url, cf_name, cf_notes, cf_units "
 				+ "				)R GROUP BY ugo_observation_id, ugo_user_group_id) R GROUP BY ugo_observation_id) UGO "
-				+ "		INNER JOIN " + "			( " + "			SELECT observation_id,  "
+				+ "		RIGHT OUTER JOIN " + "			( " + "			SELECT observation_id,  "
 				+ "			jsonb_agg( DISTINCT (to_jsonb(row_to_json((SELECT t FROM  (SELECT id, icon, name, webaddress, CONCAT(id,'|',name) ug_filter)t)))))\\:\\:json user_group_observations "
 				+ "			FROM "
 				+ "			(SELECT user_group_id, observation_id FROM user_group_observations) UGO "
@@ -284,8 +284,8 @@ public class ConstructESDocument {
 				+ "			) U ON U. observation_id =  UGO.observation_id) UG ON UG.observation_id = O.id "
 				+ "LEFT OUTER JOIN " + "		( " + "		SELECT object_id AS observation_id, "
 				+ "		jsonb_agg( DISTINCT (to_jsonb(row_to_json(( SELECT t FROM (SELECT flag_id id,  "
-				+ "		author_id,notes,author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags " + "		FROM "
-				+ "		(SELECT id flag_id, object_id, author_id, notes, created_on, flag   "
+				+ "		author_id,notes,author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags "
+				+ "		FROM " + "		(SELECT id flag_id, object_id, author_id, notes, created_on, flag   "
 				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id = "
 				+ observationId + ") F " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id, name author_name, profile_pic from suser ) U ON U.id = author_id GROUP BY object_id "
@@ -336,6 +336,7 @@ public class ConstructESDocument {
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
+			System.out.println(qry);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
 			result = query.getSingleResult();
 			System.out.println();
