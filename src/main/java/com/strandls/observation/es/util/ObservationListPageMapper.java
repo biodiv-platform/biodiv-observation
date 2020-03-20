@@ -240,9 +240,10 @@ public class ObservationListPageMapper {
 					commonName = commonName.substring(0, commonName.length() - 2);
 				}
 				List<UserIbp> userList = new ArrayList<UserIbp>();
-				UserIbp useribp = new UserIbp();
+				UserIbp useribp;
 				if (allreco.getAuthors_voted() != null) {
 					for (Authors_voted author : allreco.getAuthors_voted()) {
+						useribp = new UserIbp();
 						useribp.setId(author.getId());
 						useribp.setName(author.getName());
 						useribp.setProfilePic(author.getProfile_pic());

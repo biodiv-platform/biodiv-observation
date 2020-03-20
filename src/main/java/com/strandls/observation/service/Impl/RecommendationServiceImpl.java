@@ -148,7 +148,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 			for (RecommendationVote recoVote : recoVotes) {
 				if (recoVote.getCommonNameRecoId() != null) {
-					commonName = commonName + recoDao.findById(recoVote.getCommonNameRecoId()).getName() + "||";
+					String tempName = recoDao.findById(recoVote.getCommonNameRecoId()).getName();
+					if (!commonName.contains(tempName))
+						commonName = commonName + tempName + "||";
 				}
 			}
 			if (!(commonName.isEmpty()))
