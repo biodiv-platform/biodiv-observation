@@ -1124,7 +1124,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			observationMailData mailData = new observationMailData(observation.getId(),
 					observation.getReverseGeocodedName(), observation.getFromDate(), iconurl, reco.getScientificName(),
-					reco.getCommonName());
+					reco.getCommonName(), observation.getAuthorId());
 			return mailData;
 		} catch (Exception e) {
 			logger.error(e.getMessage());

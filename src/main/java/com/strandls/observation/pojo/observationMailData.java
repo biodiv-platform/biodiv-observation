@@ -17,6 +17,7 @@ public class observationMailData {
 	private String iconURl;
 	private String scientificName;
 	private String commonName;
+	private Long authorId;
 
 	/**
 	 * 
@@ -32,9 +33,10 @@ public class observationMailData {
 	 * @param iconURl
 	 * @param scientificName
 	 * @param commonName
+	 * @param authorId
 	 */
 	public observationMailData(Long observationId, String location, Date observedOn, String iconURl,
-			String scientificName, String commonName) {
+			String scientificName, String commonName, Long authorId) {
 		super();
 		this.observationId = observationId;
 		this.location = location;
@@ -42,6 +44,7 @@ public class observationMailData {
 		this.iconURl = iconURl;
 		this.scientificName = scientificName;
 		this.commonName = commonName;
+		this.authorId = authorId;
 	}
 
 	public Long getObservationId() {
@@ -90,6 +93,14 @@ public class observationMailData {
 
 	public void setCommonName(String commonName) {
 		this.commonName = commonName;
+	}
+
+	public Long getAuthorId() {
+		return authorId;
+	}
+
+	public void setAuthorId(Long authorId) {
+		this.authorId = authorId;
 	}
 
 }
