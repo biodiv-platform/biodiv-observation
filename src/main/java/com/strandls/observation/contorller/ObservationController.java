@@ -627,7 +627,7 @@ public class ObservationController {
 
 	public Response getUserPermissions(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam("taxonList") @QueryParam("taxonList") String taxonList) {
+			@ApiParam("taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -1001,7 +1001,7 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to fetch the details", response = String.class) })
 	public Response getLisPagePermissions(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam("taxonList") @QueryParam("taxonList") String taxonList) {
+			@ApiParam("taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);

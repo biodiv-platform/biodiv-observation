@@ -127,9 +127,9 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "facts")
 	private void unpackFacts(List<Facts> facts) {
 		factValuePair = new ArrayList<FactValuePair>();
-		FactValuePair fvp = new FactValuePair();
 		if (facts != null) {
 			for (Facts fact : facts) {
+				FactValuePair fvp = new FactValuePair();
 				fvp.setNameId(fact.getTrait_id());
 				fvp.setName(fact.getName());
 				fvp.setType(fact.getTrait_types());
@@ -152,11 +152,11 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "flags")
 	private void unpackFlags(List<Flags> flags) {
 		flagShow = new ArrayList<FlagShow>();
-		FlagShow fs = new FlagShow();
-		Flag flagIbp = new Flag();
-		com.strandls.utility.pojo.UserIbp useribp = new com.strandls.utility.pojo.UserIbp();
 		if (flags != null) {
 			for (Flags flag : flags) {
+				FlagShow fs = new FlagShow();
+				Flag flagIbp = new Flag();
+				com.strandls.utility.pojo.UserIbp useribp = new com.strandls.utility.pojo.UserIbp();
 
 				useribp.setId(flag.getAuthor_id());
 				useribp.setName(flag.getAuthor_name());
@@ -305,16 +305,16 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "custom_fields")
 	private void unpackCustomField(List<Custom_fields> custom_fields) {
 		customField = new ArrayList<CustomFieldObservationData>();
-		CustomFieldObservationData cfObservationData = new CustomFieldObservationData();
 		if (custom_fields != null) {
 			for (Custom_fields cfs : custom_fields) {
+				CustomFieldObservationData cfObservationData = new CustomFieldObservationData();
 				cfObservationData.setUserGroupId(cfs.getUser_group_id());
 
 				List<CustomFieldData> customFieldlist = new ArrayList<CustomFieldData>();
-				CustomFieldData cfData = new CustomFieldData();
-				CustomFieldValuesData cfValueData = new CustomFieldValuesData();
 				if (cfs.getCustom_field() != null) {
 					for (Custom_field cf : cfs.getCustom_field()) {
+						CustomFieldData cfData = new CustomFieldData();
+						CustomFieldValuesData cfValueData = new CustomFieldValuesData();
 						cfData.setAllowedParticipation(cf.getAllowed_participation());
 						cfData.setCfIconUrl(cf.getCf_icon_url());
 						cfData.setCfId(cf.getCustom_field_id());
@@ -362,9 +362,10 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "tags")
 	private void unpacktags(List<com.strandls.observation.es.util.Tags> tagsES) {
 		tags = new ArrayList<Tags>();
-		Tags tagIbp = new Tags();
+		Tags tagIbp;
 		if (tagsES != null) {
 			for (com.strandls.observation.es.util.Tags tag : tagsES) {
+				tagIbp = new Tags();
 				tagIbp.setName(tag.getName());
 				tagIbp.setId(tag.getId());
 				tags.add(tagIbp);
