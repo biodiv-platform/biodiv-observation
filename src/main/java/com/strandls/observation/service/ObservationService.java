@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.pac4j.core.profile.CommonProfile;
 
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
+import com.strandls.activity.pojo.MailData;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -20,7 +23,6 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
-import com.strandls.observation.pojo.observationMailData;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
@@ -111,8 +113,6 @@ public interface ObservationService {
 	public ShowData creteObservationUGContext(HttpServletRequest request,
 			ObservationCreateUGContext observationUGContext);
 
-	public observationMailData getMailData(Long obvId);
-
 	public Boolean updateLastRevised(Long observationId);
 
 	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
@@ -120,4 +120,7 @@ public interface ObservationService {
 
 	public ListPagePermissions getListPagePermissions(CommonProfile profile, Long observationId, String taxonList);
 
+	public MailData generateMailData(Long observationId);
+
+	public Activity addObservationComment(CommentLoggingData comment);
 }

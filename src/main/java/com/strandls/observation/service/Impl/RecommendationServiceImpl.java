@@ -210,7 +210,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
 		logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-				"Suggested species name");
+				"Suggested species name",observaitonService.generateMailData(observationId));
 
 		return maxRecoVote;
 
@@ -389,7 +389,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 
 			logActivities.LogActivity(description, observationId, observationId, "observation", observationId,
-					"Suggestion removed");
+					"Suggestion removed",observaitonService.generateMailData(observationId));
 
 			return result;
 
@@ -496,7 +496,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 					}
 
 					logActivities.LogActivity(description, observationId, observationId, "observation",
-							recoVote.getId(), "Agreed on species name");
+							recoVote.getId(), "Agreed on species name",observaitonService.generateMailData(observationId));
 
 				}
 
@@ -603,7 +603,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				description = objectMapper.writeValueAsString(rvActivity);
 
 				logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-						"obv locked");
+						"obv locked",observaitonService.generateMailData(observationId));
 
 				return result;
 			}
@@ -656,7 +656,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 					description = objectMapper.writeValueAsString(rvActivity);
 
 					logActivities.LogActivity(description, observationId, observationId, "observation",
-							observation.getMaxVotedRecoId(), "obv unlocked");
+							observation.getMaxVotedRecoId(), "obv unlocked",observaitonService.generateMailData(observationId));
 					return result;
 				}
 			}

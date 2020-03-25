@@ -24,5 +24,6 @@ public class ObservationServiceModule extends AbstractModule {
 		bind(LogActivities.class).in(Scopes.SINGLETON);
 		bind(UserGroupFilterThread.class).in(Scopes.SINGLETON);
 		bind(GeoPrivacyBulkThread.class).in(Scopes.SINGLETON);
+		bind(MailMetaDataConverter.class).in(Scopes.SINGLETON);
 	}
 }

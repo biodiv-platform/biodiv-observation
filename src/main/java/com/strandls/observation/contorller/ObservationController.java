@@ -30,6 +30,8 @@ import javax.ws.rs.core.UriInfo;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.google.inject.Inject;
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.pojo.FilterPanelData;
@@ -51,7 +53,6 @@ import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
-import com.strandls.observation.pojo.observationMailData;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -949,24 +950,6 @@ public class ObservationController {
 		}
 	}
 
-	@GET
-	@Path(ApiConstants.MAIL + "/{observationId}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Get the data for mail Observation Object", notes = "Return the mail Observation Object", response = observationMailData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the data", response = String.class) })
-
-	public Response getObservationMailData(@PathParam("observationId") String observationId) {
-		try {
-			Long obvId = Long.parseLong(observationId);
-			observationMailData result = observationService.getMailData(obvId);
-			return Response.status(Status.OK).entity(result).build();
-		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}
-	}
-
 	@POST
 	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + ApiConstants.MAXVOTEDRECO)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -1010,6 +993,27 @@ public class ObservationController {
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+	}
+
+	@POST
+	@Path(ApiConstants.ADD)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Adds a comment", notes = "Return the current activity", response = Activity.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to log a comment", response = String.class) })
+
+	public Response addCommnet(@Context HttpServletRequest request,
+			@ApiParam(name = "commentData") CommentLoggingData commentDatas) {
+		try {
+			Activity result = observationService.addObservationComment(commentDatas);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
 	}
 
 }

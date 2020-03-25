@@ -49,6 +49,8 @@ public class ApiConstants {
 	public static final String MAIL = "/mail";
 	public static final String LASTREVISED = "/lastrevised";
 	public static final String MAXVOTEDRECO = "/maxVotedReco";
+	public static final String ADD ="/add";
+	public static final String COMMENT = "/comment";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

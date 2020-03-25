@@ -19,6 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
+import com.strandls.activity.pojo.MailData;
+import com.strandls.activity.pojo.ObservationMailData;
+import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
@@ -44,7 +50,6 @@ import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
-import com.strandls.observation.pojo.observationMailData;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -55,6 +60,8 @@ import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonTree;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsCreateData;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
@@ -67,20 +74,25 @@ import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.CustomFieldDetails;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsertData;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldPermission;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
+import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.ObservationLatLon;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
+import com.strandls.utility.pojo.FlagCreateData;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
+import com.strandls.utility.pojo.TagsMappingData;
 
 import net.minidev.json.JSONArray;
 
@@ -139,6 +151,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ESUpdate esUpdate;
+
+	@Inject
+	private MailMetaDataConverter converter;
+
+	@Inject
+	private ActivitySerivceApi activityService;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -287,7 +305,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observation = observationDao.save(observation);
 
 			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
-					"Observation created");
+					"Observation created", generateMailData(observation.getId()));
 
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
@@ -298,16 +316,24 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData.getResources());
 			resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
+			FactsCreateData factsCreateData = new FactsCreateData();
+			factsCreateData.setFactValuePairs(observationData.getFacts());
+			factsCreateData.setMailData(converter.traitMetaData(generateMailData(observation.getId())));
 			traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
-					observationData.getFacts());
+					factsCreateData);
 
-			userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
-					observationData.getUserGroupId());
+			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+			userGroupData.setUserGroups(observationData.getUserGroupId());
+			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(observation.getId())));
+			userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
 			if (!(observationData.getTags().isEmpty())) {
 				TagsMapping tagsMapping = new TagsMapping();
 				tagsMapping.setObjectId(observation.getId());
 				tagsMapping.setTags(observationData.getTags());
-				utilityServices.createTags("observation", tagsMapping);
+				TagsMappingData tagMappingData = new TagsMappingData();
+				tagMappingData.setTagsMapping(tagsMapping);
+				tagMappingData.setMailData(converter.utilityMetaData(generateMailData(observation.getId())));
+				utilityServices.createTags("observation", tagMappingData);
 
 			}
 
@@ -386,7 +412,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		produceToRabbitMQ(observationId.toString(), "Species Group");
 		logActivity.LogActivity(description, observationId, observationId, "observation", observationId,
-				"Observation species group updated");
+				"Observation species group updated", generateMailData(observationId));
 		return observation.getGroupId();
 	}
 
@@ -411,7 +437,10 @@ public class ObservationServiceImpl implements ObservationService {
 	public List<Tags> updateTags(TagsMapping tagsMapping) {
 		List<Tags> result = null;
 		try {
-			result = utilityServices.updateTags("observation", tagsMapping);
+			TagsMappingData tagsMappingData = new TagsMappingData();
+			tagsMappingData.setTagsMapping(tagsMapping);
+			tagsMappingData.setMailData(converter.utilityMetaData(generateMailData(tagsMapping.getObjectId())));
+			result = utilityServices.updateTags("observation", tagsMappingData);
 			Observation observation = observationDao.findById(tagsMapping.getObjectId());
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
@@ -427,7 +456,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<FactValuePair> facts = null;
 		try {
-			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId, valueList);
+
+			FactsUpdateData factsUpdatedata = new FactsUpdateData();
+			factsUpdatedata.setTraitValueList(valueList);
+			factsUpdatedata.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
+			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId,
+					factsUpdatedata);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
@@ -443,7 +477,10 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<UserGroupIbp> result = null;
 		try {
-			result = userGroupService.updateUserGroupMapping(observationId, userGroupList);
+			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
+			result = userGroupService.updateUserGroupMapping(observationId, userGroupData);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
@@ -485,7 +522,10 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> result = null;
 
 		try {
-			result = userGroupService.createFeatured(featuredCreate);
+			FeaturedCreateData featuredCreateData = new FeaturedCreateData();
+			featuredCreateData.setFeaturedCreate(featuredCreate);
+			featuredCreateData.setMailData(converter.userGroupMetadata(generateMailData(featuredCreate.getObjectId())));
+			result = userGroupService.createFeatured(featuredCreateData);
 			Observation observation = observationDao.findById(featuredCreate.getObjectId());
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
@@ -500,7 +540,10 @@ public class ObservationServiceImpl implements ObservationService {
 	public List<Featured> unFeatured(String observaitonId, List<Long> userGroupList) {
 		List<Featured> result = null;
 		try {
-			result = userGroupService.unFeatured("observation", observaitonId, userGroupList);
+			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observaitonId))));
+			result = userGroupService.unFeatured("observation", observaitonId, userGroupData);
 			Observation observation = observationDao.findById(Long.parseLong(observaitonId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
@@ -734,7 +777,10 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public List<FlagShow> createFlag(Long observationId, FlagIbp flagIbp) {
 		try {
-			List<FlagShow> flagList = utilityServices.createFlag("observation", observationId.toString(), flagIbp);
+			FlagCreateData flagData = new FlagCreateData();
+			flagData.setFlagIbp(flagIbp);
+			flagData.setMailData(converter.utilityMetaData(generateMailData(observationId)));
+			List<FlagShow> flagList = utilityServices.createFlag("observation", observationId.toString(), flagData);
 			int flagCount = 0;
 			if (flagList != null)
 				flagCount = flagList.size();
@@ -755,7 +801,9 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public List<FlagShow> unFlag(Long observationId, String flagId) {
 		try {
-			List<FlagShow> result = utilityServices.unFlag("observation", observationId.toString(), flagId);
+
+			com.strandls.utility.pojo.MailData mailData = converter.utilityMetaData(generateMailData(observationId));
+			List<FlagShow> result = utilityServices.unFlag("observation", observationId.toString(), flagId, mailData);
 			int flagCount = 0;
 			if (result != null)
 				flagCount = result.size();
@@ -866,7 +914,7 @@ public class ObservationServiceImpl implements ObservationService {
 				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
 
 				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
-						"Observation updated");
+						"Observation updated", generateMailData(observationId));
 				return findById(observationId);
 			} else {
 				try {
@@ -1023,7 +1071,13 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData) {
 		try {
-			List<CustomFieldObservationData> result = cfService.addUpdateCustomFieldData(factsCreateData);
+
+			CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
+			factsInsertData.setFactsCreateData(factsCreateData);
+			factsInsertData
+					.setMailData(converter.userGroupMetadata(generateMailData(factsCreateData.getObservationId())));
+
+			List<CustomFieldObservationData> result = cfService.addUpdateCustomFieldData(factsInsertData);
 			if (result != null && !result.isEmpty())
 				produceToRabbitMQ(factsCreateData.getObservationId().toString(), "Custom Field");
 			return result;
@@ -1091,7 +1145,11 @@ public class ObservationServiceImpl implements ObservationService {
 			ShowData observationData = createObservation(request, observationUGContext.getObservationData());
 			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
 				cfInsert.setObservationId(observationData.getObservation().getId());
-				cfService.addUpdateCustomFieldData(cfInsert);
+				CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
+				factsInsertData.setFactsCreateData(cfInsert);
+				factsInsertData.setMailData(
+						converter.userGroupMetadata(generateMailData(observationData.getObservation().getId())));
+				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
 
 			return findById(observationData.getObservation().getId());
@@ -1104,7 +1162,46 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public observationMailData getMailData(Long obvId) {
+	public Boolean updateLastRevised(Long observationId) {
+		try {
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
+			produceToRabbitMQ(observationId.toString(), "Comment");
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
+	}
+
+	@Override
+	public MailData generateMailData(Long observationId) {
+		MailData mailData = null;
+		try {
+			ObservationMailData observationData = getObservationMailData(observationId);
+			List<UserGroupIbp> userGroupIbp = userGroupService.getObservationUserGroup(observationId.toString());
+			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
+			for (UserGroupIbp ugIbp : userGroupIbp) {
+				UserGroupMailData ugMailData = new UserGroupMailData();
+				ugMailData.setId(ugIbp.getId());
+				ugMailData.setIcon(ugIbp.getIcon());
+				ugMailData.setName(ugIbp.getName());
+				ugMailData.setWebAddress(ugIbp.getWebAddress());
+
+			}
+
+			mailData = new MailData();
+			mailData.setObservationData(observationData);
+			mailData.setUserGroupData(userGroupData);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return mailData;
+	}
+
+	private ObservationMailData getObservationMailData(Long obvId) {
 		Observation observation = observationDao.findById(obvId);
 		try {
 			RecoIbp reco = new RecoIbp();
@@ -1122,10 +1219,16 @@ public class ObservationServiceImpl implements ObservationService {
 					iconurl = resource.getResource().getFileName();
 			}
 
-			observationMailData mailData = new observationMailData(observation.getId(),
-					observation.getReverseGeocodedName(), observation.getFromDate(), iconurl, reco.getScientificName(),
-					reco.getCommonName(), observation.getAuthorId());
-			return mailData;
+			ObservationMailData observationData = new ObservationMailData();
+			observationData.setAuthorId(observation.getAuthorId());
+			observationData.setCommonName(reco.getCommonName());
+			observationData.setIconURl(iconurl);
+			observationData.setLocation(observation.getReverseGeocodedName());
+			observationData.setObservationId(observation.getId());
+			observationData.setObservedOn(observation.getFromDate());
+			observationData.setScientificName(reco.getScientificName());
+
+			return observationData;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1133,18 +1236,16 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Boolean updateLastRevised(Long observationId) {
+	public Activity addObservationComment(CommentLoggingData comment) {
 		try {
-			Observation observation = observationDao.findById(observationId);
-			observation.setLastRevised(new Date());
-			observationDao.update(observation);
-			produceToRabbitMQ(observationId.toString(), "Comment");
-			return true;
+			comment.setMailData(generateMailData(comment.getRootHolderId()));
+			Activity result = activityService.addComment(comment);
+			updateLastRevised(comment.getRootHolderId());
+			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		return false;
-
+		return null;
 	}
 
 }
