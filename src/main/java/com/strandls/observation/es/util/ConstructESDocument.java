@@ -276,7 +276,7 @@ public class ConstructESDocument {
 				+ "				u_display_order, cf_author_id, cf_data_type, cf_field_type, cf_icon_url, cf_name, cf_notes, cf_units "
 				+ "				)R GROUP BY ugo_observation_id, ugo_user_group_id) R GROUP BY ugo_observation_id) UGO "
 				+ "		RIGHT OUTER JOIN " + "			( " + "			SELECT observation_id,  "
-				+ "			jsonb_agg( DISTINCT (to_jsonb(row_to_json((SELECT t FROM  (SELECT id, icon, name, webaddress, domain_name, CONCAT(id,'|',name) ug_filter)t)))))\\:\\:json user_group_observations "
+				+ "			jsonb_agg( DISTINCT (to_jsonb(row_to_json((SELECT t FROM  (SELECT id, icon, name, webaddress, domain_name, CONCAT(id,'|',name,'|',domain_name,'|',webaddress) ug_filter)t)))))\\:\\:json user_group_observations "
 				+ "			FROM "
 				+ "			(SELECT user_group_id, observation_id FROM user_group_observations) UGO "
 				+ "			INNER JOIN " + "			(SELECT id ,icon, name, webaddress, domain_name FROM user_group ) U "
