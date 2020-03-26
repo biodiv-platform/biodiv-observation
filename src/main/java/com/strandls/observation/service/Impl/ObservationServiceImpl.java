@@ -189,7 +189,9 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				in.close();
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
-				authorScore = score.getRecord().get(0).get("details");
+				if(!score.getRecord().isEmpty()) {
+					authorScore = score.getRecord().get(0).get("details");
+				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource(id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
