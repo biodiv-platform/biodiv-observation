@@ -56,16 +56,17 @@ public class ObservationListMinimalData {
 			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
 					maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;
-			for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
-				taxonId = hierarchy.getTaxon_id();
-			}
+			if (maxVoted.getHierarchy() != null)
+				for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
+					taxonId = hierarchy.getTaxon_id();
+				}
 			recoIbp.setTaxonId(taxonId);
 			this.recoIbp = recoIbp;
 
 		}
 
 	}
-	
+
 //	---------USER IBP------------
 
 	@JsonProperty(value = "author_id")
@@ -88,7 +89,6 @@ public class ObservationListMinimalData {
 			user = new UserIbp();
 		user.setProfilePic(profile_pic);
 	}
-
 
 	/**
 	 * 
@@ -163,7 +163,5 @@ public class ObservationListMinimalData {
 	public void setUser(UserIbp user) {
 		this.user = user;
 	}
-
-
 
 }
