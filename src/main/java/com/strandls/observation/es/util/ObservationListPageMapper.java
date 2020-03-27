@@ -207,7 +207,7 @@ public class ObservationListPageMapper {
 				}
 			}
 
-			if (maxVoted.getTaxonstatus().equalsIgnoreCase("SYNONYM")) {
+			if (maxVoted.getTaxonstatus() != null && maxVoted.getTaxonstatus().equalsIgnoreCase("SYNONYM")) {
 				if (recoShow != null && recoShow.getAllRecoVotes() != null) {
 					List<AllRecoSugguestions> allrecoVote = recoShow.getAllRecoVotes();
 					for (AllRecoSugguestions allreco : allrecoVote) {
@@ -266,10 +266,10 @@ public class ObservationListPageMapper {
 				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
 						userList);
 				allRecoList.add(allRecoSuggeSugguestions);
-				if (recoShow != null && recoShow.getRecoIbp() != null
-						&& recoShow.getRecoIbp().getStatus().equalsIgnoreCase("SYNONYM")) {
-					recoShow.getRecoIbp().setTaxonId(taxonId);
-				}
+				if (recoShow != null && recoShow.getRecoIbp() != null && recoShow.getRecoIbp().getStatus() != null)
+					if (recoShow.getRecoIbp().getStatus().equalsIgnoreCase("SYNONYM")) {
+						recoShow.getRecoIbp().setTaxonId(taxonId);
+					}
 
 			}
 		}

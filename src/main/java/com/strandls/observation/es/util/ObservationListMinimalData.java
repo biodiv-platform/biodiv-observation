@@ -6,6 +6,7 @@ package com.strandls.observation.es.util;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.user.pojo.UserIbp;
 
 /**
  * @author Abhishek Rudra
@@ -19,6 +20,7 @@ public class ObservationListMinimalData {
 	private String speciesGroup;
 	private String thumbnail;
 	private RecoIbp recoIbp;
+	private UserIbp user;
 
 	@JsonProperty("observation_id")
 	private void unpackName(Long observation_id) {
@@ -63,6 +65,30 @@ public class ObservationListMinimalData {
 		}
 
 	}
+	
+//	---------USER IBP------------
+
+	@JsonProperty(value = "author_id")
+	private void unpackAuthorId(Long author_id) {
+		if (user == null)
+			user = new UserIbp();
+		user.setId(author_id);
+	}
+
+	@JsonProperty(value = "created_by")
+	private void unpackAuthorName(String created_by) {
+		if (user == null)
+			user = new UserIbp();
+		user.setName(created_by);
+	}
+
+	@JsonProperty(value = "profile_pic")
+	private void unpackAuthorPic(String profile_pic) {
+		if (user == null)
+			user = new UserIbp();
+		user.setProfilePic(profile_pic);
+	}
+
 
 	/**
 	 * 
