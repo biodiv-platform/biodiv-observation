@@ -103,15 +103,17 @@ public class ObservationListMinimalData {
 	 * @param speciesGroup
 	 * @param thumbnail
 	 * @param recoIbp
+	 * @param user
 	 */
 	public ObservationListMinimalData(Long observationId, Long speciesGroupId, String speciesGroup, String thumbnail,
-			RecoIbp recoIbp) {
+			RecoIbp recoIbp, UserIbp user) {
 		super();
 		this.observationId = observationId;
 		this.speciesGroupId = speciesGroupId;
 		this.speciesGroup = speciesGroup;
 		this.thumbnail = thumbnail;
 		this.recoIbp = recoIbp;
+		this.user = user;
 	}
 
 	public Long getObservationId() {
@@ -153,5 +155,15 @@ public class ObservationListMinimalData {
 	public void setRecoIbp(RecoIbp recoIbp) {
 		this.recoIbp = recoIbp;
 	}
+
+	public UserIbp getUser() {
+		return user;
+	}
+
+	public void setUser(UserIbp user) {
+		this.user = user;
+	}
+
+
 
 }
