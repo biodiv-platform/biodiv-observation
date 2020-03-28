@@ -189,7 +189,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				in.close();
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
-				if(!score.getRecord().isEmpty()) {
+				if (!score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
@@ -306,42 +306,9 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
 
-			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
-					"Observation created", generateMailData(observation.getId()));
-
-			if (!(observationData.getHelpIdentify())) {
-				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(userId, observation.getId(),
-						observationData.getRecoData().getScientificNameTaxonId(), recoCreate);
-			}
-
 			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData.getResources());
 			resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
-			FactsCreateData factsCreateData = new FactsCreateData();
-			factsCreateData.setFactValuePairs(observationData.getFacts());
-			factsCreateData.setMailData(converter.traitMetaData(generateMailData(observation.getId())));
-			traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
-					factsCreateData);
-
-			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
-			userGroupData.setUserGroups(observationData.getUserGroupId());
-			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(observation.getId())));
-			userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
-			if (!(observationData.getTags().isEmpty())) {
-				TagsMapping tagsMapping = new TagsMapping();
-				tagsMapping.setObjectId(observation.getId());
-				tagsMapping.setTags(observationData.getTags());
-				TagsMappingData tagMappingData = new TagsMappingData();
-				tagMappingData.setTagsMapping(tagsMapping);
-				tagMappingData.setMailData(converter.utilityMetaData(generateMailData(observation.getId())));
-				utilityServices.createTags("observation", tagMappingData);
-
-			}
-
-//			update observaiton object
-
-			observation.setMaxVotedRecoId(maxVotedReco);
 			Integer noOfImages = 0;
 			Integer noOfAudio = 0;
 			Integer noOfVideo = 0;
@@ -365,7 +332,45 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setNoOfImages(noOfImages);
 			observation.setNoOfVideos(noOfVideo);
 			observation.setReprImageId(reprImage);
-			observationDao.update(observation);
+			observation = observationDao.update(observation);
+
+			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
+					"Observation created", generateMailData(observation.getId()));
+
+			if (!(observationData.getHelpIdentify())) {
+				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
+				maxVotedReco = recoService.createRecoVote(userId, observation.getId(),
+						observationData.getRecoData().getScientificNameTaxonId(), recoCreate);
+
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observationDao.update(observation);
+			}
+
+			if (observationData.getFacts() != null && !observationData.getFacts().isEmpty()) {
+				FactsCreateData factsCreateData = new FactsCreateData();
+				factsCreateData.setFactValuePairs(observationData.getFacts());
+				factsCreateData.setMailData(converter.traitMetaData(generateMailData(observation.getId())));
+				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
+						factsCreateData);
+			}
+
+			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
+				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+				userGroupData.setUserGroups(observationData.getUserGroupId());
+				userGroupData.setMailData(converter.userGroupMetadata(generateMailData(observation.getId())));
+				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
+			}
+			if (!(observationData.getTags().isEmpty())) {
+				TagsMapping tagsMapping = new TagsMapping();
+				tagsMapping.setObjectId(observation.getId());
+				tagsMapping.setTags(observationData.getTags());
+				TagsMappingData tagMappingData = new TagsMappingData();
+				tagMappingData.setTagsMapping(tagsMapping);
+				tagMappingData.setMailData(converter.utilityMetaData(generateMailData(observation.getId())));
+				utilityServices.createTags("observation", tagMappingData);
+
+			}
+
 //			----------------POST CREATE ACTIONS------------
 
 //			----------------GEO PRIVACY CHECK-------------
