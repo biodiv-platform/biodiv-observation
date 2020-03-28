@@ -33,6 +33,7 @@ public class ObservationListPageMapper {
 	private Long observationId;
 	private Date createdOn;
 	private Date lastRevised;
+	private Date observedOn;
 	private String reverseGeocodedName;
 	private Long speciesGroupId;
 	private String speciesGroup;
@@ -64,6 +65,11 @@ public class ObservationListPageMapper {
 		lastRevised = lastModified;
 	}
 
+	@JsonProperty(value = "from_date")
+	private void unpackObservedOnDate(Date observedDate) {
+		observedOn = observedDate;
+	}
+	
 	@JsonProperty(value = "reverse_geocoded_name")
 	private void unpackAddress(String reverse_geocoded_name) {
 		reverseGeocodedName = reverse_geocoded_name;
@@ -385,6 +391,7 @@ public class ObservationListPageMapper {
 	 * @param observationId
 	 * @param createdOn
 	 * @param lastRevised
+	 * @param observedOn
 	 * @param reverseGeocodedName
 	 * @param speciesGroupId
 	 * @param speciesGroup
@@ -400,15 +407,16 @@ public class ObservationListPageMapper {
 	 * @param customField
 	 * @param tags
 	 */
-	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, String reverseGeocodedName,
-			Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios, Long noOfVideos,
-			String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair, List<FlagShow> flagShow,
-			RecoShow recoShow, List<UserGroupIbp> userGroup, List<CustomFieldObservationData> customField,
-			List<Tags> tags) {
+	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, Date observedOn,
+			String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios,
+			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
+			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
+			List<CustomFieldObservationData> customField, List<Tags> tags) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
 		this.lastRevised = lastRevised;
+		this.observedOn = observedOn;
 		this.reverseGeocodedName = reverseGeocodedName;
 		this.speciesGroupId = speciesGroupId;
 		this.speciesGroup = speciesGroup;
@@ -447,6 +455,14 @@ public class ObservationListPageMapper {
 
 	public void setLastRevised(Date lastRevised) {
 		this.lastRevised = lastRevised;
+	}
+
+	public Date getObservedOn() {
+		return observedOn;
+	}
+
+	public void setObservedOn(Date observedOn) {
+		this.observedOn = observedOn;
 	}
 
 	public String getReverseGeocodedName() {
@@ -560,5 +576,6 @@ public class ObservationListPageMapper {
 	public void setTags(List<Tags> tags) {
 		this.tags = tags;
 	}
+
 
 }
