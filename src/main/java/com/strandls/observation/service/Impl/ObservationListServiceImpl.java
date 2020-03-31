@@ -558,4 +558,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return result;
 	}
 
+	@Override
+	public List<ObservationListMinimalData> getObservation(String resourceUrls) {
+
+		try {
+			List<ObservationListMinimalData> observationListMinimal = new ArrayList<ObservationListMinimalData>();
+			MapSearchQuery query = esUtility.getSearchQueryResource(resourceUrls);
+			MapResponse result = esService.search(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+					null, null, null, null, query);
+			List<MapDocument> documents = result.getDocuments();
+
+			for (MapDocument document : documents) {
+				try {
+
+					observationListMinimal.add(objectMapper.readValue(String.valueOf(document.getDocument()),
+							ObservationListMinimalData.class));
+				} catch (IOException e) {
+					logger.error(e.getMessage());
+				}
+			}
+			return observationListMinimal;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
 }

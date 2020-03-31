@@ -26,6 +26,7 @@ import com.strandls.esmodule.pojo.MapOrBoolQuery;
 import com.strandls.esmodule.pojo.MapOrMatchPhraseQuery;
 import com.strandls.esmodule.pojo.MapOrRangeQuery;
 import com.strandls.esmodule.pojo.MapSearchParams;
+import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 
 /**
@@ -79,6 +80,13 @@ public class ESUtility {
 		andBool.setValues(values);
 		return andBool;
 
+	}
+
+	private MapOrBoolQuery assOrBoolQuery(String key, List<Object> values) {
+		MapOrBoolQuery orBool = new MapOrBoolQuery();
+		orBool.setKey(key);
+		orBool.setValues(values);
+		return orBool;
 	}
 
 	private MapExistQuery assignExistsQuery(String key, Boolean values, String path) {
@@ -616,6 +624,25 @@ public class ESUtility {
 		mapSearchQuery.setOrMatchPhraseQueries(orMatchPhraseQueriesnew);
 		mapSearchQuery.setSearchParams(mapSearchParams);
 
+		return mapSearchQuery;
+	}
+
+	public MapSearchQuery getSearchQueryResource(String resourcesUrl) {
+		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
+		List<Object> values = cSTSOT(resourcesUrl);
+		boolOrLists.add(assOrBoolQuery(ObservationIndex.resource.getValue(), values));
+		MapSearchQuery mapSearchQuery = new MapSearchQuery();
+		
+		MapSearchParams searchParams = new MapSearchParams();
+		MapSearchParams mapSearchParams = new MapSearchParams();
+		mapSearchParams.setFrom(0);
+		mapSearchParams.setLimit(50);
+		mapSearchParams.setSortOn(ObservationIndex.createdOn.getValue());
+		mapSearchParams.setSortType(SortTypeEnum.DESC);
+		mapSearchParams.setMapBoundParams(null);
+		
+		mapSearchQuery.setSearchParams(searchParams);
+		mapSearchQuery.setOrBoolQueries(boolOrLists);
 		return mapSearchQuery;
 	}
 }

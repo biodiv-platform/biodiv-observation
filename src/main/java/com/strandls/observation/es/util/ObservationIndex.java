@@ -24,7 +24,8 @@ public enum ObservationIndex {
 	customFieldSingleCategoricalValue("custom_fields.custom_field.custom_field_values.single_categorical_data"),
 	customFieldMultipleCategoricalValue("custom_fields.custom_field.custom_field_values.multiple_categorical_data"),
 	customFieldRangeMinValue("custom_fields.custom_field.custom_field_values.min_range"),
-	customFieldRangeMaxValue("custom_fields.custom_field.custom_field_values.max_range"), tags("tags.name");
+	customFieldRangeMaxValue("custom_fields.custom_field.custom_field_values.max_range"), tags("tags.name"),
+	resource("observation_resource.file_name.keyword");
 
 	private String field;
 

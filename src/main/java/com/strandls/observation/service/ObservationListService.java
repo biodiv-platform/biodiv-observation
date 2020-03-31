@@ -9,6 +9,7 @@ import java.util.Map;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationListData;
 
@@ -31,5 +32,7 @@ public interface ObservationListService {
 			String tags);
 
 	public FilterPanelData getAllFilter();
+
+	public List<ObservationListMinimalData> getObservation(String resourceUrls);
 
 }

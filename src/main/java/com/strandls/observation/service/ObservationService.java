@@ -123,4 +123,5 @@ public interface ObservationService {
 	public MailData generateMailData(Long observationId);
 
 	public Activity addObservationComment(CommentLoggingData comment);
+
 }

@@ -43,6 +43,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -1014,6 +1015,22 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 
+	}
+
+	@POST
+	@Path(ApiConstants.FIND)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	
+	@ApiOperation(value = "finds observation data on basis of resourceURl",notes = "returns the observation data", response = ObservationListMinimalData.class,responseContainer = "List")
+	@ApiResponses(value = {@ApiResponse(code = 400,message = "unable to fetch the data",response = String.class)})
+	public Response getObservation(@ApiParam("resourcesURLs") String resourcesUrl) {
+		try {
+			List<ObservationListMinimalData> result = observationListService.getObservation(resourcesUrl);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
 	}
 
 }
