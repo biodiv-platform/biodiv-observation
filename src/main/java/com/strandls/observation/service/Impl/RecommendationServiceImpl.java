@@ -166,7 +166,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Long createRecoVote(Long userId, Long observationId, Long taxonid, RecoCreate recoCreate) {
+	public Long createRecoVote(Long userId, Long observationId, Long taxonid, RecoCreate recoCreate,
+			Boolean createObservation) {
 
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
@@ -209,8 +210,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
-		logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-				"Suggested species name",observaitonService.generateMailData(observationId));
+		if (createObservation)
+			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
+					"Suggested species name", null);
+		else
+			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
+					"Suggested species name", observaitonService.generateMailData(observationId));
 
 		return maxRecoVote;
 
@@ -389,7 +394,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 
 			logActivities.LogActivity(description, observationId, observationId, "observation", observationId,
-					"Suggestion removed",observaitonService.generateMailData(observationId));
+					"Suggestion removed", observaitonService.generateMailData(observationId));
 
 			return result;
 
@@ -496,7 +501,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					}
 
 					logActivities.LogActivity(description, observationId, observationId, "observation",
-							recoVote.getId(), "Agreed on species name",observaitonService.generateMailData(observationId));
+							recoVote.getId(), "Agreed on species name",
+							observaitonService.generateMailData(observationId));
 
 				}
 
@@ -603,7 +609,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				description = objectMapper.writeValueAsString(rvActivity);
 
 				logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-						"obv locked",observaitonService.generateMailData(observationId));
+						"obv locked", observaitonService.generateMailData(observationId));
 
 				return result;
 			}
@@ -656,7 +662,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					description = objectMapper.writeValueAsString(rvActivity);
 
 					logActivities.LogActivity(description, observationId, observationId, "observation",
-							observation.getMaxVotedRecoId(), "obv unlocked",observaitonService.generateMailData(observationId));
+							observation.getMaxVotedRecoId(), "obv unlocked",
+							observaitonService.generateMailData(observationId));
 					return result;
 				}
 			}

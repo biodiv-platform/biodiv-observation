@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.ActivityLoggingData;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
@@ -335,12 +336,12 @@ public class ObservationServiceImpl implements ObservationService {
 			observation = observationDao.update(observation);
 
 			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
-					"Observation created", generateMailData(observation.getId()));
+					"Observation created", null);
 
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
 				maxVotedReco = recoService.createRecoVote(userId, observation.getId(),
-						observationData.getRecoData().getScientificNameTaxonId(), recoCreate);
+						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
 
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observationDao.update(observation);
@@ -349,7 +350,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observationData.getFacts() != null && !observationData.getFacts().isEmpty()) {
 				FactsCreateData factsCreateData = new FactsCreateData();
 				factsCreateData.setFactValuePairs(observationData.getFacts());
-				factsCreateData.setMailData(converter.traitMetaData(generateMailData(observation.getId())));
+				factsCreateData.setMailData(null);
 				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
 						factsCreateData);
 			}
@@ -357,7 +358,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 				userGroupData.setUserGroups(observationData.getUserGroupId());
-				userGroupData.setMailData(converter.userGroupMetadata(generateMailData(observation.getId())));
+				userGroupData.setMailData(null);
 				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
 			}
 			if (!(observationData.getTags().isEmpty())) {
@@ -366,10 +367,20 @@ public class ObservationServiceImpl implements ObservationService {
 				tagsMapping.setTags(observationData.getTags());
 				TagsMappingData tagMappingData = new TagsMappingData();
 				tagMappingData.setTagsMapping(tagsMapping);
-				tagMappingData.setMailData(converter.utilityMetaData(generateMailData(observation.getId())));
+				tagMappingData.setMailData(null);
 				utilityServices.createTags("observation", tagMappingData);
 
 			}
+
+//			send observation create mail
+			ActivityLoggingData activityLogging = new ActivityLoggingData();
+			activityLogging.setRootObjectId(observation.getId());
+			activityLogging.setSubRootObjectId(observation.getId());
+			activityLogging.setRootObjectType("observation");
+			activityLogging.setActivityType("Observation created");
+			activityLogging.setMailData(generateMailData(observation.getId()));
+
+			activityService.sendMailCreateObservation(activityLogging);
 
 //			----------------POST CREATE ACTIONS------------
 
