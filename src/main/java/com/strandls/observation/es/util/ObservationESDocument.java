@@ -1548,6 +1548,7 @@ class Max_voted_reco {
 	private Long rank;
 	private String ranktext;
 	private String taxonstatus;
+	private Long species_id;
 
 	/**
 	 * 
@@ -1564,9 +1565,10 @@ class Max_voted_reco {
 	 * @param rank
 	 * @param ranktext
 	 * @param taxonstatus
+	 * @param species_id
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			Long rank, String ranktext, String taxonstatus) {
+			Long rank, String ranktext, String taxonstatus, Long species_id) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
@@ -1575,6 +1577,7 @@ class Max_voted_reco {
 		this.rank = rank;
 		this.ranktext = ranktext;
 		this.taxonstatus = taxonstatus;
+		this.species_id = species_id;
 	}
 
 	public Long getId() {
@@ -1583,30 +1586,6 @@ class Max_voted_reco {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getTaxonstatus() {
-		return taxonstatus;
-	}
-
-	public void setTaxonstatus(String taxonstatus) {
-		this.taxonstatus = taxonstatus;
-	}
-
-	public String getScientific_name() {
-		return scientific_name;
-	}
-
-	public void setScientific_name(String scientific_name) {
-		this.scientific_name = scientific_name;
-	}
-
-	public String getRanktext() {
-		return ranktext;
-	}
-
-	public void setRanktext(String ranktext) {
-		this.ranktext = ranktext;
 	}
 
 	public List<Common_names> getCommon_names() {
@@ -1625,12 +1604,44 @@ class Max_voted_reco {
 		this.hierarchy = hierarchy;
 	}
 
+	public String getScientific_name() {
+		return scientific_name;
+	}
+
+	public void setScientific_name(String scientific_name) {
+		this.scientific_name = scientific_name;
+	}
+
 	public Long getRank() {
 		return rank;
 	}
 
 	public void setRank(Long rank) {
 		this.rank = rank;
+	}
+
+	public String getRanktext() {
+		return ranktext;
+	}
+
+	public void setRanktext(String ranktext) {
+		this.ranktext = ranktext;
+	}
+
+	public String getTaxonstatus() {
+		return taxonstatus;
+	}
+
+	public void setTaxonstatus(String taxonstatus) {
+		this.taxonstatus = taxonstatus;
+	}
+
+	public Long getSpecies_id() {
+		return species_id;
+	}
+
+	public void setSpecies_id(Long species_id) {
+		this.species_id = species_id;
 	}
 
 }

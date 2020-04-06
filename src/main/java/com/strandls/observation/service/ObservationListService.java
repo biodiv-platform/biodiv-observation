@@ -11,6 +11,7 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 
 /**
@@ -33,6 +34,7 @@ public interface ObservationListService {
 
 	public FilterPanelData getAllFilter();
 
-	public List<ObservationListMinimalData> getObservation(String resourceUrls);
+	public List<ObservationHomePage> getObservation(String resourceUrls);
 
+	public ObservationListMinimalData getObservationMinimal(String observationId);
 }

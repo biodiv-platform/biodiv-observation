@@ -52,6 +52,8 @@ public class ApiConstants {
 	public static final String ADD = "/add";
 	public static final String COMMENT = "/comment";
 	public static final String FIND = "/find";
+	public static final String MINIMAL = "/minimal";
+	
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
