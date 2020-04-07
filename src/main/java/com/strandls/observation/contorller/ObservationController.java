@@ -49,6 +49,7 @@ import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
@@ -1021,12 +1022,29 @@ public class ObservationController {
 	@Path(ApiConstants.FIND)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	
-	@ApiOperation(value = "finds observation data on basis of resourceURl",notes = "returns the observation data", response = ObservationListMinimalData.class,responseContainer = "List")
-	@ApiResponses(value = {@ApiResponse(code = 400,message = "unable to fetch the data",response = String.class)})
+
+	@ApiOperation(value = "finds observation data on basis of resourceURl", notes = "returns the observation data", response = ObservationHomePage.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 	public Response getObservation(@ApiParam("resourcesURLs") String resourcesUrl) {
 		try {
-			List<ObservationListMinimalData> result = observationListService.getObservation(resourcesUrl);
+			List<ObservationHomePage> result = observationListService.getObservation(resourcesUrl);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.MINIMAL + "/{observationId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Gets the observationData", notes = "Returns the observation Data", response = ObservationListMinimalData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationMinimal(@PathParam("observationId") String observationId) {
+		try {
+			ObservationListMinimalData result = observationListService.getObservationMinimal(observationId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

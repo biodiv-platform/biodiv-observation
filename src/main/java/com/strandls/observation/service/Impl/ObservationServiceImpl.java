@@ -437,7 +437,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
 		Observation observation = observationDao.findById(observationId);
-		if (observation.getMaxVotedRecoId() != maxVotedReco) {
+		if (observation.getMaxVotedRecoId() == null || observation.getMaxVotedRecoId() != maxVotedReco) {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
@@ -1265,5 +1265,4 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 		return null;
 	}
-
 }

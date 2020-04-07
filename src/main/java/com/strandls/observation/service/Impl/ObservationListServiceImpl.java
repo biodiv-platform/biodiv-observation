@@ -32,6 +32,7 @@ import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.service.ObservationListService;
 
@@ -559,25 +560,43 @@ public class ObservationListServiceImpl implements ObservationListService {
 	}
 
 	@Override
-	public List<ObservationListMinimalData> getObservation(String resourceUrls) {
+	public List<ObservationHomePage> getObservation(String resourceUrls) {
 
 		try {
-			List<ObservationListMinimalData> observationListMinimal = new ArrayList<ObservationListMinimalData>();
-			MapSearchQuery query = esUtility.getSearchQueryResource(resourceUrls);
-			MapResponse result = esService.search(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
-					null, null, null, null, query);
-			List<MapDocument> documents = result.getDocuments();
-
-			for (MapDocument document : documents) {
+			List<ObservationHomePage> obvHomePage = new ArrayList<ObservationHomePage>();
+			for (String s : resourceUrls.split(",")) {
+				MapSearchQuery query = esUtility.getSearchQueryResource(s);
+				MapResponse result = esService.search(ObservationIndex.index.getValue(),
+						ObservationIndex.type.getValue(), null, null, null, null, query);
+				List<MapDocument> documents = result.getDocuments();
+				MapDocument document = documents.get(0);
 				try {
-
-					observationListMinimal.add(objectMapper.readValue(String.valueOf(document.getDocument()),
-							ObservationListMinimalData.class));
+					obvHomePage.add(new ObservationHomePage(s, objectMapper
+							.readValue(String.valueOf(document.getDocument()), ObservationListMinimalData.class)));
 				} catch (IOException e) {
 					logger.error(e.getMessage());
 				}
 			}
-			return observationListMinimal;
+			return obvHomePage;
+		} catch (
+
+		Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public ObservationListMinimalData getObservationMinimal(String observationId) {
+		try {
+			ObservationListMinimalData result = null;
+			MapDocument response = esService.fetch(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+					observationId);
+			if (response.getDocument() != null) {
+				result = objectMapper.readValue(String.valueOf(response.getDocument()),
+						ObservationListMinimalData.class);
+			}
+			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
