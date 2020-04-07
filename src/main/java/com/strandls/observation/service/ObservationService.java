@@ -124,4 +124,6 @@ public interface ObservationService {
 
 	public Activity addObservationComment(CommentLoggingData comment);
 
+	public Boolean updateGalleryResourceRating(Long observationId, Long resourceId,Long rating);
+	
 }

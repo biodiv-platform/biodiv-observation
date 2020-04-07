@@ -1051,4 +1051,30 @@ public class ObservationController {
 		}
 	}
 
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + ApiConstants.RATING + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update the rating for gallery resource", notes = "Returns the success or failuer", response = String.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the rating", response = String.class) })
+	public Response gallaryRatingUpdate(@PathParam("observationId") String observationId,
+			@QueryParam("resourceId") String resourceId, @QueryParam("rating") String rating) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			Long resId = Long.parseLong(resourceId);
+			Long resRating = Long.parseLong(rating);
+			Boolean result = observationService.updateGalleryResourceRating(obvId, resId, resRating);
+			if (result)
+				return Response.status(Status.OK).entity("Rating updated").build();
+			return Response.status(Status.NOT_FOUND).entity("Cannot Update the Rating").build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }

@@ -53,6 +53,8 @@ public class ApiConstants {
 	public static final String COMMENT = "/comment";
 	public static final String FIND = "/find";
 	public static final String MINIMAL = "/minimal";
+	public static final String RATING = "/rating";
+	public static final String RESOURCE = "/resource";
 	
 
 //	<-------------RECO Controller------------->

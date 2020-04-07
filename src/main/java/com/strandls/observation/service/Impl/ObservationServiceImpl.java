@@ -1266,4 +1266,36 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 	}
 
+	@Override
+	public Boolean updateGalleryResourceRating(Long observationId, Long resourceId, Long rating) {
+		try {
+			List<Resource> resources = resourceService.updateRating("OBSERVATION", observationId.toString(),
+					rating.toString(), resourceId.toString());
+
+			Long reprImage = resources.get(0).getId();
+			int rating1 = 0;
+			for (Resource res : resources) {
+				if (res.getType().equals("IMAGE")) {
+					if (res.getRating() != null && res.getRating() > rating1) {
+						reprImage = res.getId();
+						rating1 = res.getRating();
+					}
+				}
+			}
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observation.setReprImageId(reprImage);
+			observation = observationDao.update(observation);
+			produceToRabbitMQ(observationId.toString(), "Rating update");
+			
+			logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+					"Rated media resource", generateMailData(observationId));
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
 }
