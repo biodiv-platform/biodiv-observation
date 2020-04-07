@@ -210,14 +210,17 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
-		if (createObservation)
+		if (createObservation) {
 			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
 					"Suggested species name", null);
-		else
+
+			return maxRecoVote;
+		} else {
+			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
 					"Suggested species name", observaitonService.generateMailData(observationId));
-
-		return maxRecoVote;
+			return maxRecoVote;
+		}
 
 	}
 

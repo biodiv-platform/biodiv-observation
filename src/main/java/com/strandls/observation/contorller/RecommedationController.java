@@ -29,7 +29,6 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
-import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 
@@ -50,9 +49,6 @@ public class RecommedationController {
 
 	@Inject
 	private RecommendationService recoService;
-
-	@Inject
-	private ObservationService observationService;
 
 	@Inject
 	private ObservationMapperHelper observaitonHelper;
@@ -96,8 +92,7 @@ public class RecommedationController {
 			RecoCreate recoCreate = observaitonHelper.createRecoMapping(recoData);
 			Long maxVotedReco = recoService.createRecoVote(userId, obserId, recoData.getScientificNameTaxonId(),
 					recoCreate, false);
-			Long finalMaxVotedReco = observationService.updateMaxVotedReco(obserId, maxVotedReco);
-			RecoShow result = recoService.fetchCurrentRecoState(obserId, finalMaxVotedReco);
+			RecoShow result = recoService.fetchCurrentRecoState(obserId, maxVotedReco);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
