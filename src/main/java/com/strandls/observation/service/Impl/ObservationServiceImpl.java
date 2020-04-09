@@ -1207,7 +1207,7 @@ public class ObservationServiceImpl implements ObservationService {
 				ugMailData.setIcon(ugIbp.getIcon());
 				ugMailData.setName(ugIbp.getName());
 				ugMailData.setWebAddress(ugIbp.getWebAddress());
-
+				userGroupData.add(ugMailData);
 			}
 
 			mailData = new MailData();
@@ -1287,7 +1287,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setReprImageId(reprImage);
 			observation = observationDao.update(observation);
 			produceToRabbitMQ(observationId.toString(), "Rating update");
-			
+
 			logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
 					"Rated media resource", generateMailData(observationId));
 
