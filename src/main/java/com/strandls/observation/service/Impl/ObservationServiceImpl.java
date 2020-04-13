@@ -1291,6 +1291,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
 					"Rated media resource", generateMailData(observationId));
+			return true;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
