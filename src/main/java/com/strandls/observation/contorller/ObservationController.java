@@ -1062,7 +1062,8 @@ public class ObservationController {
 	@ApiOperation(value = "update the rating for gallery resource", notes = "Returns the success or failuer", response = String.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the rating", response = String.class) })
-	public Response gallaryRatingUpdate(@PathParam("observationId") String observationId,
+	public Response gallaryRatingUpdate(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
 			@ApiParam(name = "resourceRating") ResourceRating resourceRating) {
 		try {
 			Long obvId = Long.parseLong(observationId);
