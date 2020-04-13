@@ -61,6 +61,7 @@ import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.UserGroupFilterThread;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
@@ -1062,12 +1063,10 @@ public class ObservationController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the rating", response = String.class) })
 	public Response gallaryRatingUpdate(@PathParam("observationId") String observationId,
-			@QueryParam("resourceId") String resourceId, @QueryParam("rating") String rating) {
+			@ApiParam(name = "resourceRating") ResourceRating resourceRating) {
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Long resId = Long.parseLong(resourceId);
-			Long resRating = Long.parseLong(rating);
-			Boolean result = observationService.updateGalleryResourceRating(obvId, resId, resRating);
+			Boolean result = observationService.updateGalleryResourceRating(obvId, resourceRating);
 			if (result)
 				return Response.status(Status.OK).entity("Rating updated").build();
 			return Response.status(Status.NOT_FOUND).entity("Cannot Update the Rating").build();

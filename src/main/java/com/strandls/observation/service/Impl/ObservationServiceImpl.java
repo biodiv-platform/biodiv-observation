@@ -56,6 +56,7 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -1267,10 +1268,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Boolean updateGalleryResourceRating(Long observationId, Long resourceId, Long rating) {
+	public Boolean updateGalleryResourceRating(Long observationId, ResourceRating resourceRating) {
 		try {
 			List<Resource> resources = resourceService.updateRating("OBSERVATION", observationId.toString(),
-					rating.toString(), resourceId.toString());
+					resourceRating);
 
 			Long reprImage = resources.get(0).getId();
 			int rating1 = 0;

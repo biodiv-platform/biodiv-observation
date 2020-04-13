@@ -23,6 +23,7 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
@@ -124,6 +125,6 @@ public interface ObservationService {
 
 	public Activity addObservationComment(CommentLoggingData comment);
 
-	public Boolean updateGalleryResourceRating(Long observationId, Long resourceId,Long rating);
-	
+	public Boolean updateGalleryResourceRating(Long observationId, ResourceRating resourceRating);
+
 }
