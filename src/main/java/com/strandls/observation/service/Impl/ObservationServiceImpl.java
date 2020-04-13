@@ -56,6 +56,7 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -1207,7 +1208,7 @@ public class ObservationServiceImpl implements ObservationService {
 				ugMailData.setIcon(ugIbp.getIcon());
 				ugMailData.setName(ugIbp.getName());
 				ugMailData.setWebAddress(ugIbp.getWebAddress());
-
+				userGroupData.add(ugMailData);
 			}
 
 			mailData = new MailData();
@@ -1263,6 +1264,39 @@ public class ObservationServiceImpl implements ObservationService {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
+		return null;
+	}
+
+	@Override
+	public Boolean updateGalleryResourceRating(Long observationId, ResourceRating resourceRating) {
+		try {
+			List<Resource> resources = resourceService.updateRating("OBSERVATION", observationId.toString(),
+					resourceRating);
+
+			Long reprImage = resources.get(0).getId();
+			int rating1 = 0;
+			for (Resource res : resources) {
+				if (res.getType().equals("IMAGE")) {
+					if (res.getRating() != null && res.getRating() > rating1) {
+						reprImage = res.getId();
+						rating1 = res.getRating();
+					}
+				}
+			}
+			Observation observation = observationDao.findById(observationId);
+			observation.setLastRevised(new Date());
+			observation.setReprImageId(reprImage);
+			observation = observationDao.update(observation);
+			produceToRabbitMQ(observationId.toString(), "Rating update");
+
+			logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+					"Rated media resource", generateMailData(observationId));
+			return true;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 		return null;
 	}
 }

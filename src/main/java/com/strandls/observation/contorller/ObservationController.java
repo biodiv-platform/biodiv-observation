@@ -61,6 +61,7 @@ import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.UserGroupFilterThread;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValue;
@@ -1046,6 +1047,31 @@ public class ObservationController {
 		try {
 			ObservationListMinimalData result = observationListService.getObservationMinimal(observationId);
 			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + ApiConstants.RATING + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update the rating for gallery resource", notes = "Returns the success or failuer", response = String.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the rating", response = String.class) })
+	public Response gallaryRatingUpdate(@Context HttpServletRequest request,
+			@PathParam("observationId") String observationId,
+			@ApiParam(name = "resourceRating") ResourceRating resourceRating) {
+		try {
+			Long obvId = Long.parseLong(observationId);
+			Boolean result = observationService.updateGalleryResourceRating(obvId, resourceRating);
+			if (result)
+				return Response.status(Status.OK).entity("Rating updated").build();
+			return Response.status(Status.NOT_FOUND).entity("Cannot Update the Rating").build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
