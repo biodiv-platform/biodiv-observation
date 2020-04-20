@@ -778,12 +778,15 @@ public class ObservationServiceImpl implements ObservationService {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
+
+				MailData mailData = generateMailData(observationId);
+
 				observation.setIsDeleted(true);
 				observationDao.update(observation);
-
 				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observationId.toString());
-
+				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+						"Observation updated", mailData);
 				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {

@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.file.api.UploadApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -64,6 +65,9 @@ public class SwaggerFilter implements Filter {
 	@Inject
 	public ActivitySerivceApi activityService;
 
+	@Inject
+	public UploadApi uploadApi;
+
 	/**
 	 * 
 	 */
@@ -99,6 +103,7 @@ public class SwaggerFilter implements Filter {
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 		cfService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
+		uploadApi.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, header);
 
 		chain.doFilter(request2, response);
 	}

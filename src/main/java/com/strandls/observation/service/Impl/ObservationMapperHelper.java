@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
+import com.strandls.file.api.UploadApi;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -59,6 +60,9 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private EsServicesApi esService;
+
+	@Inject
+	private UploadApi fileUploadService;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -362,35 +366,51 @@ public class ObservationMapperHelper {
 
 	public List<Resource> createResourceMapping(Long userId, List<ResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
+		try {
+			List<String> fileList = new ArrayList<String>();
+			for (ResourceData rd : resourceDataList) {
+				fileList.add(rd.getPath());
+			}
+			Map<String, Object> fileMap = fileUploadService.moveFiles(fileList);
 
-		for (ResourceData resourceData : resourceDataList) {
-			Resource resource = new Resource();
-			resource.setVersion(0L);
-			if (resourceData.getCaption() != null)
-				resource.setDescription(
-						(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
-			resource.setFileName(resourceData.getPath());
-			resource.setMimeType(null);
-			if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
-				resource.setType("IMAGE");
-			else if (resourceData.getType().startsWith("audio") || resourceData.getType().equalsIgnoreCase("audio"))
-				resource.setType("AUDIO");
-			else if (resourceData.getType().startsWith("video") || resourceData.getType().equalsIgnoreCase("video"))
-				resource.setType("VIDEO");
-			resource.setUrl(null);
-			resource.setRating(resourceData.getRating());
-			resource.setUploadTime(new Date());
-			resource.setUploaderId(userId);
-			resource.setContext("OBSERVATION");
-			resource.setLanguageId(205L);
-			resource.setAccessRights(null);
-			resource.setAnnotations(null);
-			resource.setGbifId(null);
-			resource.setLicenseId(resourceData.getLicenceId());
+			for (ResourceData resourceData : resourceDataList) {
+				Resource resource = new Resource();
+				resource.setVersion(0L);
+				if (resourceData.getCaption() != null)
+					resource.setDescription(
+							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
+				if (fileMap.containsKey(resourceData.getPath()))
+					resource.setFileName(fileMap.get(resourceData.getPath()).toString());// new path getting extracted
+																							// from the map
+				else
+					continue; // skip the resource as no new path has been returend
+				resource.setMimeType(null);
+				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
+					resource.setType("IMAGE");
+				else if (resourceData.getType().startsWith("audio") || resourceData.getType().equalsIgnoreCase("audio"))
+					resource.setType("AUDIO");
+				else if (resourceData.getType().startsWith("video") || resourceData.getType().equalsIgnoreCase("video"))
+					resource.setType("VIDEO");
+				resource.setUrl(null);
+				resource.setRating(resourceData.getRating());
+				resource.setUploadTime(new Date());
+				resource.setUploaderId(userId);
+				resource.setContext("OBSERVATION");
+				resource.setLanguageId(205L);
+				resource.setAccessRights(null);
+				resource.setAnnotations(null);
+				resource.setGbifId(null);
+				resource.setLicenseId(resourceData.getLicenceId());
 
-			resources.add(resource);
+				resources.add(resource);
+			}
+			return resources;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
-		return resources;
+		return null;
+
 	}
 
 //	GETS A RANDOM LAT,LON WITH LOWER LIMIT AS 5KM AND UPPER LIMIT AS 25KM
