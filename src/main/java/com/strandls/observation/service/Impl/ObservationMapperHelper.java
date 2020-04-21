@@ -369,10 +369,13 @@ public class ObservationMapperHelper {
 		try {
 			List<String> fileList = new ArrayList<String>();
 			for (ResourceData rd : resourceDataList) {
-				if (rd.getPath() != null || !rd.getPath().isEmpty())
+				if (rd.getPath() != null || rd.getPath().trim().length() > 0)
 					fileList.add(rd.getPath());
 			}
-			Map<String, Object> fileMap = fileUploadService.moveFiles(fileList);
+			Map<String, Object> fileMap = new HashMap<String, Object>();
+			if (!fileList.isEmpty()) {
+				fileMap = fileUploadService.moveFiles(fileList);
+			}
 
 			for (ResourceData resourceData : resourceDataList) {
 				Resource resource = new Resource();
@@ -395,7 +398,7 @@ public class ObservationMapperHelper {
 					resource.setType("AUDIO");
 				else if (resourceData.getType().startsWith("video") || resourceData.getType().equalsIgnoreCase("video"))
 					resource.setType("VIDEO");
-				if (resource.getFileName() == null) {
+				if (resourceData.getPath() == null) {
 					resource.setFileName(resource.getType().substring(0, 1).toLowerCase());
 				}
 				resource.setUrl(resourceData.getUrl());
