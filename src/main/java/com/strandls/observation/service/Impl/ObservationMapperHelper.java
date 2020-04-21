@@ -369,7 +369,8 @@ public class ObservationMapperHelper {
 		try {
 			List<String> fileList = new ArrayList<String>();
 			for (ResourceData rd : resourceDataList) {
-				fileList.add(rd.getPath());
+				if (rd.getPath() != null || !rd.getPath().isEmpty())
+					fileList.add(rd.getPath());
 			}
 			Map<String, Object> fileMap = fileUploadService.moveFiles(fileList);
 
@@ -379,11 +380,14 @@ public class ObservationMapperHelper {
 				if (resourceData.getCaption() != null)
 					resource.setDescription(
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
-				if (fileMap.containsKey(resourceData.getPath()))
-					resource.setFileName(fileMap.get(resourceData.getPath()).toString());// new path getting extracted
-																							// from the map
-				else
-					continue; // skip the resource as no new path has been returend
+
+				if (resourceData.getPath() != null) {
+					if (fileMap.containsKey(resourceData.getPath()))
+						// new path getting extracted from the map
+						resource.setFileName(fileMap.get(resourceData.getPath()).toString());
+					else
+						continue; // skip the resource as no new path has been returned
+				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
 					resource.setType("IMAGE");
@@ -391,7 +395,10 @@ public class ObservationMapperHelper {
 					resource.setType("AUDIO");
 				else if (resourceData.getType().startsWith("video") || resourceData.getType().equalsIgnoreCase("video"))
 					resource.setType("VIDEO");
-				resource.setUrl(null);
+				if (resource.getFileName() == null) {
+					resource.setFileName(resource.getType().substring(0, 1).toLowerCase());
+				}
+				resource.setUrl(resourceData.getUrl());
 				resource.setRating(resourceData.getRating());
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
@@ -456,8 +463,8 @@ public class ObservationMapperHelper {
 		List<ResourceData> editResource = new ArrayList<ResourceData>();
 		for (ObservationResourceUser resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
-			editResource.add(new ResourceData(resource.getFileName(), resource.getType(), resource.getDescription(),
-					resource.getRating(), resource.getLicenseId()));
+			editResource.add(new ResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
+					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
 
 		}
 		return editResource;

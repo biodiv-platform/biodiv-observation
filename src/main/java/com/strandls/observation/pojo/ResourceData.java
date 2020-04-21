@@ -10,6 +10,7 @@ package com.strandls.observation.pojo;
 public class ResourceData {
 
 	private String path;
+	private String url;
 	private String type;
 	private String caption;
 	private Integer rating;
@@ -24,14 +25,16 @@ public class ResourceData {
 
 	/**
 	 * @param path
+	 * @param url
 	 * @param type
 	 * @param caption
 	 * @param rating
 	 * @param licenceId
 	 */
-	public ResourceData(String path, String type, String caption, Integer rating, Long licenceId) {
+	public ResourceData(String path, String url, String type, String caption, Integer rating, Long licenceId) {
 		super();
 		this.path = path;
+		this.url = url;
 		this.type = type;
 		this.caption = caption;
 		this.rating = rating;
@@ -44,6 +47,14 @@ public class ResourceData {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public String getType() {
