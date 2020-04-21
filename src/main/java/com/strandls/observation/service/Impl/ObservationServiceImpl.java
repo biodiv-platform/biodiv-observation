@@ -786,7 +786,7 @@ public class ObservationServiceImpl implements ObservationService {
 				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observationId.toString());
 				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
-						"Observation updated", mailData);
+						"Observation Deleted", mailData);
 				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {
