@@ -369,7 +369,7 @@ public class ObservationMapperHelper {
 		try {
 			List<String> fileList = new ArrayList<String>();
 			for (ResourceData rd : resourceDataList) {
-				if (rd.getPath() != null || rd.getPath().trim().length() > 0)
+				if (rd.getPath() != null && rd.getPath().trim().length() > 0)
 					fileList.add(rd.getPath());
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
