@@ -183,8 +183,9 @@ public class ObservationController {
 			}
 
 			ShowData result = observationService.createObservation(request, observationData);
-
-			return Response.status(Status.OK).entity(result).build();
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_ACCEPTABLE).build();
 		} catch (ObservationInputException e) {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		} catch (Exception e) {
