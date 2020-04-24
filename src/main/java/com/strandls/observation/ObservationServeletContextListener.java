@@ -36,6 +36,7 @@ import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.file.api.UploadApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
@@ -110,6 +111,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+				bind(UploadApi.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
 				filter("/*").through(SwaggerFilter.class);
 

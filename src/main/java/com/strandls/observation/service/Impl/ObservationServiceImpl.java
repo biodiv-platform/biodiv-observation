@@ -315,13 +315,15 @@ public class ObservationServiceImpl implements ObservationService {
 			Integer noOfAudio = 0;
 			Integer noOfVideo = 0;
 
-			Long reprImage = resources.get(0).getId();
+			Long reprImage = null;
 			int rating = 0;
 			for (Resource res : resources) {
 				if (res.getType().equals("AUDIO"))
 					noOfAudio++;
 				else if (res.getType().equals("IMAGE")) {
 					noOfImages++;
+					if (reprImage == null)
+						reprImage = res.getId();
 					if (res.getRating() != null && res.getRating() > rating) {
 						reprImage = res.getId();
 						rating = res.getRating();
@@ -778,12 +780,15 @@ public class ObservationServiceImpl implements ObservationService {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
+
+				MailData mailData = generateMailData(observationId);
+
 				observation.setIsDeleted(true);
 				observationDao.update(observation);
-
 				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observationId.toString());
-
+				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+						"Observation Deleted", mailData);
 				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {
@@ -904,13 +909,15 @@ public class ObservationServiceImpl implements ObservationService {
 				Integer noOfAudio = 0;
 				Integer noOfVideo = 0;
 
-				Long reprImage = resources.get(0).getId();
+				Long reprImage = null;
 				int rating = 0;
 				for (Resource res : resources) {
 					if (res.getType().equals("AUDIO"))
 						noOfAudio++;
 					else if (res.getType().equals("IMAGE")) {
 						noOfImages++;
+						if (reprImage == null)
+							reprImage = res.getId();
 						if (res.getRating() != null && res.getRating() > rating) {
 							reprImage = res.getId();
 							rating = res.getRating();
@@ -1273,10 +1280,12 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Resource> resources = resourceService.updateRating("OBSERVATION", observationId.toString(),
 					resourceRating);
 
-			Long reprImage = resources.get(0).getId();
+			Long reprImage = null;
 			int rating1 = 0;
 			for (Resource res : resources) {
 				if (res.getType().equals("IMAGE")) {
+					if (reprImage == null)
+						reprImage = res.getId();
 					if (res.getRating() != null && res.getRating() > rating1) {
 						reprImage = res.getId();
 						rating1 = res.getRating();
