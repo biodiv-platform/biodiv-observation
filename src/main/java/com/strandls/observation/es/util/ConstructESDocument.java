@@ -139,7 +139,7 @@ public class ConstructESDocument {
 				+ "		id, observation_id, author_id, confidence, recommendation_id, common_name_reco_id, voted_on, comment  "
 				+ "		FROM recommendation_vote WHERE observation_id = " + observationId + " ) extended_rv "
 				+ "		INNER JOIN	 "
-				+ "		(SELECT id rid, taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
+				+ "		(SELECT id rid, null\\:\\:integer AS taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
 				+ "		ON rid =  common_name_reco_id " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id a_id, name voted_by, profile_pic FROM suser ) A ON a_id = author_id  "
