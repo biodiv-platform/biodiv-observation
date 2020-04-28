@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,8 +168,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Long createRecoVote(Long userId, Long observationId, Long taxonid, RecoCreate recoCreate,
-			Boolean createObservation) {
+	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonid,
+			RecoCreate recoCreate, Boolean createObservation) {
 
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
@@ -211,14 +213,14 @@ public class RecommendationServiceImpl implements RecommendationService {
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
 		if (createObservation) {
-			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-					"Suggested species name", null);
+			logActivities.LogActivity(request, description, observationId, observationId, "observation",
+					recoVote.getId(), "Suggested species name", null);
 
 			return maxRecoVote;
 		} else {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-			logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-					"Suggested species name", observaitonService.generateMailData(observationId));
+			logActivities.LogActivity(request, description, observationId, observationId, "observation",
+					recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
 			return maxRecoVote;
 		}
 
@@ -358,7 +360,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow removeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow removeRecoVote(HttpServletRequest request, Long observationId, Long userId, RecoSet recoSet) {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
@@ -396,7 +398,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				logger.error(e.getMessage());
 			}
 
-			logActivities.LogActivity(description, observationId, observationId, "observation", observationId,
+			logActivities.LogActivity(request, description, observationId, observationId, "observation", observationId,
 					"Suggestion removed", observaitonService.generateMailData(observationId));
 
 			return result;
@@ -414,7 +416,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow agreeRecoVote(HttpServletRequest request, Long observationId, Long userId, RecoSet recoSet) {
 
 		Observation observation = observationDao.findById(observationId);
 		if (!(observation.getIsLocked())) {
@@ -503,7 +505,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 						logger.error(e.getMessage());
 					}
 
-					logActivities.LogActivity(description, observationId, observationId, "observation",
+					logActivities.LogActivity(request, description, observationId, observationId, "observation",
 							recoVote.getId(), "Agreed on species name",
 							observaitonService.generateMailData(observationId));
 
@@ -522,11 +524,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow validateReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow validateReco(HttpServletRequest request, CommonProfile profile, Long observationId, Long userId,
+			RecoSet recoSet) {
 
 		try {
 
-			ObservationUserPermission permission = observaitonService.getUserPermissions(profile,
+			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
 			if (permission.getValidatePermissionTaxon() != null)
@@ -534,7 +537,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 			if (permissionList.contains(recoSet.getTaxonId())) {
 
-				agreeRecoVote(observationId, userId, recoSet);
+				agreeRecoVote(request, observationId, userId, recoSet);
 				Recommendation scientificNameReco = new Recommendation();
 				List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
 				List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
@@ -611,8 +614,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				description = objectMapper.writeValueAsString(rvActivity);
 
-				logActivities.LogActivity(description, observationId, observationId, "observation", recoVote.getId(),
-						"obv locked", observaitonService.generateMailData(observationId));
+				logActivities.LogActivity(request, description, observationId, observationId, "observation",
+						recoVote.getId(), "obv locked", observaitonService.generateMailData(observationId));
 
 				return result;
 			}
@@ -625,12 +628,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public RecoShow unlockReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet) {
+	public RecoShow unlockReco(HttpServletRequest request, CommonProfile profile, Long observationId, Long userId,
+			RecoSet recoSet) {
 		try {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked()) {
 
-				ObservationUserPermission permission = observaitonService.getUserPermissions(profile,
+				ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 						observationId.toString(), userId, recoSet.getTaxonId().toString());
 				List<Long> permissionList = new ArrayList<Long>();
 				if (permission.getValidatePermissionTaxon() != null)
@@ -664,7 +668,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 					description = objectMapper.writeValueAsString(rvActivity);
 
-					logActivities.LogActivity(description, observationId, observationId, "observation",
+					logActivities.LogActivity(request, description, observationId, observationId, "observation",
 							observation.getMaxVotedRecoId(), "obv unlocked",
 							observaitonService.generateMailData(observationId));
 					return result;

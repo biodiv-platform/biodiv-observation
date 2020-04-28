@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ import com.google.inject.Inject;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
+import com.strandls.observation.Headers;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -63,6 +66,9 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private UploadApi fileUploadService;
+
+	@Inject
+	private Headers headers;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -364,7 +370,8 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
-	public List<Resource> createResourceMapping(Long userId, List<ResourceData> resourceDataList) {
+	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
+			List<ResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
@@ -374,7 +381,10 @@ public class ObservationMapperHelper {
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
 			if (!fileList.isEmpty()) {
+				fileUploadService = headers.addFileUploadHeader(fileUploadService, request);
 				fileMap = fileUploadService.moveFiles(fileList);
+				if (fileMap == null || fileMap.isEmpty())
+					return null;
 			}
 
 			for (ResourceData resourceData : resourceDataList) {

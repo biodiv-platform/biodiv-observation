@@ -5,6 +5,8 @@ package com.strandls.observation.service;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.RecoCreate;
@@ -23,8 +25,8 @@ public interface RecommendationService {
 
 	public RecoIbp fetchRecoName(Long obvId, Long recoId);
 
-	public Long createRecoVote(Long userId, Long observationId, Long taxonId, RecoCreate recoCreate,
-			Boolean creataObservation);
+	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonId,
+			RecoCreate recoCreate, Boolean creataObservation);
 
 	public Long fetchTaxonId(Long maxRecoVoteId);
 
@@ -32,13 +34,15 @@ public interface RecommendationService {
 
 	public List<Long> updateCanonicalName();
 
-	public RecoShow removeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow removeRecoVote(HttpServletRequest request, Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoShow agreeRecoVote(Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow agreeRecoVote(HttpServletRequest request, Long observationId, Long userId, RecoSet recoSet);
 
-	public RecoShow validateReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow validateReco(HttpServletRequest request, CommonProfile profile, Long observationId, Long userId,
+			RecoSet recoSet);
 
-	public RecoShow unlockReco(CommonProfile profile, Long observationId, Long userId, RecoSet recoSet);
+	public RecoShow unlockReco(HttpServletRequest request, CommonProfile profile, Long observationId, Long userId,
+			RecoSet recoSet);
 
 	public List<RecoIbp> allRecoVote(Long observationId);
 

@@ -112,8 +112,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
+				bind(Headers.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(GuiceContainer.class, props);
-				filter("/*").through(SwaggerFilter.class);
 
 			}
 		}, new ObservationControllerModule(), new FilterModule(), new ObservationDAOModule(),
