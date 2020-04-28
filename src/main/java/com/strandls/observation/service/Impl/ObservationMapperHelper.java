@@ -383,6 +383,8 @@ public class ObservationMapperHelper {
 			if (!fileList.isEmpty()) {
 				fileUploadService = headers.addFileUploadHeader(fileUploadService, request);
 				fileMap = fileUploadService.moveFiles(fileList);
+				if (fileMap == null || fileMap.isEmpty())
+					return null;
 			}
 
 			for (ResourceData resourceData : resourceDataList) {
