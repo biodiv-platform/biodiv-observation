@@ -33,6 +33,7 @@ import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
+import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.es.util.ESCreateThread;
@@ -159,6 +160,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ActivitySerivceApi activityService;
+
+	@Inject
+	private Headers headers;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -308,7 +312,9 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
 
-			List<Resource> resources = observationHelper.createResourceMapping(userId, observationData.getResources());
+			List<Resource> resources = observationHelper.createResourceMapping(request, userId,
+					observationData.getResources());
+			resourceService = headers.addResourceHeaders(resourceService, request);
 			resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
 
 			Integer noOfImages = 0;
@@ -338,12 +344,12 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setReprImageId(reprImage);
 			observation = observationDao.update(observation);
 
-			logActivity.LogActivity(null, observation.getId(), observation.getId(), "observation", null,
+			logActivity.LogActivity(request, null, observation.getId(), observation.getId(), "observation", null,
 					"Observation created", null);
 
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(userId, observation.getId(),
+				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
 						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
 
 				observation.setMaxVotedRecoId(maxVotedReco);
@@ -354,6 +360,7 @@ public class ObservationServiceImpl implements ObservationService {
 				FactsCreateData factsCreateData = new FactsCreateData();
 				factsCreateData.setFactValuePairs(observationData.getFacts());
 				factsCreateData.setMailData(null);
+				traitService = headers.addTraitsHeaders(traitService, request);
 				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
 						factsCreateData);
 			}
@@ -362,6 +369,7 @@ public class ObservationServiceImpl implements ObservationService {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 				userGroupData.setUserGroups(observationData.getUserGroupId());
 				userGroupData.setMailData(null);
+				userGroupService = headers.addUserGroupHeader(userGroupService, request);
 				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
 			}
 			if (!(observationData.getTags().isEmpty())) {
@@ -371,6 +379,7 @@ public class ObservationServiceImpl implements ObservationService {
 				TagsMappingData tagMappingData = new TagsMappingData();
 				tagMappingData.setTagsMapping(tagsMapping);
 				tagMappingData.setMailData(null);
+				utilityServices = headers.addUtilityHeaders(utilityServices, request);
 				utilityServices.createTags("observation", tagMappingData);
 
 			}
@@ -383,6 +392,7 @@ public class ObservationServiceImpl implements ObservationService {
 			activityLogging.setActivityType("Observation created");
 			activityLogging.setMailData(generateMailData(observation.getId()));
 
+			activityService = headers.addActivityHeaders(activityService, request);
 			activityService.sendMailCreateObservation(activityLogging);
 
 //			----------------POST CREATE ACTIONS------------
@@ -397,6 +407,7 @@ public class ObservationServiceImpl implements ObservationService {
 			latlon.setLatitude(observation.getLatitude());
 			latlon.setLongitude(observation.getLongitude());
 			latlon.setObservationId(observation.getId());
+			userGroupService = headers.addUserGroupHeader(userGroupService, request);
 			userGroupService.getFilterRule(latlon);
 
 			ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
@@ -414,7 +425,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Long updateSGroup(Long observationId, Long sGroupId) {
+	public Long updateSGroup(HttpServletRequest request, Long observationId, Long sGroupId) {
 		Observation observation = observationDao.findById(observationId);
 		Long previousGroupId = observation.getGroupId();
 		observation.setGroupId(sGroupId);
@@ -432,7 +443,7 @@ public class ObservationServiceImpl implements ObservationService {
 		String description = previousGroupName + " to " + newGroupName;
 
 		produceToRabbitMQ(observationId.toString(), "Species Group");
-		logActivity.LogActivity(description, observationId, observationId, "observation", observationId,
+		logActivity.LogActivity(request, description, observationId, observationId, "observation", observationId,
 				"Observation species group updated", generateMailData(observationId));
 		return observation.getGroupId();
 	}
@@ -455,12 +466,13 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Tags> updateTags(TagsMapping tagsMapping) {
+	public List<Tags> updateTags(HttpServletRequest request, TagsMapping tagsMapping) {
 		List<Tags> result = null;
 		try {
 			TagsMappingData tagsMappingData = new TagsMappingData();
 			tagsMappingData.setTagsMapping(tagsMapping);
 			tagsMappingData.setMailData(converter.utilityMetaData(generateMailData(tagsMapping.getObjectId())));
+			utilityServices = headers.addUtilityHeaders(utilityServices, request);
 			result = utilityServices.updateTags("observation", tagsMappingData);
 			Observation observation = observationDao.findById(tagsMapping.getObjectId());
 			observation.setLastRevised(new Date());
@@ -473,7 +485,8 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<FactValuePair> updateTraits(String observationId, String traitId, List<Long> valueList) {
+	public List<FactValuePair> updateTraits(HttpServletRequest request, String observationId, String traitId,
+			List<Long> valueList) {
 
 		List<FactValuePair> facts = null;
 		try {
@@ -481,6 +494,7 @@ public class ObservationServiceImpl implements ObservationService {
 			FactsUpdateData factsUpdatedata = new FactsUpdateData();
 			factsUpdatedata.setTraitValueList(valueList);
 			factsUpdatedata.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
+			traitService = headers.addTraitsHeaders(traitService, request);
 			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId,
 					factsUpdatedata);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
@@ -494,13 +508,15 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<UserGroupIbp> updateUserGroup(String observationId, List<Long> userGroupList) {
+	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
+			List<Long> userGroupList) {
 
 		List<UserGroupIbp> result = null;
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
+			userGroupService = headers.addUserGroupHeader(userGroupService, request);
 			result = userGroupService.updateUserGroupMapping(observationId, userGroupData);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
@@ -539,13 +555,14 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Featured> createFeatured(FeaturedCreate featuredCreate) {
+	public List<Featured> createFeatured(HttpServletRequest request, FeaturedCreate featuredCreate) {
 		List<Featured> result = null;
 
 		try {
 			FeaturedCreateData featuredCreateData = new FeaturedCreateData();
 			featuredCreateData.setFeaturedCreate(featuredCreate);
 			featuredCreateData.setMailData(converter.userGroupMetadata(generateMailData(featuredCreate.getObjectId())));
+			userGroupService = headers.addUserGroupHeader(userGroupService, request);
 			result = userGroupService.createFeatured(featuredCreateData);
 			Observation observation = observationDao.findById(featuredCreate.getObjectId());
 			observation.setLastRevised(new Date());
@@ -558,12 +575,13 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<Featured> unFeatured(String observaitonId, List<Long> userGroupList) {
+	public List<Featured> unFeatured(HttpServletRequest request, String observaitonId, List<Long> userGroupList) {
 		List<Featured> result = null;
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observaitonId))));
+			userGroupService = headers.addUserGroupHeader(userGroupService, request);
 			result = userGroupService.unFeatured("observation", observaitonId, userGroupData);
 			Observation observation = observationDao.findById(Long.parseLong(observaitonId));
 			observation.setLastRevised(new Date());
@@ -576,7 +594,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<TraitsValue> getTraitsValue(String traitId) {
+	public List<TraitsValue> getTraitsValue(HttpServletRequest request, String traitId) {
 		List<TraitsValue> result = null;
 		try {
 			result = traitService.getTraitsValue(traitId);
@@ -599,7 +617,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
+	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(HttpServletRequest request, CommonProfile profile,
 			Map<Long, Long> observationTaxonId) {
 
 		try {
@@ -611,8 +629,10 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			} else {
 				for (Entry<Long, Long> entry : observationTaxonId.entrySet()) {
+					userService = headers.addUserHeaders(userService, request);
 					UserPermissions userPermission = userService.getAllUserPermission("observation",
 							entry.getKey().toString());
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, request);
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
 					List<Long> validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
 					if (validateAllowed.contains(entry.getValue()))
@@ -629,7 +649,8 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ListPagePermissions getListPagePermissions(CommonProfile profile, Long observationId, String taxonList) {
+	public ListPagePermissions getListPagePermissions(HttpServletRequest request, CommonProfile profile,
+			Long observationId, String taxonList) {
 		try {
 			List<Long> validateAllowed = new ArrayList<Long>();
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -640,14 +661,17 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 				}
 			} else {
+				userService = headers.addUserHeaders(userService, request);
 				UserPermissions userPermission = userService.getAllUserPermission("observation",
 						observationId.toString());
 
 				if (taxonList.trim().length() != 0) {
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, request);
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
 				}
 			}
+			cfService = headers.addCFHeaders(cfService, request);
 			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId.toString());
 			ListPagePermissions permissions = new ListPagePermissions(validateAllowed, cfPermission);
 			return permissions;
@@ -658,13 +682,14 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
-			String taxonList) throws Exception {
+	public ObservationUserPermission getUserPermissions(HttpServletRequest request, CommonProfile profile,
+			String observationId, Long userId, String taxonList) throws Exception {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
 			List<Long> validateAllowed = new ArrayList<Long>();
 			List<UserGroupIbp> allowedUserGroup = new ArrayList<UserGroupIbp>();
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
+			userService = headers.addUserHeaders(userService, request);
 			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -682,6 +707,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			} else {
 				if (taxonList.trim().length() != 0) {
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, request);
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
 
@@ -709,6 +735,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			}
 
+			cfService = headers.addCFHeaders(cfService, request);
 			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId);
 
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
@@ -751,13 +778,14 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<UserGroupIbp> getUsersGroupList(CommonProfile profile) {
+	public List<UserGroupIbp> getUsersGroupList(HttpServletRequest request, CommonProfile profile) {
 		try {
 			List<UserGroupIbp> allowedUserGroup = null;
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
 				allowedUserGroup = userGroupService.getAllUserGroup();
 			} else {
+				userService = headers.addUserHeaders(userService, request);
 				UserPermissions userPermission = userService.getUserGroupPermissions();
 				List<Long> userGroupMember = new ArrayList<Long>();
 				for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
@@ -775,7 +803,8 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public String removeObservation(CommonProfile profile, Long userId, Long observationId) {
+	public String removeObservation(HttpServletRequest request, CommonProfile profile, Long userId,
+			Long observationId) {
 		try {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
@@ -787,7 +816,7 @@ public class ObservationServiceImpl implements ObservationService {
 				observationDao.update(observation);
 				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observationId.toString());
-				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+				logActivity.LogActivity(request, null, observationId, observationId, "observation", observationId,
 						"Observation Deleted", mailData);
 				return "Observation Deleted Succesfully";
 			}
@@ -799,11 +828,12 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<FlagShow> createFlag(Long observationId, FlagIbp flagIbp) {
+	public List<FlagShow> createFlag(HttpServletRequest request, Long observationId, FlagIbp flagIbp) {
 		try {
 			FlagCreateData flagData = new FlagCreateData();
 			flagData.setFlagIbp(flagIbp);
 			flagData.setMailData(converter.utilityMetaData(generateMailData(observationId)));
+			utilityServices = headers.addUtilityHeaders(utilityServices, request);
 			List<FlagShow> flagList = utilityServices.createFlag("observation", observationId.toString(), flagData);
 			int flagCount = 0;
 			if (flagList != null)
@@ -823,10 +853,11 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<FlagShow> unFlag(Long observationId, String flagId) {
+	public List<FlagShow> unFlag(HttpServletRequest request, Long observationId, String flagId) {
 		try {
 
 			com.strandls.utility.pojo.MailData mailData = converter.utilityMetaData(generateMailData(observationId));
+			utilityServices = headers.addUtilityHeaders(utilityServices, request);
 			List<FlagShow> result = utilityServices.unFlag("observation", observationId.toString(), flagId, mailData);
 			int flagCount = 0;
 			if (result != null)
@@ -845,8 +876,9 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Follow followRequest(Long observationId) {
+	public Follow followRequest(HttpServletRequest request, Long observationId) {
 		try {
+			userService = headers.addUserHeaders(userService, request);
 			Follow result = userService.updateFollow("observation", observationId.toString());
 			return result;
 		} catch (Exception e) {
@@ -856,8 +888,9 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Follow unFollowRequest(Long observationId) {
+	public Follow unFollowRequest(HttpServletRequest request, Long observationId) {
 		try {
+			userService = headers.addUserHeaders(userService, request);
 			Follow result = userService.unfollow("observation", observationId.toString());
 			return result;
 		} catch (Exception e) {
@@ -874,7 +907,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
+	public ShowData editObservaitonCore(HttpServletRequest request, CommonProfile profile, Long observationId,
 			ObservationUpdateData observationUpdate) throws Exception {
 
 		try {
@@ -898,8 +931,9 @@ public class ObservationServiceImpl implements ObservationService {
 				observation.setLastRevised(new Date());
 //				resource data
 
-				List<Resource> resources = observationHelper.createResourceMapping(userId,
+				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationUpdate.getResources());
+				resourceService = headers.addResourceHeaders(resourceService, request);
 				resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
 
@@ -939,7 +973,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
 
-				logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+				logActivity.LogActivity(request, null, observationId, observationId, "observation", observationId,
 						"Observation updated", generateMailData(observationId));
 				return findById(observationId);
 			} else {
@@ -1095,7 +1129,8 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData) {
+	public List<CustomFieldObservationData> addUpdateCustomFieldData(HttpServletRequest request,
+			CustomFieldFactsInsert factsCreateData) {
 		try {
 
 			CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
@@ -1103,6 +1138,7 @@ public class ObservationServiceImpl implements ObservationService {
 			factsInsertData
 					.setMailData(converter.userGroupMetadata(generateMailData(factsCreateData.getObservationId())));
 
+			cfService = headers.addCFHeaders(cfService, request);
 			List<CustomFieldObservationData> result = cfService.addUpdateCustomFieldData(factsInsertData);
 			if (result != null && !result.isEmpty())
 				produceToRabbitMQ(factsCreateData.getObservationId().toString(), "Custom Field");
@@ -1114,8 +1150,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<CustomFieldValues> getCustomFieldOptions(String observationId, String userGroupId, String cfId) {
+	public List<CustomFieldValues> getCustomFieldOptions(HttpServletRequest request, String observationId,
+			String userGroupId, String cfId) {
 		try {
+			cfService = headers.addCFHeaders(cfService, request);
 			List<CustomFieldValues> result = cfService.getCustomFieldOptions(observationId, userGroupId, cfId);
 			return result;
 		} catch (Exception e) {
@@ -1135,8 +1173,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(Long userGroupId) {
+	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(HttpServletRequest request,
+			Long userGroupId) {
 		try {
+			userService = headers.addUserHeaders(userService, request);
 			UserPermissions userGroupPermission = userService.getUserGroupPermissions();
 			List<UserGroupMemberRole> memberRole = userGroupPermission.getUserMemberRole();
 			int flag = 0;
@@ -1150,6 +1190,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (flag == 1) {
 				List<UserGroupSpeciesGroup> sGroup = userGroupService.getUserGroupSGroup(userGroupId.toString());
 
+				cfService = headers.addCFHeaders(cfService, request);
 				List<CustomFieldDetails> customFields = cfService.getUserGroupCustomFields(userGroupId.toString());
 				ObservationUGContextCreatePageData observationCreateData = new ObservationUGContextCreatePageData(
 						sGroup, customFields);
@@ -1175,6 +1216,7 @@ public class ObservationServiceImpl implements ObservationService {
 				factsInsertData.setFactsCreateData(cfInsert);
 				factsInsertData.setMailData(
 						converter.userGroupMetadata(generateMailData(observationData.getObservation().getId())));
+				cfService = headers.addCFHeaders(cfService, request);
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
 
@@ -1262,9 +1304,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Activity addObservationComment(CommentLoggingData comment) {
+	public Activity addObservationComment(HttpServletRequest request, CommentLoggingData comment) {
 		try {
 			comment.setMailData(generateMailData(comment.getRootHolderId()));
+			activityService = headers.addActivityHeaders(activityService, request);
 			Activity result = activityService.addComment(comment);
 			updateLastRevised(comment.getRootHolderId());
 			return result;
@@ -1275,8 +1318,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Boolean updateGalleryResourceRating(Long observationId, ResourceRating resourceRating) {
+	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
+			ResourceRating resourceRating) {
 		try {
+			resourceService = headers.addResourceHeaders(resourceService, request);
 			List<Resource> resources = resourceService.updateRating("OBSERVATION", observationId.toString(),
 					resourceRating);
 
@@ -1298,7 +1343,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observation = observationDao.update(observation);
 			produceToRabbitMQ(observationId.toString(), "Rating update");
 
-			logActivity.LogActivity(null, observationId, observationId, "observation", observationId,
+			logActivity.LogActivity(request, null, observationId, observationId, "observation", observationId,
 					"Rated media resource", generateMailData(observationId));
 			return true;
 

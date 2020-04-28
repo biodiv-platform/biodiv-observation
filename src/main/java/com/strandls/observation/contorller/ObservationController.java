@@ -244,7 +244,7 @@ public class ObservationController {
 
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
-			ShowData result = observationService.editObservaitonCore(profile, obvId, observationUpdate);
+			ShowData result = observationService.editObservaitonCore(request, profile, obvId, observationUpdate);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -270,7 +270,7 @@ public class ObservationController {
 			Long userId = Long.parseLong(profile.getId());
 			Long obvId = Long.parseLong(observaitonId);
 
-			String result = observationService.removeObservation(profile, userId, obvId);
+			String result = observationService.removeObservation(request, profile, userId, obvId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not Allowed to Delete the Observation")
 						.build();
@@ -438,7 +438,7 @@ public class ObservationController {
 			Long obvId = Long.parseLong(observationId);
 			Long sGroup = Long.parseLong(sGroupId);
 
-			Long result = observationService.updateSGroup(obvId, sGroup);
+			Long result = observationService.updateSGroup(request, obvId, sGroup);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -458,7 +458,7 @@ public class ObservationController {
 	public Response updateTags(@Context HttpServletRequest request,
 			@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
 		try {
-			List<Tags> result = observationService.updateTags(tagsMapping);
+			List<Tags> result = observationService.updateTags(request, tagsMapping);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -479,7 +479,7 @@ public class ObservationController {
 	public Response updateTraits(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@PathParam("traitId") String traitId, @ApiParam(name = "valueList") List<Long> valueList) {
 		try {
-			List<FactValuePair> result = observationService.updateTraits(observationId, traitId, valueList);
+			List<FactValuePair> result = observationService.updateTraits(request, observationId, traitId, valueList);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -502,7 +502,7 @@ public class ObservationController {
 			@PathParam("observationId") String observationId,
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
-			List<UserGroupIbp> result = observationService.updateUserGroup(observationId, userGroupList);
+			List<UserGroupIbp> result = observationService.updateUserGroup(request, observationId, userGroupList);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -559,7 +559,7 @@ public class ObservationController {
 	public Response createFeatured(@Context HttpServletRequest request,
 			@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
 		try {
-			List<Featured> result = observationService.createFeatured(featuredCreate);
+			List<Featured> result = observationService.createFeatured(request, featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -578,7 +578,7 @@ public class ObservationController {
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
-			List<Featured> result = observationService.unFeatured(observationId, userGroupList);
+			List<Featured> result = observationService.unFeatured(request, observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -597,7 +597,7 @@ public class ObservationController {
 
 	public Response getValuesOfTraits(@Context HttpServletRequest request, @PathParam("traitId") String traitId) {
 		try {
-			List<TraitsValue> result = observationService.getTraitsValue(traitId);
+			List<TraitsValue> result = observationService.getTraitsValue(request, traitId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -637,8 +637,8 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			ObservationUserPermission result = observationService.getUserPermissions(profile, observationId, userId,
-					taxonList);
+			ObservationUserPermission result = observationService.getUserPermissions(request, profile, observationId,
+					userId, taxonList);
 
 			return Response.status(Status.OK).entity(result).build();
 
@@ -675,7 +675,7 @@ public class ObservationController {
 	public Response getUsersGroupList(@Context HttpServletRequest request) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			List<UserGroupIbp> result = observationService.getUsersGroupList(profile);
+			List<UserGroupIbp> result = observationService.getUsersGroupList(request, profile);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -696,7 +696,7 @@ public class ObservationController {
 			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<FlagShow> result = observationService.createFlag(obsId, flagIbp);
+			List<FlagShow> result = observationService.createFlag(request, obsId, flagIbp);
 			if (result.isEmpty())
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User Allowed Flagged").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -721,7 +721,7 @@ public class ObservationController {
 			@PathParam("flagId") String flagId) {
 		try {
 			Long obsId = Long.parseLong(observationId);
-			List<FlagShow> result = observationService.unFlag(obsId, flagId);
+			List<FlagShow> result = observationService.unFlag(request, obsId, flagId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE).entity("User not allowed to Unflag").build();
 			return Response.status(Status.OK).entity(result).build();
@@ -743,7 +743,7 @@ public class ObservationController {
 			@PathParam("observationId") String observationId) {
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationService.followRequest(obvId);
+			Follow result = observationService.followRequest(request, obvId);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -764,7 +764,7 @@ public class ObservationController {
 
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Follow result = observationService.unFollowRequest(obvId);
+			Follow result = observationService.unFollowRequest(request, obvId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -859,7 +859,8 @@ public class ObservationController {
 			@PathParam("observationId") String observationId, @PathParam("userGroupId") String userGroupId,
 			@PathParam("cfId") String cfId) {
 		try {
-			List<CustomFieldValues> result = observationService.getCustomFieldOptions(observationId, userGroupId, cfId);
+			List<CustomFieldValues> result = observationService.getCustomFieldOptions(request, observationId,
+					userGroupId, cfId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -881,7 +882,8 @@ public class ObservationController {
 	public Response addUpdateCustomFieldData(@Context HttpServletRequest request,
 			@ApiParam(name = "factsCreateData") CustomFieldFactsInsert factsCreateData) {
 		try {
-			List<CustomFieldObservationData> result = observationService.addUpdateCustomFieldData(factsCreateData);
+			List<CustomFieldObservationData> result = observationService.addUpdateCustomFieldData(request,
+					factsCreateData);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -921,7 +923,8 @@ public class ObservationController {
 			@PathParam("userGroupId") String userGroupId) {
 		try {
 			Long ugId = Long.parseLong(userGroupId);
-			ObservationUGContextCreatePageData result = observationService.getUGContextObservationCreateDetails(ugId);
+			ObservationUGContextCreatePageData result = observationService.getUGContextObservationCreateDetails(request,
+					ugId);
 			if (result == null)
 				return Response.status(Status.NOT_ACCEPTABLE)
 						.entity("USER NOT ALLOWED TO CREATE OBSERVATION IN A GROUP").build();
@@ -968,7 +971,7 @@ public class ObservationController {
 			@ApiParam(name = "observationTaxonId") Map<Long, Long> observationTaxonId) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			List<MaxVotedRecoPermission> result = observationService.listMaxRecoVotePermissions(profile,
+			List<MaxVotedRecoPermission> result = observationService.listMaxRecoVotePermissions(request, profile,
 					observationTaxonId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -992,7 +995,7 @@ public class ObservationController {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
-			ListPagePermissions result = observationService.getListPagePermissions(profile, obvId, taxonList);
+			ListPagePermissions result = observationService.getListPagePermissions(request, profile, obvId, taxonList);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1012,7 +1015,7 @@ public class ObservationController {
 	public Response addCommnet(@Context HttpServletRequest request,
 			@ApiParam(name = "commentData") CommentLoggingData commentDatas) {
 		try {
-			Activity result = observationService.addObservationComment(commentDatas);
+			Activity result = observationService.addObservationComment(request, commentDatas);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1068,7 +1071,7 @@ public class ObservationController {
 			@ApiParam(name = "resourceRating") ResourceRating resourceRating) {
 		try {
 			Long obvId = Long.parseLong(observationId);
-			Boolean result = observationService.updateGalleryResourceRating(obvId, resourceRating);
+			Boolean result = observationService.updateGalleryResourceRating(request, obvId, resourceRating);
 			if (result)
 				return Response.status(Status.OK).entity("Rating updated").build();
 			return Response.status(Status.NOT_FOUND).entity("Cannot Update the Rating").build();

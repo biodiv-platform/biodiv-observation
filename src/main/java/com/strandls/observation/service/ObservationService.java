@@ -53,49 +53,51 @@ public interface ObservationService {
 
 	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) throws Exception;
 
-	public ShowData editObservaitonCore(CommonProfile profile, Long observationId,
+	public ShowData editObservaitonCore(HttpServletRequest request, CommonProfile profile, Long observationId,
 			ObservationUpdateData observationUpdate) throws Exception;
 
-	public String removeObservation(CommonProfile profile, Long userId, Long observationId);
+	public String removeObservation(HttpServletRequest request, CommonProfile profile, Long userId, Long observationId);
 
-	public Long updateSGroup(Long observationId, Long sGroupId);
+	public Long updateSGroup(HttpServletRequest request, Long observationId, Long sGroupId);
 
 	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco);
 
-	public List<Tags> updateTags(TagsMapping tagsMapping);
+	public List<Tags> updateTags(HttpServletRequest request, TagsMapping tagsMapping);
 
-	public List<FactValuePair> updateTraits(String observationId, String traitId, List<Long> valueList);
+	public List<FactValuePair> updateTraits(HttpServletRequest request, String observationId, String traitId,
+			List<Long> valueList);
 
-	public List<UserGroupIbp> updateUserGroup(String observationId, List<Long> userGroupList);
+	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
+			List<Long> userGroupList);
 
 	public List<SpeciesGroup> getAllSpeciesGroup();
 
 	public List<Language> getLanguages(Boolean isDirty);
 
-	public List<Featured> createFeatured(FeaturedCreate featuredCreate);
+	public List<Featured> createFeatured(HttpServletRequest request, FeaturedCreate featuredCreate);
 
-	public List<Featured> unFeatured(String observaitonId, List<Long> userGroupList);
+	public List<Featured> unFeatured(HttpServletRequest request, String observaitonId, List<Long> userGroupList);
 
-	public List<TraitsValue> getTraitsValue(String traitId);
+	public List<TraitsValue> getTraitsValue(HttpServletRequest request, String traitId);
 
 	public List<TraitsValuePair> getTraitList(String speciesId);
 
-	public ObservationUserPermission getUserPermissions(CommonProfile profile, String observationId, Long userId,
-			String taxonList) throws Exception;
+	public ObservationUserPermission getUserPermissions(HttpServletRequest request, CommonProfile profile,
+			String observationId, Long userId, String taxonList) throws Exception;
 
 	public List<Tags> getTagsSugguestions(String phrase);
 
-	public List<UserGroupIbp> getUsersGroupList(CommonProfile profile);
+	public List<UserGroupIbp> getUsersGroupList(HttpServletRequest request, CommonProfile profile);
 
 	public List<AllRecoSugguestions> aggregateAllRecoSuggestions(List<RecoIbp> allRecoVote);
 
-	public List<FlagShow> createFlag(Long observationId, FlagIbp flagIbp);
+	public List<FlagShow> createFlag(HttpServletRequest request, Long observationId, FlagIbp flagIbp);
 
-	public List<FlagShow> unFlag(Long observationId, String flagId);
+	public List<FlagShow> unFlag(HttpServletRequest request, Long observationId, String flagId);
 
-	public Follow followRequest(Long observationId);
+	public Follow followRequest(HttpServletRequest request, Long observationId);
 
-	public Follow unFollowRequest(Long observationId);
+	public Follow unFollowRequest(HttpServletRequest request, Long observationId);
 
 	public Long getObservationAuthor(Long observationId);
 
@@ -103,28 +105,33 @@ public interface ObservationService {
 
 	public void applyGeoPrivacyObservaiton();
 
-	public List<CustomFieldObservationData> addUpdateCustomFieldData(CustomFieldFactsInsert factsCreateData);
+	public List<CustomFieldObservationData> addUpdateCustomFieldData(HttpServletRequest request,
+			CustomFieldFactsInsert factsCreateData);
 
-	public List<CustomFieldValues> getCustomFieldOptions(String observationId, String userGroupId, String cfId);
+	public List<CustomFieldValues> getCustomFieldOptions(HttpServletRequest request, String observationId,
+			String userGroupId, String cfId);
 
 	public void produceToRabbitMQ(String observationId, String updateType);
 
-	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(Long userGroupId);
+	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(HttpServletRequest request,
+			Long userGroupId);
 
 	public ShowData creteObservationUGContext(HttpServletRequest request,
 			ObservationCreateUGContext observationUGContext);
 
 	public Boolean updateLastRevised(Long observationId);
 
-	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(CommonProfile profile,
+	public List<MaxVotedRecoPermission> listMaxRecoVotePermissions(HttpServletRequest request, CommonProfile profile,
 			Map<Long, Long> observationTaxonId);
 
-	public ListPagePermissions getListPagePermissions(CommonProfile profile, Long observationId, String taxonList);
+	public ListPagePermissions getListPagePermissions(HttpServletRequest request, CommonProfile profile,
+			Long observationId, String taxonList);
 
 	public MailData generateMailData(Long observationId);
 
-	public Activity addObservationComment(CommentLoggingData comment);
+	public Activity addObservationComment(HttpServletRequest request, CommentLoggingData comment);
 
-	public Boolean updateGalleryResourceRating(Long observationId, ResourceRating resourceRating);
+	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
+			ResourceRating resourceRating);
 
 }
