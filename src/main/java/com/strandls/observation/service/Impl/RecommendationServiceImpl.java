@@ -733,4 +733,33 @@ public class RecommendationServiceImpl implements RecommendationService {
 		return recoShow;
 	}
 
+	@Override
+	public void recoCountRecalculate() {
+		Boolean hasNext = true;
+		int startPoint = 0;
+		int total = 0;
+		System.out.println("Processing started!!!!!!");
+		while (hasNext) {
+			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
+			if (observationBatch.size() == 20000) {
+				hasNext = false;
+				total = total + observationBatch.size();
+				startPoint = total + 1;
+			}
+
+			for (Observation obv : observationBatch) {
+				System.out.println("Observation Id: " + obv.getId());
+				int recoCount = recoVoteDao.findRecoVoteCount(obv.getId());
+				if (recoCount != obv.getNoOfIdentifications()) {
+					obv.setNoOfIdentifications(recoCount);
+					observationDao.update(obv);
+					System.out.println(" Updated Observaion id : " + obv.getId());
+				}
+			}
+		}
+		System.out.println("Total " + total + " observation Modified!!!!!!!!!!!!!!!!");
+		System.out.println("Process complted!!!!!!!!!!!!");
+
+	}
+
 }

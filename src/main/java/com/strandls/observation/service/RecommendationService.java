@@ -47,4 +47,6 @@ public interface RecommendationService {
 	public List<RecoIbp> allRecoVote(Long observationId);
 
 	public RecoShow fetchCurrentRecoState(Long observationId, Long maxVotedReco);
+
+	public void recoCountRecalculate();
 }
