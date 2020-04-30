@@ -744,7 +744,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
 			total = total + observationBatch.size();
 
-			if (observationBatch.size() == 5000) {
+			if (observationBatch.size() != 5000) {
 				hasNext = false;
 				startPoint = total + 1;
 			}
@@ -753,22 +753,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 				System.out.println("Observation Id: " + obv.getId());
 				int recoCount = recoVoteDao.findRecoVoteCount(obv.getId());
 				System.out.println("");
-				System.out.println("");
-				System.out.println("");
 
 				System.out.println("Actully reco Count : " + recoCount);
 				System.out.println("Previous reco Count : " + obv.getNoOfIdentifications());
 
-				System.out.println("");
-				System.out.println("");
 				System.out.println("");
 				if (recoCount != obv.getNoOfIdentifications() && recoCount != 0) {
 					obv.setNoOfIdentifications(recoCount);
 					observationDao.update(obv);
 					counter++;
 					System.out.println(" Updated Observaion id : " + obv.getId());
-					System.out.println();
-					System.out.println();
 					System.out.println("");
 
 				}
