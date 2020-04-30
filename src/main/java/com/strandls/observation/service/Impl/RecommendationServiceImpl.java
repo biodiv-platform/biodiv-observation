@@ -743,10 +743,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 		while (hasNext) {
 			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
 			total = total + observationBatch.size();
+			startPoint = total + 1;
 
 			if (observationBatch.size() != 5000) {
 				hasNext = false;
-				startPoint = total + 1;
 			}
 
 			for (Observation obv : observationBatch) {
