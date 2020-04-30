@@ -745,7 +745,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			total = total + observationBatch.size();
 			startPoint = total + 1;
 
-			if (observationBatch.size() != 5000) {
+			if (observationBatch.size() < 5000) {
 				hasNext = false;
 			}
 
