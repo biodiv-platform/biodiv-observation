@@ -741,19 +741,33 @@ public class RecommendationServiceImpl implements RecommendationService {
 		System.out.println("Processing started!!!!!!");
 		while (hasNext) {
 			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
-			if (observationBatch.size() == 20000) {
+			total = total + observationBatch.size();
+			if (observationBatch.size() == 5000) {
 				hasNext = false;
-				total = total + observationBatch.size();
 				startPoint = total + 1;
 			}
 
 			for (Observation obv : observationBatch) {
 				System.out.println("Observation Id: " + obv.getId());
 				int recoCount = recoVoteDao.findRecoVoteCount(obv.getId());
-				if (recoCount != obv.getNoOfIdentifications()) {
+				System.out.println("");
+				System.out.println("");
+				System.out.println("");
+
+				System.out.println("Actully reco Count : " + recoCount);
+				System.out.println("Previous reco Count : " + obv.getNoOfIdentifications());
+
+				System.out.println("");
+				System.out.println("");
+				System.out.println("");
+				if (recoCount != obv.getNoOfIdentifications() && recoCount != 0) {
 					obv.setNoOfIdentifications(recoCount);
 					observationDao.update(obv);
 					System.out.println(" Updated Observaion id : " + obv.getId());
+					System.out.println();
+					System.out.println();
+					System.out.println("");
+
 				}
 			}
 		}

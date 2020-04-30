@@ -70,7 +70,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "from Observation where isDeleted = false and maxVotedRecoId is not NULL and noOfIdentifications = 0 order by id";
 		try {
 			Query<Observation> query = session.createQuery(qry);
-			query.setMaxResults(20000);
+			query.setMaxResults(5000);
 			query.setFirstResult(startPoint);
 			result = query.getResultList();
 
