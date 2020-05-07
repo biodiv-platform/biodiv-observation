@@ -741,13 +741,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 		int counter = 0;
 		System.out.println("Processing started!!!!!!");
 		while (hasNext) {
+			System.out.println("START POINT = " + startPoint);
+			System.out.println("TOTAL = " + total);
 			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
+			System.out.println("Observation Batch Size = " + observationBatch.size());
 			total = total + observationBatch.size();
 			startPoint = total + 1;
-
-			if (observationBatch.size() < 5000) {
-				hasNext = false;
-			}
 
 			for (Observation obv : observationBatch) {
 				System.out.println("Observation Id: " + obv.getId());
@@ -766,6 +765,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 					System.out.println("");
 
 				}
+			}
+
+			if (observationBatch.size() != 5000) {
+				System.out.println("Observation Batch inside if = " + observationBatch.size());
+				System.out.println("Total = " + total);
+				hasNext = false;
 			}
 		}
 		System.out.println("Total " + total + " observation Modified  =   " + counter + "!!!!!!!!!!!!!!!!");
