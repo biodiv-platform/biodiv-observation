@@ -63,4 +63,23 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Observation> fetchInBatchRecoCalculate(int startPoint) {
+		List<Observation> result = null;
+		Session session = sessionFactory.openSession();
+		String qry = "from Observation where isDeleted = false and noOfIdentifications = 0 and maxVotedRecoId is not NULL order by id";
+		try {
+			Query<Observation> query = session.createQuery(qry);
+			query.setMaxResults(5000);
+			query.setFirstResult(startPoint);
+			result = query.getResultList();
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
 }

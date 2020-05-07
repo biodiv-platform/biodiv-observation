@@ -31,6 +31,7 @@ import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
+import com.strandls.observation.service.Impl.RecoRecalcThread;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,6 +53,9 @@ public class RecommedationController {
 
 	@Inject
 	private ObservationMapperHelper observaitonHelper;
+
+	@Inject
+	private RecoRecalcThread recoRecalcThread;
 
 	@GET
 	@Path(ApiConstants.RECOVOTE + ApiConstants.IBP + "/{recoVoteId}")
@@ -218,4 +222,19 @@ public class RecommedationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@GET
+	@Path(ApiConstants.RECALCULATE + ApiConstants.RECOVOTE)
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response reCalculateRecoVoteCount() {
+		try {
+			Thread thread = new Thread(recoRecalcThread);
+			thread.start();
+			return Response.status(Status.OK).entity("ReCalculation has started").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

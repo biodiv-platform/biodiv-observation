@@ -1039,7 +1039,7 @@ public class ObservationServiceImpl implements ObservationService {
 			int startPoint = 0;
 			while (hasNext) {
 				List<Observation> observationList = observationDao.fetchInBatch(startPoint);
-				if (observationList.size() != 50000)
+				if (observationList.size() != 20000)
 					hasNext = false;
 				totalObservation = totalObservation + observationList.size();
 				startPoint = totalObservation + 1;

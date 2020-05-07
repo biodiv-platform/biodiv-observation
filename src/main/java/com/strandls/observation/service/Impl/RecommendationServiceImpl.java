@@ -733,4 +733,49 @@ public class RecommendationServiceImpl implements RecommendationService {
 		return recoShow;
 	}
 
+	@Override
+	public void recoCountRecalculate() {
+		Boolean hasNext = true;
+		int startPoint = 0;
+		int total = 0;
+		int counter = 0;
+		System.out.println("Processing started!!!!!!");
+		while (hasNext) {
+			System.out.println("START POINT = " + startPoint);
+			System.out.println("TOTAL = " + total);
+			List<Observation> observationBatch = observationDao.fetchInBatchRecoCalculate(startPoint);
+			System.out.println("Observation Batch Size = " + observationBatch.size());
+			total = total + observationBatch.size();
+			startPoint = total + 1;
+
+			for (Observation obv : observationBatch) {
+				System.out.println("Observation Id: " + obv.getId());
+				int recoCount = recoVoteDao.findRecoVoteCount(obv.getId());
+				System.out.println("");
+
+				System.out.println("Actully reco Count : " + recoCount);
+				System.out.println("Previous reco Count : " + obv.getNoOfIdentifications());
+
+				System.out.println("");
+				if (recoCount != obv.getNoOfIdentifications() && recoCount != 0) {
+					obv.setNoOfIdentifications(recoCount);
+					observationDao.update(obv);
+					counter++;
+					System.out.println(" Updated Observaion id : " + obv.getId());
+					System.out.println("");
+
+				}
+			}
+
+			if (observationBatch.size() != 5000) {
+				System.out.println("Observation Batch inside if = " + observationBatch.size());
+				System.out.println("Total = " + total);
+				hasNext = false;
+			}
+		}
+		System.out.println("Total " + total + " observation Modified  =   " + counter + "!!!!!!!!!!!!!!!!");
+		System.out.println("Process complted!!!!!!!!!!!!");
+
+	}
+
 }
