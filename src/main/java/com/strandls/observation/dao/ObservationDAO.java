@@ -64,6 +64,22 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public List<Observation> fecthByListOfIds(List<Long> observationList) {
+		String qry = "from Observation where isDeleted = false and id IN :ids";
+		Session session = sessionFactory.openSession();
+		List<Observation> result = null;
+		try {
+			Query<Observation> query = session.createQuery(qry);
+			query.setParameter("ids", observationList);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
 	public List<Observation> fetchInBatchRecoCalculate(int startPoint) {
 		List<Observation> result = null;
 		Session session = sessionFactory.openSession();

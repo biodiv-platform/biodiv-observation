@@ -59,7 +59,8 @@ import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
-import com.strandls.observation.service.Impl.UserGroupFilterThread;
+import com.strandls.observation.service.Impl.UserGroupPostingFilterThread;
+import com.strandls.observation.service.Impl.UserGroupUnPostingFilterThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
@@ -791,22 +792,24 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.APPLYFILTER)
+	@Path(ApiConstants.APPLYFILTER + ApiConstants.POSTING)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 
 	@ValidateUser
-	@ApiOperation(value = "Apply the new Filter Rule to the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
+	@ApiOperation(value = "Apply the new Filter Rule to post the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to start the process", response = String.class) })
 
-	public Response applyNewFilter(@Context HttpServletRequest request, @QueryParam("groupIds") String groupIds) {
+	public Response applyNewFilterPosting(@Context HttpServletRequest request,
+			@QueryParam("groupIds") String groupIds) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 
 			if (userRole.contains("ROLE_ADMIN")) {
-				UserGroupFilterThread groupFilterThread = new UserGroupFilterThread(observationService, groupIds);
+				UserGroupPostingFilterThread groupFilterThread = new UserGroupPostingFilterThread(observationService,
+						groupIds);
 				Thread thread = new Thread(groupFilterThread);
 				thread.start();
 				return Response.status(Status.OK).entity("Process has started to apply the new filter Rule").build();
@@ -815,6 +818,36 @@ public class ObservationController {
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity("Filter cannot be started").build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.APPLYFILTER + ApiConstants.REMOVING)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ValidateUser
+	@ApiOperation(value = "Apply the new Filter Rule to unpost the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to start the process", response = String.class) })
+
+	public Response applyNewFilterRemoving(@Context HttpServletRequest request, @QueryParam("groupId") String groupId) {
+		try {
+
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+
+			if (userRole.contains("ROLE_ADMIN")) {
+				UserGroupUnPostingFilterThread groupUnPostingThread = new UserGroupUnPostingFilterThread(
+						observationService, groupId);
+				Thread thread = new Thread(groupUnPostingThread);
+				thread.start();
+				return Response.status(Status.OK).entity("Process has started to apply the new filter Rule").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 

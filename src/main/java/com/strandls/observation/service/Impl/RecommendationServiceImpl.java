@@ -219,6 +219,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 			return maxRecoVote;
 		} else {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+//			Bg process for userGroup filter rule
+			observaitonService.bgfilterRule(request, observationId);
 			logActivities.LogActivity(request, description, observationId, observationId, "observation",
 					recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
 			return maxRecoVote;
@@ -393,6 +395,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
 
 			} catch (Exception e) {
 				logger.error(e.getMessage());
@@ -514,6 +518,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+//			Bg process for userGroup filter rule
+			observaitonService.bgfilterRule(request, observationId);
 			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 
 			return result;
@@ -613,6 +619,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
 
 				logActivities.LogActivity(request, description, observationId, observationId, "observation",
 						recoVote.getId(), "obv locked", observaitonService.generateMailData(observationId));
@@ -667,6 +675,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 						rvActivity.setGivenName(recoSet.getScientificName());
 
 					description = objectMapper.writeValueAsString(rvActivity);
+
+//					Bg process for userGroup filter rule
+					observaitonService.bgfilterRule(request, observationId);
 
 					logActivities.LogActivity(request, description, observationId, observationId, "observation",
 							observation.getMaxVotedRecoId(), "obv unlocked",
