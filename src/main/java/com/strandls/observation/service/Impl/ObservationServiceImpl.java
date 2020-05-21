@@ -28,6 +28,8 @@ import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.MapQueryResponse;
+import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
@@ -837,12 +839,16 @@ public class ObservationServiceImpl implements ObservationService {
 				MailData mailData = generateMailData(observationId);
 
 				observation.setIsDeleted(true);
-				observationDao.update(observation);
-				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
-						observationId.toString());
-				logActivity.LogActivity(request, null, observationId, observationId, "observation", observationId,
-						"Observation Deleted", mailData);
-				return "Observation Deleted Succesfully";
+				MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
+						ObservationIndex.type.getValue(), observationId.toString());
+				ResultEnum result = esResponse.getResult();
+				if (result.getValue().equals("DELETED")) {
+					observationDao.update(observation);
+					logActivity.LogActivity(request, null, observationId, observationId, "observation", observationId,
+							"Observation Deleted", mailData);
+					return "Observation Deleted Succesfully";
+				}
+
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
