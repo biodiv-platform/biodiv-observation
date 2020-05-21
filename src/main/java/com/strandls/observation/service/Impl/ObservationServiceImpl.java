@@ -227,9 +227,11 @@ public class ObservationServiceImpl implements ObservationService {
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
+
+				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy);
+						observationNearBy, activityCount);
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
