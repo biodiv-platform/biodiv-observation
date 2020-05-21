@@ -48,6 +48,7 @@ public class ShowData implements Serializable {
 	private Map<String, String> authorScore;
 	private List<AllRecoSugguestions> allRecoVotes;
 	private List<ObservationNearBy> observationNearBy;
+	private Integer activityCount;
 
 	/**
 	 * 
@@ -72,13 +73,14 @@ public class ShowData implements Serializable {
 	 * @param authorScore
 	 * @param allRecoVotes
 	 * @param observationNearBy
+	 * @param activityCount
 	 */
 	public ShowData(Observation observation, List<FactValuePair> factValuePair,
 			List<ObservationResourceUser> observationResource, List<UserGroupIbp> userGroups,
 			List<CustomFieldObservationData> customField, ObservationLocationInfo layerInfo,
 			ObservationInfo esLayerInfo, RecoIbp recoIbp, List<FlagShow> flag, List<Tags> tags, List<Featured> fetaured,
 			UserIbp authorInfo, Map<String, String> authorScore, List<AllRecoSugguestions> allRecoVotes,
-			List<ObservationNearBy> observationNearBy) {
+			List<ObservationNearBy> observationNearBy, Integer activityCount) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -95,6 +97,7 @@ public class ShowData implements Serializable {
 		this.authorScore = authorScore;
 		this.allRecoVotes = allRecoVotes;
 		this.observationNearBy = observationNearBy;
+		this.activityCount = activityCount;
 	}
 
 	public Observation getObservation() {
@@ -215,6 +218,14 @@ public class ShowData implements Serializable {
 
 	public void setObservationNearBy(List<ObservationNearBy> observationNearBy) {
 		this.observationNearBy = observationNearBy;
+	}
+
+	public Integer getActivityCount() {
+		return activityCount;
+	}
+
+	public void setActivityCount(Integer activityCount) {
+		this.activityCount = activityCount;
 	}
 
 }
