@@ -10,14 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.strandls.activity.pojo.RecoVoteActivity;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
@@ -213,16 +214,17 @@ public class RecommendationServiceImpl implements RecommendationService {
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
 		if (createObservation) {
-			logActivities.LogActivity(request, description, observationId, observationId, "observation",
-					recoVote.getId(), "Suggested species name", null);
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", recoVote.getId(), "Suggested species name", null);
 
 			return maxRecoVote;
 		} else {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 //			Bg process for userGroup filter rule
 			observaitonService.bgfilterRule(request, observationId);
-			logActivities.LogActivity(request, description, observationId, observationId, "observation",
-					recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", recoVote.getId(), "Suggested species name",
+					observaitonService.generateMailData(observationId));
 			return maxRecoVote;
 		}
 
@@ -402,8 +404,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 				logger.error(e.getMessage());
 			}
 
-			logActivities.LogActivity(request, description, observationId, observationId, "observation", observationId,
-					"Suggestion removed", observaitonService.generateMailData(observationId));
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", observationId, "Suggestion removed",
+					observaitonService.generateMailData(observationId));
 
 			return result;
 
@@ -509,8 +512,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 						logger.error(e.getMessage());
 					}
 
-					logActivities.LogActivity(request, description, observationId, observationId, "observation",
-							recoVote.getId(), "Agreed on species name",
+					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+							observationId, "observation", recoVote.getId(), "Agreed on species name",
 							observaitonService.generateMailData(observationId));
 
 				}
@@ -622,8 +625,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 //				Bg process for userGroup filter rule
 				observaitonService.bgfilterRule(request, observationId);
 
-				logActivities.LogActivity(request, description, observationId, observationId, "observation",
-						recoVote.getId(), "obv locked", observaitonService.generateMailData(observationId));
+				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+						observationId, "observation", recoVote.getId(), "obv locked",
+						observaitonService.generateMailData(observationId));
 
 				return result;
 			}
@@ -679,8 +683,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 //					Bg process for userGroup filter rule
 					observaitonService.bgfilterRule(request, observationId);
 
-					logActivities.LogActivity(request, description, observationId, observationId, "observation",
-							observation.getMaxVotedRecoId(), "obv unlocked",
+					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+							observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
 							observaitonService.generateMailData(observationId));
 					return result;
 				}

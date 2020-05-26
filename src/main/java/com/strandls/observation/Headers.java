@@ -3,7 +3,6 @@
  */
 package com.strandls.observation;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
 import com.strandls.activity.controller.ActivitySerivceApi;
@@ -22,56 +21,47 @@ import com.strandls.utility.controller.UtilityServiceApi;
  */
 public class Headers {
 
-	public ActivitySerivceApi addActivityHeaders(ActivitySerivceApi activityService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public ActivitySerivceApi addActivityHeaders(ActivitySerivceApi activityService, String authHeader) {
 		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return activityService;
 	}
 
-	public TraitsServiceApi addTraitsHeaders(TraitsServiceApi traitService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public TraitsServiceApi addTraitsHeaders(TraitsServiceApi traitService, String authHeader) {
 		traitService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return traitService;
 	}
 
-	public ResourceServicesApi addResourceHeaders(ResourceServicesApi resourceService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public ResourceServicesApi addResourceHeaders(ResourceServicesApi resourceService, String authHeader) {
 		resourceService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return resourceService;
 	}
 
-	public TaxonomyServicesApi addTaxonomyHeader(TaxonomyServicesApi taxonomyService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public TaxonomyServicesApi addTaxonomyHeader(TaxonomyServicesApi taxonomyService, String authHeader) {
 		taxonomyService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return taxonomyService;
 	}
 
-	public UserGroupSerivceApi addUserGroupHeader(UserGroupSerivceApi ugService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public UserGroupSerivceApi addUserGroupHeader(UserGroupSerivceApi ugService, String authHeader) {
 		ugService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return ugService;
 	}
 
-	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, String authHeader) {
 		utilityServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return utilityServices;
 	}
 
-	public UserServiceApi addUserHeaders(UserServiceApi userService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public UserServiceApi addUserHeaders(UserServiceApi userService, String authHeader) {
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return userService;
 	}
 
-	public UploadApi addFileUploadHeader(UploadApi uploadService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public UploadApi addFileUploadHeader(UploadApi uploadService, String authHeader) {
 		uploadService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return uploadService;
 	}
 
-	public CustomFieldServiceApi addCFHeaders(CustomFieldServiceApi cfService, HttpServletRequest request) {
-		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+	public CustomFieldServiceApi addCFHeaders(CustomFieldServiceApi cfService, String authHeader) {
 		cfService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return cfService;
 	}

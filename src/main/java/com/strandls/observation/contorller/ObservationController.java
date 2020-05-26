@@ -29,7 +29,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;

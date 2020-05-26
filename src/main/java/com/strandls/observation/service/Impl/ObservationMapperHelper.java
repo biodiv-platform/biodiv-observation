@@ -15,12 +15,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
@@ -381,7 +382,8 @@ public class ObservationMapperHelper {
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
 			if (!fileList.isEmpty()) {
-				fileUploadService = headers.addFileUploadHeader(fileUploadService, request);
+				fileUploadService = headers.addFileUploadHeader(fileUploadService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
 				fileMap = fileUploadService.moveFiles(fileList);
 				if (fileMap == null || fileMap.isEmpty())
 					return null;
