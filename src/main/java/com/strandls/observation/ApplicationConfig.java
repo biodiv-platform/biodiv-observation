@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Injector;
+import com.strandls.authentication_utility.filter.InterceptorModule;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -105,6 +106,8 @@ public class ApplicationConfig extends Application {
 
 			}
 		});
+
+		singletons.add(new InterceptorModule());
 
 		return singletons;
 	}
