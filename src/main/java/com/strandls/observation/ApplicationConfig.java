@@ -20,8 +20,17 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
+import org.jvnet.hk2.guice.bridge.api.GuiceIntoHK2Bridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Injector;
+import com.strandls.authentication_utility.filter.InterceptorModule;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -65,6 +74,42 @@ public class ApplicationConfig extends Application {
 			logger.error(e.getMessage());
 		}
 
+	}
+
+	@Override
+	public Set<Object> getSingletons() {
+
+		Set<Object> singletons = new HashSet<Object>();
+		singletons.add(new ContainerLifecycleListener() {
+
+			@Override
+			public void onStartup(Container container) {
+				ServletContainer servletContainer = (ServletContainer) container;
+				ServiceLocator serviceLocator = container.getApplicationHandler().getInjectionManager()
+						.getInstance(ServiceLocator.class);
+				GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
+				GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
+				Injector injector = (Injector) servletContainer.getServletContext()
+						.getAttribute(Injector.class.getName());
+				guiceBridge.bridgeGuiceInjector(injector);
+			}
+
+			@Override
+			public void onShutdown(Container container) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void onReload(Container container) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
+		singletons.add(new InterceptorModule());
+
+		return singletons;
 	}
 
 	@Override

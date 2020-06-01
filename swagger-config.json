@@ -7,7 +7,7 @@
   "artifactVersion": "1.0.0-SNAPSHOT",
   "fullJavaUtil": true,
   "dateLibrary": "legacy",
-  "library": "jersey1",
+  "library": "jersey2",
   "developerName": "Abhishek Kumar Rudra",
   "developerEmail": "abhishek.rudra@strandls.com",
   "java8": true

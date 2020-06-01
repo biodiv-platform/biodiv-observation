@@ -3,7 +3,8 @@
  */
 package com.strandls.observation.es.util;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 
