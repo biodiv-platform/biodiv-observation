@@ -36,7 +36,6 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
-import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.naksha.controller.LayerServiceApi;
@@ -118,8 +117,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new ObservationControllerModule(), new FilterModule(), new ObservationDAOModule(),
-				new ObservationServiceModule(), new ESUtilModule());
+		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
+				new ESUtilModule());
 
 		try {
 			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
