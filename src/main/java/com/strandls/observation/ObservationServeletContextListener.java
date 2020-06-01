@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.servlet.ServletContextEvent;
 
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
@@ -32,9 +33,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.servlet.ServletModule;
 import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
-import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.naksha.controller.LayerServiceApi;
@@ -50,8 +51,6 @@ import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
-import com.sun.jersey.guice.JerseyServletModule;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 /**
  * @author Abhishek Rudra
@@ -64,7 +63,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 	@Override
 	protected Injector getInjector() {
 
-		Injector injector = Guice.createInjector(new JerseyServletModule() {
+		Injector injector = Guice.createInjector(new ServletModule() {
 			@Override
 			protected void configureServlets() {
 
@@ -95,6 +94,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				ObjectMapper objectMapper = new ObjectMapper();
@@ -113,11 +113,12 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
-				serve("/api/*").with(GuiceContainer.class, props);
+				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new ObservationControllerModule(), new FilterModule(), new ObservationDAOModule(),
-				new ObservationServiceModule(), new ESUtilModule());
+		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
+				new ESUtilModule());
 
 		try {
 			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();

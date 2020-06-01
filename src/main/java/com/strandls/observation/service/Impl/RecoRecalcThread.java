@@ -3,7 +3,8 @@
  */
 package com.strandls.observation.service.Impl;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.observation.service.RecommendationService;
 
 /**

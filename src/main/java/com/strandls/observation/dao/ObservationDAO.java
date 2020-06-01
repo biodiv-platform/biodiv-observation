@@ -11,7 +11,8 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.util.AbstractDAO;
 

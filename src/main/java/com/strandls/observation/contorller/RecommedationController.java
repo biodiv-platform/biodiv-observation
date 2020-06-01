@@ -20,7 +20,8 @@ import javax.ws.rs.core.Response.Status;
 
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.ApiConstants;

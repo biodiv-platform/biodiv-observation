@@ -11,8 +11,6 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
-import com.strandls.observation.es.util.ObservationListPageMapper;
-import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
