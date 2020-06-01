@@ -9,7 +9,10 @@ import java.util.Map;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
+import com.strandls.observation.es.util.ObservationListPageMapper;
+import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
@@ -37,4 +40,8 @@ public interface ObservationListService {
 	public List<ObservationHomePage> getObservation(String resourceUrls);
 
 	public ObservationListMinimalData getObservationMinimal(String observationId);
+	
+	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
+			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
+			String termsAggregationField);	
 }

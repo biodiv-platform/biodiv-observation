@@ -13,6 +13,8 @@ import org.pac4j.core.profile.CommonProfile;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
+import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -133,5 +135,7 @@ public interface ObservationService {
 
 	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
 			ResourceRating resourceRating);
-
+	
+	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, String observationId);
+	
 }

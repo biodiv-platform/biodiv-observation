@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.contorller;
 
+import java.io.File;
+import java.security.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import javax.ws.rs.core.UriInfo;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.google.inject.Inject;
+import com.opencsv.CSVWriter;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
@@ -42,8 +45,12 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
+import com.strandls.observation.es.util.ObservationUtilityFunctions;
+import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -106,7 +113,10 @@ public class ObservationController {
 
 	@Inject
 	private ESUtility esUtility;
-
+	
+	@Inject 
+	private ObservationDownloadLogDAO downloadLogDao;
+	
 	@Inject
 	private ObservationListService observationListService;
 
@@ -349,6 +359,7 @@ public class ObservationController {
 			@QueryParam("termsAggregationField") String termsAggregationField, @QueryParam("view") String view,
 			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
 			@QueryParam("district") String district, @QueryParam("state") String state, @QueryParam("tags") String tags,
+			@QueryParam("publicationgrade") String publicationGrade,
 			@Context UriInfo uriInfo) {
 
 		try {
@@ -403,7 +414,7 @@ public class ObservationController {
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags);
+					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
 
 			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
 					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
@@ -913,9 +924,7 @@ public class ObservationController {
 	@Path(ApiConstants.USERGROUP + ApiConstants.CREATEOBSERVATION + "/{userGroupId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
 	@ApiOperation(value = "Get the observation create page data for ug context", notes = "Returns the create page data", response = ObservationUGContextCreatePageData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
 
@@ -1080,5 +1089,145 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+	
+	@GET
+	@Path(ApiConstants.LISTCSV + "/{index}/{type}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 
+	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response observationListCsv(@PathParam("index") String index, @PathParam("type") String type,
+			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
+			@DefaultValue("") @QueryParam("user") String user,
+			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
+			@DefaultValue("") @QueryParam("webaddress") String webaddress,
+			@DefaultValue("") @QueryParam("speciesName") String speciesName,
+			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
+			@DefaultValue("") @QueryParam("months") String months,
+			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
+			@DefaultValue("lastrevised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
+			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
+			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
+			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
+			@QueryParam("recoName") String recoName,
+			@DefaultValue("265799") @QueryParam("classification") String classificationid,
+			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
+			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
+			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
+			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
+			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
+			@QueryParam("termsAggregationField") String termsAggregationField,
+			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
+			@QueryParam("district") String district, @QueryParam("state") String state, @QueryParam("tags") String tags,
+			@QueryParam("customfields")List<String> customfields, 
+			@QueryParam("taxonomic") List<String> taxonomic,
+			@QueryParam("spatial") List<String> spatial, 
+			@QueryParam("traits") List<String> traits,
+			@QueryParam("temporal") List<String> temporal,
+			@QueryParam("misc") List<String> misc,
+			@QueryParam("publicationgrade")String publicationGrade,
+			@Context UriInfo uriInfo) {
+
+		try {
+			System.out.println(customfields.isEmpty() +" "+taxonomic.isEmpty());
+			Integer max = 500;
+			Integer offset = 0;
+//			List<ObservationListElasticMapping> result = new ArrayList<ObservationListElasticMapping>();
+			Integer epochSize = 0;
+			
+			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("trait"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+			Map<String, List<String>> customParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("custom"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+			MapBounds bounds = null;
+			if (top != null || bottom != null || left != null || right != null) {
+				bounds = new MapBounds();
+				bounds.setBottom(bottom);
+				bounds.setLeft(left);
+				bounds.setRight(right);
+				bounds.setTop(top);
+			}
+			List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
+			if (location != null) {
+				double[] point = Stream.of(location.split(",")).mapToDouble(Double::parseDouble).toArray();
+				for (int i = 0; i < point.length; i = i + 2) {
+					String singlePoint = point[i + 1] + "," + point[i];
+
+					int comma = singlePoint.indexOf(',');
+					if (comma != -1) {
+						MapGeoPoint geoPoint = new MapGeoPoint();
+						geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
+						geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
+						polygon.add(geoPoint);
+					}
+				}
+			}
+
+			MapBoundParams mapBoundsParams = new MapBoundParams();
+			mapBoundsParams.setBounds(bounds);
+			mapBoundsParams.setPolygon(polygon);
+			
+			MapSearchParams mapSearchParams = new MapSearchParams();
+			mapSearchParams.setSortOn(sortOn);
+			mapSearchParams.setSortType(SortTypeEnum.DESC);
+			mapSearchParams.setMapBoundParams(mapBoundsParams);
+			
+			ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+			String filePath = obUtil.getCsvFileNameDownloadPath();
+			CSVWriter writer = obUtil.getCsvWriter(filePath);
+			obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, 
+					temporal, misc));
+			do {
+			mapSearchParams.setFrom(offset);
+			mapSearchParams.setLimit(max);
+
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
+			
+			List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type, mapSearchQuery,
+					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField);
+			
+//			result.addAll(epochSet);
+			epochSize = epochSet.size();
+			offset = offset + max;
+			obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, 
+					temporal, misc);
+			}while(epochSize >= max);
+			obUtil.closeWriter();
+			downloadLogDao.save(obUtil.createDownloadLogEntity(filePath, 1111L, uriInfo.getRequestUri().toString(), 
+					"test test Ashish", 0L));
+			System.out.println("Successful operation");
+			return Response.status(Status.OK).build();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.PUBLICATIONGRADE + "/{index}/{type}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = PublicationGrade.class)
+	@ApiResponses(value = { @ApiResponse (code = 400, message = "unable to fetch the data", response = String.class) })
+	public Response getObservationPublicationGrade(@PathParam("index") String index, 
+			@PathParam("type")String type, @QueryParam("documentId")String documentId) {
+		ObservationListElasticMapping obervation = observationService.getObservationPublicationGrade(index, type, documentId);
+		
+		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+		PublicationGrade observationGrade = obUtil.GradeObservation(obervation);
+		return Response.status(Status.OK).entity(observationGrade).build();
+
+}
+	
 }

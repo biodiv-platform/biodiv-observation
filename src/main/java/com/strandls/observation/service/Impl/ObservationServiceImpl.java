@@ -18,6 +18,7 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
@@ -27,7 +28,9 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
@@ -39,6 +42,8 @@ import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
+import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.ListPagePermissions;
@@ -163,6 +168,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private Headers headers;
+	
+	@Inject 
+	private ObjectMapper objectMapper;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -1358,6 +1366,20 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 
+		return null;
+	}
+	@Override
+	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, 
+			String observationId) {
+		try {
+			MapDocument document =  esService.fetch(index, type, observationId);
+			return objectMapper.readValue(String.valueOf(document.getDocument()),
+					ObservationListElasticMapping.class);
+
+			
+		} catch (ApiException | IOException e) {
+			logger.error(e.getMessage());
+		}
 		return null;
 	}
 }

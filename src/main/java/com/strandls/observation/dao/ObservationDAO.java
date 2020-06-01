@@ -59,7 +59,6 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		} finally {
 			session.close();
 		}
-
 		return result;
 	}
 
