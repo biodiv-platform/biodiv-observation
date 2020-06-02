@@ -4,7 +4,7 @@
   "invokerPackage": "com.strandls.observation",
   "groupId": "com.strandls.biodiv",
   "artifactId": "observation-client",
-  "artifactVersion": "1.0.0-SNAPSHOT",
+  "artifactVersion": "1.0.0",
   "fullJavaUtil": true,
   "dateLibrary": "legacy",
   "library": "jersey2",
