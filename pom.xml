@@ -5,7 +5,7 @@
 	<groupId>com.strandls.observation</groupId>
 	<artifactId>observation-api</artifactId>
 	<packaging>war</packaging>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>biodiv-observation-api</name>
 	<url>https://github.com/strandls/biodiv-observation</url>
 
@@ -239,67 +239,67 @@
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>traits-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>resource-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>taxonomy-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>userGroup-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>esmodule-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>naksha-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>utility-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>authentication-utility</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 		
 		<dependency>
 		    <groupId>com.strandls.biodiv</groupId>
 		    <artifactId>user-client</artifactId>
-		    <version>1.0.0-SNAPSHOT</version>
+		    <version>1.0.0</version>
 		</dependency>
 		
 		<dependency>
 		    <groupId>com.strandls.biodiv</groupId>
 		    <artifactId>activity-client</artifactId>
-		    <version>1.0.0-SNAPSHOT</version>
+		    <version>1.0.0</version>
 		</dependency>
 		
 		<dependency>
 		    <groupId>biodiv</groupId>
 		    <artifactId>file-upload-client</artifactId>
-		    <version>1.0.0-SNAPSHOT</version>
+		    <version>1.0.0</version>
 		</dependency>
 		
 	</dependencies>
