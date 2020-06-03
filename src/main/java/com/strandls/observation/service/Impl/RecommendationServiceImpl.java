@@ -214,14 +214,17 @@ public class RecommendationServiceImpl implements RecommendationService {
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
 		if (createObservation) {
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation",
-					recoVote.getId(), "Suggested species name", null);
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", recoVote.getId(), "Suggested species name", null);
 
 			return maxRecoVote;
 		} else {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation",
-					recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
+//			Bg process for userGroup filter rule
+			observaitonService.bgfilterRule(request, observationId);
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", recoVote.getId(), "Suggested species name",
+					observaitonService.generateMailData(observationId));
 			return maxRecoVote;
 		}
 
@@ -394,13 +397,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
 
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
 
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation", observationId,
-					"Suggestion removed", observaitonService.generateMailData(observationId));
+			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+					observationId, "observation", observationId, "Suggestion removed",
+					observaitonService.generateMailData(observationId));
 
 			return result;
 
@@ -506,8 +512,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 						logger.error(e.getMessage());
 					}
 
-					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation",
-							recoVote.getId(), "Agreed on species name",
+					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+							observationId, "observation", recoVote.getId(), "Agreed on species name",
 							observaitonService.generateMailData(observationId));
 
 				}
@@ -515,6 +521,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 			Long maxRecoVote = maxRecoVote(observationId);
 			Long newMaxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+//			Bg process for userGroup filter rule
+			observaitonService.bgfilterRule(request, observationId);
 			RecoShow result = fetchCurrentRecoState(observationId, newMaxRecoVote);
 
 			return result;
@@ -614,9 +622,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
 
-				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation",
-						recoVote.getId(), "obv locked", observaitonService.generateMailData(observationId));
+				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+						observationId, "observation", recoVote.getId(), "obv locked",
+						observaitonService.generateMailData(observationId));
 
 				return result;
 			}
@@ -669,8 +680,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 					description = objectMapper.writeValueAsString(rvActivity);
 
-					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId, "observation",
-							observation.getMaxVotedRecoId(), "obv unlocked",
+//					Bg process for userGroup filter rule
+					observaitonService.bgfilterRule(request, observationId);
+
+					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+							observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
 							observaitonService.generateMailData(observationId));
 					return result;
 				}

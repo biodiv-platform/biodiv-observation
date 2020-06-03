@@ -101,7 +101,9 @@ public interface ObservationService {
 
 	public Long getObservationAuthor(Long observationId);
 
-	public void applyFilterObservation(String userGroupIds);
+	public void applyFilterObservationPosting(String userGroupId);
+
+	public void applyFilterObservationRemoving(String userGroupId);
 
 	public void applyGeoPrivacyObservaiton();
 
@@ -133,5 +135,7 @@ public interface ObservationService {
 
 	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
 			ResourceRating resourceRating);
+
+	public void bgfilterRule(HttpServletRequest request, Long observationId);
 
 }
