@@ -26,7 +26,7 @@ public enum ObservationIndex {
 	customFieldRangeMinValue("custom_fields.custom_field.custom_field_values.min_range"),
 	customFieldRangeMaxValue("custom_fields.custom_field.custom_field_values.max_range"), tags("tags.name"),
 	resource("observation_resource.file_name.keyword"),
-	publicationgrade("publication_grade");
+	publicationgrade("is_publication_grade");
 
 	private String field;
 

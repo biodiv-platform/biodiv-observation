@@ -95,8 +95,8 @@ public class ObservationUtilityFunctions {
 	public void insertListToCSV(List<ObservationListElasticMapping>records, CSVWriter writer, 
 			List<String> customfields,  List<String> taxonomic, List<String> spatial, 
 			List<String> traits, List<String> temporal, List<String> misc) {
+		
 		List<String>coreHeaders = Arrays.asList(csvCoreHeaders);
-		//List<String>optionalHeaders = Arrays.asList(fields.split(" "));
 		
 		List<String[]> rowSets = new ArrayList<String[]>();
 		for (ObservationListElasticMapping record : records ) {
@@ -104,25 +104,12 @@ public class ObservationUtilityFunctions {
 			row.add(record.getObservationId().toString());
 			row.add(record.getUser().getName());
 			row.add(record.getPlaceName());
-			// fetch flag notes 
-//			String flagNotes = "";
-//			for(Flags flag : record.getFlags()) {
-//				if(flag.getFlag() != null)
-//					flagNotes += flag.getNotes()+" |";
-//			}
-//			if(flagNotes !="")
-//				row.add(flagNotes.substring(0, flagNotes.length()-2));
-//			else
-//				row.add(null);
 			row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
 			row.add(record.getNoOfIdentification());
 			row.add(record.getGeoPrivacy().toString());
 			row.add(record.getCreatedOn());
 			row.add(record.getReprImageUrl());
-//			row.add(record.getNoOfAudios().toString());
-//			row.add(record.getNoOfImages().toString());
-//			row.add(record.getNoOfVideos().toString());
-//			row.add(record.getReverseGeocodedName());
+
 			row.add(record.getSpeciesGroup());
 			row.add(record.getDateAccuracy());
 			row.add(record.getIsLocked().toString());
@@ -186,20 +173,19 @@ public class ObservationUtilityFunctions {
 		observationGrade.setHasMediaEvidence((observation.getNoOfAudios()!=0 || observation.getNoOfImages()!=0 
 				|| observation.getNoOfVideos()!=0) ? true : false);
 		
-		observationGrade.setHasDateDefined(observation.getCreatedOn()!=null ? true : false);
+		observationGrade.setHasDateDefined(observation.getFromDate()!=null ? true : false);
 		observationGrade.setIsLocationDefined((observation.getLatitude()!=null || 
 				observation.getLongitude()!=null)? true : false );
 		
 		observationGrade.setHasfamilyRankOrLower(observation.getMaxVotedReco()!=null ?  
-				(observation.getMaxVotedReco().getRank() > 5 ? true : false): false);
+				(observation.getMaxVotedReco().getRank() >= 5 ? true : false): false);
 		observationGrade.setHasTaxonName(observation.getMaxVotedReco() !=null ?
 				(observation.getMaxVotedReco().getScientific_name()!=null ? true : false): false);
 		
-		observationGrade.setIsIdValidated(( Integer.parseInt(observation.getNoOfIdentification()) > 0 || 
-				(observation.getAllRecoVotes()!=null &&  observation.getAllRecoVotes().size() >=2 
-				? true : false) ? true : false ));
+		observationGrade.setIsIdValidated(observation.getIsLocked() == true || 
+				(observation.getRecoVoteCount()>=2 ? true : false) ? true : false);
 		
-		observationGrade.setIsNotFlagged(observation.getFlagCount() > 0 ? true : false);
+		observationGrade.setIsNotFlagged(observation.getFlagCount() == 0 ? true : false);
 		observationGrade.setIsNativeObservation(observation.getDatasetTitle()!=null ? 
 				(observation.getDatasetTitle().toLowerCase().contains("gbif") ? false : true) : true);
 
@@ -212,12 +198,8 @@ public class ObservationUtilityFunctions {
 		if (names != null) {
 			for (Common_names name : names) {
 				if(name !=null )
-//					value.concat(name.getCommon_name() !=null ? name.getCommon_name() : null).
-//					concat(":").concat(name.getLanguage_name() != null ? name.getLanguage_name() : null).
-//					concat(" | ");
 					value +=name.getCommon_name() + ":" + name.getLanguage_name() + " | ";
 			}
-			//System.out.println("in here");
 			if(value.length() >3)
 				value  = value.substring(0, value.length()-3);
 		}

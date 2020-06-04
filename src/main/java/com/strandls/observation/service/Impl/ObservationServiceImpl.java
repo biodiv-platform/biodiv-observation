@@ -1387,8 +1387,6 @@ public class ObservationServiceImpl implements ObservationService {
 			MapDocument document =  esService.fetch(index, type, observationId);
 			return objectMapper.readValue(String.valueOf(document.getDocument()),
 					ObservationListElasticMapping.class);
-
-			
 		} catch (ApiException | IOException e) {
 			logger.error(e.getMessage());
 		}

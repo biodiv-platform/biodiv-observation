@@ -39,7 +39,7 @@ public class ObservationListElasticMapping {
 	private Boolean geoPrivacy;
 	private String datasetTitle;
 	private LocationInformation locationInformation;
-
+	private Integer recoVoteCount;
 	private UserIbp user;
 	private List<Facts> facts;
 	private List<Flags> flags;
@@ -200,6 +200,11 @@ public class ObservationListElasticMapping {
 	private void unpackLocationInformation(LocationInformation location) {
 		locationInformation = location;
 	}
+	
+	@JsonProperty(value = "reco_vote_count")
+	private void unpackRecoVoteCount(Integer count) {
+		recoVoteCount = count;
+	}
 
 
 //	---------USER IBP------------
@@ -285,7 +290,7 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 			Long noOfImages, Long noOfAudios, Long noOfVideos, String reprImageUrl, Boolean isLocked,
 			String locationScale, Double latitude, Double longitude, String dateAccuracy, String fromDate,
 			String toDate, String observedInMonth, Boolean geoPrivacy, String datasetTitle,
-			LocationInformation locationInformation, UserIbp user, List<Facts> facts, List<Flags> flags,
+			LocationInformation locationInformation, Integer recoVoteCount, UserIbp user, List<Facts> facts, List<Flags> flags,
 			Max_voted_reco maxVotedReco, List<All_reco_vote> allRecoVotes, List<User_group_observations> userGroup,
 			List<Custom_fields> customFields, List<com.strandls.observation.es.util.Tags> tags, Boolean containsMedia,
 			String uploadProtocol, Integer flagCount, String organismRemarks, String annotations) {
@@ -313,6 +318,7 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		this.geoPrivacy = geoPrivacy;
 		this.datasetTitle = datasetTitle;
 		this.locationInformation = locationInformation;
+		this.recoVoteCount = recoVoteCount;
 		this.user = user;
 		this.facts = facts;
 		this.flags = flags;
@@ -467,10 +473,14 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 	public String getOrganismRemarks() {
 		return organismRemarks;
 	}
-
 	public String getAnnotations() {
 		return annotations;
 	}
+
+	public Integer getRecoVoteCount() {
+		return recoVoteCount;
+	}
+
 
 	
 
