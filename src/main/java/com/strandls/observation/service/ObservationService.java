@@ -13,8 +13,10 @@ import org.pac4j.core.profile.CommonProfile;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
+import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -136,5 +138,8 @@ public interface ObservationService {
 			ResourceRating resourceRating);
 	
 	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, String observationId);
+	
+	public List<DownloadLog> fetchDownloadLog(List<Long> authorId, String fileType, Integer offSet, Integer limit);
+
 	
 }

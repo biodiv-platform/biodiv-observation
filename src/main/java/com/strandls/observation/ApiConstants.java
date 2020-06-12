@@ -71,5 +71,6 @@ public class ApiConstants {
 	public static final String LIST = "/list";
 	public static final String AGGREGATE = "/aggregate";
 	public static final String LISTCSV = "/listcsv";
+	public static final String LISTDOWNLOAD = "/listdownload";
 	
 }

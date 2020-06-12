@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.QueryParam;
 
@@ -47,7 +49,7 @@ public class ObservationUtilityFunctions {
 			"kingdom","phylum","class","order","superfamily","family","genus","species"
 			};
 	private final Integer hierarchyDepth = 8;
-	private final String csvFileDownloadPath = "/home/ashish/testFiles";
+	private final String csvFileDownloadPath = "/app/data/biodiv/data-archive/listpagecsv";
 	private CSVWriter writer;
 
 	public String getCsvFileNameDownloadPath() {
@@ -66,16 +68,20 @@ public class ObservationUtilityFunctions {
 	public List<String[]> getCsvHeaders(List<String> customfields,  List<String> taxonomic, List<String> spatial, 
 			List<String> traits, List<String> temporal, List<String> misc) {
 		List<String[]> headers = new ArrayList<String[]>();
-		List<String> header = Arrays.asList(csvCoreHeaders);
-		header.addAll(getOptionalHeaders(customfields,taxonomic,spatial,traits,temporal, misc));
-		System.out.println(header);
+//		List<String> header = Arrays.asList(csvCoreHeaders);
+		List<String> optionalHeaders = getOptionalHeaders(customfields,taxonomic,spatial,traits,temporal, misc);
+		//header.addAll(optiona);
+		List<String> header = Stream.concat(Arrays.asList(csvCoreHeaders).stream(), 
+				optionalHeaders.stream())
+                .collect(Collectors.toList());
+//		System.out.println(header);
 		headers.add(header.stream().toArray(String[]::new));
 		return headers;
 	}
 	
 	 
 	public DownloadLog createDownloadLogEntity(String filePath, Long authorId, String filterURL,
-			String notes, Long offSet)
+			String notes, Long offSet, String status, String type)
 	{
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		DownloadLog entity = new DownloadLog();
@@ -85,8 +91,8 @@ public class ObservationUtilityFunctions {
 		entity.setNotes(notes);
 		entity.setOffsetParam(offSet);
 		entity.setCreatedOn(timestamp);
-		entity.setStatus("SUCCESS");
-		entity.setType("CSV");
+		entity.setStatus(status);
+		entity.setType(type);
 		entity.setVersion(2L);
 		return entity;
 		
@@ -125,19 +131,40 @@ public class ObservationUtilityFunctions {
 					getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy()) : 
 						new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null))) : 
 							new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
+//			System.out.println(!customfields.isEmpty());
+			List<String> optionalHeader = null;
+			if(!customfields.isEmpty()) {
+				optionalHeader = Arrays.asList(customfields.get(0).split(","));
+				Collection<String> values = fetchCustomFieldForCsv(optionalHeader, 
+						record.getCustomFields());
+				row.addAll(values);}
 			
-			if(!customfields.isEmpty())
-				row.addAll(fetchCustomFieldForCsv(customfields, record.getCustomFields()));
-			if(!taxonomic.isEmpty())
-				row.addAll(fetchTaxonomicForCsv(taxonomic, record.getAllRecoVotes()));
-			if(!spatial.isEmpty())
-				row.addAll(fetchSpatialForCsv(spatial, record.getLocationInformation(),record.getReverseGeocodedName()));
-			if(!traits.isEmpty())
-				row.addAll(fetchTraitsForCsv(traits, record.getFacts()));
-			if(!temporal.isEmpty())
-				row.addAll(fetchTemporalForCsv(temporal, record));
-			if(!misc.isEmpty())
-				row.addAll(fetchMiscForCsv(misc, record));
+			if(!taxonomic.isEmpty()) {
+				optionalHeader = Arrays.asList(taxonomic.get(0).split(","));
+				Collection<String> values = fetchTaxonomicForCsv(optionalHeader, record.getAllRecoVotes(), 
+						record.getMaxVotedReco());
+				row.addAll(values);
+			}
+			if(!spatial.isEmpty()){
+				optionalHeader = Arrays.asList(spatial.get(0).split(","));
+				Collection<String> values = fetchSpatialForCsv(optionalHeader, record.getLocationInformation(),
+						record.getReverseGeocodedName());
+				row.addAll(values);}
+			if(!traits.isEmpty()) {
+				optionalHeader = Arrays.asList(traits.get(0).split(","));
+				Collection<String> values = fetchTraitsForCsv(optionalHeader, record.getFacts());
+				row.addAll(values);
+			}
+			if(!temporal.isEmpty()) {
+				optionalHeader = Arrays.asList(temporal.get(0).split(","));
+				Collection<String> values = fetchTemporalForCsv(optionalHeader, record);
+				row.addAll(values);
+			}
+			if(!misc.isEmpty()) {
+				optionalHeader = Arrays.asList(misc.get(0).split(","));
+				Collection<String> values = fetchMiscForCsv(optionalHeader, record);
+				row.addAll(values);
+			}
 			
 			rowSets.add(row.stream().toArray(String[]::new));
 		}
@@ -226,18 +253,30 @@ public class ObservationUtilityFunctions {
 	
 	private List<String> getOptionalHeaders(List<String> customfields, List<String> taxonomic, List<String> spatial, List<String> traits, List<String> temporal, List<String> misc){
 		List<String> optionalHeader = new ArrayList<String>();
-		if(!customfields.isEmpty())
+		if(!customfields.isEmpty()) {
+			customfields = Arrays.asList(customfields.get(0).split(","));
 			optionalHeader.addAll(customfields);
-		if(!taxonomic.isEmpty())
+		}
+		if(!taxonomic.isEmpty()) {
+			taxonomic = Arrays.asList(taxonomic.get(0).split(","));
 			optionalHeader.addAll(taxonomic);
-		if(!spatial.isEmpty())
+		}
+		if(!spatial.isEmpty()) {
+			spatial = Arrays.asList(spatial.get(0).split(","));
 			optionalHeader.addAll(spatial);
-		if(!traits.isEmpty())
+		}
+		if(!traits.isEmpty()) {
+			traits = Arrays.asList(traits.get(0).split(","));
 			optionalHeader.addAll(traits);
-		if(!temporal.isEmpty())
+		}
+		if(!temporal.isEmpty()) {
+			temporal = Arrays.asList(temporal.get(0).split(","));
 			optionalHeader.addAll(temporal);
-		if(!misc.isEmpty())
+		}
+		if(!misc.isEmpty()) {
+			misc = Arrays.asList(misc.get(0).split(","));
 			optionalHeader.addAll(misc);
+		}
 		return optionalHeader;
 	}
 	
@@ -273,9 +312,11 @@ public class ObservationUtilityFunctions {
 		
 	}
 	
-	private Collection<String> fetchTaxonomicForCsv(List<String>taxonomic, List<All_reco_vote> allRecoVote) {
+	private Collection<String> fetchTaxonomicForCsv(List<String>taxonomic, List<All_reco_vote> allRecoVote, Max_voted_reco maxVotedReco) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(taxonomic);
-		String[] taxonomicValues = {"previousIdentifications", "previousVernacularNames"}; 
+		String[] taxonomicValues = {"previousIdentifications", 
+				"previousVernacularNames", "SpeciesPageID",
+						"higherClassificationID"}; 
 		if(allRecoVote != null) {
 			for (All_reco_vote reco : allRecoVote) {
 				String name = reco.getScientific_name()!=null ? reco.getScientific_name().getName(): null;
@@ -299,6 +340,21 @@ public class ObservationUtilityFunctions {
 					map.replace(taxonomicValues[1], recoId+"-"+commonNameValue.substring(0, commonNameValue.length()-1)+ " | ");
 				else
 					map.replace(taxonomicValues[1], keyValue + recoId+"-"+commonNameValue.substring(0, commonNameValue.length()-1)+ " | ");
+				}
+			}
+		}
+		if(maxVotedReco != null) {
+//			System.out.println("-----"+maxVotedReco.getSpecies_id());
+			map.replace(taxonomicValues[2], (maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString():null));
+			List<Hierarchy> hierarchy = maxVotedReco.getHierarchy();
+			if(hierarchy != null) {
+				String value = "";
+				for (Hierarchy level : hierarchy) {
+					value += "name:"+level.getNormalized_name()+"-rank:"+level.getRank()
+					+"-taxonID:"+level.getTaxon_id() + " | ";
+				}
+				if(value.length() > 3) {
+					map.replace(taxonomicValues[3], value);
 				}
 			}
 		}
@@ -354,7 +410,6 @@ public class ObservationUtilityFunctions {
 		map.replace(temporalFields[0], document.getObservedInMonth());
 		map.replace(temporalFields[1], document.getLastRevised());
 		return map.values();
-		
 	}
 	
 	private Collection<String> fetchMiscForCsv(List<String>misc, ObservationListElasticMapping document) {
@@ -379,7 +434,9 @@ public class ObservationUtilityFunctions {
 		for(Tags tag : tags ) {
 			value.concat(tag.getName()).concat(" | ");
 		}
-		return value.substring(0,value.length()-3);
+		if(value.length() >3)
+			return value.substring(0,value.length()-3);
+		return null;
 	}
 	
 	private String fetchFlags(List<Flags> flags) {
@@ -395,6 +452,7 @@ public class ObservationUtilityFunctions {
 	private LinkedHashMap<String, String>createLinkedHashMap(List<String> keys){
 		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 		for (String key : keys) {
+//			System.out.println(key);
 			map.put(key, null);
 		}
 		return map;

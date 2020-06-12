@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
@@ -46,6 +48,7 @@ import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
@@ -171,6 +174,9 @@ public class ObservationServiceImpl implements ObservationService {
 	
 	@Inject 
 	private ObjectMapper objectMapper;
+
+	@Inject
+	private ObservationDownloadLogDAO downloadLogDao;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -1381,7 +1387,8 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 	}
 	@Override
-	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, 
+	
+public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, 
 			String observationId) {
 		try {
 			MapDocument document =  esService.fetch(index, type, observationId);
@@ -1391,5 +1398,24 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public List<DownloadLog> fetchDownloadLog(List<Long> authorIds, String fileType, 
+			Integer offSet,Integer limit) {
+		String authorAttribute = "authorId";
+		String filetypeAttribute = "type";
+		String orderBy = "createdOn";
+		if(authorIds == null || authorIds.isEmpty()) {
+			authorAttribute = null;
+		}
+		if(fileType == null || fileType.isEmpty()) {
+			filetypeAttribute = null;
+		}
+		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria
+				(authorAttribute, filetypeAttribute, authorIds, 
+						fileType.toUpperCase(),
+						orderBy, offSet,limit);
+		return records;
 	}
 }

@@ -10,6 +10,7 @@ import com.opencsv.CSVWriter;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.service.ObservationListService;
 
 public class ObservationListCSVThread implements Runnable {
@@ -143,6 +144,11 @@ public class ObservationListCSVThread implements Runnable {
 		Integer max = 500;
 		Integer offset = 0;
 		Integer epochSize = 0;
+		String fileGenerationStatus = "Pending";
+		String fileType = "CSV";
+		DownloadLog entity = obUtil.createDownloadLogEntity(null,Long.parseLong(authorId), url,
+				notes, 0L, fileGenerationStatus,fileType);
+		downloadLogDao.save(entity);
 		do {
 			mapSearchParams.setFrom(offset);
 			mapSearchParams.setLimit(max);
@@ -160,10 +166,13 @@ public class ObservationListCSVThread implements Runnable {
 			epochSize = epochSet.size();
 			offset = offset + max;
 			obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc);
+
 		} while (epochSize >= max);
 		obUtil.closeWriter();
-		downloadLogDao.save(obUtil.createDownloadLogEntity(filePath, Long.parseLong(authorId), url,
-				notes, 0L));
+		fileGenerationStatus = "SUCCESS";
+		entity.setFilePath(filePath);
+		entity.setStatus(fileGenerationStatus);
+		downloadLogDao.update(entity);
 		System.out.println("Successful operation");
 		
 

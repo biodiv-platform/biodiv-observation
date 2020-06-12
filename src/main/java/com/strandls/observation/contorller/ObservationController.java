@@ -4,6 +4,7 @@
 package com.strandls.observation.contorller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,6 +55,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
+import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -1206,5 +1208,25 @@ public class ObservationController {
 		return Response.status(Status.OK).entity(observationGrade).build();
 
 	}
-
+	
+	@GET
+	@Path(ApiConstants.LISTDOWNLOAD)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value="fetch the download log table based on filter",
+	notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class)})
+	public Response fetchDownloadLog(@DefaultValue("")@QueryParam("authorid")String authorId,
+			@DefaultValue("")@QueryParam("filetype")String fileType,
+			@DefaultValue("-1")@QueryParam("offset")String offSet,
+			@DefaultValue("-1")@QueryParam("limit")String limit) {
+		List<Long> authorIds = new ArrayList<Long>();
+		if(!authorId.isEmpty() || authorId != null) {
+			authorIds = Arrays.asList(authorId.split(",")).stream().
+					map(Long::parseLong).collect(Collectors.toList());
+		}
+		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, 
+				Integer.parseInt(offSet),Integer.parseInt(limit));
+		return Response.status(Status.OK).entity(records).build();	
+	}
 }
