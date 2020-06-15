@@ -218,13 +218,6 @@ public class ObservationServiceImpl implements ObservationService {
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 
-				if (observation.getGeoPrivacy()) {
-					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
-							observation.getLongitude());
-					observation.setLatitude(latlon.get("lat"));
-					observation.setLongitude(latlon.get("lon"));
-				}
-
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
@@ -236,6 +229,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
+				if (observation.getGeoPrivacy()) {
+					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
+							observation.getLongitude());
+					observation.setLatitude(latlon.get("lat"));
+					observation.setLongitude(latlon.get("lon"));
+				}
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
