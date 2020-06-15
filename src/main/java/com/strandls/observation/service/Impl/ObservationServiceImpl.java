@@ -218,6 +218,11 @@ public class ObservationServiceImpl implements ObservationService {
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 
+				
+				observation.setVisitCount(observation.getVisitCount() + 1);
+				observationDao.update(observation);
+				
+				
 				if (observation.getGeoPrivacy()) {
 					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
 							observation.getLongitude());
@@ -234,8 +239,7 @@ public class ObservationServiceImpl implements ObservationService {
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, activityCount);
 
-				observation.setVisitCount(observation.getVisitCount() + 1);
-				observationDao.update(observation);
+				
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
