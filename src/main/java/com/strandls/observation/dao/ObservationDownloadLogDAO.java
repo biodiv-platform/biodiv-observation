@@ -6,8 +6,6 @@ package com.strandls.observation.dao;
 import javax.inject.Inject;
 
 import org.hibernate.SessionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.util.AbstractDAO;
@@ -18,7 +16,6 @@ import com.strandls.observation.util.AbstractDAO;
  */
 public class ObservationDownloadLogDAO extends AbstractDAO<DownloadLog, Long>{
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationDownloadLogDAO.class);
 	
 	@Inject
 	protected ObservationDownloadLogDAO(SessionFactory sessionFactory) {

@@ -65,6 +65,7 @@ import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.service.MailService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -122,6 +123,10 @@ public class ObservationController {
 
 	@Inject
 	private ObservationListService observationListService;
+	
+	@Inject
+	MailService mailService;
+	
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -1181,7 +1186,7 @@ public class ObservationController {
 					status,  taxonId,  recoName,  rank,  tahsil,  district,  state,
 					tags,  publicationGrade,  index,  type,  geoAggregationField,
 					geoAggegationPrecision,  onlyFilteredAggregation,  termsAggregationField,
-					authorId,  notes, uriInfo.getRequestUri().toString());
+					authorId,  notes, uriInfo.getRequestUri().toString(), mailService);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();

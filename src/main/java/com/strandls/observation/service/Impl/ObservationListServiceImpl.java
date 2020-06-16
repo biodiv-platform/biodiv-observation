@@ -28,7 +28,6 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
-import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -55,10 +54,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	@Inject
 	private ESUtility esUtility;
-	
-	@Inject
-	private ObservationDownloadLogDAO observationList;
-	
+
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
@@ -146,7 +142,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 				classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status, taxonId,
-				recoName, rank, tahsil, district, state, tags,publicationGrade);
+				recoName, rank, tahsil, district, state, tags, publicationGrade);
 
 		MapSearchQuery mapSearchQueryFilter;
 
@@ -158,7 +154,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(omiter, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse.setGroupSpeciesName(
 					getAggregate(index, type, "group_name.keyword", geoAggregationField, mapSearchQueryFilter)
 							.getGroupAggregation());
@@ -171,7 +167,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, omiter,
-					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse.setGroupStatus(getAggregate(index, type, "max_voted_reco.taxonstatus.keyword",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 		} else {
@@ -184,7 +180,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, omiter, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, omiter, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse.setGroupRank(getAggregate(index, type, "max_voted_reco.ranktext.keyword",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 		} else {
@@ -197,7 +193,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, omiter, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade);
 			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.keyword",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 
@@ -211,7 +207,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, omiter, webaddress, speciesName,
 					mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse.setGroupUserGroupName(getAggregate(index, type, "user_group_observations.name.keyword",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 		} else {
@@ -222,7 +218,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, omiter, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse
 					.setGroupFlag(getAggregate(index, type, "flag_count", geoAggregationField, mapSearchQueryFilter)
 							.getGroupAggregation());
@@ -234,7 +230,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, omiter, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
 			aggregationResponse
 					.setGroupValidate(getAggregate(index, type, "is_locked", geoAggregationField, mapSearchQueryFilter)
 							.getGroupAggregation());
@@ -344,7 +340,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
 							customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+							publicationGrade);
 
 					traitValuesAggregation = getTraitsAggregation(
 							getAggregate(index, type, "facts.trait_value.trait_aggregation.keyword",
@@ -380,7 +377,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
 						customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,publicationGrade);
+						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+						publicationGrade);
 
 				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
 					cfValuesAggregation = getCustomFieldAggregationFieldText(

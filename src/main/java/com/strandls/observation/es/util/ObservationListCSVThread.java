@@ -3,17 +3,18 @@ package com.strandls.observation.es.util;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import javax.inject.Inject;
 
 import com.opencsv.CSVWriter;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.service.MailService;
 import com.strandls.observation.service.ObservationListService;
 
 public class ObservationListCSVThread implements Runnable {
+	
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -65,7 +66,7 @@ public class ObservationListCSVThread implements Runnable {
 	private String authorId;
 	private String notes;
 	private String url;
-	
+	private MailService mailService;
 	
 	
 	public ObservationListCSVThread() {
@@ -83,7 +84,7 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url) {
+			String authorId, String notes, String url, MailService mailService) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -131,6 +132,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.authorId = authorId;
 		this.notes = notes;
 		this.url = url;
+		this.mailService = mailService;
 	}
 
 
@@ -173,6 +175,7 @@ public class ObservationListCSVThread implements Runnable {
 		entity.setFilePath(filePath);
 		entity.setStatus(fileGenerationStatus);
 		downloadLogDao.update(entity);
+		mailService.sendMail("1111");
 		System.out.println("Successful operation");
 		
 

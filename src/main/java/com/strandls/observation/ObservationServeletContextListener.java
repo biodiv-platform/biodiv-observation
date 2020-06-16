@@ -38,6 +38,7 @@ import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
+import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
@@ -91,7 +92,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				}
 
 				bind(Channel.class).toInstance(channel);
-
+				RabbitMQProducer producer = new RabbitMQProducer(channel);
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
@@ -114,6 +115,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				bind(RabbitMQProducer.class).toInstance(producer);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}

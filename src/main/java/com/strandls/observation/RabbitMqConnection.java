@@ -19,17 +19,16 @@ import com.strandls.observation.util.PropertyFileUtil;
  */
 public class RabbitMqConnection {
 
-	private final static String EXCHANGE_BIODIV = "biodiv";
 	private final static String QUEUE_ELASTIC = "elastic";
 	private final static String ROUTING_ELASTIC = "esmodule";
 	
-	public static final String MAIL_EXCHANGE;
+	public final static String EXCHANGE_BIODIV;
 	public static final String MAIL_QUEUE;
 	public static final String MAIL_ROUTING_KEY;
 	
 	static {
 		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
-		MAIL_EXCHANGE = properties.getProperty("rabbitmq_exchange");
+		EXCHANGE_BIODIV = properties.getProperty("rabbitmq_exchange");
 		MAIL_QUEUE = properties.getProperty("rabbitmq_queue");
 		MAIL_ROUTING_KEY = properties.getProperty("rabbitmq_routingKey");		
 	}
@@ -62,7 +61,7 @@ public class RabbitMqConnection {
 		channel.queueDeclare(QUEUE_ELASTIC, false, false, false, null);
 		channel.queueBind(QUEUE_ELASTIC, EXCHANGE_BIODIV, ROUTING_ELASTIC);
 		channel.queueDeclare(MAIL_QUEUE, false, false, false, null);
-		channel.queueBind(MAIL_QUEUE, MAIL_EXCHANGE, MAIL_ROUTING_KEY);
+		channel.queueBind(MAIL_QUEUE, EXCHANGE_BIODIV, MAIL_ROUTING_KEY);
 
 		return channel;
 
