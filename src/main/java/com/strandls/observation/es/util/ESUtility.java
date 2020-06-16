@@ -134,7 +134,8 @@ public class ESUtility {
 			String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String rank, String tahsil, String district, String state, String tags) {
+			String recoName, String rank, String tahsil, String district, String state, String tags
+			,String publicationGrade) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -608,7 +609,13 @@ public class ESUtility {
 		if (!maxvotedrecoids.isEmpty()) {
 			boolAndLists.add(assignBoolAndQuery("maxvotedrecoid", maxvotedrecoids));
 		}
-
+		
+// publication grade
+		List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
+		if(!publicationGradeChoice.isEmpty()) {
+			boolAndLists.add(assignBoolAndQuery(ObservationIndex.publicationgrade.getValue(), 
+					publicationGradeChoice));
+		}
 		/**
 		 * combine all the queries
 		 * 

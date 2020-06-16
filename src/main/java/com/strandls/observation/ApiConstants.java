@@ -55,8 +55,10 @@ public class ApiConstants {
 	public static final String MINIMAL = "/minimal";
 	public static final String RATING = "/rating";
 	public static final String RESOURCE = "/resource";
+
 	public static final String POSTING = "/posting";
 	public static final String REMOVING = "/removing";
+	public static final String PUBLICATIONGRADE = "/publicationgrade";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
@@ -71,5 +73,7 @@ public class ApiConstants {
 	// Observation List Controller
 	public static final String LIST = "/list";
 	public static final String AGGREGATE = "/aggregate";
-
+	public static final String LISTCSV = "/listcsv";
+	public static final String LISTDOWNLOAD = "/listdownload";
+	
 }

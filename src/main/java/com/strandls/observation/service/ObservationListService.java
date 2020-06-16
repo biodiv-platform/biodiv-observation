@@ -9,6 +9,7 @@ import java.util.Map;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
@@ -30,11 +31,15 @@ public interface ObservationListService {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
 			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state,
-			String tags);
+			String tags, String publicationGrade);
 
 	public FilterPanelData getAllFilter();
 
 	public List<ObservationHomePage> getObservation(String resourceUrls);
 
 	public ObservationListMinimalData getObservationMinimal(String observationId);
+	
+	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
+			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
+			String termsAggregationField);	
 }
