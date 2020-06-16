@@ -301,6 +301,19 @@
 		    <artifactId>file-upload-client</artifactId>
 		    <version>1.0.0</version>
 		</dependency>
+		<dependency>
+		    <groupId>com.strandls.biodiv</groupId>
+		    <artifactId>mail-utility</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
+		<dependency>
+		    <groupId>com.opencsv</groupId>
+		    <artifactId>opencsv</artifactId>
+		    <version>3.3</version>
+		</dependency>
+		
 		
 	</dependencies>
 	<build>
