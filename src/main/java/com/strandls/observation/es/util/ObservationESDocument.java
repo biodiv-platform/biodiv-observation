@@ -88,6 +88,7 @@ public class ObservationESDocument {
 	@Type(type = "json")
 	@Column(columnDefinition = "json")
 	private LocationInformation location_information;
+	private Integer reco_vote_count;
 	private String notes;
 	private Date from_date;
 	private String observed_in_month;
@@ -141,6 +142,7 @@ public class ObservationESDocument {
 	@Type(type = "json")
 	@Column(columnDefinition = "json")
 	private List<Facts> facts;
+	private Boolean is_publication_grade;
 
 	/**
 	 * 
@@ -160,6 +162,7 @@ public class ObservationESDocument {
 	 * @param sgroup_filter
 	 * @param location
 	 * @param location_information
+	 * @param reco_vote_count
 	 * @param notes
 	 * @param from_date
 	 * @param observed_in_month
@@ -195,18 +198,20 @@ public class ObservationESDocument {
 	 * @param flags
 	 * @param featured
 	 * @param facts
+	 * @param is_publication_grade
 	 */
 	public ObservationESDocument(Long observation_id, Long author_id, String created_by, String profile_pic,
 			Date created_on, Long group_id, String group_name, String sgroup_filter, Location location,
-			LocationInformation location_information, String notes, Date from_date, String observed_in_month,
-			String place_name, String reverse_geocoded_name, Long flag_count, Boolean geo_privacy, Date last_revised,
-			Long visit_count, Boolean is_checklist, Date to_date, Boolean is_locked, Integer language_id,
-			String location_scale, Long dataset_id, String dataset_title, Long repr_image_id, String repr_image_url,
-			String protocol, Integer no_of_images, Integer no_of_videos, Integer no_of_audio, Integer no_media,
-			Integer no_of_identifications, Long data_table_id, String date_accuracy, Max_voted_reco max_voted_reco,
-			List<All_reco_vote> all_reco_vote, List<Observation_resource> observation_resource,
-			List<Custom_fields> custom_fields, List<User_group_observations> user_group_observations, List<Tags> tags,
-			List<Flags> flags, List<Featured> featured, List<Facts> facts) {
+			LocationInformation location_information, Integer reco_vote_count, String notes, Date from_date,
+			String observed_in_month, String place_name, String reverse_geocoded_name, Long flag_count,
+			Boolean geo_privacy, Date last_revised, Long visit_count, Boolean is_checklist, Date to_date,
+			Boolean is_locked, Integer language_id, String location_scale, Long dataset_id, String dataset_title,
+			Long repr_image_id, String repr_image_url, String protocol, Integer no_of_images, Integer no_of_videos,
+			Integer no_of_audio, Integer no_media, Integer no_of_identifications, Long data_table_id,
+			String date_accuracy, Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
+			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
+			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
+			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -218,6 +223,7 @@ public class ObservationESDocument {
 		this.sgroup_filter = sgroup_filter;
 		this.location = location;
 		this.location_information = location_information;
+		this.reco_vote_count = reco_vote_count;
 		this.notes = notes;
 		this.from_date = from_date;
 		this.observed_in_month = observed_in_month;
@@ -253,6 +259,7 @@ public class ObservationESDocument {
 		this.flags = flags;
 		this.featured = featured;
 		this.facts = facts;
+		this.is_publication_grade = is_publication_grade;
 	}
 
 	public Long getObservation_id() {
@@ -333,6 +340,14 @@ public class ObservationESDocument {
 
 	public void setLocation_information(LocationInformation location_information) {
 		this.location_information = location_information;
+	}
+
+	public Integer getReco_vote_count() {
+		return reco_vote_count;
+	}
+
+	public void setReco_vote_count(Integer reco_vote_count) {
+		this.reco_vote_count = reco_vote_count;
 	}
 
 	public String getNotes() {
@@ -614,6 +629,17 @@ public class ObservationESDocument {
 	public void setFacts(List<Facts> facts) {
 		this.facts = facts;
 	}
+
+	public Boolean getIs_publication_grade() {
+		return is_publication_grade;
+	}
+
+	public void setIs_publication_grade(Boolean is_publication_grade) {
+		this.is_publication_grade = is_publication_grade;
+	}
+
+	
+	
 
 	// sequence
 
