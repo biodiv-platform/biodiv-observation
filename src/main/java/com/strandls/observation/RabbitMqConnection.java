@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.strandls.authentication_utility.util.PropertyFileUtil;
+import com.strandls.observation.util.PropertyFileUtil;
 
 /**
  * @author Abhishek Rudra
@@ -23,9 +23,16 @@ public class RabbitMqConnection {
 	private final static String QUEUE_ELASTIC = "elastic";
 	private final static String ROUTING_ELASTIC = "esmodule";
 	
-	public static String MAIL_EXCHANGE;
-	public static String MAIL_QUEUE;
-	public static String MAIL_ROUTING_KEY;
+	public static final String MAIL_EXCHANGE;
+	public static final String MAIL_QUEUE;
+	public static final String MAIL_ROUTING_KEY;
+	
+	static {
+		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
+		MAIL_EXCHANGE = properties.getProperty("rabbitmq_exchange");
+		MAIL_QUEUE = properties.getProperty("rabbitmq_queue");
+		MAIL_ROUTING_KEY = properties.getProperty("rabbitmq_routingKey");		
+	}
 
 	public Channel setRabbitMQConnetion() throws IOException, TimeoutException {
 
@@ -42,9 +49,6 @@ public class RabbitMqConnection {
 		Integer rabbitmqPort = Integer.parseInt(properties.getProperty("rabbitmq_port"));
 		String rabbitmqUsername = properties.getProperty("rabbitmq_username");
 		String rabbitmqPassword = properties.getProperty("rabbitmq_password");
-		MAIL_EXCHANGE = properties.getProperty("rabbitmq_exchange");
-		MAIL_QUEUE = properties.getProperty("rabbitmq_queue");
-		MAIL_ROUTING_KEY = properties.getProperty("rabbitmq_routingKey");
 		in.close();
 
 		ConnectionFactory factory = new ConnectionFactory();
