@@ -95,7 +95,7 @@ public class ConstructESDocument {
 				+ "	row_to_json((SELECT t FROM (SELECT taxon_detail->0 AS taxon_detail, NULLIF(scientific_name,'') AS name, accepted_name_id)t)) scientific_name) t))\\:\\:jsonb  "
 				+ "	reco_vote, " + " "
 				+ "	row_to_json(( SELECT t FROM (SELECT recommendation_id, common_names, scientific_name, hierarchy, taxon_detail)  "
-				+ "	t))\\:\\:jsonb recos , Count" + "FROM " + "	( " + "	SELECT  "
+				+ "	t))\\:\\:jsonb recos , Count " + "FROM " + "	( " + "	SELECT  "
 				+ "	observation_id, recommendation_id, "
 				+ "	array_agg(DISTINCT common_name_reco_id) filter (where common_name_reco_id is not null) common_name_reco_ids, "
 				+ "		MIN(Distinct taxon_concept_id) taxon_id,  "

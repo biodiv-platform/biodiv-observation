@@ -3,8 +3,6 @@ package com.strandls.observation.es.util;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import com.opencsv.CSVWriter;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
