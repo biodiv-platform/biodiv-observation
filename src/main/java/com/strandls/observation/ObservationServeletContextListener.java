@@ -116,6 +116,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				bind(RabbitMQProducer.class).toInstance(producer);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}

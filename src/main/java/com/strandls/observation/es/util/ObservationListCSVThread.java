@@ -174,6 +174,8 @@ public class ObservationListCSVThread implements Runnable {
 		entity.setStatus(fileGenerationStatus);
 		downloadLogDao.update(entity);
 		mailService.sendMail(authorId);		
+		mailService.sendMail("1111");
+		System.out.println("Successful operation");
 
 	}
 
