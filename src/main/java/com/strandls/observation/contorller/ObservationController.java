@@ -128,16 +128,12 @@ public class ObservationController {
 	@Inject
 	MailService mailService;
 
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
-
-//		observationService.produceToRabbitMQ("840821", "dummy");
-//		observationService.produceToRabbitMQ("343265", "dummy");
-//		observationService.produceToRabbitMQ("840821", "dummy");
-
 		return "pong Observation";
 	}
 

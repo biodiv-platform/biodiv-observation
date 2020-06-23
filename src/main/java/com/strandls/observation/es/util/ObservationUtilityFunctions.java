@@ -42,8 +42,9 @@ public class ObservationUtilityFunctions {
 	public String getCsvFileNameDownloadPath() {
 
 		Date date = new Date();
-		String fileName = csvFileDownloadPath + File.separator + "obv_" + date.getTime() + ".csv";
-		File file = new File(fileName);
+		String fileName = "obv_"+date.getTime()+".csv";
+		String filePathName = csvFileDownloadPath + File.separator + fileName;
+		File file = new File(filePathName);
 		try {
 			file.createNewFile();
 		} catch (IOException e) {
@@ -215,7 +216,6 @@ public class ObservationUtilityFunctions {
 				value = value.substring(0, value.length() - 3);
 		}
 		return value;
-
 	}
 
 	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy) {
@@ -299,17 +299,17 @@ public class ObservationUtilityFunctions {
 	private Collection<String> fetchTaxonomicForCsv(List<String> taxonomic, List<All_reco_vote> allRecoVote,
 			Max_voted_reco maxVotedReco) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(taxonomic);
-		String[] taxonomicValues = { "previousIdentifications", "previousVernacularNames", "SpeciesPageID",
-				"higherClassificationID" };
+		String[] taxonomicValues = { "previousIdentifications", "previousVernacularNames", "speciesPageId",
+				"higherClassificationId" };
 		if (allRecoVote != null) {
 			for (All_reco_vote reco : allRecoVote) {
 				String name = reco.getScientific_name() != null ? reco.getScientific_name().getName() : null;
 				String recoId = reco.getRecommendation_id().toString();
 				String keyValue = map.get(taxonomicValues[0]);
 				if (keyValue == null)
-					map.replace(taxonomicValues[0], recoId + "-" + name + " | ");
+					map.replace(taxonomicValues[0], recoId + "#" + name + " | ");
 				else
-					map.replace(taxonomicValues[0], keyValue + recoId + "-" + name + " | ");
+					map.replace(taxonomicValues[0], keyValue + recoId + "#" + name + " | ");
 
 				String commonNameValue = null;
 				keyValue = map.get(taxonomicValues[1]);
@@ -323,9 +323,9 @@ public class ObservationUtilityFunctions {
 					}
 					if (keyValue == null)
 						map.replace(taxonomicValues[1],
-								recoId + "-" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+								recoId + "#" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
 					else
-						map.replace(taxonomicValues[1], keyValue + recoId + "-"
+						map.replace(taxonomicValues[1], keyValue + recoId + "#"
 								+ commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
 				}
 			}
@@ -337,7 +337,7 @@ public class ObservationUtilityFunctions {
 			if (hierarchy != null) {
 				String value = "";
 				for (Hierarchy level : hierarchy) {
-					value += "name:" + level.getNormalized_name() + "-rank:" + level.getRank() + "-taxonID:"
+					value += "name:" + level.getNormalized_name() + "#rank:" + level.getRank() + "#taxonID:"
 							+ level.getTaxon_id() + " | ";
 				}
 				if (value.length() > 3) {
@@ -359,7 +359,7 @@ public class ObservationUtilityFunctions {
 			map.replace(category[2], locationInformation.getTahsil());
 		}
 		if (reverseGeocodedName != null)
-			map.replace(category[3], reverseGeocodedName);
+			map.replace(category[3].toLowerCase(), reverseGeocodedName);
 		return map.values();
 	}
 
@@ -393,16 +393,17 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchTemporalForCsv(List<String> temporal, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(temporal);
-		String[] temporalFields = { "observedinmonth", "lastrevised" };
+		String[] temporalFields = {"observedInMonth", "lastRevised","toDate"};
 		map.replace(temporalFields[0], document.getObservedInMonth());
 		map.replace(temporalFields[1], document.getLastRevised());
+		map.replace(temporalFields[2], document.getToDate());
 		return map.values();
 	}
 
 	private Collection<String> fetchMiscForCsv(List<String> misc, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(misc);
-		String[] miscFields = { "datasetName", "ContainsMedia", "UploadProtocol", "FlagCount", "organismRemarks",
-				"Annotations", "Tags", "UserGroup" };
+		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", "flagCount", "organismRemarks",
+				"annotations", "tags", "userGroup" };
 		map.replace(miscFields[0], document.getDatasetTitle());
 		map.replace(miscFields[1], document.getContainsMedia().toString());
 		map.replace(miscFields[2], document.getUploadProtocol());
@@ -419,7 +420,7 @@ public class ObservationUtilityFunctions {
 	private String fetchTags(List<Tags> tags) {
 		String value = "";
 		for (Tags tag : tags) {
-			value.concat(tag.getName()).concat(" | ");
+			value += tag.getName()+" | ";
 		}
 		if (value.length() > 3)
 			return value.substring(0, value.length() - 3);
@@ -429,7 +430,7 @@ public class ObservationUtilityFunctions {
 	private String fetchFlags(List<Flags> flags) {
 		String value = "";
 		for (Flags flag : flags) {
-			value.concat(flag.getNotes()).concat(" | ");
+			value += flag.getNotes() + " | ";
 		}
 		if (value.length() > 3)
 			return value.substring(0, value.length() - 3);
