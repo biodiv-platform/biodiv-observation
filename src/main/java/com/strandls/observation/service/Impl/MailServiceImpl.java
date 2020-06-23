@@ -32,17 +32,21 @@ public class MailServiceImpl implements MailService {
 	UserServiceApi userServiceApi;
 	
 	@Override
-	public void sendMail(String authorId) {
+	public void sendMail(String authorId, String fileName, String type) {
 		try {
 			User user = userServiceApi.getUser(authorId);
 		
 		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.DOWNLOAD_MAIL.getAction());
+		data.put(FIELDS.TO.getAction(), user.getEmail());
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put(DOWNLOAD_MAIL.SERVER_URL.getAction(), properties.getProperty("serverUrl"));
 		model.put(DOWNLOAD_MAIL.SITENAME.getAction(), properties.getProperty("siteName"));
 		model.put(DOWNLOAD_MAIL.USER_DATA.getAction(), user);
+		model.put(DOWNLOAD_MAIL.DOWNLOAD_TYPE.getAction(), type);
+		model.put(DOWNLOAD_MAIL.DOWNLOAD_FILE.getAction(), fileName);
+
 
 
 		data.put(FIELDS.DATA.getAction(), JsonUtil.unflattenJSON(model));

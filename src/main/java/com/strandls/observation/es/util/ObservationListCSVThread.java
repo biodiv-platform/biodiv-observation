@@ -1,7 +1,14 @@
 package com.strandls.observation.es.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
 import com.strandls.esmodule.pojo.MapSearchParams;
@@ -13,7 +20,9 @@ import com.strandls.observation.service.ObservationListService;
 
 public class ObservationListCSVThread implements Runnable {
 	
-
+	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
+	private final String basePath = "/app/data/biodiv/data-archive/listpagecsv";
+	
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
 	private ObservationDownloadLogDAO downloadLogDao;
@@ -138,21 +147,26 @@ public class ObservationListCSVThread implements Runnable {
 	@Override
 	public void run() {
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-		String filePath = obUtil.getCsvFileNameDownloadPath();
+		String fileName = obUtil.getCsvFileNameDownloadPath();
+		String filePath = basePath+File.separator+fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
-		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc));
-		Integer max = 500;
+		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, 
+				taxonomic, spatial, traits, temporal, misc));
+		Integer max = 10000;
 		Integer offset = 0;
 		Integer epochSize = 0;
 		String fileGenerationStatus = "Pending";
 		String fileType = "CSV";
+		
 		DownloadLog entity = obUtil.createDownloadLogEntity(null,Long.parseLong(authorId), url,
 				notes, 0L, fileGenerationStatus,fileType);
 		downloadLogDao.save(entity);
+		try {
+			fileGenerationStatus = "SUCCESS";
 		do {
 			mapSearchParams.setFrom(offset);
 			mapSearchParams.setLimit(max);
-
+			
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
 					webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
@@ -162,19 +176,32 @@ public class ObservationListCSVThread implements Runnable {
 			List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 					mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 					termsAggregationField);
-
+			
 			epochSize = epochSet.size();
 			offset = offset + max;
 			obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc);
-
 		} while (epochSize >= max);
-		obUtil.closeWriter();
-		fileGenerationStatus = "SUCCESS";
 		entity.setFilePath(filePath);
 		entity.setStatus(fileGenerationStatus);
-		downloadLogDao.update(entity);
-		mailService.sendMail(authorId);		
-
+		mailService.sendMail(authorId,fileName, "observation");		
+		} 
+		catch (Exception e) {
+			logger.error("file generation failed @ "+filePath+" due to - "+e.getMessage());
+			fileGenerationStatus = "FAILED";
+			entity.setStatus(fileGenerationStatus);
+		}
+		finally {
+			obUtil.closeWriter();
+			entity.setStatus(fileGenerationStatus);
+			downloadLogDao.update(entity);
+		}
+		if(fileGenerationStatus.equalsIgnoreCase("failed")) {
+			try {
+				Files.deleteIfExists(Paths.get(filePath));
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+		}
 	}
 
 }
