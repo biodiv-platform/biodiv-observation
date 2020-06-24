@@ -46,9 +46,7 @@ public class MailServiceImpl implements MailService {
 		model.put(DOWNLOAD_MAIL.USER_DATA.getAction(), user);
 		model.put(DOWNLOAD_MAIL.DOWNLOAD_TYPE.getAction(), type);
 		model.put(DOWNLOAD_MAIL.DOWNLOAD_FILE.getAction(), fileName);
-
-
-
+		model.put(DOWNLOAD_MAIL.TYPE.getAction(), MAIL_TYPE.DOWNLOAD_MAIL.getAction());
 		data.put(FIELDS.DATA.getAction(), JsonUtil.unflattenJSON(model));
 		RabbitMQProducer producer = new RabbitMQProducer(channel);
 		if (user.getEmail() != null && !user.getEmail().isEmpty()
