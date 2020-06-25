@@ -167,8 +167,11 @@ public class ObservationListElasticMapping {
 	}
 	
 	@JsonProperty(value = "no_media")
-	private void unpackNoMedia(Boolean value) {
-		containsMedia = value;
+	private void unpackNoMedia(Integer value) {
+		if(value == 1) { 
+			containsMedia = false;}
+		else if(value == 0) {
+			containsMedia = true;}
 	}
 	
 	@JsonProperty(value = "dataset_title")

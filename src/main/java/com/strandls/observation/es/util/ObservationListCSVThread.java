@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -146,6 +148,9 @@ public class ObservationListCSVThread implements Runnable {
 
 	@Override
 	public void run() {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();
+		logger.info("Observation List Download Request Received : RequestId = "+authorId+dtf.format(now));
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 		String fileName = obUtil.getCsvFileNameDownloadPath();
 		String filePath = basePath+File.separator+fileName;
@@ -157,7 +162,6 @@ public class ObservationListCSVThread implements Runnable {
 		Integer epochSize = 0;
 		String fileGenerationStatus = "Pending";
 		String fileType = "CSV";
-		
 		DownloadLog entity = obUtil.createDownloadLogEntity(null,Long.parseLong(authorId), url,
 				notes, 0L, fileGenerationStatus,fileType);
 		downloadLogDao.save(entity);
@@ -180,6 +184,7 @@ public class ObservationListCSVThread implements Runnable {
 			epochSize = epochSet.size();
 			offset = offset + max;
 			obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc);
+			logger.info("Observation List Download RequestId = "+authorId+dtf.format(now)+"@ offset = "+offset);
 		} while (epochSize >= max);
 		entity.setFilePath(filePath);
 		entity.setStatus(fileGenerationStatus);

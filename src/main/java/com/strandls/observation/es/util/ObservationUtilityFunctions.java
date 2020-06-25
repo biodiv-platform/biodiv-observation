@@ -341,7 +341,7 @@ public class ObservationUtilityFunctions {
 							+ level.getTaxon_id() + " | ";
 				}
 				if (value.length() > 3) {
-					map.replace(taxonomicValues[3], value);
+					map.replace(taxonomicValues[3], value.substring(0, value.length()-3));
 				}
 			}
 		}
@@ -359,7 +359,7 @@ public class ObservationUtilityFunctions {
 			map.replace(category[2], locationInformation.getTahsil());
 		}
 		if (reverseGeocodedName != null)
-			map.replace(category[3].toLowerCase(), reverseGeocodedName);
+			map.replace(category[3], reverseGeocodedName);
 		return map.values();
 	}
 
@@ -402,8 +402,9 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchMiscForCsv(List<String> misc, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(misc);
-		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", "flagCount", "organismRemarks",
-				"annotations", "tags", "userGroup" };
+		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", 
+				"flagCount", "organismRemarks","annotations", "tags", 
+				"userGroup","noOfImages","speciesGroup" };
 		map.replace(miscFields[0], document.getDatasetTitle());
 		map.replace(miscFields[1], document.getContainsMedia().toString());
 		map.replace(miscFields[2], document.getUploadProtocol());
@@ -412,7 +413,8 @@ public class ObservationUtilityFunctions {
 		map.replace(miscFields[5], document.getAnnotations());
 		map.replace(miscFields[6], document.getTags() != null ? fetchTags(document.getTags()) : null);
 		map.replace(miscFields[7], document.getSpeciesGroup());
-
+		map.replace(miscFields[8], document.getNoOfImages().toString());
+		map.replace(miscFields[9], document.getSpeciesGroup());
 		return map.values();
 
 	}
