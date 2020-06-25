@@ -29,6 +29,8 @@ import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.MapQueryResponse;
+import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
@@ -85,9 +87,9 @@ import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.FeaturedCreateData;
-import com.strandls.userGroup.pojo.ObservationLatLon;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.FlagCreateData;
@@ -380,8 +382,10 @@ public class ObservationServiceImpl implements ObservationService {
 
 			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+
 				userGroupData.setUserGroups(observationData.getUserGroupId());
 				userGroupData.setMailData(null);
+				userGroupData.setUgFilterData(getUGFilterObvData(observation));
 				userGroupService = headers.addUserGroupHeader(userGroupService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
@@ -418,13 +422,11 @@ public class ObservationServiceImpl implements ObservationService {
 			updateGeoPrivacy(observationList);
 
 //			---------------USER GROUP FILTER RULE----------
-			ObservationLatLon latlon = new ObservationLatLon();
-			latlon.setLatitude(observation.getLatitude());
-			latlon.setLongitude(observation.getLongitude());
-			latlon.setObservationId(observation.getId());
+			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
+			ugObvFilterData = getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			userGroupService.getFilterRule(latlon);
+			userGroupService.getFilterRule(ugObvFilterData);
 
 			ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
 			Thread thread = new Thread(esCreateThread);
@@ -523,6 +525,21 @@ public class ObservationServiceImpl implements ObservationService {
 		return facts;
 	}
 
+	private UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
 	@Override
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
 			List<Long> userGroupList) {
@@ -531,6 +548,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -598,6 +616,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setUgFilterData(null);
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observaitonId))));
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -835,12 +854,16 @@ public class ObservationServiceImpl implements ObservationService {
 				MailData mailData = generateMailData(observationId);
 
 				observation.setIsDeleted(true);
-				observationDao.update(observation);
-				esService.delete(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
-						observationId.toString());
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId,
-						observationId, "observation", observationId, "Observation Deleted", mailData);
-				return "Observation Deleted Succesfully";
+				MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
+						ObservationIndex.type.getValue(), observationId.toString());
+				ResultEnum result = esResponse.getResult();
+				if (result.getValue().equals("DELETED")) {
+					observationDao.update(observation);
+					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId,
+							observationId, "observation", observationId, "Observation Deleted", mailData);
+					return "Observation Deleted Succesfully";
+				}
+
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -993,6 +1016,12 @@ public class ObservationServiceImpl implements ObservationService {
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
+//				------------BG rules-----------------
+				UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
+				ugObvFilterData = getUGFilterObvData(observation);
+				userGroupService = headers.addUserGroupHeader(userGroupService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				userGroupService.getFilterRule(ugObvFilterData);
 
 				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
 
@@ -1050,7 +1079,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public void applyFilterObservation(String userGroupIds) {
+	public void applyFilterObservationPosting(String userGroupIds) {
 		try {
 
 			Boolean hasNext = true;
@@ -1062,18 +1091,45 @@ public class ObservationServiceImpl implements ObservationService {
 					hasNext = false;
 				totalObservation = totalObservation + observationList.size();
 				startPoint = totalObservation + 1;
-				List<ObservationLatLon> latlonList = new ArrayList<ObservationLatLon>();
-				ObservationLatLon latlon = new ObservationLatLon();
+				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
 				for (Observation observation : observationList) {
-					latlon.setObservationId(observation.getId());
-					latlon.setLatitude(observation.getLatitude());
-					latlon.setLongitude(observation.getLongitude());
-					latlonList.add(latlon);
+					ugObvFilterDataList.add(getUGFilterObvData(observation));
 				}
-				userGroupService.bulkFilterRule(userGroupIds, latlonList);
+				userGroupService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
 			}
 
 			System.out.println("Filter Rule Process Completed");
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
+	@Override
+	public void applyFilterObservationRemoving(String userGroupId) {
+		try {
+
+			List<Long> observationIdList = userGroupService.getAllObservation(userGroupId);
+			List<Long> idList = new ArrayList<Long>();
+			int total = 0;
+			while (observationIdList.size() != total) {
+				if (observationIdList.size() > 20000) {
+					for (int i = 0; i < 200000; i++) {
+						idList.add(observationIdList.get(i));
+					}
+
+				} else {
+					idList.addAll(observationIdList);
+				}
+				total = total + idList.size();
+				List<Observation> observationList = observationDao.fecthByListOfIds(idList);
+				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
+				for (Observation observation : observationList) {
+					ugObvFilterDataList.add(getUGFilterObvData(observation));
+				}
+				userGroupService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -1377,4 +1433,20 @@ public class ObservationServiceImpl implements ObservationService {
 
 		return null;
 	}
+
+	@Override
+	public void bgfilterRule(HttpServletRequest request, Long observationId) {
+		try {
+			Observation observation = observationDao.findById(observationId);
+			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
+			ugObvFilterData = getUGFilterObvData(observation);
+			userGroupService = headers.addUserGroupHeader(userGroupService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			userGroupService.getFilterRule(ugObvFilterData);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
 }

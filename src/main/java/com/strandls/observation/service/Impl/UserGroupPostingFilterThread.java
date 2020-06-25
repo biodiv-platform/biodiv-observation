@@ -9,16 +9,16 @@ import com.strandls.observation.service.ObservationService;
  * @author Abhishek Rudra
  *
  */
-public class UserGroupFilterThread implements Runnable {
+public class UserGroupPostingFilterThread implements Runnable {
 
 	private ObservationService service;
 
-	private String userGroupIds;
+	private String userGroupId;
 
 	/**
 	 * 
 	 */
-	public UserGroupFilterThread() {
+	public UserGroupPostingFilterThread() {
 		super();
 	}
 
@@ -26,15 +26,15 @@ public class UserGroupFilterThread implements Runnable {
 	 * @param service
 	 * @param userGroupIds
 	 */
-	public UserGroupFilterThread(ObservationService service, String userGroupIds) {
+	public UserGroupPostingFilterThread(ObservationService service, String userGroupId) {
 		super();
 		this.service = service;
-		this.userGroupIds = userGroupIds;
+		this.userGroupId = userGroupId;
 	}
 
 	@Override
 	public void run() {
-		service.applyFilterObservation(userGroupIds);
+		service.applyFilterObservationPosting(userGroupId);
 
 	}
 
