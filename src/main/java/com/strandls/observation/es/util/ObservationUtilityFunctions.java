@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,7 +43,7 @@ public class ObservationUtilityFunctions {
 	public String getCsvFileNameDownloadPath() {
 
 		Date date = new Date();
-		String fileName = "obv_"+date.getTime()+".csv";
+		String fileName = "obv_" + date.getTime() + ".csv";
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
@@ -271,7 +272,7 @@ public class ObservationUtilityFunctions {
 					String key = field.getCf_name();
 					String keyValue = map.get(key);
 					String fieldValue = getCustomFieldValue(field.getCustom_field_values(),
-							field.getField_type().toLowerCase());
+							field.getField_type().toLowerCase().trim());
 					if (keyValue == null)
 						map.replace(key, fieldValue);
 					else
@@ -283,14 +284,13 @@ public class ObservationUtilityFunctions {
 	}
 
 	private String getCustomFieldValue(Custom_field_values values, String fieldType) {
-
-		if (fieldType == "field text")
+		if (fieldType.equalsIgnoreCase("field text"))
 			return values.getField_text_data();
-		if (fieldType == "range")
+		if (fieldType.equalsIgnoreCase("range"))
 			return values.getMin_range() + "-" + values.getMax_range();
-		if (fieldType == "single categorical")
+		if (fieldType.equalsIgnoreCase("single categorical"))
 			return values.getSingle_categorical_data();
-		if (fieldType == "multiple categorical")
+		if (fieldType.equalsIgnoreCase("multiple categorical"))
 			return String.join(";", values.getMultiple_categorical_data());
 		return null;
 
@@ -341,7 +341,7 @@ public class ObservationUtilityFunctions {
 							+ level.getTaxon_id() + " | ";
 				}
 				if (value.length() > 3) {
-					map.replace(taxonomicValues[3], value.substring(0, value.length()-3));
+					map.replace(taxonomicValues[3], value.substring(0, value.length() - 3));
 				}
 			}
 		}
@@ -393,7 +393,7 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchTemporalForCsv(List<String> temporal, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(temporal);
-		String[] temporalFields = {"observedInMonth", "lastRevised","toDate"};
+		String[] temporalFields = { "observedInMonth", "lastRevised", "toDate" };
 		map.replace(temporalFields[0], document.getObservedInMonth());
 		map.replace(temporalFields[1], document.getLastRevised());
 		map.replace(temporalFields[2], document.getToDate());
@@ -402,9 +402,8 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchMiscForCsv(List<String> misc, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(misc);
-		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", 
-				"flagCount", "organismRemarks","annotations", "tags", 
-				"userGroup","noOfImages","speciesGroup" };
+		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", "flagCount", "organismRemarks",
+				"annotations", "tags", "userGroup", "noOfImages", "speciesGroup" };
 		map.replace(miscFields[0], document.getDatasetTitle());
 		map.replace(miscFields[1], document.getContainsMedia().toString());
 		map.replace(miscFields[2], document.getUploadProtocol());
@@ -422,7 +421,7 @@ public class ObservationUtilityFunctions {
 	private String fetchTags(List<Tags> tags) {
 		String value = "";
 		for (Tags tag : tags) {
-			value += tag.getName()+" | ";
+			value += tag.getName() + " | ";
 		}
 		if (value.length() > 3)
 			return value.substring(0, value.length() - 3);
