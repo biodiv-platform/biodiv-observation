@@ -284,13 +284,13 @@ public class ObservationUtilityFunctions {
 
 	private String getCustomFieldValue(Custom_field_values values, String fieldType) {
 
-		if (fieldType == "field text")
+		if (fieldType.equalsIgnoreCase("field text"))
 			return values.getField_text_data();
-		if (fieldType == "range")
+		if (fieldType.equalsIgnoreCase("range"))
 			return values.getMin_range() + "-" + values.getMax_range();
-		if (fieldType == "single categorical")
+		if (fieldType.equalsIgnoreCase("single categorical"))
 			return values.getSingle_categorical_data();
-		if (fieldType == "multiple categorical")
+		if (fieldType.equalsIgnoreCase("multiple categorical"))
 			return String.join(";", values.getMultiple_categorical_data());
 		return null;
 
