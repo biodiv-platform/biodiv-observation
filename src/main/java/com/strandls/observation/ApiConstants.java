@@ -57,7 +57,9 @@ public class ApiConstants {
 	public static final String RESOURCE = "/resource";
 	public static final String POSTING = "/posting";
 	public static final String REMOVING = "/removing";
+
 	public static final String PUBLICATIONGRADE = "/publicationgrade";
+
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

@@ -1461,6 +1461,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	}
 
+
 	@Override
 	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type,
 			String observationId) {

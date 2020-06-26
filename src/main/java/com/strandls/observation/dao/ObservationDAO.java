@@ -63,6 +63,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return result;
 	}
 
+
 	@SuppressWarnings("unchecked")
 	public List<Observation> fecthByListOfIds(List<Long> observationList) {
 		String qry = "from Observation where isDeleted = false and id IN :ids";
