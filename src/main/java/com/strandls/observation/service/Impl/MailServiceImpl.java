@@ -26,10 +26,10 @@ public class MailServiceImpl implements MailService {
 	private static final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 	
 	@Inject
-	Channel channel;
+	private Channel channel;
 	
 	@Inject
-	UserServiceApi userServiceApi;
+	private UserServiceApi userServiceApi;
 	
 	@Override
 	public void sendMail(String authorId, String fileName, String type) {

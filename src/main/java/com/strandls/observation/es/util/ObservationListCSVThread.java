@@ -80,7 +80,6 @@ public class ObservationListCSVThread implements Runnable {
 	
 	public ObservationListCSVThread() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public ObservationListCSVThread(ESUtility esUtility, ObservationListService observationListService,

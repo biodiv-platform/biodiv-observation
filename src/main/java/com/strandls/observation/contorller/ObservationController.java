@@ -126,7 +126,7 @@ public class ObservationController {
 	private ObservationListService observationListService;
 	
 	@Inject
-	MailService mailService;
+	private MailService mailService;
 	
 
 
