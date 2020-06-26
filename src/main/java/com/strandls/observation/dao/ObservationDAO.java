@@ -60,9 +60,9 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		} finally {
 			session.close();
 		}
-
 		return result;
 	}
+
 
 	@SuppressWarnings("unchecked")
 	public List<Observation> fecthByListOfIds(List<Long> observationList) {
