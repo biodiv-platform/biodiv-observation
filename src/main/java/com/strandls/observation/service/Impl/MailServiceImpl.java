@@ -26,10 +26,10 @@ public class MailServiceImpl implements MailService {
 	private static final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 	
 	@Inject
-	Channel channel;
+	private Channel channel;
 	
 	@Inject
-	UserServiceApi userServiceApi;
+	private UserServiceApi userServiceApi;
 	
 	@Override
 	public void sendMail(String authorId, String fileName, String type) {
@@ -39,7 +39,7 @@ public class MailServiceImpl implements MailService {
 		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.DOWNLOAD_MAIL.getAction());
-		data.put(FIELDS.TO.getAction(), user.getEmail());
+		data.put(FIELDS.TO.getAction(), new String[] {user.getEmail()});
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put(DOWNLOAD_MAIL.SERVER_URL.getAction(), properties.getProperty("serverUrl"));
 		model.put(DOWNLOAD_MAIL.SITENAME.getAction(), properties.getProperty("siteName"));

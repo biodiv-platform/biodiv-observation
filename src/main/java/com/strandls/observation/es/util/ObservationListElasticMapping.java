@@ -19,7 +19,7 @@ public class ObservationListElasticMapping {
 	private Long observationId;
 	private String placeName;
 	private String noOfIdentification;
-	private String createdOn; // pg
+	private String createdOn;
 	private String lastRevised;
 	private String reverseGeocodedName;
 	private Long speciesGroupId;
@@ -28,10 +28,10 @@ public class ObservationListElasticMapping {
 	private Long noOfAudios;
 	private Long noOfVideos;
 	private String reprImageUrl;
-	private Boolean isLocked; //pg
+	private Boolean isLocked;
 	private String locationScale;
-	private Double latitude; //pg
-	private Double longitude; //pg
+	private Double latitude; 
+	private Double longitude;
 	private String dateAccuracy;
 	private String fromDate;
 	private String toDate;
@@ -45,8 +45,7 @@ public class ObservationListElasticMapping {
 	private List<Flags> flags;
 	
 	private Max_voted_reco maxVotedReco;
-	private List<All_reco_vote>allRecoVotes; //pg
-	//private RecoShow recoShow;
+	private List<All_reco_vote>allRecoVotes; 
 	
 	private List<User_group_observations> userGroup;
 	
@@ -238,23 +237,6 @@ public class ObservationListElasticMapping {
 	@JsonProperty(value = "facts")
 	private void unpackFacts(List<Facts> allFacts) {
 		facts = allFacts;
-//		factValuePair = new ArrayList<FactValuePair>();
-//		if (facts != null) {
-//			for (Facts fact : facts) {
-//				FactValuePair fvp = new FactValuePair();
-//				fvp.setNameId(fact.getTrait_id());
-//				fvp.setName(fact.getName());
-//				fvp.setType(fact.getTrait_types());
-//				fvp.setIsParticipatry(fact.getIs_participatory());
-//				if (fact.getTrait_value() != null) {
-//					for (Trait_value value : fact.getTrait_value()) {
-//						fvp.setValue(value.getValue());
-//						fvp.setValueId(value.getTrait_value_id());
-//						factValuePair.add(fvp);
-//					}
-//				}
-//
-//			}
 		}
 
 //	------------FLAG SHOW--------------

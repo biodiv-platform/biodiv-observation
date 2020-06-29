@@ -124,9 +124,10 @@ public class ObservationController {
 
 	@Inject
 	private ObservationListService observationListService;
-
+	
 	@Inject
-	MailService mailService;
+	private MailService mailService;
+
 
 
 	@GET
@@ -360,10 +361,9 @@ public class ObservationController {
 			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
 			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
 			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
-			@QueryParam("termsAggregationField") String termsAggregationField,
-			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
-			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
-			@QueryParam("state") String state, @QueryParam("tags") String tags,
+			@QueryParam("termsAggregationField") String termsAggregationField, @DefaultValue("list")@QueryParam("view") String view,
+			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
+			@QueryParam("district") String district, @QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade, @Context UriInfo uriInfo) {
 
 		try {
@@ -1125,7 +1125,7 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
+		
 	@GET
 	@Path(ApiConstants.LISTCSV + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
@@ -1158,8 +1158,8 @@ public class ObservationController {
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade,
-			@DefaultValue("") @QueryParam("notes") String notes,
-			@NotBlank @NotEmpty @NotNull @QueryParam("authorid") String authorId,
+			@DefaultValue("")@QueryParam("notes") String notes,
+			@NotBlank@NotEmpty@NotNull@QueryParam("authorid") String authorId,
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
@@ -1204,14 +1204,18 @@ public class ObservationController {
 			mapSearchParams.setSortOn(sortOn);
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
-
+			
 			ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
-					downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
-					userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
-					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService);
+					downloadLogDao, customfields, taxonomic,
+					spatial, traits, temporal, misc, sGroup,
+					taxon,  user,  userGroupList,  webaddress,  speciesName,  mediaFilter,
+					months,  isFlagged,  minDate,  maxDate,  validate,
+					traitParams,  customParams,  classificationid,
+					mapSearchParams,  maxvotedrecoid,  createdOnMaxDate,  createdOnMinDate,
+					status,  taxonId,  recoName,  rank,  tahsil,  district,  state,
+					tags,  publicationGrade,  index,  type,  geoAggregationField,
+					geoAggegationPrecision,  onlyFilteredAggregation,  termsAggregationField,
+					authorId,  notes, uriInfo.getRequestUri().toString(), mailService);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();
@@ -1236,23 +1240,25 @@ public class ObservationController {
 		return Response.status(Status.OK).entity(observationGrade).build();
 
 	}
-
+	
 	@GET
 	@Path(ApiConstants.LISTDOWNLOAD)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "fetch the download log table based on filter", notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-	public Response fetchDownloadLog(@DefaultValue("") @QueryParam("authorid") String authorId,
-			@DefaultValue("") @QueryParam("filetype") String fileType,
-			@DefaultValue("-1") @QueryParam("offset") String offSet,
-			@DefaultValue("-1") @QueryParam("limit") String limit) {
+	@ApiOperation(value="fetch the download log table based on filter",
+	notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class)})
+	public Response fetchDownloadLog(@DefaultValue("")@QueryParam("authorid")String authorId,
+			@DefaultValue("")@QueryParam("filetype")String fileType,
+			@DefaultValue("-1")@QueryParam("offset")String offSet,
+			@DefaultValue("-1")@QueryParam("limit")String limit) {
 		List<Long> authorIds = new ArrayList<Long>();
-		if (!authorId.isEmpty() || authorId != null) {
-			authorIds = Arrays.asList(authorId.split(",")).stream().map(Long::parseLong).collect(Collectors.toList());
+		if(!authorId.isEmpty() || authorId != null) {
+			authorIds = Arrays.asList(authorId.split(",")).stream().
+					map(Long::parseLong).collect(Collectors.toList());
 		}
-		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, Integer.parseInt(offSet),
-				Integer.parseInt(limit));
-		return Response.status(Status.OK).entity(records).build();
+		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, 
+				Integer.parseInt(offSet),Integer.parseInt(limit));
+		return Response.status(Status.OK).entity(records).build();	
 	}
 }

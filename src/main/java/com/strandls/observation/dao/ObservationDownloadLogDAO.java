@@ -24,7 +24,6 @@ public class ObservationDownloadLogDAO extends AbstractDAO<DownloadLog, Long>{
 
 	@Override
 	public DownloadLog findById(Long id) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
