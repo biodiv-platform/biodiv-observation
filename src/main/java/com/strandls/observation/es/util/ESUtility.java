@@ -134,8 +134,8 @@ public class ESUtility {
 			String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String rank, String tahsil, String district, String state, String tags
-			,String publicationGrade) {
+			String recoName, String rank, String tahsil, String district, String state, String tags,
+			String publicationGrade) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -211,7 +211,7 @@ public class ESUtility {
 
 //		district
 		List<Object> districtList = cSTSOT(district);
-		if (!tahsilList.isEmpty()) {
+		if (!districtList.isEmpty()) {
 			List<Object> lowerCaseList = new ArrayList<Object>();
 			for (Object o : districtList) {
 				String result = o.toString().toLowerCase();
@@ -536,7 +536,7 @@ public class ESUtility {
 								ObservationIndex.customFieldMultipleCategoricalValue.getValue(), valueObject));
 
 					}
-					if (fieldType.equalsIgnoreCase("Range")) {
+					if (fieldType.equalsIgnoreCase("range")) {
 //						 range and query
 						String value = entry.getValue().get(0);
 						String values[] = value.split("-");
@@ -609,12 +609,11 @@ public class ESUtility {
 		if (!maxvotedrecoids.isEmpty()) {
 			boolAndLists.add(assignBoolAndQuery("maxvotedrecoid", maxvotedrecoids));
 		}
-		
+
 // publication grade
 		List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
-		if(!publicationGradeChoice.isEmpty()) {
-			boolAndLists.add(assignBoolAndQuery(ObservationIndex.publicationgrade.getValue(), 
-					publicationGradeChoice));
+		if (!publicationGradeChoice.isEmpty()) {
+			boolAndLists.add(assignBoolAndQuery(ObservationIndex.publicationgrade.getValue(), publicationGradeChoice));
 		}
 		/**
 		 * combine all the queries
@@ -639,7 +638,7 @@ public class ESUtility {
 		List<Object> values = cSTSOT(resourcesUrl);
 		boolOrLists.add(assOrBoolQuery(ObservationIndex.resource.getValue(), values));
 		MapSearchQuery mapSearchQuery = new MapSearchQuery();
-		
+
 		MapSearchParams searchParams = new MapSearchParams();
 		MapSearchParams mapSearchParams = new MapSearchParams();
 		mapSearchParams.setFrom(0);
@@ -647,7 +646,7 @@ public class ESUtility {
 		mapSearchParams.setSortOn(ObservationIndex.createdOn.getValue());
 		mapSearchParams.setSortType(SortTypeEnum.DESC);
 		mapSearchParams.setMapBoundParams(null);
-		
+
 		mapSearchQuery.setSearchParams(searchParams);
 		mapSearchQuery.setOrBoolQueries(boolOrLists);
 		return mapSearchQuery;
