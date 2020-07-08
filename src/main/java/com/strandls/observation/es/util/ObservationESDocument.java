@@ -638,9 +638,6 @@ public class ObservationESDocument {
 		this.is_publication_grade = is_publication_grade;
 	}
 
-	
-	
-
 	// sequence
 
 }
@@ -1869,6 +1866,7 @@ class Custom_field_values {
 	private String max_range;
 	private List<String> custom_field_aggregation;
 	private List<String> custom_field_filter;
+	private String cfid_value;
 
 	/**
 	 * 
@@ -1885,10 +1883,11 @@ class Custom_field_values {
 	 * @param max_range
 	 * @param custom_field_aggregation
 	 * @param custom_field_filter
+	 * @param cfid_value
 	 */
 	public Custom_field_values(String field_text_data, String single_categorical_data,
 			List<String> multiple_categorical_data, String min_range, String max_range,
-			List<String> custom_field_aggregation, List<String> custom_field_filter) {
+			List<String> custom_field_aggregation, List<String> custom_field_filter, String cfid_value) {
 		super();
 		this.field_text_data = field_text_data;
 		this.single_categorical_data = single_categorical_data;
@@ -1897,6 +1896,7 @@ class Custom_field_values {
 		this.max_range = max_range;
 		this.custom_field_aggregation = custom_field_aggregation;
 		this.custom_field_filter = custom_field_filter;
+		this.cfid_value = cfid_value;
 	}
 
 	public String getField_text_data() {
@@ -1953,6 +1953,14 @@ class Custom_field_values {
 
 	public void setCustom_field_filter(List<String> custom_field_filter) {
 		this.custom_field_filter = custom_field_filter;
+	}
+
+	public String getCfid_value() {
+		return cfid_value;
+	}
+
+	public void setCfid_value(String cfid_value) {
+		this.cfid_value = cfid_value;
 	}
 
 }

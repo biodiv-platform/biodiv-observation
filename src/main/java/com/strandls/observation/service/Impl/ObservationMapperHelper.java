@@ -289,7 +289,7 @@ public class ObservationMapperHelper {
 				throw new ObservationInputException("Scientific Name Cannot start with Small letter");
 
 			String canonicalName = parsedName.getCanonicalName().getSimple();
-			ExtendedTaxonDefinition esResult = esService.matchPhrase("etdi", "er", "name", providedSciName,
+			ExtendedTaxonDefinition esResult = esService.matchPhrase("etd", "er", "name", providedSciName,
 					"canonical_form", canonicalName);
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
@@ -326,7 +326,7 @@ public class ObservationMapperHelper {
 				filteredList.add(recommendation);
 		}
 		if (filteredList.isEmpty())
-			return taxonIdExists(filteredList, providedSciName);
+			return taxonIdExists(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
@@ -344,7 +344,7 @@ public class ObservationMapperHelper {
 				filteredList.add(recommendation);
 		}
 		if (filteredList.isEmpty())
-			return fullNameSearch(filteredList, providedSciName);
+			return fullNameSearch(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);

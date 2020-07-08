@@ -344,7 +344,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 							publicationGrade);
 
 					traitValuesAggregation = getTraitsAggregation(
-							getAggregate(index, type, "facts.trait_value.trait_aggregation.keyword",
+							getAggregate(index, type, "facts.trait_value.trait_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							trait.getName());
 
@@ -353,7 +353,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
 				traitValuesAggregation = getTraitsAggregation(
-						getAggregate(index, type, "facts.trait_value.trait_aggregation.keyword", geoAggregationField,
+						getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
 								mapSearchQuery).getGroupAggregation(),
 						trait.getName());
 			}
@@ -383,21 +383,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
 					cfValuesAggregation = getCustomFieldAggregationFieldText(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
 						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
 					cfValuesAggregation = getCustomFieldAggregationCategorical(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else {
 //					field type = RANGE
 					cfValuesAggregation = getCustomFieldAggregationRange(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							cf.getDataType(), fieldType, cf.getId().toString());
 				}
@@ -408,21 +408,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
 					cfValuesAggregation = getCustomFieldAggregationFieldText(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
 						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
 					cfValuesAggregation = getCustomFieldAggregationCategorical(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else {
 //					field type = RANGE
 					cfValuesAggregation = getCustomFieldAggregationRange(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							cf.getDataType(), fieldType, cf.getId().toString());
 				}
