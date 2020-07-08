@@ -255,7 +255,6 @@ public class ESUtility {
 					lowerCaseList.add(result);
 				}
 				boolAndLists.add(assignBoolAndQuery(ObservationIndex.tags.getValue(), lowerCaseList));
-
 			}
 
 //			user Group
@@ -573,7 +572,6 @@ public class ESUtility {
 									boolAndLists.add(assignBoolAndQuery(
 											ObservationIndex.customFieldAggregation.getValue(), valueList));
 								}
-
 							}
 						}
 
@@ -622,13 +620,13 @@ public class ESUtility {
 
 			}
 
-//			unknown checks
+//		unknown checks
 			List<Object> maxvotedrecoids = cSTSOT(maxvotedrecoid);
 			if (!maxvotedrecoids.isEmpty()) {
 				boolAndLists.add(assignBoolAndQuery("maxvotedrecoid", maxvotedrecoids));
 			}
 
-			// publication grade
+// 		publication grade
 			List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
 			if (!publicationGradeChoice.isEmpty()) {
 				boolAndLists
