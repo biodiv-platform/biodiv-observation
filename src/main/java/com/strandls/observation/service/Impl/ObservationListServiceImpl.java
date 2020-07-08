@@ -194,12 +194,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade);
-			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.keyword",
+			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.raw",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 
 		} else {
 			aggregationResponse.setGroupState(
-					getAggregate(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQuery)
+					getAggregate(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery)
 							.getGroupAggregation());
 		}
 
@@ -452,7 +452,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> traitsAgg = new HashMap<String, Long>();
 
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().startsWith(traitName)) {
+			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
 				traitsAgg.put(entry.getKey().split("\\|")[1], entry.getValue());
 			}
 		}
