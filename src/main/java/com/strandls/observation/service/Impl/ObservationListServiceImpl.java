@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -453,7 +454,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
 			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
-				traitsAgg.put(entry.getKey().split("\\|")[1], entry.getValue());
+				String capitalizeWord = StringUtils.capitalize(entry.getKey().split("\\|")[1]);
+				traitsAgg.put(capitalizeWord, entry.getValue());
 			}
 		}
 		return traitsAgg;
