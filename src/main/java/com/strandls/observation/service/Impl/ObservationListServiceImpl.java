@@ -13,7 +13,6 @@ import java.util.Map.Entry;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -454,11 +453,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
 			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
-				String capitalizeWord = StringUtils.capitalize(entry.getKey().split("\\|")[1]);
+				String capitalizeWord = toTitleCase(entry.getKey().split("\\|")[1]);
 				traitsAgg.put(capitalizeWord, entry.getValue());
 			}
 		}
 		return traitsAgg;
+	}
+
+	private String toTitleCase(String input) {
+		StringBuilder titleCase = new StringBuilder(input.length());
+		boolean nextTitleCase = true;
+
+		for (char c : input.toCharArray()) {
+			if (Character.isSpaceChar(c)) {
+				nextTitleCase = true;
+			} else if (nextTitleCase) {
+				c = Character.toTitleCase(c);
+				nextTitleCase = false;
+			}
+
+			titleCase.append(c);
+		}
+
+		return titleCase.toString();
 	}
 
 	private Map<String, Long> getCustomFieldAggregationFieldText(Map<String, Long> aggregation, String fieldType,
