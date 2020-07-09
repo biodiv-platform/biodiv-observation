@@ -145,6 +145,12 @@ public class ObservationListPageMapper {
 						fvp.setValue(toTitleCase(value.getValue()));
 						fvp.setValueId(value.getTrait_value_id());
 						factValuePair.add(fvp);
+						fvp = new FactValuePair();
+						fvp.setNameId(fact.getTrait_id());
+						fvp.setName(fact.getName());
+						fvp.setType(fact.getTrait_types());
+						fvp.setIsParticipatry(fact.getIs_participatory());
+						
 					}
 				}
 
