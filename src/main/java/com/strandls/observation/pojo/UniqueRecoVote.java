@@ -117,7 +117,7 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 			}
 			return checkForScientificName(o);
 		} else
-			return this.isScientificName ? 1 : -1;
+			return this.isTaxon ? 1 : -1;
 	}
 
 	/**
