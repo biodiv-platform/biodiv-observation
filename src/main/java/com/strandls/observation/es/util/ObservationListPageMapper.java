@@ -142,15 +142,39 @@ public class ObservationListPageMapper {
 				fvp.setIsParticipatry(fact.getIs_participatory());
 				if (fact.getTrait_value() != null) {
 					for (Trait_value value : fact.getTrait_value()) {
-						fvp.setValue(value.getValue());
+						fvp.setValue(toTitleCase(value.getValue()));
 						fvp.setValueId(value.getTrait_value_id());
 						factValuePair.add(fvp);
+						fvp = new FactValuePair();
+						fvp.setNameId(fact.getTrait_id());
+						fvp.setName(fact.getName());
+						fvp.setType(fact.getTrait_types());
+						fvp.setIsParticipatry(fact.getIs_participatory());
+						
 					}
 				}
 
 			}
 		}
 
+	}
+	
+	private String toTitleCase(String input) {
+		StringBuilder titleCase = new StringBuilder(input.length());
+		boolean nextTitleCase = true;
+
+		for (char c : input.toCharArray()) {
+			if (Character.isSpaceChar(c)) {
+				nextTitleCase = true;
+			} else if (nextTitleCase) {
+				c = Character.toTitleCase(c);
+				nextTitleCase = false;
+			}
+
+			titleCase.append(c);
+		}
+
+		return titleCase.toString();
 	}
 
 //	------------FLAG SHOW--------------

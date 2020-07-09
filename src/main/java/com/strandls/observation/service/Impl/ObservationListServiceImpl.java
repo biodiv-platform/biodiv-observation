@@ -194,12 +194,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade);
-			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.keyword",
+			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.raw",
 					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
 
 		} else {
 			aggregationResponse.setGroupState(
-					getAggregate(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQuery)
+					getAggregate(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery)
 							.getGroupAggregation());
 		}
 
@@ -344,7 +344,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 							publicationGrade);
 
 					traitValuesAggregation = getTraitsAggregation(
-							getAggregate(index, type, "facts.trait_value.trait_aggregation.keyword",
+							getAggregate(index, type, "facts.trait_value.trait_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							trait.getName());
 
@@ -353,7 +353,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
 				traitValuesAggregation = getTraitsAggregation(
-						getAggregate(index, type, "facts.trait_value.trait_aggregation.keyword", geoAggregationField,
+						getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
 								mapSearchQuery).getGroupAggregation(),
 						trait.getName());
 			}
@@ -383,21 +383,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
 					cfValuesAggregation = getCustomFieldAggregationFieldText(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
 						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
 					cfValuesAggregation = getCustomFieldAggregationCategorical(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else {
 //					field type = RANGE
 					cfValuesAggregation = getCustomFieldAggregationRange(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 							cf.getDataType(), fieldType, cf.getId().toString());
 				}
@@ -408,21 +408,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
 					cfValuesAggregation = getCustomFieldAggregationFieldText(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
 						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
 					cfValuesAggregation = getCustomFieldAggregationCategorical(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							fieldType, cf.getId().toString());
 				} else {
 //					field type = RANGE
 					cfValuesAggregation = getCustomFieldAggregationRange(
 							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.keyword",
+									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
 									geoAggregationField, mapSearchQuery).getGroupAggregation(),
 							cf.getDataType(), fieldType, cf.getId().toString());
 				}
@@ -452,11 +452,30 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> traitsAgg = new HashMap<String, Long>();
 
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().startsWith(traitName)) {
-				traitsAgg.put(entry.getKey().split("\\|")[1], entry.getValue());
+			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
+				String capitalizeWord = toTitleCase(entry.getKey().split("\\|")[1]);
+				traitsAgg.put(capitalizeWord, entry.getValue());
 			}
 		}
 		return traitsAgg;
+	}
+
+	private String toTitleCase(String input) {
+		StringBuilder titleCase = new StringBuilder(input.length());
+		boolean nextTitleCase = true;
+
+		for (char c : input.toCharArray()) {
+			if (Character.isSpaceChar(c)) {
+				nextTitleCase = true;
+			} else if (nextTitleCase) {
+				c = Character.toTitleCase(c);
+				nextTitleCase = false;
+			}
+
+			titleCase.append(c);
+		}
+
+		return titleCase.toString();
 	}
 
 	private Map<String, Long> getCustomFieldAggregationFieldText(Map<String, Long> aggregation, String fieldType,
