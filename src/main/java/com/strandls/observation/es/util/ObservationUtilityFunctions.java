@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,17 +96,16 @@ public class ObservationUtilityFunctions {
 			row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
 			row.add(record.getNoOfIdentification());
 			row.add(record.getGeoPrivacy().toString());
-			row.add(record.getCreatedOn());
+			row.add(parseDate(record.getCreatedOn()));
 			row.add(record.getReprImageUrl());
-
 			row.add(record.getSpeciesGroup());
 			row.add(record.getDateAccuracy());
 			row.add(record.getIsLocked().toString());
 			row.add(record.getLatitude().toString());
 			row.add(record.getLongitude().toString());
 			row.add(record.getLocationScale());
-			row.add(record.getFromDate());
-			row.add(record.getToDate());
+			row.add(parseDate(record.getFromDate()));
+			row.add(parseDate(record.getToDate()));
 			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRanktext() : null);
 			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
 			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
@@ -446,5 +448,24 @@ public class ObservationUtilityFunctions {
 		}
 		return map;
 	}
+	
+	private String parseDate(String date) {
+        DateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy"); 
+        DateFormat secondaryFormat = new SimpleDateFormat("yyyy-MM-dd");
+        if(!(date == null)) {
+	        if(date.contains("-") || date.contains("T")) {
+	        	try {
+	        		return originalFormat.format(new Date(secondaryFormat.parse(date).getTime())).toString();
+				} catch (ParseException e) {
+					logger.error("Date Parsing Error - "+e.getMessage());
+				}
+	        }
+	        else
+	        {
+	        	return originalFormat.format(new Date(Long.parseLong(date))).toString();
+	        }
+        }
+        return "";
 
+	}
 }
