@@ -744,7 +744,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
@@ -843,7 +843,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 				userGroupService = headers.addUserGroupHeader(userGroupService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
+				UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
 
 				List<Long> userGroupMember = new ArrayList<Long>();
 				for (UserGroupMemberRole userMemberRole : userGroupPermission.getUserMemberRole()) {
@@ -1276,7 +1276,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
 			List<UserGroupMemberRole> memberRole = userGroupPermission.getUserMemberRole();
 			int flag = 0;
 			for (UserGroupMemberRole ugMemberRole : memberRole) {
@@ -1407,7 +1407,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			comment.setMailData(generateMailData(comment.getRootHolderId()));
 			activityService = headers.addActivityHeaders(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			Activity result = activityService.addComment(comment);
+			Activity result = activityService.addComment("observation", comment);
 			updateLastRevised(comment.getRootHolderId());
 			return result;
 		} catch (Exception e) {
