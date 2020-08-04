@@ -43,6 +43,7 @@ import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
@@ -1488,5 +1489,12 @@ public class ObservationServiceImpl implements ObservationService {
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
 				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
 		return records;
+	}
+	
+	@Override
+	public void bulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception {
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		Long userId = Long.parseLong(profile.getId());
+		
 	}
 }

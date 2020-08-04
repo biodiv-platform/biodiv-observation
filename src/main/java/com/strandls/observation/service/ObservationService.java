@@ -13,6 +13,7 @@ import org.pac4j.core.profile.CommonProfile;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
+import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
@@ -143,5 +144,7 @@ public interface ObservationService {
 	public List<DownloadLog> fetchDownloadLog(List<Long> authorId, String fileType, Integer offSet, Integer limit);
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
+	
+	public void bulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
 
 }

@@ -1261,4 +1261,16 @@ public class ObservationController {
 				Integer.parseInt(offSet),Integer.parseInt(limit));
 		return Response.status(Status.OK).entity(records).build();	
 	}
+	
+	@POST
+	@Path(ApiConstants.BULKUPLOAD)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response bulkUpload() {
+		try {
+			return Response.status(Status.OK).build();			
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
 }
