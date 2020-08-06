@@ -143,5 +143,8 @@ public interface ObservationService {
 	public List<DownloadLog> fetchDownloadLog(List<Long> authorId, String fileType, Integer offSet, Integer limit);
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
+	
+	public String forceUpdateIndexField(String index, String type,String field, String value, Long dataTableId);
+	
 
 }
