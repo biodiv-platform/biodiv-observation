@@ -4,14 +4,21 @@
 package com.strandls.observation.dao;
 
 import java.util.List;
+import java.util.Map;
 
+import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.util.AbstractDAO;
@@ -96,6 +103,21 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			session.close();
 		}
 		return result;
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String>projectedColumns, Map<String,Object>filterOn){
+		Session session = sessionFactory.openSession();
+		Criteria criteria = session.createCriteria(Observation.class);
+		ProjectionList projectionList = Projections.projectionList();
+		for(String projectedColumn:projectedColumns) {
+			projectionList.add(Projections.property(projectedColumn));
+		}
+		criteria.add(Restrictions.allEq(filterOn));
+		criteria.setProjection(projectionList);
+		List<Object[]> queryData = criteria.list();
+		session.close();
+		return queryData;
 	}
 
 }
