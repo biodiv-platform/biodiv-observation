@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1488,5 +1489,21 @@ public class ObservationServiceImpl implements ObservationService {
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
 				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
 		return records;
+	}
+
+	@Override
+	public String forceUpdateIndexField(String index, String type,String field, String value, Long dataTableId){
+	List<String>columnNames = new ArrayList<>();
+	Map<String, Object> filterOn = new HashMap<String, Object>();
+	columnNames.add("id");
+	filterOn.put("dataTableId", dataTableId);
+	List<Object[]>keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
+	String ids =  keys.toString();
+	try {
+		return esService.forceUpdateIndexField(index, type, field, value, ids.toString().substring(1, ids.length()));
+	} catch (ApiException e) {
+		logger.error(e.getMessage());
+	}
+	return null;
 	}
 }
