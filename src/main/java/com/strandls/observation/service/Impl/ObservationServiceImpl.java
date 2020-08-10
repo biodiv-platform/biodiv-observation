@@ -209,7 +209,7 @@ public class ObservationServiceImpl implements ObservationService {
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
-				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
+				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
 				if (!score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
