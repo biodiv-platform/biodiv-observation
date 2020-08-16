@@ -190,6 +190,7 @@ public class ObservationListCSVThread implements Runnable {
 		mailService.sendMail(authorId,fileName, "observation");		
 		} 
 		catch (Exception e) {
+			e.printStackTrace();
 			logger.error("file generation failed @ "+filePath+" due to - "+e.getMessage());
 			fileGenerationStatus = "FAILED";
 			entity.setStatus(fileGenerationStatus);
