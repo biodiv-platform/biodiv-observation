@@ -292,7 +292,7 @@ public class ObservationUtilityFunctions {
 		if (fieldType.equalsIgnoreCase("single categorical"))
 			return values.getSingle_categorical_data();
 		if (fieldType.equalsIgnoreCase("multiple categorical"))
-			return String.join(";", values.getMultiple_categorical_data());
+			return String.join(";", values.getMultiple_categorical_data() != null ? values.getMultiple_categorical_data() : new ArrayList());
 		return null;
 
 	}
