@@ -398,7 +398,7 @@ public class ObservationMapperHelper {
 				if (fileMap == null || fileMap.isEmpty())
 					return null;
 			}
-			
+
 			System.out.println("\n\n***** " + fileMap + " *****\n\n");
 
 			for (ResourceData resourceData : resourceDataList) {
@@ -416,9 +416,8 @@ public class ObservationMapperHelper {
 
 						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
 
-						System.out.println(files.keySet());
-						System.out.println(files.get("name"));
 						String relativePath = files.get("name").toString();
+						System.out.println(relativePath);
 						resource.setFileName(relativePath);
 
 					} else
@@ -446,6 +445,9 @@ public class ObservationMapperHelper {
 				resource.setLicenseId(resourceData.getLicenceId());
 
 				resources.add(resource);
+
+				System.out.println("resource create");
+				System.out.println(resource.toString());
 			}
 			return resources;
 
