@@ -22,6 +22,7 @@ import javax.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
@@ -71,6 +72,9 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
+
+	@Inject
+	private ObjectMapper objectMapper;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -407,8 +411,8 @@ public class ObservationMapperHelper {
 						// new path getting extracted from the map
 
 						System.out.println("----------inside resource mapper---------");
-						Map<String, String> files = (Map<String, String>) fileMap
-								.get(fileMap.get(resourceData.getPath()));
+
+						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
 
 						System.out.println(files.keySet());
 						System.out.println(files.get("name"));
