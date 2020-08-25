@@ -341,11 +341,9 @@ public class ObservationServiceImpl implements ObservationService {
 				resourceService = headers.addResourceHeaders(resourceService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 
-				System.out.println("resource start");
 				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
 
-				System.out.println("after resource");
 				Integer noOfImages = 0;
 				Integer noOfAudio = 0;
 				Integer noOfVideo = 0;
@@ -448,7 +446,6 @@ public class ObservationServiceImpl implements ObservationService {
 			return findById(observation.getId());
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 

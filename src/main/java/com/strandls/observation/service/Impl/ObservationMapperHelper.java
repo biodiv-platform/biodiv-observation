@@ -22,7 +22,6 @@ import javax.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
@@ -72,9 +71,6 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
-
-	@Inject
-	private ObjectMapper objectMapper;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -399,8 +395,6 @@ public class ObservationMapperHelper {
 					return null;
 			}
 
-			System.out.println("\n\n***** " + fileMap + " *****\n\n");
-
 			for (ResourceData resourceData : resourceDataList) {
 				Resource resource = new Resource();
 				resource.setVersion(0L);
@@ -411,13 +405,8 @@ public class ObservationMapperHelper {
 				if (resourceData.getPath() != null) {
 					if (fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
-
-						System.out.println("----------inside resource mapper---------");
-
 						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
-
 						String relativePath = files.get("name").toString();
-						System.out.println(relativePath);
 						resource.setFileName(relativePath);
 
 					} else
@@ -445,14 +434,10 @@ public class ObservationMapperHelper {
 				resource.setLicenseId(resourceData.getLicenceId());
 
 				resources.add(resource);
-
-				System.out.println("resource create");
-				System.out.println(resource.toString());
 			}
 			return resources;
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return null;
