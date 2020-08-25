@@ -398,6 +398,8 @@ public class ObservationMapperHelper {
 				if (fileMap == null || fileMap.isEmpty())
 					return null;
 			}
+			
+			System.out.println("\n\n***** " + fileMap + " *****\n\n");
 
 			for (ResourceData resourceData : resourceDataList) {
 				Resource resource = new Resource();
