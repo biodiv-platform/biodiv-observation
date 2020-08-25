@@ -405,8 +405,13 @@ public class ObservationMapperHelper {
 				if (resourceData.getPath() != null) {
 					if (fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
+
+						System.out.println("----------inside resource mapper---------");
 						Map<String, String> files = (Map<String, String>) fileMap
 								.get(fileMap.get(resourceData.getPath()));
+
+						System.out.println(files.keySet());
+						System.out.println(files.get("name"));
 						String relativePath = files.get("name").toString();
 						resource.setFileName(relativePath);
 
