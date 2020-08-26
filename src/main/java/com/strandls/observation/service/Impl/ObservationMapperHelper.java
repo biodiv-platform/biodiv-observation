@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
@@ -371,6 +372,7 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
 			List<ResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
@@ -384,7 +386,11 @@ public class ObservationMapperHelper {
 			if (!fileList.isEmpty()) {
 				fileUploadService = headers.addFileUploadHeader(fileUploadService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				fileMap = fileUploadService.moveFiles(fileList);
+
+				FilesDTO filesDTO = new FilesDTO();
+				filesDTO.setFiles(fileList);
+				filesDTO.setFolder("observations");
+				fileMap = fileUploadService.moveFiles(filesDTO);
 				if (fileMap == null || fileMap.isEmpty())
 					return null;
 			}
@@ -397,10 +403,13 @@ public class ObservationMapperHelper {
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 
 				if (resourceData.getPath() != null) {
-					if (fileMap.containsKey(resourceData.getPath()))
+					if (fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
-						resource.setFileName(fileMap.get(resourceData.getPath()).toString());
-					else
+						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
+						String relativePath = files.get("name").toString();
+						resource.setFileName(relativePath);
+
+					} else
 						continue; // skip the resource as no new path has been returned
 				}
 				resource.setMimeType(null);

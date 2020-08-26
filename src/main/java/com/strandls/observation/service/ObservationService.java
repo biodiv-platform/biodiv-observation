@@ -137,13 +137,14 @@ public interface ObservationService {
 
 	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
 			ResourceRating resourceRating);
-	
-	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type, String observationId);
-	
+
+	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type,
+			String observationId);
+
 	public List<DownloadLog> fetchDownloadLog(List<Long> authorId, String fileType, Integer offSet, Integer limit);
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
 
-	public String forceUpdateIndexField(String index, String type,String field, String value, Long dataTableId);
-	
+	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId);
+
 }

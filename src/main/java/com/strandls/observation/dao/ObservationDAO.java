@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+<<<<<<< HEAD
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+=======
+>>>>>>> bcfdd1ba5ef32e233f6d5e417d5c9b70336da950
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;

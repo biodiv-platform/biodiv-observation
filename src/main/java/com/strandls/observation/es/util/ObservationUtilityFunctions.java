@@ -284,6 +284,7 @@ public class ObservationUtilityFunctions {
 		return map.values();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private String getCustomFieldValue(Custom_field_values values, String fieldType) {
 		if (fieldType.equalsIgnoreCase("field text"))
 			return values.getField_text_data();
