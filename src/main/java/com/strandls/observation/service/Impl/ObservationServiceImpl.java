@@ -1311,6 +1311,10 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
 
+			ESCreateThread esCreateThread = new ESCreateThread(esUpdate,
+					observationData.getObservation().getId().toString());
+			Thread thread = new Thread(esCreateThread);
+			thread.start();
 			return findById(observationData.getObservation().getId());
 
 		} catch (Exception e) {
