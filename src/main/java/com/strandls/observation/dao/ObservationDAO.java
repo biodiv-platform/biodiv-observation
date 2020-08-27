@@ -7,11 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-<<<<<<< HEAD
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-=======
->>>>>>> bcfdd1ba5ef32e233f6d5e417d5c9b70336da950
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -107,13 +102,13 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		}
 		return result;
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String>projectedColumns, Map<String,Object>filterOn){
+	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String> projectedColumns, Map<String, Object> filterOn) {
 		Session session = sessionFactory.openSession();
 		Criteria criteria = session.createCriteria(Observation.class);
 		ProjectionList projectionList = Projections.projectionList();
-		for(String projectedColumn:projectedColumns) {
+		for (String projectedColumn : projectedColumns) {
 			projectionList.add(Projections.property(projectedColumn));
 		}
 		criteria.add(Restrictions.allEq(filterOn));

@@ -250,12 +250,8 @@ public class ObservationServiceImpl implements ObservationService {
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-<<<<<<< HEAD
-						observationNearBy, activityCount);				
-=======
 						observationNearBy, activityCount);
 
->>>>>>> bcfdd1ba5ef32e233f6d5e417d5c9b70336da950
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
@@ -1497,21 +1493,6 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-<<<<<<< HEAD
-	public String forceUpdateIndexField(String index, String type,String field, String value, Long dataTableId){
-	List<String>columnNames = new ArrayList<>();
-	Map<String, Object> filterOn = new HashMap<String, Object>();
-	columnNames.add("id");
-	filterOn.put("dataTableId", dataTableId);
-	List<Object[]>keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
-	String ids =  keys.toString();
-	try {
-		return esService.forceUpdateIndexField(index, type, field, value, ids.toString().substring(1, ids.length()));
-	} catch (ApiException e) {
-		logger.error(e.getMessage());
-	}
-	return null;
-=======
 	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId) {
 		List<String> columnNames = new ArrayList<>();
 		Map<String, Object> filterOn = new HashMap<String, Object>();
@@ -1526,6 +1507,5 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
->>>>>>> bcfdd1ba5ef32e233f6d5e417d5c9b70336da950
 	}
 }
