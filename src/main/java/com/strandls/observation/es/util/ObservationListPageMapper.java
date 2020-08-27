@@ -69,7 +69,7 @@ public class ObservationListPageMapper {
 	private void unpackObservedOnDate(Date observedDate) {
 		observedOn = observedDate;
 	}
-	
+
 	@JsonProperty(value = "reverse_geocoded_name")
 	private void unpackAddress(String reverse_geocoded_name) {
 		reverseGeocodedName = reverse_geocoded_name;
@@ -150,7 +150,7 @@ public class ObservationListPageMapper {
 						fvp.setName(fact.getName());
 						fvp.setType(fact.getTrait_types());
 						fvp.setIsParticipatry(fact.getIs_participatory());
-						
+
 					}
 				}
 
@@ -158,7 +158,7 @@ public class ObservationListPageMapper {
 		}
 
 	}
-	
+
 	private String toTitleCase(String input) {
 		StringBuilder titleCase = new StringBuilder(input.length());
 		boolean nextTitleCase = true;
@@ -361,8 +361,9 @@ public class ObservationListPageMapper {
 						List<CustomFieldValues> multipleCategorical = new ArrayList<CustomFieldValues>();
 						if (cfValue.getMultiple_categorical_data() != null) {
 							for (String multi : cfValue.getMultiple_categorical_data()) {
-								singleCategorical.setValues(multi);
-								multipleCategorical.add(singleCategorical);
+								CustomFieldValues mutliCat = new CustomFieldValues();
+								mutliCat.setValues(multi);
+								multipleCategorical.add(mutliCat);
 							}
 						}
 
@@ -371,7 +372,8 @@ public class ObservationListPageMapper {
 						cfData.setCustomFieldValues(cfValueData);
 						cfData.setDataType(cf.getData_type());
 						cfData.setDefaultValue(cf.getDefault_value());
-						cfData.setDisplayOrder(Integer.parseInt(cf.getDisplay_order().toString()));
+						if (cf.getDisplay_order() != null)
+							cfData.setDisplayOrder(Integer.parseInt(cf.getDisplay_order().toString()));
 						cfData.setFieldType(cf.getField_type());
 						cfData.setUnits(cf.getUnits());
 
@@ -600,6 +602,5 @@ public class ObservationListPageMapper {
 	public void setTags(List<Tags> tags) {
 		this.tags = tags;
 	}
-
 
 }

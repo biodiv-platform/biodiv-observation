@@ -233,11 +233,9 @@ public class ObservationServiceImpl implements ObservationService {
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 
-				
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
-				
-				
+
 				if (observation.getGeoPrivacy()) {
 					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
 							observation.getLongitude());
@@ -254,7 +252,6 @@ public class ObservationServiceImpl implements ObservationService {
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, activityCount);
 
-				
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
@@ -343,6 +340,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 				resourceService = headers.addResourceHeaders(resourceService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
+
 				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
 
@@ -1313,6 +1311,10 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
 
+			ESCreateThread esCreateThread = new ESCreateThread(esUpdate,
+					observationData.getObservation().getId().toString());
+			Thread thread = new Thread(esCreateThread);
+			thread.start();
 			return findById(observationData.getObservation().getId());
 
 		} catch (Exception e) {
@@ -1462,7 +1464,6 @@ public class ObservationServiceImpl implements ObservationService {
 
 	}
 
-
 	@Override
 	public ObservationListElasticMapping getObservationPublicationGrade(String index, String type,
 			String observationId) {
@@ -1492,18 +1493,19 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public String forceUpdateIndexField(String index, String type,String field, String value, Long dataTableId){
-	List<String>columnNames = new ArrayList<>();
-	Map<String, Object> filterOn = new HashMap<String, Object>();
-	columnNames.add("id");
-	filterOn.put("dataTableId", dataTableId);
-	List<Object[]>keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
-	String ids =  keys.toString();
-	try {
-		return esService.forceUpdateIndexField(index, type, field, value, ids.toString().substring(1, ids.length()));
-	} catch (ApiException e) {
-		logger.error(e.getMessage());
-	}
-	return null;
+	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId) {
+		List<String> columnNames = new ArrayList<>();
+		Map<String, Object> filterOn = new HashMap<String, Object>();
+		columnNames.add("id");
+		filterOn.put("dataTableId", dataTableId);
+		List<Object[]> keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
+		String ids = keys.toString();
+		try {
+			return esService.forceUpdateIndexField(index, type, field, value,
+					ids.toString().substring(1, ids.length()));
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 	}
 }
