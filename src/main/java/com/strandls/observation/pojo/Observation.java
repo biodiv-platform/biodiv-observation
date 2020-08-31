@@ -22,7 +22,7 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 @Entity
 @Table(name = "observation", schema = "public")
-@JsonIgnoreProperties(value = { "" },ignoreUnknown = true)
+@JsonIgnoreProperties(value = { "" }, ignoreUnknown = true)
 public class Observation implements Serializable {
 
 	/**
@@ -84,6 +84,7 @@ public class Observation implements Serializable {
 	private Integer noOfIdentifications;
 	private Long dataTableId;
 	private String dateAccuracy;
+	private Boolean isVerified;
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -321,9 +322,9 @@ public class Observation implements Serializable {
 		this.toDate = toDate;
 	}
 
-	@Column(name = "topology", columnDefinition="Geometry", nullable = false)
+	@Column(name = "topology", columnDefinition = "Geometry", nullable = false)
 	@JsonSerialize(using = GeometrySerializer.class)
-    @JsonDeserialize(contentUsing = GeometryDeserializer.class)
+	@JsonDeserialize(contentUsing = GeometryDeserializer.class)
 	public Geometry getTopology() {
 		return this.topology;
 	}
@@ -582,6 +583,15 @@ public class Observation implements Serializable {
 
 	public void setDateAccuracy(String dateAccuracy) {
 		this.dateAccuracy = dateAccuracy;
+	}
+
+	@Column(name = "is_verified",columnDefinition = "boolean default false")
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
 	}
 
 }
