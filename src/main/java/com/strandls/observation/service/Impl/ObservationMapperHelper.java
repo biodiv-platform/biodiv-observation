@@ -391,8 +391,6 @@ public class ObservationMapperHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
 				fileMap = fileUploadService.moveFiles(filesDTO);
-				if (fileMap == null || fileMap.isEmpty())
-					return null;
 			}
 
 			for (ResourceData resourceData : resourceDataList) {
@@ -403,7 +401,7 @@ public class ObservationMapperHelper {
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 
 				if (resourceData.getPath() != null) {
-					if (fileMap.containsKey(resourceData.getPath())) {
+					if (fileMap != null && !fileMap.isEmpty() && fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
 						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
 						String relativePath = files.get("name").toString();
