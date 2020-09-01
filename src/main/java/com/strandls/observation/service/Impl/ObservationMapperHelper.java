@@ -410,7 +410,8 @@ public class ObservationMapperHelper {
 						resource.setFileName(relativePath);
 
 					} else
-						continue; // skip the resource as no new path has been returned
+						resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
+																		// returned
 				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
