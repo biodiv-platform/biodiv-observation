@@ -391,8 +391,6 @@ public class ObservationMapperHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
 				fileMap = fileUploadService.moveFiles(filesDTO);
-				if (fileMap == null || fileMap.isEmpty())
-					return null;
 			}
 
 			for (ResourceData resourceData : resourceDataList) {
@@ -403,14 +401,17 @@ public class ObservationMapperHelper {
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 
 				if (resourceData.getPath() != null) {
-					if (fileMap.containsKey(resourceData.getPath())) {
+					if (fileMap != null && !fileMap.isEmpty() && fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
+						System.out.println(fileMap);
 						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
+						System.out.println(files);
 						String relativePath = files.get("name").toString();
 						resource.setFileName(relativePath);
 
 					} else
-						continue; // skip the resource as no new path has been returned
+						resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
+																		// returned
 				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
