@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -209,7 +210,7 @@ public class ObservationServiceImpl implements ObservationService {
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
-				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString());
+				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
 				if (!score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
@@ -338,6 +339,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 				resourceService = headers.addResourceHeaders(resourceService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
+
 				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
 
@@ -744,7 +746,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
@@ -843,7 +845,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 				userGroupService = headers.addUserGroupHeader(userGroupService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
+				UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 				List<Long> userGroupMember = new ArrayList<Long>();
 				for (UserGroupMemberRole userMemberRole : userGroupPermission.getUserMemberRole()) {
@@ -1276,7 +1278,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupPermission();
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 			List<UserGroupMemberRole> memberRole = userGroupPermission.getUserMemberRole();
 			int flag = 0;
 			for (UserGroupMemberRole ugMemberRole : memberRole) {
@@ -1319,6 +1321,10 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
 
+			ESCreateThread esCreateThread = new ESCreateThread(esUpdate,
+					observationData.getObservation().getId().toString());
+			Thread thread = new Thread(esCreateThread);
+			thread.start();
 			return findById(observationData.getObservation().getId());
 
 		} catch (Exception e) {
@@ -1494,5 +1500,22 @@ public class ObservationServiceImpl implements ObservationService {
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
 				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
 		return records;
+	}
+
+	@Override
+	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId) {
+		List<String> columnNames = new ArrayList<>();
+		Map<String, Object> filterOn = new HashMap<String, Object>();
+		columnNames.add("id");
+		filterOn.put("dataTableId", dataTableId);
+		List<Object[]> keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
+		String ids = keys.toString();
+		try {
+			return esService.forceUpdateIndexField(index, type, field, value,
+					ids.toString().substring(1, ids.length()));
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 	}
 }

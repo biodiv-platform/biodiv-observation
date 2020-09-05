@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.pojo.Observation;
@@ -371,6 +372,7 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
 			List<ResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
@@ -384,9 +386,11 @@ public class ObservationMapperHelper {
 			if (!fileList.isEmpty()) {
 				fileUploadService = headers.addFileUploadHeader(fileUploadService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				fileMap = fileUploadService.moveFiles(fileList);
-				if (fileMap == null || fileMap.isEmpty())
-					return null;
+
+				FilesDTO filesDTO = new FilesDTO();
+				filesDTO.setFiles(fileList);
+				filesDTO.setFolder("observations");
+				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
 			for (ResourceData resourceData : resourceDataList) {
@@ -397,11 +401,17 @@ public class ObservationMapperHelper {
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
 
 				if (resourceData.getPath() != null) {
-					if (fileMap.containsKey(resourceData.getPath()))
+					if (fileMap != null && !fileMap.isEmpty() && fileMap.containsKey(resourceData.getPath())) {
 						// new path getting extracted from the map
-						resource.setFileName(fileMap.get(resourceData.getPath()).toString());
-					else
-						continue; // skip the resource as no new path has been returned
+						System.out.println(fileMap);
+						Map<String, String> files = (Map<String, String>) fileMap.get(resourceData.getPath());
+						System.out.println(files);
+						String relativePath = files.get("name").toString();
+						resource.setFileName(relativePath);
+
+					} else
+						resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
+																		// returned
 				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
