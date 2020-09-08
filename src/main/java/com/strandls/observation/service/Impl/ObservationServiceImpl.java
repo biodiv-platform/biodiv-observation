@@ -1542,6 +1542,7 @@ public class ObservationServiceImpl implements ObservationService {
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
+		return null;
 	}
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
