@@ -47,6 +47,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -1263,11 +1264,29 @@ public class ObservationController {
 	}
 	
 	@POST
-	@Path(ApiConstants.BULKUPLOAD)
+	@Path(ApiConstants.BULK + ApiConstants.CREATE)
 	@ValidateUser
+	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response bulkUpload() {
+	@ApiOperation(value="Handle bulk upload", notes = "Handle bulk upload", response = String.class)
+	public Response bulkUpload(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
 		try {
+			observationService.handleBulkUpload(request, observationDTO);
+			return Response.status(Status.OK).build();			
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path(ApiConstants.BULK + ApiConstants.UGCONTEXT)
+	@ValidateUser
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(value="Handle bulk upload UGContext",	notes = "Handle bulk upload UGContext", response = String.class)
+	public Response bulkUploadUGContext(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
+		try {
+			observationService.handleBulkUploadUGContext(request, observationDTO);
 			return Response.status(Status.OK).build();			
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

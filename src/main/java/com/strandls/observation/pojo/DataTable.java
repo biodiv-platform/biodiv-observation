@@ -113,7 +113,7 @@ public class DataTable implements Serializable {
 	private Long partyUploaderId;
 	
 	@Column(name = "project")
-	private Long project;
+	private String project;
 	
 	@Column(name = "rating", nullable = false)
 	private Integer rating;
@@ -156,6 +156,9 @@ public class DataTable implements Serializable {
 
 	@Column(name = "images_file_id")
 	private Long imagesFileId;
+	
+	@Column(name = "basis_of_data", nullable = false, columnDefinition = "varchar(255) default 'PRIMARY_OBSERVATION'")
+	private String basisOfData;
 
 	public Long getId() {
 		return id;
@@ -397,11 +400,11 @@ public class DataTable implements Serializable {
 		this.partyUploaderId = partyUploaderId;
 	}
 
-	public Long getProject() {
+	public String getProject() {
 		return project;
 	}
 
-	public void setProject(Long project) {
+	public void setProject(String project) {
 		this.project = project;
 	}
 
@@ -517,6 +520,14 @@ public class DataTable implements Serializable {
 		this.imagesFileId = imagesFileId;
 	}
 
+	public String getBasisOfData() {
+		return basisOfData;
+	}
+
+	public void setBasisOfData(String basisOfData) {
+		this.basisOfData = basisOfData;
+	}
+
 	@Override
 	public String toString() {
 		return "DataTable [id=" + id + ", version=" + version + ", accessLicenseId=" + accessLicenseId
@@ -538,6 +549,6 @@ public class DataTable implements Serializable {
 				+ temporalCoverageToDate + ", title=" + title + ", uFileId=" + uFileId + ", uploaderId=" + uploaderId
 				+ ", viaCode=" + viaCode + ", viaId=" + viaId + ", temporalCoverageDateAccuracy="
 				+ temporalCoverageDateAccuracy + ", uploadLogId=" + uploadLogId + ", traitValueFileId="
-				+ traitValueFileId + ", summary=" + summary + ", imagesFileId=" + imagesFileId + "]";
+				+ traitValueFileId + ", summary=" + summary + ", imagesFileId=" + imagesFileId + ", basisOfData=" + basisOfData + "]";
 	}
 }

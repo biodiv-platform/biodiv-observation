@@ -84,6 +84,77 @@ public class Observation implements Serializable {
 	private Integer noOfIdentifications;
 	private Long dataTableId;
 	private String dateAccuracy;
+	
+	public Observation() {}
+
+	public Observation(Long id, Long version, Long authorId, Date createdOn, Long groupId, Double latitude,
+			Double longitude, String notes, Date fromDate, String placeName, Integer rating, String reverseGeocodedName,
+			Integer flagCount, Boolean geoPrivacy, Long habitatId, Boolean isDeleted, Date lastRevised,
+			String locationAccuracy, Long visitCount, String searchText, Long maxVotedRecoId, Boolean agreeTerms,
+			Boolean isChecklist, Boolean isShowable, Long sourceId, Date toDate, Geometry topology,
+			String checklistAnnotations, Integer featureCount, Boolean isLocked, Long licenseId, Long languageId,
+			String locationScale, String accessRights, String catalogNumber, Long datasetId, String externalDatasetKey,
+			String externalId, String externalUrl, String informationWithheld, Date lastCrawled, Date lastInterpreted,
+			String originalAuthor, String publishingCountry, Long reprImageId, String viaCode, String viaId,
+			String protocol, String basisOfRecord, Integer noOfImages, Integer noOfVideos, Integer noOfAudio,
+			Integer noOfIdentifications, Long dataTableId, String dateAccuracy) {
+		super();
+		this.id = id;
+		this.version = version;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.groupId = groupId;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.notes = notes;
+		this.fromDate = fromDate;
+		this.placeName = placeName;
+		this.rating = rating;
+		this.reverseGeocodedName = reverseGeocodedName;
+		this.flagCount = flagCount;
+		this.geoPrivacy = geoPrivacy;
+		this.habitatId = habitatId;
+		this.isDeleted = isDeleted;
+		this.lastRevised = lastRevised;
+		this.locationAccuracy = locationAccuracy;
+		this.visitCount = visitCount;
+		this.searchText = searchText;
+		this.maxVotedRecoId = maxVotedRecoId;
+		this.agreeTerms = agreeTerms;
+		this.isChecklist = isChecklist;
+		this.isShowable = isShowable;
+		this.sourceId = sourceId;
+		this.toDate = toDate;
+		this.topology = topology;
+		this.checklistAnnotations = checklistAnnotations;
+		this.featureCount = featureCount;
+		this.isLocked = isLocked;
+		this.licenseId = licenseId;
+		this.languageId = languageId;
+		this.locationScale = locationScale;
+		this.accessRights = accessRights;
+		this.catalogNumber = catalogNumber;
+		this.datasetId = datasetId;
+		this.externalDatasetKey = externalDatasetKey;
+		this.externalId = externalId;
+		this.externalUrl = externalUrl;
+		this.informationWithheld = informationWithheld;
+		this.lastCrawled = lastCrawled;
+		this.lastInterpreted = lastInterpreted;
+		this.originalAuthor = originalAuthor;
+		this.publishingCountry = publishingCountry;
+		this.reprImageId = reprImageId;
+		this.viaCode = viaCode;
+		this.viaId = viaId;
+		this.protocol = protocol;
+		this.basisOfRecord = basisOfRecord;
+		this.noOfImages = noOfImages;
+		this.noOfVideos = noOfVideos;
+		this.noOfAudio = noOfAudio;
+		this.noOfIdentifications = noOfIdentifications;
+		this.dataTableId = dataTableId;
+		this.dateAccuracy = dateAccuracy;
+	}
 
 	@Id
 	@Column(name = "id", nullable = false)

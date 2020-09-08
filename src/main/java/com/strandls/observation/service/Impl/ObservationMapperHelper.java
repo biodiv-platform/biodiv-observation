@@ -19,6 +19,10 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +31,7 @@ import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.pojo.DataTable;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
@@ -35,8 +40,10 @@ import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -435,6 +442,67 @@ public class ObservationMapperHelper {
 
 	}
 
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	public List<Resource> createResourceMapping(HttpServletRequest request, List<License> licenses, Map<String, Integer> fieldMapping, 
+			Row dataRow, Long userId, Map<String, Object> resourceDataList, DataTable dataTable) {
+		List<Resource> resources = new ArrayList<Resource>();
+		try {
+			for (Map.Entry<String, Object> resourceData: resourceDataList.entrySet()) {
+				Map<String, String> values = (Map<String, String>) resourceData.getValue();
+				Resource resource = new Resource();
+				resource.setVersion(0L);
+				resource.setDescription(null);
+				
+				resource.setMimeType(null);
+				if (values.get("mimeType").startsWith("image") || values.get("mimeType").equalsIgnoreCase("image"))
+					resource.setType("IMAGE");
+				else if (values.get("mimeType").startsWith("audio") || values.get("mimeType").equalsIgnoreCase("audio"))
+					resource.setType("AUDIO");
+				else if (values.get("mimeType").startsWith("video") || values.get("mimeType").equalsIgnoreCase("video"))
+					resource.setType("VIDEO");
+				resource.setFileName(resourceData.getKey());
+				resource.setUrl(null);
+				resource.setRating(null);
+				resource.setUploadTime(new Date());
+				resource.setUploaderId(userId);
+				resource.setContext("OBSERVATION");
+				resource.setLanguageId(205L);
+				resource.setAccessRights(null);
+				resource.setAnnotations(null);
+				resource.setGbifId(null);
+				
+				License license = null;
+				Cell licenseCell = dataRow.getCell(fieldMapping.get("license"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (licenseCell != null) {
+					licenseCell.setCellType(CellType.STRING);
+					
+					license = licenses.stream().filter(l -> {
+						final String docLicense;
+						docLicense = licenseCell.getStringCellValue().replaceAll("-", "_").toUpperCase();
+						return l.getName().endsWith(docLicense);
+					}).findAny().orElse(null);
+					
+					if (license == null) {
+						return null;
+					}
+				} else {
+					license = new License();
+					license.setId(822L);
+				}
+				
+				resource.setLicenseId(license.getId());
+
+				resources.add(resource);
+			}
+			return resources;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
 //	GETS A RANDOM LAT,LON WITH LOWER LIMIT AS 5KM AND UPPER LIMIT AS 25KM
 	public Map<String, Double> getRandomLatLong(Double lat, Double lon) {
 
@@ -484,6 +552,172 @@ public class ObservationMapperHelper {
 		}
 		return editResource;
 
+	}
+	
+	@SuppressWarnings("deprecation")
+	public Observation bulkUploadPayload(Row dataRow, Map<String, Integer> fieldMapping, DataTable dataTable, List<SpeciesGroup> speciesGroupList, Long languageId, Long authorId) {
+		Observation observation = null;
+		try {
+			SpeciesGroup speciesGroup = null;
+			Cell sGroupCell = dataRow.getCell(fieldMapping.get("sGroup"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (sGroupCell != null) {
+				sGroupCell.setCellType(CellType.STRING);
+				
+				speciesGroup = speciesGroupList.stream().filter(group -> {
+					final String sGroup = sGroupCell.getStringCellValue();
+					return group.getName().equalsIgnoreCase(sGroup);
+				}).findFirst().orElse(null);	
+				
+			} else { // get value from dataTable metadata if not mentioned in excel
+				speciesGroup = new SpeciesGroup();
+				speciesGroup.setId(Long.parseLong(dataTable.getTaxonomicCoverageGroupIds().split(",")[0].trim()));
+			}
+			
+			String helpIdentify = null;
+			Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (helpIdentifyCell != null) {
+				helpIdentifyCell.setCellType(CellType.STRING);
+				helpIdentify = helpIdentifyCell.getStringCellValue();
+			}
+			
+			Date fromDate = null;
+			Cell fromDateCell = dataRow.getCell(fieldMapping.get("fromDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (fromDateCell != null) {
+				fromDate = fromDateCell.getDateCellValue();
+			} else { // get value from dataTable metadata if not mentioned in excel
+				fromDate = dataTable.getTemporalCoverageFromDate(); 
+			}
+			
+			Date toDate = null;
+			Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (toDateCell != null) {
+				fromDate = fromDateCell.getDateCellValue();
+			}
+			
+			String dateAccuracy = null;
+			Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (dateAccuracyCell != null) {
+				dateAccuracyCell.setCellType(CellType.STRING);
+				dateAccuracy = dateAccuracyCell.getStringCellValue();
+			}	
+			
+			String notes = null;
+			Cell notesCell = dataRow.getCell(fieldMapping.get("notes"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (notesCell != null) {
+				notesCell.setCellType(CellType.STRING);
+				notes = notesCell.getStringCellValue();
+			}		
+			
+			String observedAt = null;
+			Cell observedAtCell = dataRow.getCell(fieldMapping.get("observedAt"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (observedAtCell != null) {
+				observedAtCell.setCellType(CellType.STRING);
+				observedAt = observedAtCell.getStringCellValue();
+			}	
+			
+			String locationScale = null;
+			Cell locationScaleCell = dataRow.getCell(fieldMapping.get("locationScale"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (locationScaleCell != null) {
+				locationScaleCell.setCellType(CellType.STRING);
+				locationScale = locationScaleCell.getStringCellValue();
+			}	
+			
+			Double latitude = null;
+			Cell latitudeCell = dataRow.getCell(fieldMapping.get("latitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (latitudeCell != null) {
+				latitudeCell.setCellType(CellType.NUMERIC);
+				latitude = latitudeCell.getNumericCellValue();
+			} else { // get value from dataTable metadata if not mentioned in excel
+				latitude = dataTable.getGeographicalCoverageLatitude();
+			}
+			
+			Double longitude = null;
+			Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (longitudeCell != null) {
+				longitudeCell.setCellType(CellType.NUMERIC);
+				longitude = longitudeCell.getNumericCellValue();
+			} else { // get value from dataTable metadata if not mentioned in excel
+				latitude = dataTable.getGeographicalCoverageLongitude();
+			}
+			
+			Boolean geoPrivacy = null;
+			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (geoPrivacyCell != null) {
+				geoPrivacyCell.setCellType(CellType.BOOLEAN);
+				geoPrivacy = geoPrivacyCell.getBooleanCellValue();		
+			}
+			
+			Geometry topology = null;
+			if (latitude != null && longitude != null) {
+				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
+				DecimalFormat df = new DecimalFormat("#.####");
+				df.setRoundingMode(RoundingMode.HALF_EVEN);
+				double lat = Double.parseDouble(df.format(latitude));
+				double lon = Double.parseDouble(df.format(longitude));
+				Coordinate c = new Coordinate(lat, lon);
+				topology = geofactory.createPoint(c);
+			}
+			
+			observation = new Observation(null, 0L, authorId, new Date(), speciesGroup.getId(), 
+					latitude, longitude, notes, fromDate, observedAt, 0, null,
+					0, geoPrivacy, null, false, new Date(),
+					null, 0L, null, 0L, true, false, false, null, toDate, topology,
+					null /* checklist annotations */, 0, false, 822L, languageId, 
+					locationScale, null, null, dataTable.getDatasetid(), null,
+					null, null, null, null, null,
+					null, null, null, null, null, 
+					"List", "HUMAN_OBSERVATION", 0, 0, 0,
+					helpIdentify != null && helpIdentify.equalsIgnoreCase("YES") ? 
+					0 : 1, dataTable.getId(), dateAccuracy);
+
+			System.out.println("\n***** Observation Prepared *****\n");
+			System.out.println(observation.toString());
+			
+			return observation;
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+		
+		return null;
+	}
+	
+	@SuppressWarnings("deprecation")
+	public RecoCreate createRecoMapping(Row dataRow, Map<String, Integer> fieldMapping) {
+		RecoCreate recoCreate = null;
+		try {
+			RecoData recoData = new RecoData();
+			String commonName = null;
+			Cell commonNameCell = dataRow.getCell(fieldMapping.get("commonName"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (commonNameCell != null) {
+				commonNameCell.setCellType(CellType.STRING);
+				commonName = commonNameCell.getStringCellValue();
+				
+				recoData.setTaxonCommonName(commonName);
+			}
+			
+			String scientificName = null;
+			Cell scientificNameCell = dataRow.getCell(fieldMapping.get("scientificName"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (scientificNameCell != null) {
+				scientificNameCell.setCellType(CellType.STRING);
+				scientificName = scientificNameCell.getStringCellValue();
+				
+				recoData.setTaxonCommonName(scientificName);
+			}
+			
+			String comment = null;
+			Cell commentCell = dataRow.getCell(fieldMapping.get("comment"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+			if (commentCell != null) {
+				commentCell.setCellType(CellType.STRING);
+				comment = commentCell.getStringCellValue();
+				
+				recoData.setRecoComment(comment);
+			}
+			
+			recoCreate = createRecoMapping(recoData);
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+		return recoCreate;
 	}
 
 }

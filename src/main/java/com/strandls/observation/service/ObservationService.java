@@ -145,6 +145,8 @@ public interface ObservationService {
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
 	
-	public void bulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
+	public String handleBulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
+	
+	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
 
 }
