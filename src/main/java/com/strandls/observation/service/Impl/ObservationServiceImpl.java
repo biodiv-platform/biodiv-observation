@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-<<<<<<< HEAD
-=======
 import java.util.Iterator;
->>>>>>> 38c23667323676a57cdaf683a3a4640b4e7a429c
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -279,10 +276,7 @@ public class ObservationServiceImpl implements ObservationService {
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, activityCount);
-<<<<<<< HEAD
-=======
-
->>>>>>> 38c23667323676a57cdaf683a3a4640b4e7a429c
+				
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
