@@ -2087,18 +2087,22 @@ public class ObservationServiceImpl implements ObservationService {
 									if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("FIELD TEXT")) {
 										cffInsert.setTextBoxValue(docCFValue);
 									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("SINGLE CATEGORICAL")) {
-										CustomFieldValues cvf = cfValues.stream().findFirst().filter(cfValue -> {
-											return cfValue.getValues().equalsIgnoreCase(docCFValue);
-										}).orElse(null);
+										CustomFieldValues cvf = null;
+										for (CustomFieldValues cfValue : cfValues) {
+											if (cfValue.getValues().equalsIgnoreCase(docCFValue)) {
+												cvf = cfValue;
+											}
+										}
 										if (cvf != null) {
 											cffInsert.setSingleCategorical(cvf.getId());
 										}
 									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-										List<Long> cvf = cfValues.stream().filter(cfValue -> {
-											return cfValue.getValues().equalsIgnoreCase(docCFValue);
-										}).map(cfValue -> {
-											return cfValue.getId(); 
-										}).collect(Collectors.toList());
+										List<Long> cvf = new ArrayList<>();
+										for (CustomFieldValues cfValue: cfValues) {
+											if (cfValue.getValues().equalsIgnoreCase(docCFValue)) {
+												cvf.add(cfValue.getId());
+											}
+										}
 
 										cffInsert.setMultipleCategorical(cvf);
 									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("RANGE")) {
