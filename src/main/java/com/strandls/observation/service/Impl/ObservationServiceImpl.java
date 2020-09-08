@@ -1964,14 +1964,14 @@ public class ObservationServiceImpl implements ObservationService {
 
 						String[] traits = traitValue.split(",");
 
-						List<TraitsValue> tv = pair.getValues().stream().filter(value -> {
-							return traitValue.trim().equalsIgnoreCase(value.getValue());
-						}).collect(Collectors.toList());
-
 						List<Long> traitValues = new ArrayList<>();
-
-						for (TraitsValue t : tv) {
-							traitValues.add(t.getId());
+						
+						for (TraitsValue tv: pair.getValues()) {
+							for (String trait: traits) {
+								if (trait.equalsIgnoreCase(tv.getValue())) {
+									traitValues.add(tv.getId());
+								}
+							}
 						}
 
 						facts.put(String.valueOf(pair.getTraits().getId()), traitValues);
@@ -2000,11 +2000,14 @@ public class ObservationServiceImpl implements ObservationService {
 						cell.setCellType(CellType.STRING);
 						docUserGroup = cell.getStringCellValue();
 						
-						Long userGroupId = userGroups.stream().findAny().filter(group -> {
-							return group.getName().equalsIgnoreCase(docUserGroup);
-						}).map(group -> {
-							return group.getId();
-						}).orElse(null);
+						Long userGroupId = null;
+						
+						for (UserGroupIbp group: userGroups) {
+							if (group.getName().equalsIgnoreCase(docUserGroup)) {
+								userGroupId = group.getId();
+								break;
+							}
+						}
 						
 						if (userGroupId != null) {
 							docUserGroups.add(userGroupId);
