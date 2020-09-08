@@ -155,6 +155,7 @@ public class Observation implements Serializable {
 		this.noOfIdentifications = noOfIdentifications;
 		this.dataTableId = dataTableId;
 		this.dateAccuracy = dateAccuracy;
+		this.isVerified = isVerified;
 	}
 
 	@Id
