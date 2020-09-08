@@ -70,6 +70,7 @@ public class DataTableHelper {
 		dataTable.setViaCode(null);
 		dataTable.setViaId(null);
 		dataTable.setUploadLogId(null);
+		dataTable.setUploaderId(userId);
 		dataTable.setBasisOfData(boDTO.getBasisOfData());
 
 		System.out.println("\n***** DataTable Prepared *****\n");
