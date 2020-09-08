@@ -663,7 +663,7 @@ public class ObservationMapperHelper {
 					0, geoPrivacy, null, false, new Date(),
 					null, 0L, null, null, true, false, false, null, toDate, topology,
 					null /* checklist annotations */, 0, false, 822L, languageId, 
-					locationScale, null, null, dataTable.getDatasetid(), null,
+					locationScale, null, null, null, null,
 					null, null, null, null, null,
 					null, null, null, null, null, 
 					"List", "HUMAN_OBSERVATION", 0, 0, 0,
