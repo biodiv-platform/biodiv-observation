@@ -58,7 +58,7 @@ public class DataTableHelper {
 		dataTable.setPartyContributorId(boDTO.getContributors()); // only one contributor
 		dataTable.setProject(boDTO.getProject());
 		dataTable.setRating(0);
-		dataTable.setSummary(dataTable.getSummary());
+		dataTable.setSummary(boDTO.getSummary());
 		dataTable.setTaxonomicCoverageGroupIds(boDTO.getSGroup());
 		dataTable.setTemporalCoverageDateAccuracy(boDTO.getDateAccuracy());
 		dataTable.setTemporalCoverageFromDate(boDTO.getObservedFromDate());
