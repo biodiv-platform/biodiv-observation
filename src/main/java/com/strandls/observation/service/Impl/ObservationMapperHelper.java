@@ -686,6 +686,7 @@ public class ObservationMapperHelper {
 			
 			return observation;
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 		
@@ -726,6 +727,7 @@ public class ObservationMapperHelper {
 			
 			recoCreate = createRecoMapping(recoData);
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 		return recoCreate;
