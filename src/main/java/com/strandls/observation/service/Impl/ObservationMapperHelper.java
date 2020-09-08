@@ -679,7 +679,7 @@ public class ObservationMapperHelper {
 					null, null, null, null, null, 
 					"List", "HUMAN_OBSERVATION", 0, 0, 0,
 					helpIdentify != null && helpIdentify.equalsIgnoreCase("YES") ? 
-					0 : 1, dataTable.getId(), dateAccuracy);
+					0 : 1, dataTable.getId(), dateAccuracy, false);
 
 			System.out.println("\n***** Observation Prepared *****\n");
 			System.out.println(observation.toString());
