@@ -55,7 +55,7 @@ public class MailServiceImpl implements MailService {
 			mData.put(INFO_FIELDS.TYPE.getAction(), MAIL_TYPE.DOWNLOAD_MAIL.getAction());
 			mData.put(INFO_FIELDS.RECIPIENTS.getAction(), Arrays.asList(data));
 			RabbitMQProducer producer = new RabbitMQProducer(channel);
-			if (user.getEmail() != null && !user.getEmail().isEmpty() && !user.getEmail().contains("@ibp.org")) {
+			if (user.getEmail() != null && !user.getEmail().isEmpty()) {
 				producer.produceMail(RabbitMqConnection.EXCHANGE_BIODIV, RabbitMqConnection.MAIL_ROUTING_KEY, null,
 						JsonUtil.mapToJSON(mData));
 			}
