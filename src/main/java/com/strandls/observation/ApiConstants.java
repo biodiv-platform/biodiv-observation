@@ -17,6 +17,7 @@ public class ApiConstants {
 	public static final String OBSERVATION = "/observation";
 	public static final String SHOW = "/show";
 	public static final String PING = "/ping";
+	public static final String BULK = "/bulk";
 	public static final String CREATE = "/create";
 	public static final String SPECIESGROUP = "/speciesgroup";
 	public static final String AGREE = "/agree";
