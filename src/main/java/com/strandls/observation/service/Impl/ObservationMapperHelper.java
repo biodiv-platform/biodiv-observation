@@ -661,7 +661,7 @@ public class ObservationMapperHelper {
 			observation = new Observation(null, 0L, authorId, new Date(), speciesGroup.getId(), 
 					latitude, longitude, notes, fromDate, observedAt, 0, null,
 					0, geoPrivacy, null, false, new Date(),
-					null, 0L, null, 0L, true, false, false, null, toDate, topology,
+					null, 0L, null, null, true, false, false, null, toDate, topology,
 					null /* checklist annotations */, 0, false, 822L, languageId, 
 					locationScale, null, null, dataTable.getDatasetid(), null,
 					null, null, null, null, null,

@@ -15,11 +15,6 @@
 		<property name="hbm2ddl.auto">update</property>
 
 		<property name="show_sql">true</property>
-		<property name="hibernate.jdbc.batch_size">25</property>
-
-		<property name="hibernate.order_inserts">true</property>
-
-		<property name="hibernate.order_updates">true</property>
 
 		<property name="hibernate.current_session_context_class">thread</property>
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
