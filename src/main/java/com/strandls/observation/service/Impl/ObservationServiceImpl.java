@@ -279,6 +279,7 @@ public class ObservationServiceImpl implements ObservationService {
 				
 				return data;
 			} catch (Exception e) {
+				e.printStackTrace();
 				logger.error(e.getMessage());
 			}
 		}
