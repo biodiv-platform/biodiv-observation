@@ -472,6 +472,7 @@ public class ObservationServiceImpl implements ObservationService {
 			return findById(observation.getId());
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 
