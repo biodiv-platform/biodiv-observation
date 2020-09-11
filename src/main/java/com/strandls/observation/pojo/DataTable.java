@@ -85,7 +85,7 @@ public class DataTable implements Serializable {
 	@Column(name = "geographical_coverage_longitude", nullable = false)
 	private Double geographicalCoverageLongitude;
 	
-	@Column(name = "geographical_coverage_placename")
+	@Column(name = "geographical_coverage_place_name")
 	private String geographicalCoveragePlaceName;
 	
 	@Column(name = "geographical_coverage_topology")
