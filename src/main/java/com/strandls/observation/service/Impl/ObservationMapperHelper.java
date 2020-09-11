@@ -655,9 +655,8 @@ public class ObservationMapperHelper {
 			Boolean geoPrivacy = null;
 			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (geoPrivacyCell != null) {
-				geoPrivacyCell.setCellType(CellType.STRING);
-				String geoPrivacyCellValue = geoPrivacyCell.getStringCellValue();
-				geoPrivacy = new Boolean(geoPrivacy);		
+				geoPrivacyCell.setCellType(CellType.BOOLEAN);
+				geoPrivacy = geoPrivacyCell.getBooleanCellValue();		
 			}
 			
 			Geometry topology = null;
