@@ -110,6 +110,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 					observationListMinimal);
 
 		} catch (ApiException e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return listData;

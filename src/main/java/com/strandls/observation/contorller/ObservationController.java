@@ -1221,6 +1221,7 @@ public class ObservationController {
 			thread.start();
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
