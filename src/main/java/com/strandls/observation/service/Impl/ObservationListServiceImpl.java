@@ -582,6 +582,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			result = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return result;
