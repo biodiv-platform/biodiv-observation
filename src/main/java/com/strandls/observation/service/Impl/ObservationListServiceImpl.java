@@ -332,35 +332,37 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, Long> traitValuesAggregation = new HashMap<String, Long>();
 		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
-		for (Traits trait : traitList) {
-			String keyword = "trait_" + trait.getId() + "." + trait.getType();
-			if (!traitParams.isEmpty()) {
-				List<String> tempTraitParams = new ArrayList<String>();
-				if (traitParams.containsKey(keyword)) {
-					tempTraitParams = traitParams.remove(keyword);
-					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-							customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-							publicationGrade);
-
+		if (traitList != null) {
+			for (Traits trait : traitList) {
+				String keyword = "trait_" + trait.getId() + "." + trait.getType();
+				if (!traitParams.isEmpty()) {
+					List<String> tempTraitParams = new ArrayList<String>();
+					if (traitParams.containsKey(keyword)) {
+						tempTraitParams = traitParams.remove(keyword);
+						mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+								speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+								customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
+								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+								publicationGrade);
+	
+						traitValuesAggregation = getTraitsAggregation(
+								getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+										mapSearchQueryFilter).getGroupAggregation(),
+								trait.getName());
+	
+						traitParams.put(keyword, tempTraitParams);
+					}
+				}
+				if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
 					traitValuesAggregation = getTraitsAggregation(
 							getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-									mapSearchQueryFilter).getGroupAggregation(),
+									mapSearchQuery).getGroupAggregation(),
 							trait.getName());
-
-					traitParams.put(keyword, tempTraitParams);
 				}
+	
+				traitMaps.put(trait.getName(), traitValuesAggregation);
+	
 			}
-			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
-				traitValuesAggregation = getTraitsAggregation(
-						getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-								mapSearchQuery).getGroupAggregation(),
-						trait.getName());
-			}
-
-			traitMaps.put(trait.getName(), traitValuesAggregation);
-
 		}
 		aggregationResponse.setGroupTraits(traitMaps);
 
