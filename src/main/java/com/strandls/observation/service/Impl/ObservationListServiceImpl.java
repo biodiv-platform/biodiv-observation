@@ -339,17 +339,17 @@ public class ObservationListServiceImpl implements ObservationListService {
 					List<String> tempTraitParams = new ArrayList<String>();
 					if (traitParams.containsKey(keyword)) {
 						tempTraitParams = traitParams.remove(keyword);
-						mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-								speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-								customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-								publicationGrade);
-	
+						mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
+								webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+								traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
+								createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district,
+								state, tags, publicationGrade);
+
 						traitValuesAggregation = getTraitsAggregation(
-								getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-										mapSearchQueryFilter).getGroupAggregation(),
+								getAggregate(index, type, "facts.trait_value.trait_aggregation.raw",
+										geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
 								trait.getName());
-	
+
 						traitParams.put(keyword, tempTraitParams);
 					}
 				}
@@ -359,9 +359,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 									mapSearchQuery).getGroupAggregation(),
 							trait.getName());
 				}
-	
+
 				traitMaps.put(trait.getName(), traitValuesAggregation);
-	
+
 			}
 		}
 		aggregationResponse.setGroupTraits(traitMaps);
@@ -370,67 +370,69 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> cfValuesAggregation = new HashMap<String, Long>();
 		Map<String, Map<String, Long>> cfMaps = new HashMap<String, Map<String, Long>>();
 		List<String> tempCFParams = new ArrayList<String>();
-		for (CustomFields cf : customFieldList) {
-			String keyword = "custom_" + cf.getId() + "." + cf.getFieldtype();
-			String fieldType = cf.getFieldtype();
+		if (customFieldList != null) {
+			for (CustomFields cf : customFieldList) {
+				String keyword = "custom_" + cf.getId() + "." + cf.getFieldtype();
+				String fieldType = cf.getFieldtype();
 
-			if (!customParams.isEmpty()) {
-				tempCFParams = customParams.remove(keyword);
+				if (!customParams.isEmpty()) {
+					tempCFParams = customParams.remove(keyword);
 
-				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-						customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-						publicationGrade);
+					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+							customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
+							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+							publicationGrade);
 
-				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
-					cfValuesAggregation = getCustomFieldAggregationFieldText(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
-						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-					cfValuesAggregation = getCustomFieldAggregationCategorical(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else {
+					if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
+						cfValuesAggregation = getCustomFieldAggregationFieldText(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
+								fieldType, cf.getId().toString());
+					} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
+							|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+						cfValuesAggregation = getCustomFieldAggregationCategorical(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
+								fieldType, cf.getId().toString());
+					} else {
 //					field type = RANGE
-					cfValuesAggregation = getCustomFieldAggregationRange(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							cf.getDataType(), fieldType, cf.getId().toString());
+						cfValuesAggregation = getCustomFieldAggregationRange(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
+								cf.getDataType(), fieldType, cf.getId().toString());
+					}
+					customParams.put(keyword, tempCFParams);
 				}
-				customParams.put(keyword, tempCFParams);
-			}
 
-			if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
-				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
-					cfValuesAggregation = getCustomFieldAggregationFieldText(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
-						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-					cfValuesAggregation = getCustomFieldAggregationCategorical(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else {
+				if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
+					if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
+						cfValuesAggregation = getCustomFieldAggregationFieldText(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQuery).getGroupAggregation(),
+								fieldType, cf.getId().toString());
+					} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
+							|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+						cfValuesAggregation = getCustomFieldAggregationCategorical(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQuery).getGroupAggregation(),
+								fieldType, cf.getId().toString());
+					} else {
 //					field type = RANGE
-					cfValuesAggregation = getCustomFieldAggregationRange(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							cf.getDataType(), fieldType, cf.getId().toString());
+						cfValuesAggregation = getCustomFieldAggregationRange(
+								getAggregate(index, type,
+										"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+										geoAggregationField, mapSearchQuery).getGroupAggregation(),
+								cf.getDataType(), fieldType, cf.getId().toString());
+					}
 				}
+				cfMaps.put(cf.getName(), cfValuesAggregation);
 			}
-			cfMaps.put(cf.getName(), cfValuesAggregation);
 		}
 		aggregationResponse.setGroupCustomField(cfMaps);
 
