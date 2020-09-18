@@ -70,6 +70,7 @@ import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
@@ -79,10 +80,7 @@ import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
-import com.strandls.user.pojo.SpeciesPermission;
-import com.strandls.user.pojo.UserGroupMemberRole;
 import com.strandls.user.pojo.UserIbp;
-import com.strandls.user.pojo.UserPermissions;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.CustomFieldDetails;
@@ -96,7 +94,9 @@ import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
+import com.strandls.userGroup.pojo.UserGroupMemberRole;
 import com.strandls.userGroup.pojo.UserGroupObvFilterData;
+import com.strandls.userGroup.pojo.UserGroupPermissions;
 import com.strandls.userGroup.pojo.UserGroupSpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.FlagCreateData;
@@ -251,7 +251,6 @@ public class ObservationServiceImpl implements ObservationService {
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, activityCount);
-
 				return data;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
@@ -678,13 +677,12 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			} else {
 				for (Entry<Long, Long> entry : observationTaxonId.entrySet()) {
-					userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-					UserPermissions userPermission = userService.getAllUserPermission("observation",
-							entry.getKey().toString());
+
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
+					List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
-					List<Long> validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+					List<Long> validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 					if (validateAllowed.contains(entry.getValue()))
 						result.add(new MaxVotedRecoPermission(entry.getKey(), true));
 					else
@@ -711,15 +709,16 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 				}
 			} else {
-				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-				UserPermissions userPermission = userService.getAllUserPermission("observation",
-						observationId.toString());
+
+				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
 
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
-					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+					validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 				}
 			}
 			cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -741,7 +740,13 @@ public class ObservationServiceImpl implements ObservationService {
 			List<UserGroupIbp> allowedUserGroup = new ArrayList<UserGroupIbp>();
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
 			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserPermissions userPermission = userService.getAllUserPermission("observation", observationId);
+			Follow follow = userService.getFollowByObject("observation", observationId);
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<SpeciesPermission> speciesPermissions = taxonomyService.getSpeciesPermission();
+
+			userGroupService = headers.addUserGroupHeader(userGroupService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
@@ -761,19 +766,19 @@ public class ObservationServiceImpl implements ObservationService {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
-					validateAllowed = ValidatePermission(taxonTree, userPermission.getAllowedTaxonList());
+					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
 				}
 
 				List<Long> userGroupMember = new ArrayList<Long>();
-				for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+				for (UserGroupMemberRole userMemberRole : userGroupPermission.getUserMemberRole()) {
 					userGroupMember.add(userMemberRole.getUserGroupId());
 				}
 				String s = userGroupMember.toString();
 				if (s.substring(1, s.length() - 1).trim().length() != 0)
 					allowedUserGroup = userGroupService.getUserGroupList(s.substring(1, s.length() - 1));
 
-				for (UserGroupMemberRole userFeatureRole : userPermission.getUserFeatureRole()) {
+				for (UserGroupMemberRole userFeatureRole : userGroupPermission.getUserFeatureRole()) {
 					userGroupFeatureRole.add(userFeatureRole.getUserGroupId());
 				}
 			}
@@ -791,7 +796,7 @@ public class ObservationServiceImpl implements ObservationService {
 			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId);
 
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
-					featureableGroup, cfPermission, userPermission.getFollowing());
+					featureableGroup, cfPermission, (follow != null) ? true : false);
 
 			return permission;
 
@@ -837,10 +842,13 @@ public class ObservationServiceImpl implements ObservationService {
 			if (userRole.contains("ROLE_ADMIN")) {
 				allowedUserGroup = userGroupService.getAllUserGroup();
 			} else {
-				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-				UserPermissions userPermission = userService.getUserGroupPermissions();
+
+				userGroupService = headers.addUserGroupHeader(userGroupService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
+
 				List<Long> userGroupMember = new ArrayList<Long>();
-				for (UserGroupMemberRole userMemberRole : userPermission.getUserMemberRole()) {
+				for (UserGroupMemberRole userMemberRole : userGroupPermission.getUserMemberRole()) {
 					userGroupMember.add(userMemberRole.getUserGroupId());
 				}
 				String s = userGroupMember.toString();
@@ -1267,8 +1275,10 @@ public class ObservationServiceImpl implements ObservationService {
 	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(HttpServletRequest request,
 			Long userGroupId) {
 		try {
-			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			UserPermissions userGroupPermission = userService.getUserGroupPermissions();
+
+			userGroupService = headers.addUserGroupHeader(userGroupService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 			List<UserGroupMemberRole> memberRole = userGroupPermission.getUserMemberRole();
 			int flag = 0;
 			for (UserGroupMemberRole ugMemberRole : memberRole) {
@@ -1403,7 +1413,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			comment.setMailData(generateMailData(comment.getRootHolderId()));
 			activityService = headers.addActivityHeaders(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			Activity result = activityService.addComment(comment);
+			Activity result = activityService.addComment("observation", comment);
 			updateLastRevised(comment.getRootHolderId());
 			return result;
 		} catch (Exception e) {
