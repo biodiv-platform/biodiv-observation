@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -276,7 +275,6 @@ public class ObservationServiceImpl implements ObservationService {
 				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, activityCount);
-				
 				return data;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -515,7 +513,6 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
 			updateGeoPrivacy(observationList);
-			produceToRabbitMQ(observationId.toString(), "Recommendation");
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
@@ -1496,6 +1493,8 @@ public class ObservationServiceImpl implements ObservationService {
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupService.getFilterRule(ugObvFilterData);
+			produceToRabbitMQ(observationId.toString(), "Recommendation");
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1546,14 +1545,14 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 		return null;
 	}
-	
+
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@Override
 	public String handleBulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			
+
 			// ufile
 //			FilesDTO filesDto = new FilesDTO();
 //			filesDto.setFiles(Arrays.asList(observationDTO.getFilename()));
@@ -1606,11 +1605,12 @@ public class ObservationServiceImpl implements ObservationService {
 			while (dataSheetIterator.hasNext()) {
 				Row dataRow = dataSheetIterator.next();
 
-				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable, speciesGroupList, observationDTO.getLanguageId(), userId);
+				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable,
+						speciesGroupList, observationDTO.getLanguageId(), userId);
 				if (observation != null) {
-					observation = observationDao.save(observation);	
+					observation = observationDao.save(observation);
 
-					System.out.println("\n***** DataTable Saved : " + observation.getId() + " *****\n");			
+					System.out.println("\n***** DataTable Saved : " + observation.getId() + " *****\n");
 				} else {
 					continue;
 				}
@@ -1621,32 +1621,33 @@ public class ObservationServiceImpl implements ObservationService {
 					if (cell != null) {
 						cell.setCellType(CellType.STRING);
 						fileName = cell.getStringCellValue();
-						
+
 						FilesDTO observationFiles = new FilesDTO();
 						observationFiles.setFiles(Arrays.asList(fileName.split(",")));
 						observationFiles.setFolder("observations");
 						observationFiles.setModule("observation");
-						
-						fileUpload = headers.addFileUploadHeader(fileUpload, request.getHeader(HttpHeaders.AUTHORIZATION));
-						Map<String, Object> fileResponse = fileUpload.handleBulkUploadMoveFiles(observationFiles);
 
+						fileUpload = headers.addFileUploadHeader(fileUpload,
+								request.getHeader(HttpHeaders.AUTHORIZATION));
+						Map<String, Object> fileResponse = fileUpload.handleBulkUploadMoveFiles(observationFiles);
 
 						System.out.println("\n***** Filenames Prepared *****\n");
 						System.out.println(fileResponse);
 						if (fileResponse != null && !fileResponse.isEmpty()) {
-							List<Resource> resources = observationHelper.createResourceMapping(request, licenses, fieldMapping, dataRow, userId, fileResponse, dataTable);
+							List<Resource> resources = observationHelper.createResourceMapping(request, licenses,
+									fieldMapping, dataRow, userId, fileResponse, dataTable);
 							if (resources == null) {
 								continue;
 							}
 							resourceService = headers.addResourceHeaders(resourceService,
 									request.getHeader(HttpHeaders.AUTHORIZATION));
-							resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
-									resources);
-	
+							resources = resourceService.createResource("OBSERVATION",
+									String.valueOf(observation.getId()), resources);
+
 							Integer noOfImages = 0;
 							Integer noOfAudio = 0;
 							Integer noOfVideo = 0;
-	
+
 							Long reprImage = null;
 							int rating = 0;
 							for (Resource res : resources) {
@@ -1668,21 +1669,22 @@ public class ObservationServiceImpl implements ObservationService {
 							observation.setNoOfVideos(noOfVideo);
 							observation.setReprImageId(reprImage);
 							observation = observationDao.update(observation);
-	
+
 						}
 					}
-				}			
+				}
 				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
-						observation.getId(), "observation", null, "Observation created", null);	
-				
+						observation.getId(), "observation", null, "Observation created", null);
+
 				// Reco Data Starts
 				boolean helpIdentify = false;
-				Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (helpIdentifyCell != null) {
 					helpIdentifyCell.setCellType(CellType.STRING);
 					helpIdentify = helpIdentifyCell.getStringCellValue().equalsIgnoreCase("yes");
 				}
-				
+
 				Long maxVotedReco = null;
 				if (!helpIdentify) {
 					RecoCreate recoCreate = observationHelper.createRecoMapping(dataRow, fieldMapping);
@@ -1694,11 +1696,11 @@ public class ObservationServiceImpl implements ObservationService {
 								recoCreate.getScientificNameId(), recoCreate, true);
 
 						observation.setMaxVotedRecoId(maxVotedReco);
-						observationDao.update(observation);						
+						observationDao.update(observation);
 					}
 				}
 				// Reco Data End
-				
+
 				// Traits Start
 				Map<String, List<Long>> facts = new HashMap<String, List<Long>>();
 				for (TraitsValuePair pair : pairs) {
@@ -1714,9 +1716,9 @@ public class ObservationServiceImpl implements ObservationService {
 						String[] traits = traitValue.split(",");
 
 						List<Long> traitValues = new ArrayList<>();
-						
-						for (TraitsValue tv: pair.getValues()) {
-							for (String trait: traits) {
+
+						for (TraitsValue tv : pair.getValues()) {
+							for (String trait : traits) {
 								if (trait.equalsIgnoreCase(tv.getValue())) {
 									traitValues.add(tv.getId());
 								}
@@ -1748,16 +1750,16 @@ public class ObservationServiceImpl implements ObservationService {
 					if (cell != null) {
 						cell.setCellType(CellType.STRING);
 						docUserGroup = cell.getStringCellValue();
-						
+
 						Long userGroupId = null;
-						
-						for (UserGroupIbp group: userGroups) {
+
+						for (UserGroupIbp group : userGroups) {
 							if (group.getName().equalsIgnoreCase(docUserGroup)) {
 								userGroupId = group.getId();
 								break;
 							}
 						}
-						
+
 						if (userGroupId != null) {
 							docUserGroups.add(userGroupId);
 							UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
@@ -1767,14 +1769,15 @@ public class ObservationServiceImpl implements ObservationService {
 							userGroupData.setUgFilterData(getUGFilterObvData(observation));
 							userGroupService = headers.addUserGroupHeader(userGroupService,
 									request.getHeader(HttpHeaders.AUTHORIZATION));
-							userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
+							userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
+									userGroupData);
 						}
 
 					}
 				}
-				
+
 				// userGroups Ends
-				
+
 				// tags
 				if (fieldMapping.get("tags") != null) {
 					String docTags = null;
@@ -1806,7 +1809,7 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 
 				}
-				
+
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
@@ -1821,10 +1824,9 @@ public class ObservationServiceImpl implements ObservationService {
 				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
 				Thread thread = new Thread(esCreateThread);
 				thread.start();
-				
-				
+
 			}
-			
+
 			workBook.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -1832,14 +1834,15 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 		return null;
 	}
-	
+
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@Override
-	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception {
+	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO)
+			throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			
+
 			// ufile
 //			FilesDTO filesDto = new FilesDTO();
 //			filesDto.setFiles(Arrays.asList(observationDTO.getFilename()));
@@ -1892,11 +1895,12 @@ public class ObservationServiceImpl implements ObservationService {
 			while (dataSheetIterator.hasNext()) {
 				Row dataRow = dataSheetIterator.next();
 
-				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable, speciesGroupList, observationDTO.getLanguageId(), userId);
+				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable,
+						speciesGroupList, observationDTO.getLanguageId(), userId);
 				if (observation != null) {
-					observation = observationDao.save(observation);	
+					observation = observationDao.save(observation);
 
-					System.out.println("\n***** DataTable Saved : " + observation.getId() + " *****\n");			
+					System.out.println("\n***** DataTable Saved : " + observation.getId() + " *****\n");
 				} else {
 					continue;
 				}
@@ -1907,32 +1911,33 @@ public class ObservationServiceImpl implements ObservationService {
 					if (cell != null) {
 						cell.setCellType(CellType.STRING);
 						fileName = cell.getStringCellValue();
-						
+
 						FilesDTO observationFiles = new FilesDTO();
 						observationFiles.setFiles(Arrays.asList(fileName.split(",")));
 						observationFiles.setFolder("observations");
 						observationFiles.setModule("observation");
-						
-						fileUpload = headers.addFileUploadHeader(fileUpload, request.getHeader(HttpHeaders.AUTHORIZATION));
-						Map<String, Object> fileResponse = fileUpload.handleBulkUploadMoveFiles(observationFiles);
 
+						fileUpload = headers.addFileUploadHeader(fileUpload,
+								request.getHeader(HttpHeaders.AUTHORIZATION));
+						Map<String, Object> fileResponse = fileUpload.handleBulkUploadMoveFiles(observationFiles);
 
 						System.out.println("\n***** Filenames Prepared *****\n");
 						System.out.println(fileResponse);
 						if (fileResponse != null && !fileResponse.isEmpty()) {
-							List<Resource> resources = observationHelper.createResourceMapping(request, licenses, fieldMapping, dataRow, userId, fileResponse, dataTable);
+							List<Resource> resources = observationHelper.createResourceMapping(request, licenses,
+									fieldMapping, dataRow, userId, fileResponse, dataTable);
 							if (resources == null) {
 								continue;
 							}
 							resourceService = headers.addResourceHeaders(resourceService,
 									request.getHeader(HttpHeaders.AUTHORIZATION));
-							resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
-									resources);
-	
+							resources = resourceService.createResource("OBSERVATION",
+									String.valueOf(observation.getId()), resources);
+
 							Integer noOfImages = 0;
 							Integer noOfAudio = 0;
 							Integer noOfVideo = 0;
-	
+
 							Long reprImage = null;
 							int rating = 0;
 							for (Resource res : resources) {
@@ -1954,21 +1959,22 @@ public class ObservationServiceImpl implements ObservationService {
 							observation.setNoOfVideos(noOfVideo);
 							observation.setReprImageId(reprImage);
 							observation = observationDao.update(observation);
-	
+
 						}
 					}
-				}				
+				}
 				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
 						observation.getId(), "observation", null, "Observation created", null);
-				
+
 				// Reco Data Starts
 				boolean helpIdentify = false;
-				Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (helpIdentifyCell != null) {
 					helpIdentifyCell.setCellType(CellType.STRING);
 					helpIdentify = helpIdentifyCell.getStringCellValue().equalsIgnoreCase("yes");
 				}
-				
+
 				Long maxVotedReco = null;
 				if (!helpIdentify) {
 					RecoCreate recoCreate = observationHelper.createRecoMapping(dataRow, fieldMapping);
@@ -1980,11 +1986,11 @@ public class ObservationServiceImpl implements ObservationService {
 								recoCreate.getScientificNameId(), recoCreate, true);
 
 						observation.setMaxVotedRecoId(maxVotedReco);
-						observationDao.update(observation);						
+						observationDao.update(observation);
 					}
 				}
 				// Reco Data End
-				
+
 				// Traits Start
 				Map<String, List<Long>> facts = new HashMap<String, List<Long>>();
 				for (TraitsValuePair pair : pairs) {
@@ -2000,9 +2006,9 @@ public class ObservationServiceImpl implements ObservationService {
 						String[] traits = traitValue.split(",");
 
 						List<Long> traitValues = new ArrayList<>();
-						
-						for (TraitsValue tv: pair.getValues()) {
-							for (String trait: traits) {
+
+						for (TraitsValue tv : pair.getValues()) {
+							for (String trait : traits) {
 								if (trait.equalsIgnoreCase(tv.getValue())) {
 									traitValues.add(tv.getId());
 								}
@@ -2034,16 +2040,16 @@ public class ObservationServiceImpl implements ObservationService {
 					if (cell != null) {
 						cell.setCellType(CellType.STRING);
 						docUserGroup = cell.getStringCellValue();
-						
+
 						Long userGroupId = null;
-						
-						for (UserGroupIbp group: userGroups) {
+
+						for (UserGroupIbp group : userGroups) {
 							if (group.getName().equalsIgnoreCase(docUserGroup)) {
 								userGroupId = group.getId();
 								break;
 							}
 						}
-						
+
 						if (userGroupId != null) {
 							docUserGroups.add(userGroupId);
 							UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
@@ -2053,42 +2059,46 @@ public class ObservationServiceImpl implements ObservationService {
 							userGroupData.setUgFilterData(getUGFilterObvData(observation));
 							userGroupService = headers.addUserGroupHeader(userGroupService,
 									request.getHeader(HttpHeaders.AUTHORIZATION));
-							userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
+							userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
+									userGroupData);
 						}
 
 					}
 				}
-				
+
 				// userGroups Ends
-				
+
 				// custom field starts
-				
+
 				if (!docUserGroups.isEmpty()) {
 					List<CustomFieldFactsInsert> cfDataList = new ArrayList<CustomFieldFactsInsert>();
-					for (Long ugId: docUserGroups) {
+					for (Long ugId : docUserGroups) {
 						cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
 						List<CustomFieldDetails> cfDetails = cfService.getUserGroupCustomFields(String.valueOf(ugId));
-						
-						for (CustomFieldDetails cfDetail: cfDetails) {
+
+						for (CustomFieldDetails cfDetail : cfDetails) {
 							String customFieldLabel = cfDetail.getCustomFields().getName();
 							String docCFValue = null;
-							if (fieldMapping.get(customFieldLabel) != null) {								
-								Cell docCFValueCell = dataRow.getCell(fieldMapping.get(customFieldLabel), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+							if (fieldMapping.get(customFieldLabel) != null) {
+								Cell docCFValueCell = dataRow.getCell(fieldMapping.get(customFieldLabel),
+										MissingCellPolicy.RETURN_BLANK_AS_NULL);
 								if (docCFValueCell != null) {
 									docCFValueCell.setCellType(CellType.STRING);
 									docCFValue = docCFValueCell.getStringCellValue();
-									
-									List<CustomFieldValues> cfValues = getCustomFieldOptions(request, String.valueOf(observation.getId()), 
-											String.valueOf(ugId), String.valueOf(cfDetail.getCustomFields().getId()));
-									
+
+									List<CustomFieldValues> cfValues = getCustomFieldOptions(request,
+											String.valueOf(observation.getId()), String.valueOf(ugId),
+											String.valueOf(cfDetail.getCustomFields().getId()));
+
 									CustomFieldFactsInsert cffInsert = new CustomFieldFactsInsert();
 									cffInsert.setCustomFieldId(cfDetail.getCustomFields().getId());
 									cffInsert.setObservationId(observation.getId());
 									cffInsert.setUserGroupId(ugId);
-									
+
 									if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("FIELD TEXT")) {
 										cffInsert.setTextBoxValue(docCFValue);
-									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("SINGLE CATEGORICAL")) {
+									} else if (cfDetail.getCustomFields().getFieldType()
+											.equalsIgnoreCase("SINGLE CATEGORICAL")) {
 										CustomFieldValues cvf = null;
 										for (CustomFieldValues cfValue : cfValues) {
 											if (cfValue.getValues().equalsIgnoreCase(docCFValue)) {
@@ -2098,9 +2108,10 @@ public class ObservationServiceImpl implements ObservationService {
 										if (cvf != null) {
 											cffInsert.setSingleCategorical(cvf.getId());
 										}
-									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+									} else if (cfDetail.getCustomFields().getFieldType()
+											.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
 										List<Long> cvf = new ArrayList<>();
-										for (CustomFieldValues cfValue: cfValues) {
+										for (CustomFieldValues cfValue : cfValues) {
 											if (cfValue.getValues().equalsIgnoreCase(docCFValue)) {
 												cvf.add(cfValue.getId());
 											}
@@ -2110,24 +2121,23 @@ public class ObservationServiceImpl implements ObservationService {
 									} else if (cfDetail.getCustomFields().getFieldType().equalsIgnoreCase("RANGE")) {
 										// ask this
 									}
-									
+
 									cfDataList.add(cffInsert);
-								}						
+								}
 							}
-						}				
-					}			
-					for (CustomFieldFactsInsert cvf: cfDataList) {
+						}
+					}
+					for (CustomFieldFactsInsert cvf : cfDataList) {
 						CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
 						factsInsertData.setFactsCreateData(cvf);
-						factsInsertData.setMailData(
-								converter.userGroupMetadata(generateMailData(observation.getId())));
+						factsInsertData.setMailData(converter.userGroupMetadata(generateMailData(observation.getId())));
 						cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
-						cfService.addUpdateCustomFieldData(factsInsertData);						
+						cfService.addUpdateCustomFieldData(factsInsertData);
 					}
 				}
-				
+
 				// custom field ends
-				
+
 				// tags
 				if (fieldMapping.get("tags") != null) {
 					String docTags = null;
@@ -2159,7 +2169,7 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 
 				}
-				
+
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
@@ -2174,10 +2184,9 @@ public class ObservationServiceImpl implements ObservationService {
 				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
 				Thread thread = new Thread(esCreateThread);
 				thread.start();
-				
-				
+
 			}
-			
+
 			workBook.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
