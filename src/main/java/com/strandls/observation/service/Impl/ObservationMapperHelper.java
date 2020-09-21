@@ -134,7 +134,7 @@ public class ObservationMapperHelper {
 			Observation observation = new Observation();
 			observation.setAuthorId(userId);
 			observation.setVersion(0L);
-			observation.setCreatedOn(observationData.getCreatedOn());
+			observation.setCreatedOn(new Date());
 			observation.setGroupId(observationData.getsGroup());
 			observation.setLatitude(observationData.getLatitude());
 			observation.setLongitude(observationData.getLongitude());
@@ -149,9 +149,9 @@ public class ObservationMapperHelper {
 			observation.setGeoPrivacy(observationData.getHidePreciseLocation());
 			observation.setHabitatId(null);// has to Depricate , default to all
 			observation.setIsDeleted(false);
-			observation.setLastRevised(observationData.getCreatedOn());// initially same as date of creation of object
-																		// later
-																		// when updated
+			observation.setLastRevised(new Date());// initially same as date of creation of object
+													// later
+													// when updated
 			observation.setLocationAccuracy(null); // what to insert
 			observation.setVisitCount(0L); // updateble field
 			observation.setSearchText(null); // it is not used as of now , maybe in future
