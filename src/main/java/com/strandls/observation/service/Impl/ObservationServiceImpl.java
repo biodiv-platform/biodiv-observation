@@ -487,7 +487,6 @@ public class ObservationServiceImpl implements ObservationService {
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
 			updateGeoPrivacy(observationList);
-			produceToRabbitMQ(observationId.toString(), "Recommendation");
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
@@ -1468,6 +1467,8 @@ public class ObservationServiceImpl implements ObservationService {
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupService.getFilterRule(ugObvFilterData);
+			produceToRabbitMQ(observationId.toString(), "Recommendation");
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
