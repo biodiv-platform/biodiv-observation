@@ -417,8 +417,11 @@ public class ObservationMapperHelper {
 						resource.setFileName(relativePath);
 
 					} else
-						resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
-																		// returned
+						if (resourceData.getPath().startsWith("/ibpmu")) {
+							continue;
+						} else {
+							resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
+						}										// returned
 				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
