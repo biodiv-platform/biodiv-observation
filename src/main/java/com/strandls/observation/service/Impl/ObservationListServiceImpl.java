@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +34,12 @@ import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
+import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
+import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.service.ObservationListService;
 
 /**
@@ -95,8 +99,49 @@ public class ObservationListServiceImpl implements ObservationListService {
 				} else {
 					for (MapDocument document : documents) {
 						try {
-							observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
-									ObservationListPageMapper.class));
+							ObservationListPageMapper observationMapper = objectMapper
+									.readValue(String.valueOf(document.getDocument()), ObservationListPageMapper.class);
+							if (observationMapper.getRecoShow() != null) {
+								int targetIndex = 0;
+								int flag = 0;
+
+								RecoShow recoShow = observationMapper.getRecoShow();
+								RecoIbp recoIbp = recoShow.getRecoIbp();
+								List<AllRecoSugguestions> allRecoVote = recoShow.getAllRecoVotes();
+								for (AllRecoSugguestions allrecoSuggestion : allRecoVote) {
+									if (recoIbp.getTaxonId() != null && allrecoSuggestion.getTaxonId() != null
+											&& recoIbp.getTaxonId().equals(allrecoSuggestion.getTaxonId())) {
+										flag = 1;
+										break;
+									}
+
+									if (recoIbp.getScientificName() != null
+											&& allrecoSuggestion.getScientificName() != null
+											&& recoIbp.getScientificName()
+													.equalsIgnoreCase(allrecoSuggestion.getScientificName())) {
+										flag = 1;
+										break;
+									}
+
+									if (recoIbp.getCommonName() != null && allrecoSuggestion.getCommonName() != null
+											&& recoIbp.getCommonName()
+													.equalsIgnoreCase(allrecoSuggestion.getCommonName())) {
+										flag = 1;
+										break;
+									}
+
+									targetIndex++;
+
+								}
+
+								if (targetIndex != 0 && flag == 1) {
+									Collections.swap(allRecoVote, 0, targetIndex);
+									recoShow.setAllRecoVotes(allRecoVote);
+									observationMapper.setRecoShow(recoShow);
+								}
+
+							}
+							observationList.add(observationMapper);
 						} catch (IOException e) {
 							logger.error(e.getMessage());
 						}
