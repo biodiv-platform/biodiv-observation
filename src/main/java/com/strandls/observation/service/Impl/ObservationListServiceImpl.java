@@ -117,6 +117,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 									if (recoIbp.getScientificName() != null
 											&& allrecoSuggestion.getScientificName() != null
+											&& !recoIbp.getScientificName().isEmpty()
+											&& !allrecoSuggestion.getScientificName().isEmpty()
 											&& recoIbp.getScientificName()
 													.equalsIgnoreCase(allrecoSuggestion.getScientificName())) {
 										flag = 1;
@@ -124,7 +126,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 									}
 
 									if (recoIbp.getCommonName() != null && allrecoSuggestion.getCommonName() != null
-											&& recoIbp.getCommonName()
+											&& !recoIbp.getCommonName().isEmpty()
+											&& !allrecoSuggestion.getCommonName().isEmpty() && recoIbp.getCommonName()
 													.equalsIgnoreCase(allrecoSuggestion.getCommonName())) {
 										flag = 1;
 										break;
