@@ -544,6 +544,7 @@ public class ObservationServiceImpl implements ObservationService {
 		ugFilterData.setLatitude(observation.getLatitude());
 		ugFilterData.setLongitude(observation.getLongitude());
 		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
 		ugFilterData.setTaxonomyId(taxonomyId);
 
 		return ugFilterData;
