@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -58,10 +59,12 @@ import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
+import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -1519,5 +1522,34 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public ObservationUserPageInfo observationUserInfo(Long userId, Long sGroupId, Boolean hasMedia) {
+//		map of max_voted_reco_id to freq count
+		Map<Long, Long> maxVotedRecoFreq = observationDao.getObservationUploadCount(userId, sGroupId, hasMedia, 0L);
+
+		List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();
+
+		for (Entry<Long, Long> entrySet : maxVotedRecoFreq.entrySet()) {
+			RecoIbp recoIbp = recoService.fetchRecoVote(entrySet.getKey());
+			observationUploaded.add(new UniqueSpeciesInfo(
+					(recoIbp.getScientificName() != null) ? recoIbp.getScientificName() : recoIbp.getCommonName(),
+					entrySet.getKey(), recoIbp.getSpeciesId(), recoIbp.getTaxonId(), entrySet.getValue()));
+
+		}
+
+//		observation identified 
+		Long identifiedSpeciesCount = null;
+		Map<Long, List<UniqueSpeciesInfo>> identifiedFreq = recoService.getIdentifiedObservationInfo(userId, 0L);
+		if (identifiedFreq != null) {
+			Set<Long> identifiedCount = identifiedFreq.keySet();
+			identifiedSpeciesCount = identifiedCount.iterator().next();
+
+		}
+
+		ObservationUserPageInfo result = new ObservationUserPageInfo(observationUploaded, maxVotedRecoFreq.get(null),
+				identifiedFreq.get(identifiedSpeciesCount), identifiedSpeciesCount);
+		return result;
 	}
 }

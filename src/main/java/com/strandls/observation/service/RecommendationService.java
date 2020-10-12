@@ -4,6 +4,7 @@
 package com.strandls.observation.service;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,6 +15,7 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.pojo.UniqueSpeciesInfo;
 
 /**
  * @author Abhishek Rudra
@@ -49,4 +51,6 @@ public interface RecommendationService {
 	public RecoShow fetchCurrentRecoState(Long observationId, Long maxVotedReco);
 
 	public void recoCountRecalculate();
+
+	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long offset);
 }

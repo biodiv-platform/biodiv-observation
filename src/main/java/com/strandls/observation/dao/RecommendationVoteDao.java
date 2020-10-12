@@ -4,7 +4,9 @@
 package com.strandls.observation.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -138,6 +140,43 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			session.close();
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<Long, Long> getUniqueRecoVoteByUser(Long userId, Long offset) {
+
+		String qry = "select recommendation_id, count(id) from recommendation_vote where author_id = " + userId
+				+ " group by recommendation_id order by count(id) desc limit 10 offset " + offset;
+
+		String qry1 = "select recommendation_id, count(id) from recommendation_vote where author_id = " + userId
+				+ " group by recommendation_id order by count(id) desc ";
+
+		Session session = sessionFactory.openSession();
+
+		Map<Long, Long> result = new HashMap<Long, Long>();
+
+		List<Object[]> objectList = null;
+
+		try {
+			Query<Object[]> query = session.createNativeQuery(qry);
+
+			objectList = query.getResultList();
+
+			for (Object object[] : objectList) {
+				result.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
+			}
+
+			Query<Object> query2 = session.createNativeQuery(qry1);
+			Object obj = query2.getSingleResult();
+			result.put(null, Long.parseLong(obj.toString()));
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+
 	}
 
 }

@@ -33,6 +33,7 @@ import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
+import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
@@ -789,6 +790,39 @@ public class RecommendationServiceImpl implements RecommendationService {
 		System.out.println("Total " + total + " observation Modified  =   " + counter + "!!!!!!!!!!!!!!!!");
 		System.out.println("Process complted!!!!!!!!!!!!");
 
+	}
+
+	@Override
+	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long offset) {
+		try {
+//			map of recoId to freq count
+			Map<Long, Long> recoFreq = recoVoteDao.getUniqueRecoVoteByUser(userId, offset);
+
+			List<UniqueSpeciesInfo> uniqueSpeciesList = new ArrayList<>();
+			for (Entry<Long, Long> entrySet : recoFreq.entrySet()) {
+				Recommendation reco = recoDao.findById(entrySet.getKey());
+				if (reco != null) {
+
+					Long speciesId = null;
+					if (reco.getTaxonConceptId() != null) {
+						TaxonomyDefinition taxonomyDefinition = taxonomyService
+								.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
+						speciesId = taxonomyDefinition.getSpeciesId();
+					}
+
+					uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), null, speciesId, reco.getTaxonConceptId(),
+							entrySet.getValue()));
+				}
+			}
+			Map<Long, List<UniqueSpeciesInfo>> result = new HashMap<Long, List<UniqueSpeciesInfo>>();
+			result.put(recoFreq.get(null), uniqueSpeciesList);
+			return result;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 
 }
