@@ -3,7 +3,7 @@
  */
 package com.strandls.observation.dao;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -125,7 +125,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "select max_voted_reco_id, count(id) from observation "
 				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
 		if (sGroup != null)
-			qry = qry + " and s_group = " + sGroup;
+			qry = qry + " and group_id = " + sGroup;
 		if (hasMedia)
 			qry = qry + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
 
@@ -139,9 +139,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		if (hasMedia)
 			qry1 = qry1 + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
 
-		qry1 = qry1 + "group by max_voted_reco_id order by count(id) desc ";
-
-		Map<Long, Long> maxVotedRecoFreq = new HashMap<Long, Long>();
+		Map<Long, Long> maxVotedRecoFreq = new LinkedHashMap<Long, Long>();
 
 		List<Object[]> objectList = null;
 

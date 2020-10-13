@@ -29,9 +29,9 @@ public interface ObservationListService {
 			String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,
 			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
-			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
+			String maxvotedrecoid,String recoId, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
 			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state,
-			String tags, String publicationGrade);
+			String tags, String publicationGrade,String auhtorVoted);
 
 	public FilterPanelData getAllFilter();
 

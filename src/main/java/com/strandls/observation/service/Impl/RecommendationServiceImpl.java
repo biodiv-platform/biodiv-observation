@@ -793,26 +793,28 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long offset) {
+	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long sGroupId, Boolean hasMedia,
+			Long offset) {
 		try {
 //			map of recoId to freq count
-			Map<Long, Long> recoFreq = recoVoteDao.getUniqueRecoVoteByUser(userId, offset);
+			Map<Long, Long> recoFreq = recoVoteDao.getUniqueRecoVoteByUser(userId, sGroupId, hasMedia, offset);
 
 			List<UniqueSpeciesInfo> uniqueSpeciesList = new ArrayList<>();
 			for (Entry<Long, Long> entrySet : recoFreq.entrySet()) {
-				Recommendation reco = recoDao.findById(entrySet.getKey());
-				if (reco != null) {
-
-					Long speciesId = null;
-					if (reco.getTaxonConceptId() != null) {
-						TaxonomyDefinition taxonomyDefinition = taxonomyService
-								.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-						speciesId = taxonomyDefinition.getSpeciesId();
+				if (entrySet.getKey() != null) {
+					Recommendation reco = recoDao.findById(entrySet.getKey());
+					if (reco != null) {
+						Long speciesId = null;
+						if (reco.getTaxonConceptId() != null) {
+							TaxonomyDefinition taxonomyDefinition = taxonomyService
+									.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
+							speciesId = taxonomyDefinition.getSpeciesId();
+						}
+						uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), null, speciesId,
+								reco.getTaxonConceptId(), entrySet.getValue()));
 					}
-
-					uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), null, speciesId, reco.getTaxonConceptId(),
-							entrySet.getValue()));
 				}
+
 			}
 			Map<Long, List<UniqueSpeciesInfo>> result = new HashMap<Long, List<UniqueSpeciesInfo>>();
 			result.put(recoFreq.get(null), uniqueSpeciesList);

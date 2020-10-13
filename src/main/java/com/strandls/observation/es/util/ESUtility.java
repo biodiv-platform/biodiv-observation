@@ -143,9 +143,9 @@ public class ESUtility {
 			String webaddress, String speciesName, String mediaFilter, String months, String isFlagged, String minDate,
 			String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
-			String maxvotedrecoid, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String rank, String tahsil, String district, String state, String tags,
-			String publicationGrade) {
+			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
+			String taxonId, String recoName, String rank, String tahsil, String district, String state, String tags,
+			String publicationGrade,String authorVoted) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -620,13 +620,26 @@ public class ESUtility {
 
 			}
 
-//		unknown checks
+//			max voted reco
 			List<Object> maxvotedrecoids = cSTSOT(maxvotedrecoid);
 			if (!maxvotedrecoids.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery("maxvotedrecoid", maxvotedrecoids));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.maxVotedReco.getValue(), maxvotedrecoids));
 			}
 
-// 		publication grade
+//			reco id
+			List<Object> recoIds = cSTSOT(recoId);
+			if (!recoIds.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.recoId.getValue(), recoIds));
+			}
+			
+//			author voted
+			List<Object> authorVoteds = cSTSOT(authorVoted);
+			if (!authorVoteds.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.authorVoted.getValue(), authorVoteds));
+			}
+
+
+// 			publication grade
 			List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
 			if (!publicationGradeChoice.isEmpty()) {
 				boolAndLists

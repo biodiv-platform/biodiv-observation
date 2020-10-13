@@ -1532,16 +1532,19 @@ public class ObservationServiceImpl implements ObservationService {
 		List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();
 
 		for (Entry<Long, Long> entrySet : maxVotedRecoFreq.entrySet()) {
-			RecoIbp recoIbp = recoService.fetchRecoVote(entrySet.getKey());
-			observationUploaded.add(new UniqueSpeciesInfo(
-					(recoIbp.getScientificName() != null) ? recoIbp.getScientificName() : recoIbp.getCommonName(),
-					entrySet.getKey(), recoIbp.getSpeciesId(), recoIbp.getTaxonId(), entrySet.getValue()));
+			if(entrySet.getKey()!=null) {
+				RecoIbp recoIbp = recoService.fetchRecoVote(entrySet.getKey());
+				if(recoIbp!=null)
+				observationUploaded.add(new UniqueSpeciesInfo(
+						(recoIbp.getScientificName() != null) ? recoIbp.getScientificName() : recoIbp.getCommonName(),
+								entrySet.getKey(), recoIbp.getSpeciesId(), recoIbp.getTaxonId(), entrySet.getValue()));
+			}
 
 		}
 
 //		observation identified 
 		Long identifiedSpeciesCount = null;
-		Map<Long, List<UniqueSpeciesInfo>> identifiedFreq = recoService.getIdentifiedObservationInfo(userId, 0L);
+		Map<Long, List<UniqueSpeciesInfo>> identifiedFreq = recoService.getIdentifiedObservationInfo(userId, sGroupId, hasMedia, 0L);
 		if (identifiedFreq != null) {
 			Set<Long> identifiedCount = identifiedFreq.keySet();
 			identifiedSpeciesCount = identifiedCount.iterator().next();

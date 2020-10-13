@@ -52,5 +52,6 @@ public interface RecommendationService {
 
 	public void recoCountRecalculate();
 
-	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long offset);
+	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long sGroupId, Boolean hasMedia,
+			Long offset);
 }

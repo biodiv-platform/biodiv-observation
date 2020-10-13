@@ -358,7 +358,8 @@ public class ObservationController {
 			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
 			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
 			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
-			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
+			@QueryParam("bottom") Double bottom, @QueryParam("recom") String recoId,
+			@QueryParam("maxVotedReco") String maxVotedReco, @QueryParam("authorVoted") String authorVoted,
 			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
 			@QueryParam("termsAggregationField") String termsAggregationField,
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
@@ -417,14 +418,14 @@ public class ObservationController {
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
+					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
 			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
 					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-					validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
+					validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
 					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-					district, state, tags, publicationGrade);
+					district, state, tags, publicationGrade, authorVoted);
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
