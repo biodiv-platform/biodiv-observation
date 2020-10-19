@@ -64,6 +64,7 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
+import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.service.MailService;
@@ -125,11 +126,9 @@ public class ObservationController {
 
 	@Inject
 	private ObservationListService observationListService;
-	
+
 	@Inject
 	private MailService mailService;
-
-
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -361,11 +360,13 @@ public class ObservationController {
 			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
 			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
 			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
-			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
+			@QueryParam("bottom") Double bottom, @QueryParam("recom") String recoId,
+			@QueryParam("maxVotedReco") String maxVotedReco, @QueryParam("authorVoted") String authorVoted,
 			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
-			@QueryParam("termsAggregationField") String termsAggregationField, @DefaultValue("list")@QueryParam("view") String view,
-			@QueryParam("rank") String rank, @QueryParam("tahsil") String tahsil,
-			@QueryParam("district") String district, @QueryParam("state") String state, @QueryParam("tags") String tags,
+			@QueryParam("termsAggregationField") String termsAggregationField,
+			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
+			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
+			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade, @Context UriInfo uriInfo) {
 
 		try {
@@ -419,14 +420,14 @@ public class ObservationController {
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade);
+					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
 			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
 					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-					validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
+					validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
 					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-					district, state, tags, publicationGrade);
+					district, state, tags, publicationGrade, authorVoted);
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
@@ -1129,7 +1130,7 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-		
+
 	@GET
 	@Path(ApiConstants.LISTCSV + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
@@ -1162,8 +1163,8 @@ public class ObservationController {
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade,
-			@DefaultValue("")@QueryParam("notes") String notes,
-			@NotBlank@NotEmpty@NotNull@QueryParam("authorid") String authorId,
+			@DefaultValue("") @QueryParam("notes") String notes,
+			@NotBlank @NotEmpty @NotNull @QueryParam("authorid") String authorId,
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
@@ -1208,18 +1209,14 @@ public class ObservationController {
 			mapSearchParams.setSortOn(sortOn);
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
-			
+
 			ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
-					downloadLogDao, customfields, taxonomic,
-					spatial, traits, temporal, misc, sGroup,
-					taxon,  user,  userGroupList,  webaddress,  speciesName,  mediaFilter,
-					months,  isFlagged,  minDate,  maxDate,  validate,
-					traitParams,  customParams,  classificationid,
-					mapSearchParams,  maxvotedrecoid,  createdOnMaxDate,  createdOnMinDate,
-					status,  taxonId,  recoName,  rank,  tahsil,  district,  state,
-					tags,  publicationGrade,  index,  type,  geoAggregationField,
-					geoAggegationPrecision,  onlyFilteredAggregation,  termsAggregationField,
-					authorId,  notes, uriInfo.getRequestUri().toString(), mailService);
+					downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
+					userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
+					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
+					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
+					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();
@@ -1245,71 +1242,93 @@ public class ObservationController {
 		return Response.status(Status.OK).entity(observationGrade).build();
 
 	}
-	
+
 	@GET
 	@Path(ApiConstants.LISTDOWNLOAD)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value="fetch the download log table based on filter",
-	notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class)})
-	public Response fetchDownloadLog(@DefaultValue("")@QueryParam("authorid")String authorId,
-			@DefaultValue("")@QueryParam("filetype")String fileType,
-			@DefaultValue("-1")@QueryParam("offset")String offSet,
-			@DefaultValue("-1")@QueryParam("limit")String limit) {
+	@ApiOperation(value = "fetch the download log table based on filter", notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+	public Response fetchDownloadLog(@DefaultValue("") @QueryParam("authorid") String authorId,
+			@DefaultValue("") @QueryParam("filetype") String fileType,
+			@DefaultValue("-1") @QueryParam("offset") String offSet,
+			@DefaultValue("-1") @QueryParam("limit") String limit) {
 		List<Long> authorIds = new ArrayList<Long>();
-		if(!authorId.isEmpty() || authorId != null) {
-			authorIds = Arrays.asList(authorId.split(",")).stream().
-					map(Long::parseLong).collect(Collectors.toList());
+		if (!authorId.isEmpty() || authorId != null) {
+			authorIds = Arrays.asList(authorId.split(",")).stream().map(Long::parseLong).collect(Collectors.toList());
 		}
-		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, 
-				Integer.parseInt(offSet),Integer.parseInt(limit));
-		return Response.status(Status.OK).entity(records).build();	
+		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, Integer.parseInt(offSet),
+				Integer.parseInt(limit));
+		return Response.status(Status.OK).entity(records).build();
 	}
-	
+
 	@GET
 	@Path(ApiConstants.INDEXFIELDUPDATE)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Update the field value of observation index",
-	notes="for all observation given datatableId",response = String.class)
-	@ApiResponses(value = {@ApiResponse(code = 400,message="error in updating",response = String.class)})
-	public Response forceUpdateIndexField(@QueryParam("field")String field, @QueryParam("value")String value,
-			@QueryParam("datatableid")String dataTableId) {
+	@ApiOperation(value = "Update the field value of observation index", notes = "for all observation given datatableId", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "error in updating", response = String.class) })
+	public Response forceUpdateIndexField(@QueryParam("field") String field, @QueryParam("value") String value,
+			@QueryParam("datatableid") String dataTableId) {
 		String index = "eo";
 		String type = "er";
-		String response = observationService.forceUpdateIndexField(index,type,field, value, Long.parseLong(dataTableId));
-		
+		String response = observationService.forceUpdateIndexField(index, type, field, value,
+				Long.parseLong(dataTableId));
+
 		return Response.status(Status.OK).entity(response).build();
 	}
-	
+
 	@POST
 	@Path(ApiConstants.BULK + ApiConstants.CREATE)
 	@ValidateUser
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(value="Handle bulk upload", notes = "Handle bulk upload", response = String.class)
+	@ApiOperation(value = "Handle bulk upload", notes = "Handle bulk upload", response = String.class)
+
 	public Response bulkUpload(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
 		try {
 			observationService.handleBulkUpload(request, observationDTO);
-			return Response.status(Status.OK).build();			
+			return Response.status(Status.OK).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path(ApiConstants.BULK + ApiConstants.UGCONTEXT)
 	@ValidateUser
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(value="Handle bulk upload UGContext",	notes = "Handle bulk upload UGContext", response = String.class)
+	@ApiOperation(value = "Handle bulk upload UGContext", notes = "Handle bulk upload UGContext", response = String.class)
 	public Response bulkUploadUGContext(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
 		try {
 			observationService.handleBulkUploadUGContext(request, observationDTO);
-			return Response.status(Status.OK).build();			
+			return Response.status(Status.OK).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
+
+	@GET
+	@Path(ApiConstants.USERINFO + "/{userId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	public Response getObservationUserInfo(@PathParam("userId") String userId, @QueryParam("sGroupId") String sGroupIds,
+			@DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia) {
+
+		try {
+			Long user = Long.parseLong(userId);
+			Long sGroupId = null;
+			if (sGroupIds != null)
+				sGroupId = Long.parseLong(sGroupIds);
+			ObservationUserPageInfo result = observationService.observationUserInfo(user, sGroupId, hasMedia);
+
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

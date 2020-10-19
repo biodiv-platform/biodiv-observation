@@ -61,6 +61,7 @@ public class ApiConstants {
 
 	public static final String PUBLICATIONGRADE = "/publicationgrade";
 	public static final String INDEXFIELDUPDATE = "/indexfieldupdate";
+	public static final String USERINFO = "/userinfo";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

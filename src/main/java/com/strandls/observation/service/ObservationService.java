@@ -23,6 +23,7 @@ import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
+import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
@@ -145,11 +146,14 @@ public interface ObservationService {
 	public List<DownloadLog> fetchDownloadLog(List<Long> authorId, String fileType, Integer offSet, Integer limit);
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
-	
+
 	public String handleBulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
-	
-	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
+
+	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO)
+			throws Exception;
 
 	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId);
+
+	public ObservationUserPageInfo observationUserInfo(Long userId, Long sGroupId, Boolean hasMedia);
 
 }
