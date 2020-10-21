@@ -594,28 +594,28 @@ public class ObservationMapperHelper {
 				fromDate = fromDateCell.getDateCellValue();
 			}
 			
-			String dateAccuracy = null;
+			String dateAccuracy = "";
 			Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (dateAccuracyCell != null) {
 				dateAccuracyCell.setCellType(CellType.STRING);
 				dateAccuracy = dateAccuracyCell.getStringCellValue();
 			}	
 			
-			String notes = null;
+			String notes = "";
 			Cell notesCell = dataRow.getCell(fieldMapping.get("notes"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (notesCell != null) {
 				notesCell.setCellType(CellType.STRING);
 				notes = notesCell.getStringCellValue();
 			}		
 			
-			String observedAt = null;
+			String observedAt = "";
 			Cell observedAtCell = dataRow.getCell(fieldMapping.get("observedAt"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (observedAtCell != null) {
 				observedAtCell.setCellType(CellType.STRING);
 				observedAt = observedAtCell.getStringCellValue();
 			}	
 			
-			String locationScale = null;
+			String locationScale = "";
 			Cell locationScaleCell = dataRow.getCell(fieldMapping.get("locationScale"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (locationScaleCell != null) {
 				locationScaleCell.setCellType(CellType.STRING);
