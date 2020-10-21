@@ -1856,7 +1856,7 @@ public class ObservationServiceImpl implements ObservationService {
 			dataSheetIterator.next();
 			while (dataSheetIterator.hasNext()) {
 				Row dataRow = dataSheetIterator.next();
-
+				System.out.println("\n\n***** Reading Row: " + count++ + "*****\n\n");
 				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable, speciesGroupList, observationDTO.getLanguageId(), userId);
 				if (observation != null) {
 					observation = observationDao.save(observation);	
