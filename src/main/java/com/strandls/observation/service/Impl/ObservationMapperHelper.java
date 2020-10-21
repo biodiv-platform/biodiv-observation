@@ -625,8 +625,8 @@ public class ObservationMapperHelper {
 			Double latitude = null;
 			Cell latitudeCell = dataRow.getCell(fieldMapping.get("latitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (latitudeCell != null) {
-				latitudeCell.setCellType(CellType.NUMERIC);
-				latitude = latitudeCell.getNumericCellValue();
+				latitudeCell.setCellType(CellType.STRING);
+				latitude = Double.parseDouble(latitudeCell.getStringCellValue());
 			} else { // get value from dataTable metadata if not mentioned in excel
 				latitude = dataTable.getGeographicalCoverageLatitude();
 			}
@@ -634,12 +634,11 @@ public class ObservationMapperHelper {
 			Double longitude = null;
 			Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (longitudeCell != null) {
-				longitudeCell.setCellType(CellType.NUMERIC);
-				longitude = longitudeCell.getNumericCellValue();
+				longitudeCell.setCellType(CellType.STRING);
+				longitude = Double.parseDouble(longitudeCell.getStringCellValue());
 			} else { // get value from dataTable metadata if not mentioned in excel
 				longitude = dataTable.getGeographicalCoverageLongitude();
 			}
-			System.out.println("\n\n***** Longitude: " + longitude + " *****\n\n");
 			
 			Boolean geoPrivacy = new Boolean(Boolean.TRUE);
 			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);

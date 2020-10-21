@@ -1570,12 +1570,12 @@ public class ObservationServiceImpl implements ObservationService {
 			dataSheetIterator.next();
 			while (dataSheetIterator.hasNext()) {
 				Row dataRow = dataSheetIterator.next();
-
+				System.out.println("\n\n***** Reading Row #:" + count++ + " *****\n\n");
 				Observation observation = observationHelper.bulkUploadPayload(dataRow, fieldMapping, dataTable, speciesGroupList, observationDTO.getLanguageId(), userId);
 				if (observation != null) {
 					observation = observationDao.save(observation);	
 
-					System.out.println("\n***** DataTable Saved : " + observation.getId() + " *****\n");			
+					System.out.println("\n***** Observation Saved : " + observation.getId() + " *****\n");			
 				} else {
 					continue;
 				}
@@ -1783,9 +1783,9 @@ public class ObservationServiceImpl implements ObservationService {
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				userGroupService.getFilterRule(ugObvFilterData);
 
-				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
-				Thread thread = new Thread(esCreateThread);
-				thread.start();
+//				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
+//				Thread thread = new Thread(esCreateThread);
+//				thread.start();
 				
 				
 			}
