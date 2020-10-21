@@ -650,6 +650,7 @@ public class ObservationMapperHelper {
 			Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (longitudeCell != null) {
 				longitudeCell.setCellType(CellType.NUMERIC);
+				System.out.println("\n\n***** Excel Longitude: " + longitudeCell.getNumericCellValue() + " *****\n\n");
 				longitude = longitudeCell.getNumericCellValue();
 			} else { // get value from dataTable metadata if not mentioned in excel
 				longitude = dataTable.getGeographicalCoverageLongitude();
