@@ -609,7 +609,7 @@ public class ObservationMapperHelper {
 				fromDate = fromDateCell.getDateCellValue();
 			}
 			
-			String dateAccuracy = "";
+			String dateAccuracy = "ACCURATE";
 			Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (dateAccuracyCell != null) {
 				dateAccuracyCell.setCellType(CellType.STRING);
@@ -630,7 +630,7 @@ public class ObservationMapperHelper {
 				observedAt = observedAtCell.getStringCellValue();
 			}	
 			
-			String locationScale = "";
+			String locationScale = "APPROXIMATE";
 			Cell locationScaleCell = dataRow.getCell(fieldMapping.get("locationScale"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (locationScaleCell != null) {
 				locationScaleCell.setCellType(CellType.STRING);
@@ -655,7 +655,7 @@ public class ObservationMapperHelper {
 				latitude = dataTable.getGeographicalCoverageLongitude();
 			}
 			
-			Boolean geoPrivacy = null;
+			Boolean geoPrivacy = new Boolean(Boolean.TRUE);
 			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (geoPrivacyCell != null) {
 				geoPrivacyCell.setCellType(CellType.BOOLEAN);
