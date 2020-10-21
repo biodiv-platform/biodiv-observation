@@ -652,8 +652,9 @@ public class ObservationMapperHelper {
 				longitudeCell.setCellType(CellType.NUMERIC);
 				longitude = longitudeCell.getNumericCellValue();
 			} else { // get value from dataTable metadata if not mentioned in excel
-				latitude = dataTable.getGeographicalCoverageLongitude();
+				longitude = dataTable.getGeographicalCoverageLongitude();
 			}
+			System.out.println("\n\n***** Longitude: " + longitude + " *****\n\n");
 			
 			Boolean geoPrivacy = new Boolean(Boolean.TRUE);
 			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
