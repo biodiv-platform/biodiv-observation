@@ -588,7 +588,7 @@ public class ObservationMapperHelper {
 				speciesGroup.setId(Long.parseLong(dataTable.getTaxonomicCoverageGroupIds().split(",")[0].trim()));
 			}
 			
-			String helpIdentify = null;
+			String helpIdentify = "";
 			Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (helpIdentifyCell != null) {
 				helpIdentifyCell.setCellType(CellType.STRING);
@@ -681,7 +681,7 @@ public class ObservationMapperHelper {
 					locationScale, null, null, null, null,
 					null, null, null, null, null,
 					null, null, null, null, null, 
-					"List", "HUMAN_OBSERVATION", 0, 0, 0,
+					"LIST", "HUMAN_OBSERVATION", 0, 0, 0,
 					helpIdentify != null && helpIdentify.equalsIgnoreCase("YES") ? 
 					0 : 1, dataTable.getId(), dateAccuracy, false);
 
