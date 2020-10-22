@@ -1826,9 +1826,9 @@ public class ObservationServiceImpl implements ObservationService {
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				userGroupService.getFilterRule(ugObvFilterData);
 
-				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
-				Thread thread = new Thread(esCreateThread);
-				thread.start();
+//				ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
+//				Thread thread = new Thread(esCreateThread);
+//				thread.start();
 
 			}
 
