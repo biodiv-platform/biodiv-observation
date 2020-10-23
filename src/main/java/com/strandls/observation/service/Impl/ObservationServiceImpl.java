@@ -33,9 +33,11 @@ import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
 import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
+import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
@@ -1525,34 +1527,52 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUserPageInfo observationUserInfo(Long userId, Long sGroupId, Boolean hasMedia) {
-//		map of max_voted_reco_id to freq count
-		Map<Long, Long> maxVotedRecoFreq = observationDao.getObservationUploadCount(userId, sGroupId, hasMedia, 0L);
+	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset) {
 
-		List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();
+		try {
+			Long size = offset + 10;
+			AuthorUploadedObservationInfo authorUploadedObservationInfo = esService.getUploadUserInfo(
+					ObservationIndex.index.getValue(), ObservationIndex.type.getValue(), userId.toString(),
+					size.toString(), (sGroupId != null) ? sGroupId.toString() : null, hasMedia);
 
-		for (Entry<Long, Long> entrySet : maxVotedRecoFreq.entrySet()) {
-			if(entrySet.getKey()!=null) {
-				RecoIbp recoIbp = recoService.fetchRecoVote(entrySet.getKey());
-				if(recoIbp!=null)
-				observationUploaded.add(new UniqueSpeciesInfo(
-						(recoIbp.getScientificName() != null) ? recoIbp.getScientificName() : recoIbp.getCommonName(),
-								entrySet.getKey(), recoIbp.getSpeciesId(), recoIbp.getTaxonId(), entrySet.getValue()));
+			List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();
+			List<MaxVotedRecoFreq> maxVotedRecoFreqs = authorUploadedObservationInfo.getMaxVotedRecoFreqs();
+			for (MaxVotedRecoFreq maxVotedRecoFreq : maxVotedRecoFreqs) {
+
+				RecoIbp recoIbp = recoService.fetchRecoVote(maxVotedRecoFreq.getMaxVotedRecoId());
+				if (recoIbp != null)
+					observationUploaded.add(new UniqueSpeciesInfo(
+							(recoIbp.getScientificName() != null) ? recoIbp.getScientificName()
+									: recoIbp.getCommonName(),
+							maxVotedRecoFreq.getMaxVotedRecoId(), recoIbp.getSpeciesId(), recoIbp.getTaxonId(),
+							maxVotedRecoFreq.getFreq()));
 			}
+			ObservationUserPageInfo result = new ObservationUserPageInfo(observationUploaded,
+					authorUploadedObservationInfo.getTotalCount());
 
+			return result;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
+		return null;
+	}
 
-//		observation identified 
+	@Override
+	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia,
+			Long offset) {
+
 		Long identifiedSpeciesCount = null;
-		Map<Long, List<UniqueSpeciesInfo>> identifiedFreq = recoService.getIdentifiedObservationInfo(userId, sGroupId, hasMedia, 0L);
+		Map<Long, List<UniqueSpeciesInfo>> identifiedFreq = recoService.getIdentifiedObservationInfo(userId, sGroupId,
+				hasMedia, offset);
 		if (identifiedFreq != null) {
 			Set<Long> identifiedCount = identifiedFreq.keySet();
 			identifiedSpeciesCount = identifiedCount.iterator().next();
 
 		}
 
-		ObservationUserPageInfo result = new ObservationUserPageInfo(observationUploaded, maxVotedRecoFreq.get(null),
-				identifiedFreq.get(identifiedSpeciesCount), identifiedSpeciesCount);
+		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
+				identifiedSpeciesCount);
 		return result;
 	}
 }
