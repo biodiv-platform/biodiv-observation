@@ -154,6 +154,8 @@ public interface ObservationService {
 
 	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId);
 
-	public ObservationUserPageInfo observationUserInfo(Long userId, Long sGroupId, Boolean hasMedia);
+	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
+
+	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
 }

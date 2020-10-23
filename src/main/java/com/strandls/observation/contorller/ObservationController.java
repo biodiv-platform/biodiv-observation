@@ -1310,20 +1310,51 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path(ApiConstants.USERINFO + "/{userId}")
+	@Path(ApiConstants.USERINFO + ApiConstants.UPLOADED + "/{userId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	public Response getObservationUserInfo(@PathParam("userId") String userId, @QueryParam("sGroupId") String sGroupIds,
-			@DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia) {
+	@ApiOperation(value = "search for the unique species uploaded by user", notes = "returns the total and unique species list", response = ObservationUserPageInfo.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationUploadedUserInfo(@PathParam("userId") String userId,
+			@QueryParam("sGroupId") String sGroupIds, @DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia,
+			@QueryParam("offset") String offset) {
 
 		try {
 			Long user = Long.parseLong(userId);
 			Long sGroupId = null;
 			if (sGroupIds != null)
 				sGroupId = Long.parseLong(sGroupIds);
-			ObservationUserPageInfo result = observationService.observationUserInfo(user, sGroupId, hasMedia);
+			Long Offset = Long.parseLong(offset);
+			ObservationUserPageInfo result = observationService.observationUploadInfo(user, sGroupId, hasMedia, Offset);
 
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
+	@Path(ApiConstants.USERINFO + ApiConstants.IDENTIFIED + "/{userId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "search for the unique species identified by user", notes = "returns the total and unique species list", response = ObservationUserPageInfo.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationIdentifiedUserInfo(@PathParam("userId") String userId,
+			@QueryParam("sGroupId") String sGroupIds, @DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia,
+			@QueryParam("offset") String offset) {
+		try {
+			Long user = Long.parseLong(userId);
+			Long sGroupId = null;
+			if (sGroupIds != null)
+				sGroupId = Long.parseLong(sGroupIds);
+			Long Offset = Long.parseLong(offset);
+			ObservationUserPageInfo result = observationService.observationIdentifiedInfo(user, sGroupId, hasMedia,
+					Offset);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

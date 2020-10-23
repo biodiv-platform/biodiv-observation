@@ -4,54 +4,33 @@ import java.util.List;
 
 public class ObservationUserPageInfo {
 
-	private List<UniqueSpeciesInfo> observationUploaded;
-	private Long observationUploadedCount;
-	private List<UniqueSpeciesInfo> identifiedSpecies;
-	private Long identifiedSpeciesCount;
+	private List<UniqueSpeciesInfo> uniqueSpeciesInfos;
+	private Long totalCount;
 
 	public ObservationUserPageInfo() {
 		super();
 	}
 
-	public ObservationUserPageInfo(List<UniqueSpeciesInfo> observationUploaded, Long observationUploadedCount,
-			List<UniqueSpeciesInfo> identifiedSpecies, Long identifiedSpeciesCount) {
+	public ObservationUserPageInfo(List<UniqueSpeciesInfo> uniqueSpeciesInfos, Long totalCount) {
 		super();
-		this.observationUploaded = observationUploaded;
-		this.observationUploadedCount = observationUploadedCount;
-		this.identifiedSpecies = identifiedSpecies;
-		this.identifiedSpeciesCount = identifiedSpeciesCount;
+		this.uniqueSpeciesInfos = uniqueSpeciesInfos;
+		this.totalCount = totalCount;
 	}
 
-	public List<UniqueSpeciesInfo> getObservationUploaded() {
-		return observationUploaded;
+	public List<UniqueSpeciesInfo> getUniqueSpeciesInfos() {
+		return uniqueSpeciesInfos;
 	}
 
-	public void setObservationUploaded(List<UniqueSpeciesInfo> observationUploaded) {
-		this.observationUploaded = observationUploaded;
+	public void setUniqueSpeciesInfos(List<UniqueSpeciesInfo> uniqueSpeciesInfos) {
+		this.uniqueSpeciesInfos = uniqueSpeciesInfos;
 	}
 
-	public Long getObservationUploadedCount() {
-		return observationUploadedCount;
+	public Long getTotalCount() {
+		return totalCount;
 	}
 
-	public void setObservationUploadedCount(Long observationUploadedCount) {
-		this.observationUploadedCount = observationUploadedCount;
-	}
-
-	public List<UniqueSpeciesInfo> getIdentifiedSpecies() {
-		return identifiedSpecies;
-	}
-
-	public void setIdentifiedSpecies(List<UniqueSpeciesInfo> identifiedSpecies) {
-		this.identifiedSpecies = identifiedSpecies;
-	}
-
-	public Long getIdentifiedSpeciesCount() {
-		return identifiedSpeciesCount;
-	}
-
-	public void setIdentifiedSpeciesCount(Long identifiedSpeciesCount) {
-		this.identifiedSpeciesCount = identifiedSpeciesCount;
+	public void setTotalCount(Long totalCount) {
+		this.totalCount = totalCount;
 	}
 
 }
