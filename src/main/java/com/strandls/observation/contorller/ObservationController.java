@@ -1346,7 +1346,7 @@ public class ObservationController {
 
 	public Response getObservationIdentifiedUserInfo(@PathParam("userId") String userId,
 			@QueryParam("sGroupId") String sGroupIds, @DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia,
-			@QueryParam("offset") String offset) {
+			@DefaultValue("0") @QueryParam("offset") String offset) {
 		try {
 			Long user = Long.parseLong(userId);
 			Long sGroupId = null;
