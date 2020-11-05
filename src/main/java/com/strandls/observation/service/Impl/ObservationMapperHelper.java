@@ -460,7 +460,7 @@ public class ObservationMapperHelper {
 					resource.setType("AUDIO");
 				else if (values.get("mimeType").startsWith("video") || values.get("mimeType").equalsIgnoreCase("video"))
 					resource.setType("VIDEO");
-				resource.setFileName(resourceData.getKey());
+				resource.setFileName(values.get("name"));
 				resource.setUrl(null);
 				resource.setRating(null);
 				resource.setUploadTime(new Date());
