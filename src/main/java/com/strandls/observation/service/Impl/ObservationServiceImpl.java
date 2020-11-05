@@ -1733,10 +1733,11 @@ public class ObservationServiceImpl implements ObservationService {
 								for (String trait : traits) {
 									if (trait.equalsIgnoreCase(tv.getValue())) {
 										traitValues.add(tv.getId());
+									}
 								}
-							}
 
-							facts.put(String.valueOf(pair.getTraits().getId()), traitValues);
+								facts.put(String.valueOf(pair.getTraits().getId()), traitValues);
+							}
 						}
 					}
 					if (!facts.isEmpty()) {
@@ -1755,7 +1756,6 @@ public class ObservationServiceImpl implements ObservationService {
 					ex.printStackTrace();
 					logger.error(ex.getMessage());
 				}
-
 
 				// userGroups Starts
 				try {
