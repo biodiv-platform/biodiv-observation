@@ -360,7 +360,7 @@ public class ObservationController {
 			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
 			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
 			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
-			@QueryParam("bottom") Double bottom, @QueryParam("recom") String recoId,
+			@QueryParam("bottom") Double bottom, @QueryParam("recoId") String recoId,
 			@QueryParam("maxVotedReco") String maxVotedReco, @QueryParam("authorVoted") String authorVoted,
 			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
 			@QueryParam("termsAggregationField") String termsAggregationField,

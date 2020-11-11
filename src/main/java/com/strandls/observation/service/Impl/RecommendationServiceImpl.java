@@ -123,6 +123,36 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
+	public RecoIbp fetchByRecoId(Long recoId) {
+
+		try {
+			Recommendation reco = recoDao.findById(recoId);
+			Long speciesId = null;
+			String scientificName = "";
+			Long taxonId = null;
+			if (reco.getTaxonConceptId() != null) {
+
+				TaxonomyDefinition taxonomyDefinition = taxonomyService
+						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
+				speciesId = taxonomyDefinition.getSpeciesId();
+				taxonId = reco.getTaxonConceptId();
+				scientificName = taxonomyDefinition.getNormalizedForm();
+
+			} else {
+				scientificName = reco.getName();
+			}
+
+			RecoIbp recoIbp = new RecoIbp(null, scientificName, taxonId, speciesId, null, null, null, null);
+			return recoIbp;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
 	public RecoIbp fetchRecoName(Long obvId, Long recoId) {
 
 		Long speciesId = null;
@@ -810,7 +840,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 									.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 							speciesId = taxonomyDefinition.getSpeciesId();
 						}
-						uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), null, speciesId,
+						uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), entrySet.getKey(), speciesId,
 								reco.getTaxonConceptId(), entrySet.getValue()));
 					}
 				}
