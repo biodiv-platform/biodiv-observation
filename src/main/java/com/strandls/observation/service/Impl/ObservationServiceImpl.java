@@ -1539,7 +1539,7 @@ public class ObservationServiceImpl implements ObservationService {
 			List<MaxVotedRecoFreq> maxVotedRecoFreqs = authorUploadedObservationInfo.getMaxVotedRecoFreqs();
 			for (MaxVotedRecoFreq maxVotedRecoFreq : maxVotedRecoFreqs) {
 
-				RecoIbp recoIbp = recoService.fetchRecoVote(maxVotedRecoFreq.getMaxVotedRecoId());
+				RecoIbp recoIbp = recoService.fetchByRecoId(maxVotedRecoFreq.getMaxVotedRecoId());
 				if (recoIbp != null)
 					observationUploaded.add(new UniqueSpeciesInfo(
 							(recoIbp.getScientificName() != null) ? recoIbp.getScientificName()
