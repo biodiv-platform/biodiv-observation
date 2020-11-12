@@ -152,14 +152,19 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		if (hasMedia)
 			qry = qry + " and (o.no_of_audio > 0 or o.no_of_videos > 0 or o.no_of_images > 0 ) ";
 
+		qry = qry + " and o.is_deleted = false ";
+
 		qry = qry + " group by rv.recommendation_id order by count(rv.id) desc limit 10 offset " + offset;
 
-		String qry1 = "select count(rv.id) from recommendation_vote rv "
+		String qry1 = "select count(distinct(rv.recommendation_id)) from recommendation_vote rv "
 				+ "inner join observation o on rv.observation_id = o.id where rv.author_id = " + userId;
 		if (sGroup != null)
 			qry1 = qry1 + " and o.group_id = " + sGroup;
 		if (hasMedia)
 			qry1 = qry1 + " and (o.no_of_audio > 0 or o.no_of_videos > 0 or o.no_of_images > 0 ) ";
+		
+		qry1 = qry1 + " and o.is_deleted = false ";
+		
 
 		Session session = sessionFactory.openSession();
 
