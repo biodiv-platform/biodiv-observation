@@ -9,7 +9,7 @@ package com.strandls.observation.es.util;
  */
 public enum ObservationIndex {
 
-	index("extended_observation"), type("extended_records"), sGroup("group_id"),
+	index("extended_observation"), type("_doc"), sGroup("group_id"),
 	userGroupId("user_group_observations.id"), speciesNames("group_name"),
 	scientificName("max_voted_reco.scientific_name"), commonName("max_voted_reco.common_names"),
 	flagCount("flag_count"), isLocked("is_locked"), authorid("author_id"), fromDate("from_date"),
