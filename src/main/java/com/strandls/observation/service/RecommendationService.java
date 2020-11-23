@@ -25,6 +25,8 @@ public interface RecommendationService {
 
 	public RecoIbp fetchRecoVote(Long id);
 
+	public RecoIbp fetchByRecoId(Long recoId);
+
 	public RecoIbp fetchRecoName(Long obvId, Long recoId);
 
 	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonId,
