@@ -4,15 +4,17 @@
 package com.strandls.observation.dao;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.util.AbstractDAO;
@@ -138,6 +140,58 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			session.close();
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<Long, Long> getUniqueRecoVoteByUser(Long userId, Long sGroup, Boolean hasMedia, Long offset) {
+
+		String qry = "select rv.recommendation_id, count(rv.id) from recommendation_vote rv "
+				+ "inner join observation o on rv.observation_id = o.id where rv.author_id = " + userId;
+		if (sGroup != null)
+			qry = qry + " and o.group_id = " + sGroup;
+		if (hasMedia)
+			qry = qry + " and (o.no_of_audio > 0 or o.no_of_videos > 0 or o.no_of_images > 0 ) ";
+
+		qry = qry + " and o.is_deleted = false ";
+
+		qry = qry + " group by rv.recommendation_id order by count(rv.id) desc limit 10 offset " + offset;
+
+		String qry1 = "select count(distinct(rv.recommendation_id)) from recommendation_vote rv "
+				+ "inner join observation o on rv.observation_id = o.id where rv.author_id = " + userId;
+		if (sGroup != null)
+			qry1 = qry1 + " and o.group_id = " + sGroup;
+		if (hasMedia)
+			qry1 = qry1 + " and (o.no_of_audio > 0 or o.no_of_videos > 0 or o.no_of_images > 0 ) ";
+		
+		qry1 = qry1 + " and o.is_deleted = false ";
+		
+
+		Session session = sessionFactory.openSession();
+
+		Map<Long, Long> result = new LinkedHashMap<Long, Long>();
+
+		List<Object[]> objectList = null;
+
+		try {
+			Query<Object[]> query = session.createNativeQuery(qry);
+
+			objectList = query.getResultList();
+
+			for (Object object[] : objectList) {
+				result.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
+			}
+
+			Query<Object> query2 = session.createNativeQuery(qry1);
+			Object obj = query2.getSingleResult();
+			result.put(null, Long.parseLong(obj.toString()));
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+
 	}
 
 }

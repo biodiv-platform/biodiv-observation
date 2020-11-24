@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,6 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return result;
 	}
 
-
 	@SuppressWarnings("unchecked")
 	public List<Observation> fecthByListOfIds(List<Long> observationList) {
 		String qry = "from Observation where isDeleted = false and id IN :ids";
@@ -103,13 +103,13 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		}
 		return result;
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String>projectedColumns, Map<String,Object>filterOn){
+	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String> projectedColumns, Map<String, Object> filterOn) {
 		Session session = sessionFactory.openSession();
 		Criteria criteria = session.createCriteria(Observation.class);
 		ProjectionList projectionList = Projections.projectionList();
-		for(String projectedColumn:projectedColumns) {
+		for (String projectedColumn : projectedColumns) {
 			projectionList.add(Projections.property(projectedColumn));
 		}
 		criteria.add(Restrictions.allEq(filterOn));
@@ -117,6 +117,52 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		List<Object[]> queryData = criteria.list();
 		session.close();
 		return queryData;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<Long, Long> getObservationUploadCount(Long authorId, Long sGroup, Boolean hasMedia, Long offset) {
+		Session session = sessionFactory.openSession();
+		String qry = "select max_voted_reco_id, count(id) from observation "
+				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
+		if (sGroup != null)
+			qry = qry + " and group_id = " + sGroup;
+		if (hasMedia)
+			qry = qry + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
+
+		qry = qry + "group by max_voted_reco_id order by count(id) desc limit 10 offset " + offset;
+		
+		
+		String qry1 = "select count(id) from observation "
+				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
+		if (sGroup != null)
+			qry1 = qry1 + " and s_group = " + sGroup;
+		if (hasMedia)
+			qry1 = qry1 + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
+
+		Map<Long, Long> maxVotedRecoFreq = new LinkedHashMap<Long, Long>();
+
+		List<Object[]> objectList = null;
+
+		try {
+
+			Query<Object[]> query = session.createNativeQuery(qry);
+
+			objectList = query.getResultList();
+
+			for (Object object[] : objectList) {
+				maxVotedRecoFreq.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
+			}
+			
+			Query<Object> query2 = session.createNativeQuery(qry1);
+			Object obj = query2.getSingleResult();
+			maxVotedRecoFreq.put(null, Long.parseLong(obj.toString()));
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return maxVotedRecoFreq;
 	}
 
 }

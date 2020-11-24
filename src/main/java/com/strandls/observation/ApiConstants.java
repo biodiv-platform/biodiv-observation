@@ -60,6 +60,9 @@ public class ApiConstants {
 
 	public static final String PUBLICATIONGRADE = "/publicationgrade";
 	public static final String INDEXFIELDUPDATE = "/indexfieldupdate";
+	public static final String USERINFO = "/userinfo";
+	public static final String UPLOADED = "/uploaded";
+	public static final String IDENTIFIED = "/identified";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
@@ -76,5 +79,5 @@ public class ApiConstants {
 	public static final String AGGREGATE = "/aggregate";
 	public static final String LISTCSV = "/listcsv";
 	public static final String LISTDOWNLOAD = "/listdownload";
-	
+
 }
