@@ -79,12 +79,17 @@ public class ObservationListServiceImpl implements ObservationListService {
 				totalCount = geoHashAggregationData.getTotalCount();
 
 			} else {
-
+				long startMillis = System.currentTimeMillis();
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, querys);
+				long endMillis = System.currentTimeMillis();
+
+				System.out.println("\n\n\n\n***** ES Operation: " + (endMillis - startMillis) +
+						"*****\n\n\n\n");
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
-
+				
+				startMillis = System.currentTimeMillis();
 				if (view.equalsIgnoreCase("list_minimal")) {
 					for (MapDocument document : documents) {
 						try {
@@ -151,6 +156,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 					}
 
 				}
+				endMillis = System.currentTimeMillis();
+				
+				System.out.println("\n\n\n\n***** Other Operation: " + (endMillis - startMillis) +
+						"*****\n\n\n\n");
 
 			}
 
