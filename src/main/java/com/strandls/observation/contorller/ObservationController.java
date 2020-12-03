@@ -423,7 +423,7 @@ public class ObservationController {
 
 			MapAggregationResponse aggregationResult = null;
 
-			if (offset != 0) {
+			if (offset == 0) {
 				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
