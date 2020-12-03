@@ -161,7 +161,6 @@ public class ObservationListCSVThread implements Runnable {
 		downloadLogDao.save(entity);
 		try {
 			fileGenerationStatus = "SUCCESS";
-
 			do {
 				mapSearchParams.setFrom(offset);
 				mapSearchParams.setLimit(max);

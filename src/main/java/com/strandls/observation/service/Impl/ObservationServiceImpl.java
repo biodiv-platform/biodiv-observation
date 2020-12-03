@@ -2224,7 +2224,6 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-
 	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset) {
 
 		try {

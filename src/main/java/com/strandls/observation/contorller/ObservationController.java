@@ -423,11 +423,16 @@ public class ObservationController {
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
-			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
-					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-					validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-					district, state, tags, publicationGrade, authorVoted);
+			MapAggregationResponse aggregationResult = null;
+
+			if (offset != 0) {
+				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
+						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
+						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
+						tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			}
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
