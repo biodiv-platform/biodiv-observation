@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
@@ -164,18 +165,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	}
 
-	private AggregationResponse getAggregate(String index, String type, String filter, String geoAggregationField,
-			MapSearchQuery searchQuery) {
-		try {
-			AggregationResponse response = esService.getAggregation(index, type, filter, geoAggregationField,
-					searchQuery);
+	private void getAggregateLatch(String index, String type, String filter, String geoAggregationField,
+			MapSearchQuery searchQuery, Map<String, AggregationResponse> mapResponse, CountDownLatch latch,
+			String namedAgg) {
 
-			return response;
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
+		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, geoAggregationField, searchQuery,
+				mapResponse, namedAgg, latch, esService);
+		worker.start();
 
-		return null;
 	}
 
 	@Override
@@ -197,170 +194,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 		String omiter = null;
 		MapAggregationResponse aggregationResponse = new MapAggregationResponse();
 
-		if (sGroup != null && !sGroup.isEmpty()) {
+		Map<String, AggregationResponse> mapAggResponse = new HashMap<String, AggregationResponse>();
 
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(omiter, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupSpeciesName(
-					getAggregate(index, type, "group_name.keyword", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupSpeciesName(
-					getAggregate(index, type, "group_name.keyword", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-		if (status != null && !status.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					omiter, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupStatus(getAggregate(index, type, "max_voted_reco.taxonstatus.keyword",
-					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupStatus(
-					getAggregate(index, type, "max_voted_reco.taxonstatus.keyword", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
+//		filter panel data
 
-		if (rank != null && !rank.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, omiter, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupRank(getAggregate(index, type, "max_voted_reco.ranktext.keyword",
-					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupRank(
-					getAggregate(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-
-		if (state != null && !state.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupState(getAggregate(index, type, "location_information.state.raw",
-					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
-
-		} else {
-			aggregationResponse.setGroupState(
-					getAggregate(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-
-		if (userGroupList != null && !userGroupList.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, omiter, webaddress, speciesName,
-					mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupUserGroupName(getAggregate(index, type, "user_group_observations.name.keyword",
-					geoAggregationField, mapSearchQueryFilter).getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupUserGroupName(getAggregate(index, type, "user_group_observations.name.keyword",
-					geoAggregationField, mapSearchQuery).getGroupAggregation());
-		}
-		if (isFlagged != null && !isFlagged.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, omiter, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse
-					.setGroupFlag(getAggregate(index, type, "flag_count", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupFlag(
-					getAggregate(index, type, "flag_count", geoAggregationField, mapSearchQuery).getGroupAggregation());
-		}
-		if (validate != null && !validate.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, omiter, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse
-					.setGroupValidate(getAggregate(index, type, "is_locked", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupValidate(
-					getAggregate(index, type, "is_locked", geoAggregationField, mapSearchQuery).getGroupAggregation());
-		}
-		if (months != null && !months.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, omiter, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupMonth(
-					getAggregate(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-		} else {
-			aggregationResponse.setGroupMonth(
-					getAggregate(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-		if (mediaFilter != null && !mediaFilter.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-
-			aggregationResponse.setGroupAudio(
-					getTotal(getAggregate(index, type, "no_of_audio", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupVideo(
-					getTotal(getAggregate(index, type, "no_of_videos", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupImages(
-					getTotal(getAggregate(index, type, "no_of_images", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupNoMedia(getTotal(
-					getAggregate(index, type, "no_media", geoAggregationField, mapSearchQuery).getGroupAggregation()));
-
-		} else {
-			aggregationResponse.setGroupAudio(
-					getTotal(getAggregate(index, type, "no_of_audio", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupVideo(
-					getTotal(getAggregate(index, type, "no_of_videos", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupImages(
-					getTotal(getAggregate(index, type, "no_of_images", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation()));
-			aggregationResponse.setGroupNoMedia(getTotal(
-					getAggregate(index, type, "no_media", geoAggregationField, mapSearchQuery).getGroupAggregation()));
-
-		}
-		if (speciesName != null && !speciesName.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress, omiter,
-					mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupIdentificationNameExists(
-					getAggregate(index, type, "max_voted_reco", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-
-		} else {
-			aggregationResponse.setGroupIdentificationNameExists(
-					getAggregate(index, type, "max_voted_reco", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-		if (taxonId != null && !taxonId.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, omiter, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-			aggregationResponse.setGroupTaxonIDExists(
-					getAggregate(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQueryFilter)
-							.getGroupAggregation());
-
-		} else {
-			aggregationResponse.setGroupTaxonIDExists(
-					getAggregate(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQuery)
-							.getGroupAggregation());
-		}
-
-//		getting filter panel
 		FilterPanelData filterList = null;
 		try {
 			filterList = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
@@ -375,9 +212,185 @@ public class ObservationListServiceImpl implements ObservationListService {
 			customFieldList = filterList.getCustomFields();
 		}
 
+		int totalLatch = 14 + traitList.size() + customFieldList.size();
+//		latch count down
+		CountDownLatch latch = new CountDownLatch(totalLatch);
+
+		if (sGroup != null && !sGroup.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(omiter, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "group_name.keyword", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+
+		} else {
+			getAggregateLatch(index, type, "group_name.keyword", geoAggregationField, mapSearchQuery, mapAggResponse,
+					latch, null);
+
+		}
+		if (status != null && !status.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					omiter, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco.taxonstatus.keyword", geoAggregationField,
+					mapSearchQueryFilter, mapAggResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco.taxonstatus.keyword", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+		}
+
+		if (rank != null && !rank.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, omiter, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+		}
+
+		if (state != null && !state.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+		}
+
+		if (userGroupList != null && !userGroupList.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, omiter, webaddress, speciesName,
+					mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "user_group_observations.name.keyword", geoAggregationField,
+					mapSearchQueryFilter, mapAggResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "user_group_observations.name.keyword", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+
+		}
+		if (isFlagged != null && !isFlagged.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, omiter, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "flag_count", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "flag_count", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+		}
+		if (validate != null && !validate.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, omiter, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "is_locked", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+		} else {
+
+			getAggregateLatch(index, type, "is_locked", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+
+		}
+		if (months != null && !months.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, omiter, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+		}
+		if (mediaFilter != null && !mediaFilter.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "no_of_audio", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+			getAggregateLatch(index, type, "no_of_videos", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+			getAggregateLatch(index, type, "no_of_images", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+			getAggregateLatch(index, type, "no_media", geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch,
+					null);
+
+		} else {
+
+			getAggregateLatch(index, type, "no_of_audio", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+			getAggregateLatch(index, type, "no_of_videos", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+			getAggregateLatch(index, type, "no_of_images", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+			getAggregateLatch(index, type, "no_media", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+
+		}
+		if (speciesName != null && !speciesName.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress, omiter,
+					mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
+					null);
+
+		}
+		if (taxonId != null && !taxonId.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, omiter, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
+		}
+
 //		new trait aggregation
 
-		Map<String, Long> traitValuesAggregation = new HashMap<String, Long>();
 		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
 		for (Traits trait : traitList) {
 			String keyword = "trait_" + trait.getId() + "." + trait.getType();
@@ -385,40 +398,35 @@ public class ObservationListServiceImpl implements ObservationListService {
 				List<String> tempTraitParams = new ArrayList<String>();
 				if (traitParams.containsKey(keyword)) {
 					tempTraitParams = traitParams.remove(keyword);
+
 					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
 							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
 							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
 							publicationGrade, authorVoted);
 
-					traitValuesAggregation = getTraitsAggregation(
-							getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-									mapSearchQueryFilter).getGroupAggregation(),
-							trait.getName());
+					getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+							mapSearchQueryFilter, mapAggResponse, latch, trait.getName());
 
 					traitParams.put(keyword, tempTraitParams);
 				}
 			}
 			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
-				traitValuesAggregation = getTraitsAggregation(
-						getAggregate(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-								mapSearchQuery).getGroupAggregation(),
-						trait.getName());
+				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+						mapSearchQuery, mapAggResponse, latch, trait.getName());
 			}
-
-			traitMaps.put(trait.getName(), traitValuesAggregation);
-
 		}
-		aggregationResponse.setGroupTraits(traitMaps);
 
 //		custom Field Aggregation Start
-		Map<String, Long> cfValuesAggregation = new HashMap<String, Long>();
+		String namedAggs = "";
+
 		Map<String, Map<String, Long>> cfMaps = new HashMap<String, Map<String, Long>>();
 		List<String> tempCFParams = new ArrayList<String>();
 		for (CustomFields cf : customFieldList) {
 			String keyword = "custom_" + cf.getId() + "." + cf.getFieldtype();
 			String fieldType = cf.getFieldtype();
 
+			namedAggs = cf.getId().toString() + "||" + fieldType;
 			if (!customParams.isEmpty()) {
 				tempCFParams = customParams.remove(keyword);
 
@@ -428,63 +436,82 @@ public class ObservationListServiceImpl implements ObservationListService {
 						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
 						publicationGrade, authorVoted);
 
-				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
-					cfValuesAggregation = getCustomFieldAggregationFieldText(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
-						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-					cfValuesAggregation = getCustomFieldAggregationCategorical(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else {
-//					field type = RANGE
-					cfValuesAggregation = getCustomFieldAggregationRange(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQueryFilter).getGroupAggregation(),
-							cf.getDataType(), fieldType, cf.getId().toString());
-				}
+				getAggregateLatch(index, type,
+						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+						geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch, namedAggs);
+
 				customParams.put(keyword, tempCFParams);
 			}
-
 			if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
-				if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
-					cfValuesAggregation = getCustomFieldAggregationFieldText(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
-						|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-					cfValuesAggregation = getCustomFieldAggregationCategorical(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							fieldType, cf.getId().toString());
-				} else {
-//					field type = RANGE
-					cfValuesAggregation = getCustomFieldAggregationRange(
-							getAggregate(index, type,
-									"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-									geoAggregationField, mapSearchQuery).getGroupAggregation(),
-							cf.getDataType(), fieldType, cf.getId().toString());
-				}
+				getAggregateLatch(index, type,
+						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+						geoAggregationField, mapSearchQuery, mapAggResponse, latch, namedAggs);
+
 			}
-			cfMaps.put(cf.getName(), cfValuesAggregation);
+		}
+//		custom Field Aggregation ENDS
+
+		try {
+			latch.await();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		aggregationResponse.setGroupSpeciesName(mapAggResponse.get("group_name.keyword").getGroupAggregation());
+		aggregationResponse
+				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
+		aggregationResponse.setGroupRank(mapAggResponse.get("max_voted_reco.ranktext.keyword").getGroupAggregation());
+		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
+		aggregationResponse.setGroupUserGroupName(
+				mapAggResponse.get("user_group_observations.name.keyword").getGroupAggregation());
+		aggregationResponse.setGroupFlag(mapAggResponse.get("flag_count").getGroupAggregation());
+		aggregationResponse.setGroupValidate(mapAggResponse.get("is_locked").getGroupAggregation());
+		aggregationResponse.setGroupMonth(mapAggResponse.get("observed_in_month.keyword").getGroupAggregation());
+		aggregationResponse.setGroupAudio(getTotal(mapAggResponse.get("no_of_audio").getGroupAggregation()));
+		aggregationResponse.setGroupVideo(getTotal(mapAggResponse.get("no_of_videos").getGroupAggregation()));
+		aggregationResponse.setGroupImages(getTotal(mapAggResponse.get("no_of_images").getGroupAggregation()));
+		aggregationResponse.setGroupNoMedia(getTotal(mapAggResponse.get("no_media").getGroupAggregation()));
+		aggregationResponse
+				.setGroupIdentificationNameExists(mapAggResponse.get("max_voted_reco").getGroupAggregation());
+		aggregationResponse
+				.setGroupTaxonIDExists(mapAggResponse.get("max_voted_reco.taxonstatus").getGroupAggregation());
+
+//		record traits aggregation
+		for (Traits traits : traitList) {
+			traitMaps.put(traits.getName(),
+					getTraitsAggregation(mapAggResponse.get(traits.getName()).getGroupAggregation(), traits.getName()));
+		}
+		aggregationResponse.setGroupTraits(traitMaps);
+
+//		record custom field aggreation
+		for (CustomFields cf : customFieldList) {
+			String fieldType = cf.getFieldtype();
+			namedAggs = cf.getId().toString() + "||" + fieldType;
+			if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
+
+				cfMaps.put(cf.getName(), getCustomFieldAggregationFieldText(
+						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+
+			} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
+					|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+
+				cfMaps.put(cf.getName(), getCustomFieldAggregationCategorical(
+						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+
+			} else {
+//				field type range
+				cfMaps.put(cf.getName(),
+						getCustomFieldAggregationRange(mapAggResponse.get(namedAggs).getGroupAggregation(),
+								cf.getDataType(), fieldType, cf.getId().toString()));
+			}
 		}
 		aggregationResponse.setGroupCustomField(cfMaps);
-
-//		custom Field Aggregation ENDS
 
 		return aggregationResponse;
 
 	}
 
+//	for media data
 	private Long getTotal(Map<String, Long> media) {
 		Long sum = 0L;
 
