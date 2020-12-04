@@ -87,8 +87,8 @@ import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
-import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.resource.pojo.UFile;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -222,7 +222,7 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 
 		List<FactValuePair> facts;
-		List<ObservationResourceUser> observationResource;
+		List<ResourceData> observationResource;
 		List<UserGroupIbp> userGroups;
 		List<CustomFieldObservationData> customField = null;
 		ObservationLocationInfo layerInfo;
@@ -244,7 +244,7 @@ public class ObservationServiceImpl implements ObservationService {
 					authorScore = score.getRecord().get(0).get("details");
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
-				observationResource = resourceService.getImageResource(id.toString());
+				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
@@ -1116,7 +1116,8 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setHidePreciseLocation(observation.getGeoPrivacy());
 
 //				resources Data
-				List<ObservationResourceUser> resourceData = resourceService.getImageResource(observationId.toString());
+				List<ResourceData> resourceData = resourceService.getImageResource("observation",
+						observationId.toString());
 				editData.setResources(observationHelper.createEditResourceMapping(resourceData));
 			} else {
 				throw new ObservationInputException("USER NOT ALLOWED TO EDIT THE PAGE");
@@ -1413,12 +1414,12 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observation.getMaxVotedRecoId() != null) {
 				reco = recoService.fetchRecoName(obvId, observation.getMaxVotedRecoId());
 			}
-			List<ObservationResourceUser> resources = new ArrayList<ObservationResourceUser>();
+			List<ResourceData> resources = new ArrayList<ResourceData>();
 			;
 			if (observation.getReprImageId() != null)
-				resources = resourceService.getImageResource(observation.getId().toString());
+				resources = resourceService.getImageResource("observation", observation.getId().toString());
 
-			for (ObservationResourceUser resource : resources) {
+			for (ResourceData resource : resources) {
 				if (observation.getReprImageId().equals(resource.getResource().getId()))
 					iconurl = resource.getResource().getFileName();
 			}

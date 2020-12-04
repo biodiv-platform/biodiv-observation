@@ -42,7 +42,6 @@ import com.strandls.observation.pojo.ResourceData;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.License;
-import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -416,12 +415,11 @@ public class ObservationMapperHelper {
 						String relativePath = files.get("name").toString();
 						resource.setFileName(relativePath);
 
-					} else
-						if (resourceData.getPath().startsWith("/ibpmu")) {
-							continue;
-						} else {
-							resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
-						}										// returned
+					} else if (resourceData.getPath().startsWith("/ibpmu")) {
+						continue;
+					} else {
+						resource.setFileName(resourceData.getPath()); // skip the resource as no new path has been
+					} // returned
 				}
 				resource.setMimeType(null);
 				if (resourceData.getType().startsWith("image") || resourceData.getType().equalsIgnoreCase("image"))
@@ -557,9 +555,9 @@ public class ObservationMapperHelper {
 		return latlon;
 	}
 
-	public List<ResourceData> createEditResourceMapping(List<ObservationResourceUser> resources) {
+	public List<ResourceData> createEditResourceMapping(List<com.strandls.resource.pojo.ResourceData> resources) {
 		List<ResourceData> editResource = new ArrayList<ResourceData>();
-		for (ObservationResourceUser resourceUser : resources) {
+		for (com.strandls.resource.pojo.ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
 					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
