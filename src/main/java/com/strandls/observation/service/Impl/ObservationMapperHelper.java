@@ -33,10 +33,11 @@ import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
-import com.strandls.observation.pojo.ResourceData;
+import com.strandls.observation.pojo.ResourceDataObs;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -373,11 +374,11 @@ public class ObservationMapperHelper {
 
 	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
-			List<ResourceData> resourceDataList) {
+			List<ResourceDataObs> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
-			for (ResourceData rd : resourceDataList) {
+			for (ResourceDataObs rd : resourceDataList) {
 				if (rd.getPath() != null && rd.getPath().trim().length() > 0)
 					fileList.add(rd.getPath());
 			}
@@ -392,7 +393,7 @@ public class ObservationMapperHelper {
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
-			for (ResourceData resourceData : resourceDataList) {
+			for (ResourceDataObs resourceData : resourceDataList) {
 				Resource resource = new Resource();
 				resource.setVersion(0L);
 				if (resourceData.getCaption() != null)
@@ -485,11 +486,11 @@ public class ObservationMapperHelper {
 		return latlon;
 	}
 
-	public List<ResourceData> createEditResourceMapping(List<com.strandls.resource.pojo.ResourceData> resources) {
-		List<ResourceData> editResource = new ArrayList<ResourceData>();
-		for (com.strandls.resource.pojo.ResourceData resourceUser : resources) {
+	public List<ResourceDataObs> createEditResourceMapping(List<ResourceData> resources) {
+		List<ResourceDataObs> editResource = new ArrayList<ResourceDataObs>();
+		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
-			editResource.add(new ResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
+			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
 					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
 
 		}
