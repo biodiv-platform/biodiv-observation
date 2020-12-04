@@ -53,7 +53,7 @@ public class ObservationCreate {
 	private List<Long> userGroupId;
 
 //	-----Resource Data--------
-	private List<ResourceData> resources;
+	private List<ResourceDataObs> resources;
 //	-----GETTERS AND SETTERS----
 
 	public Long getsGroup() {
@@ -240,11 +240,11 @@ public class ObservationCreate {
 		this.userGroupId = userGroupId;
 	}
 
-	public List<ResourceData> getResources() {
+	public List<ResourceDataObs> getResources() {
 		return resources;
 	}
 
-	public void setResources(List<ResourceData> resources) {
+	public void setResources(List<ResourceDataObs> resources) {
 		this.resources = resources;
 	}
 
