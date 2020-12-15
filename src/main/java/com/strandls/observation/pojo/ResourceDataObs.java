@@ -89,4 +89,15 @@ public class ResourceDataObs {
 		this.licenceId = licenceId;
 	}
 
+	@Override
+	public String toString() {
+		return "ResourceDataObs{" +
+				"path='" + path + '\'' +
+				", url='" + url + '\'' +
+				", type='" + type + '\'' +
+				", caption='" + caption + '\'' +
+				", rating=" + rating +
+				", licenceId=" + licenceId +
+				'}';
+	}
 }

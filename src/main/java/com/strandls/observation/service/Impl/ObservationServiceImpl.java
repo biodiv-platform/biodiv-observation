@@ -353,7 +353,7 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
-			System.out.println("\n\n\n***** Observation Create Data: " + observationData + " ***** \n\n\n");
+			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString() + " ***** \n\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;

@@ -248,4 +248,33 @@ public class ObservationCreate {
 		this.resources = resources;
 	}
 
+	@Override
+	public String toString() {
+		return "ObservationCreate{" +
+				"sGroup=" + sGroup +
+				", helpIdentify=" + helpIdentify +
+				", createdOn=" + createdOn +
+				", fromDate=" + fromDate +
+				", toDate=" + toDate +
+				", recoData=" + recoData +
+				", dateAccuracy='" + dateAccuracy + '\'' +
+				", observedOn=" + observedOn +
+				", protocol='" + protocol + '\'' +
+				", basisOfRecords='" + basisOfRecords + '\'' +
+				", obsvLanguageId=" + obsvLanguageId +
+				", observedAt='" + observedAt + '\'' +
+				", reverseGeocoded='" + reverseGeocoded + '\'' +
+				", locationScale='" + locationScale + '\'' +
+				", latitude=" + latitude +
+				", longitude=" + longitude +
+				", useDegMinSec=" + useDegMinSec +
+				", degMinSec='" + degMinSec + '\'' +
+				", hidePreciseLocation=" + hidePreciseLocation +
+				", facts=" + facts +
+				", notes='" + notes + '\'' +
+				", tags=" + tags +
+				", userGroupId=" + userGroupId +
+				", resources=" + resources +
+				'}';
+	}
 }
