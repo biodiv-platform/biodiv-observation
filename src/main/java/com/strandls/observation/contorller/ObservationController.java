@@ -1165,7 +1165,7 @@ public class ObservationController {
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("") @QueryParam("notes") String notes,
-			@NotBlank @NotEmpty @NotNull @QueryParam("authorid") String authorId,
+			@NotBlank @NotEmpty @NotNull @QueryParam("authorId") String authorId,
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
