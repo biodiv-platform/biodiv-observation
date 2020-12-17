@@ -136,6 +136,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.onlyFilteredAggregation = onlyFilteredAggregation;
 		this.termsAggregationField = termsAggregationField;
 		this.authorId = authorId;
+		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
 		this.mailService = mailService;
