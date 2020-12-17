@@ -82,7 +82,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else {
 				long startMillis = System.currentTimeMillis();
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-						onlyFilteredAggregation, termsAggregationField, querys);
+						onlyFilteredAggregation, termsAggregationField, null, querys);
 				long endMillis = System.currentTimeMillis();
 
 				System.out.println("\n\n\n\n***** ES Operation: " + (endMillis - startMillis) + "*****\n\n\n\n");
@@ -674,7 +674,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			for (String s : resourceUrls.split(",")) {
 				MapSearchQuery query = esUtility.getSearchQueryResource(s);
 				MapResponse result = esService.search(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), null, null, null, null, query);
+						ObservationIndex.type.getValue(), null, null, null, null, null, query);
 				List<MapDocument> documents = result.getDocuments();
 				MapDocument document = documents.get(0);
 				try {
@@ -717,7 +717,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		try {
 			List<ObservationListElasticMapping> observationList = new ArrayList<ObservationListElasticMapping>();
 			MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-					onlyFilteredAggregation, termsAggregationField, querys);
+					onlyFilteredAggregation, termsAggregationField, null, querys);
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {
