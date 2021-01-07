@@ -56,6 +56,7 @@ import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -422,6 +423,7 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
 			MapAggregationResponse aggregationResult = null;
+			MapAggregationStatsResponse aggregationStatsResult = null;
 
 			if (offset == 0) {
 				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
@@ -430,11 +432,20 @@ public class ObservationController {
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
 						tahsil, district, state, tags, publicationGrade, authorVoted);
 
+				if (view.equalsIgnoreCase("stats")) {
+					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
+							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
+							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
+							rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+				}
+
 			}
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					aggregationResult, view);
+					aggregationResult, aggregationStatsResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
