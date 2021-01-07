@@ -1510,12 +1510,11 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public void observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException {
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		Long userId = Long.parseLong(profile.getId());
+		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
+		dataTable = dataTableDAO.save(dataTable);
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
-			DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
-			dataTable = dataTableDAO.save(dataTable);
-
 			final int THREAD_COUNT = 3;
 			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(10);
 			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);

@@ -45,6 +45,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class ObservationBulkMapperHelper {
 
@@ -623,6 +624,8 @@ public class ObservationBulkMapperHelper {
             ExecutorService executorService = Executors.newSingleThreadExecutor();
             ESCreateThread esThread = new ESCreateThread(esUpdate, id.toString());
             executorService.submit(esThread).get();
+            executorService.shutdownNow();
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.error(ex.getMessage());
