@@ -19,6 +19,10 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.es.util.RabbitMQProducer;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +71,19 @@ public class ObservationMapperHelper {
 	private EsServicesApi esService;
 
 	@Inject
+	private TraitsServiceApi traitsServiceApi;
+
+	@Inject
 	private UploadApi fileUploadService;
 
 	@Inject
 	private Headers headers;
+
+	@Inject
+	private RabbitMQProducer rabbitMQProducer;
+
+	@Inject
+	ObservationDAO observationDAO;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -495,6 +508,68 @@ public class ObservationMapperHelper {
 
 		}
 		return editResource;
+
+	}
+
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
+	public void updateGeoPrivacy(List<Observation> observationList) {
+
+		try {
+
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
+			in.close();
+
+			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
+
+			for (Observation observation : observationList) {
+				System.out.println("--------START---------");
+				System.out.println("Observation Id : " + observation.getId());
+				System.out.println("---------END----------");
+
+				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						if (geoPrivateTaxonId.contains(taxonId)) {
+							System.out.println("---------BEGIN----------");
+							System.out.println("Observation Id : " + observation.getId());
+							observation.setGeoPrivacy(true);
+							observationDAO.update(observation);
+							rabbitMQProducer.setMessage("esmodule", observation.getId().toString(),
+									"Observation Core");
+							System.out.println("----------END------------");
+						}
+
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 	}
 

@@ -1346,4 +1346,15 @@ public class ObservationController {
 
 	}
 
+	@POST
+	@Path(ApiConstants.BULK + ApiConstants.UPLOAD + ApiConstants.OBSERVATION)
+	public Response bulkObservationUpload() {
+		try {
+
+			return Response.status(Status.OK).entity("").build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+
 }
