@@ -1,5 +1,7 @@
 package com.strandls.observation.pojo;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.Objects;
@@ -29,7 +31,7 @@ public class DataTable {
     private String geographicalCoverageLocationScale;
     private double geographicalCoverageLongitude;
     private String geographicalCoveragePlaceName;
-    private Object geographicalCoverageTopology;
+    private Geometry geographicalCoverageTopology;
     private boolean isDeleted;
     private Date lastRevised;
     private String methods;
@@ -277,11 +279,11 @@ public class DataTable {
 
     @Basic
     @Column(name = "geographical_coverage_topology")
-    public Object getGeographicalCoverageTopology() {
+    public Geometry getGeographicalCoverageTopology() {
         return geographicalCoverageTopology;
     }
 
-    public void setGeographicalCoverageTopology(Object geographicalCoverageTopology) {
+    public void setGeographicalCoverageTopology(Geometry geographicalCoverageTopology) {
         this.geographicalCoverageTopology = geographicalCoverageTopology;
     }
 
