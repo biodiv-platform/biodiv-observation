@@ -219,7 +219,7 @@ public class ObservationBulkMapperHelper {
                     null, null, null, null, null,
                     null, null, null, null, null,
                     "LIST", "HUMAN_OBSERVATION", 0, 0, 0,
-                    0, dataTable.getId(), dateAccuracy);
+                    0, dataTable.getId(), dateAccuracy, "PRIMARY_OBSERVATION");
 
             return observation;
         } catch (Exception ex) {

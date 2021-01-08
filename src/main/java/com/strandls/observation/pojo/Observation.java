@@ -85,11 +85,12 @@ public class Observation implements Serializable {
 	private Long dataTableId;
 	private String dateAccuracy;
 	private Boolean isVerified;
+	private String basisOfData;
 
 	public Observation() {
 	}
 
-	public Observation(Long id, Long version, Long authorId, Date createdOn, Long groupId, Double latitude, Double longitude, String notes, Date fromDate, String placeName, Integer rating, String reverseGeocodedName, Integer flagCount, Boolean geoPrivacy, Long habitatId, Boolean isDeleted, Date lastRevised, String locationAccuracy, Long visitCount, String searchText, Long maxVotedRecoId, Boolean agreeTerms, Boolean isChecklist, Boolean isShowable, Long sourceId, Date toDate, Geometry topology, String checklistAnnotations, Integer featureCount, Boolean isLocked, Long licenseId, Long languageId, String locationScale, String accessRights, String catalogNumber, Long datasetId, String externalDatasetKey, String externalId, String externalUrl, String informationWithheld, Date lastCrawled, Date lastInterpreted, String originalAuthor, String publishingCountry, Long reprImageId, String viaCode, String viaId, String protocol, String basisOfRecord, Integer noOfImages, Integer noOfVideos, Integer noOfAudio, Integer noOfIdentifications, Long dataTableId, String dateAccuracy) {
+	public Observation(Long id, Long version, Long authorId, Date createdOn, Long groupId, Double latitude, Double longitude, String notes, Date fromDate, String placeName, Integer rating, String reverseGeocodedName, Integer flagCount, Boolean geoPrivacy, Long habitatId, Boolean isDeleted, Date lastRevised, String locationAccuracy, Long visitCount, String searchText, Long maxVotedRecoId, Boolean agreeTerms, Boolean isChecklist, Boolean isShowable, Long sourceId, Date toDate, Geometry topology, String checklistAnnotations, Integer featureCount, Boolean isLocked, Long licenseId, Long languageId, String locationScale, String accessRights, String catalogNumber, Long datasetId, String externalDatasetKey, String externalId, String externalUrl, String informationWithheld, Date lastCrawled, Date lastInterpreted, String originalAuthor, String publishingCountry, Long reprImageId, String viaCode, String viaId, String protocol, String basisOfRecord, Integer noOfImages, Integer noOfVideos, Integer noOfAudio, Integer noOfIdentifications, Long dataTableId, String dateAccuracy, String basisOfData) {
 		this.id = id;
 		this.version = version;
 		this.authorId = authorId;
@@ -145,6 +146,7 @@ public class Observation implements Serializable {
 		this.noOfIdentifications = noOfIdentifications;
 		this.dataTableId = dataTableId;
 		this.dateAccuracy = dateAccuracy;
+		this.basisOfData = basisOfData;
 	}
 
 	@Id
@@ -655,4 +657,44 @@ public class Observation implements Serializable {
 		this.isVerified = isVerified;
 	}
 
+	public Boolean getDeleted() {
+		return isDeleted;
+	}
+
+	public void setDeleted(Boolean deleted) {
+		isDeleted = deleted;
+	}
+
+	public Boolean getChecklist() {
+		return isChecklist;
+	}
+
+	public void setChecklist(Boolean checklist) {
+		isChecklist = checklist;
+	}
+
+	public Boolean getShowable() {
+		return isShowable;
+	}
+
+	public void setShowable(Boolean showable) {
+		isShowable = showable;
+	}
+
+	public Boolean getLocked() {
+		return isLocked;
+	}
+
+	public void setLocked(Boolean locked) {
+		isLocked = locked;
+	}
+
+	@Column(name = "basis_of_data", nullable = false)
+	public String getBasisOfData() {
+		return basisOfData;
+	}
+
+	public void setBasisOfData(String basisOfData) {
+		this.basisOfData = basisOfData;
+	}
 }
