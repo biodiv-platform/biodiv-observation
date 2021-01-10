@@ -216,7 +216,7 @@ public class ObservationBulkMapperHelper {
                     latitude, longitude, notes, fromDate, observedAt, 0, null,
                     0, geoPrivacy, null, false, new Date(),
                     null, 0L, null, null, true, false, false, null, toDate, topology,
-                    null /* checklist annotations */, 0, false, 822L, 1L,
+                    null /* checklist annotations */, 0, false, 822L, 205L,
                     locationScale, null, null, null, null,
                     null, null, null, null, null,
                     null, null, null, null, null,
