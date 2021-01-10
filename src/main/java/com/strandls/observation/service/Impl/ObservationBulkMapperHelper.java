@@ -115,30 +115,32 @@ public class ObservationBulkMapperHelper {
                         return group.getName().equalsIgnoreCase(sGroup);
                     }).findFirst().orElse(null);
 
-                } else { // get value from dataTable metadata if not mentioned in excel
+                }
+            } else { // get value from dataTable metadata if not mentioned in excel
                 speciesGroup = new SpeciesGroup();
                 speciesGroup.setId(Long.parseLong(dataTable.getTaxonomicCoverageGroupIds().split(",")[0].trim()));
-                }
             }
 
             Date fromDate = null;
             if (fieldMapping.get("fromDate") != null) {
                 Cell fromDateCell = dataRow.getCell(fieldMapping.get("fromDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (fromDateCell != null) {
+                    fromDateCell.setCellType(CellType.NUMERIC);
                     fromDate = fromDateCell.getDateCellValue();
-                } else { // get value from dataTable metadata if not mentioned in excel
-                    fromDate = dataTable.getTemporalCoverageFromDate();
                 }
+            } else { // get value from dataTable metadata if not mentioned in excel
+                fromDate = dataTable.getTemporalCoverageFromDate();
             }
 
             Date toDate = null;
             if (fieldMapping.get("toDate") != null) {
                 Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (toDateCell != null) {
+                    toDateCell.setCellType(CellType.NUMERIC);
                     toDate = toDateCell.getDateCellValue();
-                } else { // get value from dataTable metadata if not mentioned in excel
-                    toDate = dataTable.getTemporalCoverageToDate();
                 }
+            } else { // get value from dataTable metadata if not mentioned in excel
+                toDate = dataTable.getTemporalCoverageToDate();
             }
 
             String observedAt = "";
@@ -165,9 +167,9 @@ public class ObservationBulkMapperHelper {
                 if (latitudeCell != null) {
                     latitudeCell.setCellType(CellType.STRING);
                     latitude = Double.parseDouble(latitudeCell.getStringCellValue());
-                } else { // get value from dataTable metadata if not mentioned in excel
-                    latitude = dataTable.getGeographicalCoverageLatitude();
                 }
+            } else { // get value from dataTable metadata if not mentioned in excel
+                latitude = dataTable.getGeographicalCoverageLatitude();
             }
 
             Double longitude = null;
@@ -176,9 +178,9 @@ public class ObservationBulkMapperHelper {
                 if (longitudeCell != null) {
                     longitudeCell.setCellType(CellType.STRING);
                     longitude = Double.parseDouble(longitudeCell.getStringCellValue());
-                } else { // get value from dataTable metadata if not mentioned in excel
-                    longitude = dataTable.getGeographicalCoverageLongitude();
                 }
+            } else { // get value from dataTable metadata if not mentioned in excel
+                longitude = dataTable.getGeographicalCoverageLongitude();
             }
 
             String dateAccuracy = "ACCURATE";

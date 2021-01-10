@@ -13,7 +13,7 @@ public class DataTable {
     private Long version;
     private Long accessLicenseId;
     private String accessRights;
-    private boolean agreeTerms;
+    private Boolean agreeTerms;
     private Long checklistId;
     private String columns;
     private Date createdOn;
@@ -25,14 +25,14 @@ public class DataTable {
     private String externalUrl;
     private Integer featureCount;
     private Integer flagCount;
-    private boolean geographicalCoverageGeoPrivacy;
-    private double geographicalCoverageLatitude;
+    private Boolean geographicalCoverageGeoPrivacy;
+    private Double geographicalCoverageLatitude;
     private String geographicalCoverageLocationAccuracy;
     private String geographicalCoverageLocationScale;
-    private double geographicalCoverageLongitude;
+    private Double geographicalCoverageLongitude;
     private String geographicalCoveragePlaceName;
     private Geometry geographicalCoverageTopology;
-    private boolean isDeleted;
+    private Boolean isDeleted;
     private Date lastRevised;
     private String methods;
     private String partyAttributions;
@@ -99,11 +99,11 @@ public class DataTable {
 
     @Basic
     @Column(name = "agree_terms")
-    public boolean isAgreeTerms() {
+    public Boolean getAgreeTerms() {
         return agreeTerms;
     }
 
-    public void setAgreeTerms(boolean agreeTerms) {
+    public void setAgreeTerms(Boolean agreeTerms) {
         this.agreeTerms = agreeTerms;
     }
 
@@ -220,21 +220,21 @@ public class DataTable {
 
     @Basic
     @Column(name = "geographical_coverage_geo_privacy")
-    public boolean isGeographicalCoverageGeoPrivacy() {
+    public Boolean getGeographicalCoverageGeoPrivacy() {
         return geographicalCoverageGeoPrivacy;
     }
 
-    public void setGeographicalCoverageGeoPrivacy(boolean geographicalCoverageGeoPrivacy) {
+    public void setGeographicalCoverageGeoPrivacy(Boolean geographicalCoverageGeoPrivacy) {
         this.geographicalCoverageGeoPrivacy = geographicalCoverageGeoPrivacy;
     }
 
     @Basic
     @Column(name = "geographical_coverage_latitude")
-    public double getGeographicalCoverageLatitude() {
+    public Double getGeographicalCoverageLatitude() {
         return geographicalCoverageLatitude;
     }
 
-    public void setGeographicalCoverageLatitude(double geographicalCoverageLatitude) {
+    public void setGeographicalCoverageLatitude(Double geographicalCoverageLatitude) {
         this.geographicalCoverageLatitude = geographicalCoverageLatitude;
     }
 
@@ -260,11 +260,11 @@ public class DataTable {
 
     @Basic
     @Column(name = "geographical_coverage_longitude")
-    public double getGeographicalCoverageLongitude() {
+    public Double getGeographicalCoverageLongitude() {
         return geographicalCoverageLongitude;
     }
 
-    public void setGeographicalCoverageLongitude(double geographicalCoverageLongitude) {
+    public void setGeographicalCoverageLongitude(Double geographicalCoverageLongitude) {
         this.geographicalCoverageLongitude = geographicalCoverageLongitude;
     }
 
@@ -290,11 +290,11 @@ public class DataTable {
 
     @Basic
     @Column(name = "is_deleted")
-    public boolean isDeleted() {
+    public Boolean getDeleted() {
         return isDeleted;
     }
 
-    public void setDeleted(boolean deleted) {
+    public void setDeleted(Boolean deleted) {
         isDeleted = deleted;
     }
 
