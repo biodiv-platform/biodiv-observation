@@ -172,7 +172,7 @@ public class ObservationBulkMapperHelper {
             if (fieldMapping.get("latitude") != null) {
                 Cell latitudeCell = dataRow.getCell(fieldMapping.get("latitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (latitudeCell != null) {
-                    latitudeCell.setCellType(CellType.NUMERIC);
+                    latitudeCell.setCellType(CellType.STRING);
                     latitude = Double.parseDouble(latitudeCell.getStringCellValue());
                 } else { // get value from dataTable metadata if not mentioned in excel
                     latitude = dataTable.getGeographicalCoverageLatitude();
@@ -185,7 +185,7 @@ public class ObservationBulkMapperHelper {
             if (fieldMapping.get("longitude") != null) {
                 Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (longitudeCell != null) {
-                    longitudeCell.setCellType(CellType.NUMERIC);
+                    longitudeCell.setCellType(CellType.STRING);
                     longitude = Double.parseDouble(longitudeCell.getStringCellValue());
                 } else { // get value from dataTable metadata if not mentioned in excel
                     longitude = dataTable.getGeographicalCoverageLongitude();
