@@ -27,6 +27,8 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.ObservationTask;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
@@ -1514,7 +1516,12 @@ public class ObservationServiceImpl implements ObservationService {
 		Long userId = Long.parseLong(profile.getId());
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
 		dataTable = dataTableDAO.save(dataTable);
+
 		try {
+			List<TraitsValuePair> traitsList = traitService.getAllTraits();
+			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
+			List<License> licenseList = licenseControllerApi.getAllLicenses();
+			
 			final int THREAD_COUNT = 20;
 			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(200);
 			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
@@ -1523,8 +1530,8 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			service.submit(new FileTask(queue, observationBulkData.getColumns(), observationBulkData.getFilename(),
-					request, dataTable, getAllSpeciesGroup(), traitService.getAllTraits(),
-					userGroupService.getAllUserGroup(), licenseControllerApi.getAllLicenses()))
+					request, dataTable, getAllSpeciesGroup(), traitsList,
+					userGroupIbpList, licenseList))
 					.get();
 			service.shutdownNow();
 			service.awaitTermination(6, TimeUnit.HOURS);
