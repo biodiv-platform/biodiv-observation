@@ -12,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -45,7 +46,14 @@ public class FileTask implements Runnable {
     public void run() {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new File(filePath))) {
             XSSFSheet sheet = workbook.getSheetAt(0);
-            for (Row dataRow : sheet) {
+            Iterator<Row> rows = sheet.rowIterator();
+
+            Row dataRow;
+            // skip header
+            rows.next();
+
+            while (rows.hasNext()) {
+                dataRow = rows.next();
                 ObservationBulkData observationBulkData = new ObservationBulkData(fieldMapping, dataRow,
                         request, dataTable, speciesGroupList, pairs, userGroupsList, licenses);
                 queue.put(observationBulkData);
