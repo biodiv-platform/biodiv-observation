@@ -159,7 +159,7 @@ public class ObservationBulkMapperHelper {
                 }
             }
 
-            String locationScale = null;
+            String locationScale = "APPROXIMATE";
             if (fieldMapping.get("locationScale") != null) {
                 Cell locationScaleCell = dataRow.getCell(fieldMapping.get("locationScale"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (locationScaleCell != null) {
