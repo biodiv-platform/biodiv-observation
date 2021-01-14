@@ -348,7 +348,7 @@ public class ObservationBulkMapperHelper {
                     scientificNameCell.setCellType(CellType.STRING);
                     scientificName = scientificNameCell.getStringCellValue();
 
-                    recoData.setTaxonCommonName(scientificName);
+                    recoData.setTaxonScientificName(scientificName);
                 }
             }
 
