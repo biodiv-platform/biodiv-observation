@@ -631,17 +631,4 @@ public class ObservationBulkMapperHelper {
             logger.error(ex.getMessage());
         }
     }
-
-    public void updateESThread(Long id) {
-        try {
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            ESCreateThread esThread = new ESCreateThread(esUpdate, id.toString());
-            executorService.submit(esThread).get();
-            executorService.shutdownNow();
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            logger.error(ex.getMessage());
-        }
-    }
 }

@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,6 +164,22 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			session.close();
 		}
 		return maxVotedRecoFreq;
+	}
+
+	public List<Observation> getObservationCountForDatatable(Long datatableId) {
+		Session session = sessionFactory.openSession();
+		List<Observation> observationList = new ArrayList<>();
+		String hql = "from Observation o where o.dataTableId = :datatable";
+		try {
+			Query query = session.createQuery(hql);
+			query.setParameter("datatable", datatableId);
+			observationList = query.list();
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		} finally {
+			session.close();
+		}
+		return observationList;
 	}
 
 }

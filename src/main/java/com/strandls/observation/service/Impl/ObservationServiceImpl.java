@@ -1521,8 +1521,8 @@ public class ObservationServiceImpl implements ObservationService {
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
-			
-			final int THREAD_COUNT = 20;
+
+			final int THREAD_COUNT = 10;
 			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(200);
 			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
 			for (int i = 0; i < THREAD_COUNT - 1; i++) {
@@ -1535,6 +1535,8 @@ public class ObservationServiceImpl implements ObservationService {
 					.get();
 			service.shutdownNow();
 			service.awaitTermination(6, TimeUnit.HOURS);
+
+			observationHelper.invokeESForDataTable(dataTable.getId(), esUpdate);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			logger.error(ex.getMessage());

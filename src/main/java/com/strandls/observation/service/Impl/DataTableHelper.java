@@ -33,7 +33,7 @@ public class DataTableHelper {
         dataTable.setFlagCount(0);
 
         // geo fields
-        dataTable.setGeographicalCoverageGeoPrivacy(observationBulkData.getHidePreciseLocation());
+        dataTable.setGeographicalCoverageGeoPrivacy(false);
         dataTable.setGeographicalCoverageLatitude(observationBulkData.getLatitude());
         dataTable.setGeographicalCoverageLongitude(observationBulkData.getLongitude());
         dataTable.setGeographicalCoverageLocationAccuracy(observationBulkData.getLocationAccuracy());

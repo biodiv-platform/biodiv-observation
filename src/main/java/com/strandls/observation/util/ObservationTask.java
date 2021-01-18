@@ -62,9 +62,6 @@ public class ObservationTask implements Runnable {
                     observationData.getDataRow(), observationData.getUserGroupsList(), observation.getId());
             mapper.updateGeoPrivacy(observation);
             mapper.updateUserGroupFilter(observationData.getRequest(), observation);
-
-            // add ESCreateThread here
-//            mapper.updateESThread(observation.getId());
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.error(ex.getMessage());
