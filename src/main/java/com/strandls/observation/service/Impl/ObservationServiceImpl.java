@@ -22,9 +22,7 @@ import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.*;
 import com.strandls.observation.pojo.*;
 import com.strandls.observation.service.ObservationService;
-import com.strandls.observation.util.FileTask;
-import com.strandls.observation.util.ObservationInputException;
-import com.strandls.observation.util.ObservationTask;
+import com.strandls.observation.util.*;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -1536,7 +1534,15 @@ public class ObservationServiceImpl implements ObservationService {
 			service.shutdownNow();
 			service.awaitTermination(6, TimeUnit.HOURS);
 
-			observationHelper.invokeESForDataTable(dataTable.getId(), esUpdate);
+			BlockingQueue<Long> observationQueue = new ArrayBlockingQueue<>(200);
+			ExecutorService elasticService = Executors.newFixedThreadPool(THREAD_COUNT);
+			for (int i = 0; i < THREAD_COUNT - 1; i++) {
+				elasticService.submit(new ElasticThread(observationQueue, esUpdate));
+			}
+
+			elasticService.submit(new ObservationThread(observationQueue, observationDao, dataTable.getId())).get();
+			elasticService.shutdownNow();
+			elasticService.awaitTermination(6, TimeUnit.HOURS);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			logger.error(ex.getMessage());

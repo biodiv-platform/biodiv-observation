@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Abhishek Rudra
@@ -553,21 +552,6 @@ public class ObservationMapperHelper {
             logger.error(e.getMessage());
         }
 
-    }
-
-    public void invokeESForDataTable(Long datatableId, ESUpdate esUpdate) {
-    	try {
-    		List<Observation> observationList = observationDAO.getObservationCountForDatatable(datatableId);
-    		int latchCount = observationList.size();
-			CountDownLatch latch = new CountDownLatch(latchCount);
-			for (Observation observation: observationList) {
-				ElasticLatchThreadWorker worker = new ElasticLatchThreadWorker(latch, esUpdate, observation.getId());
-				worker.start();
-			}
-		} catch (Exception ex) {
-    		logger.error(ex.getMessage());
-    		ex.printStackTrace();
-		}
     }
 
 }
