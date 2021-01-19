@@ -1520,8 +1520,8 @@ public class ObservationServiceImpl implements ObservationService {
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
 
-			final int THREAD_COUNT = 10;
-			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(200);
+			final int THREAD_COUNT = 5;
+			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
 			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
 			for (int i = 0; i < THREAD_COUNT - 1; i++) {
 				service.submit(new ObservationTask(queue, observationBulkMapperHelper, observationDao));
