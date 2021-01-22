@@ -76,8 +76,7 @@ public class ReindexLatchManager extends Thread {
 					System.out.println("INNER LATCH AWAIT START POINT :" + startPoint);
 
 					String jsonArray = om.writeValueAsString(result);
-					esService.bulkUpload(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
-							jsonArray);
+					esService.bulkUpload("extended_observation123", ObservationIndex.type.getValue(), jsonArray);
 
 					result.clear();
 					if (length <= 1000)
