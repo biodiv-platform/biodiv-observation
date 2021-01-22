@@ -3,7 +3,7 @@
  */
 package com.strandls.observation.es.util;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ public class ReindexLatch extends Thread {
 	private final Logger logger = LoggerFactory.getLogger(ReindexLatch.class);
 
 	private Long id;
-	private List<ShowData> showDataList;
+	private Map<Long, ShowData> showDataMap;
 	private ObservationService observationService;
 	private CountDownLatch latch;
 
@@ -35,15 +35,15 @@ public class ReindexLatch extends Thread {
 
 	/**
 	 * @param id
-	 * @param showDataList
+	 * @param showDataMap
 	 * @param observationService
 	 * @param latch
 	 */
-	public ReindexLatch(Long id, List<ShowData> showDataList, ObservationService observationService,
+	public ReindexLatch(Long id, Map<Long, ShowData> showDataMap, ObservationService observationService,
 			CountDownLatch latch) {
 		super();
 		this.id = id;
-		this.showDataList = showDataList;
+		this.showDataMap = showDataMap;
 		this.observationService = observationService;
 		this.latch = latch;
 	}
@@ -54,7 +54,7 @@ public class ReindexLatch extends Thread {
 			ShowData result = observationService.findById(id);
 			if (result != null) {
 				result.setId(result.getObservation().getId());
-				showDataList.add(result);
+				showDataMap.put(result.getId(), result);
 			}
 			latch.countDown();
 		} catch (Exception e) {
