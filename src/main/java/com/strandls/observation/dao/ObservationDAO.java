@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.dao;
 
+import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
+import org.hibernate.type.LongType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,20 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public Long findTotalObservation() {
+		Session session = sessionFactory.openSession();
+		String qry = "select count(id) from observation where is_deleted = false";
+		BigInteger bigInt = null;
+		try {
+			Query<BigInteger> query = session.createNativeQuery(qry);
+			bigInt = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return bigInt.longValue();
+	}
+
+	@SuppressWarnings("unchecked")
 	public List<Observation> fetchInBatch(int startPoint) {
 		List<Observation> result = null;
 		Session session = sessionFactory.openSession();
@@ -82,6 +98,22 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			logger.error(e.getMessage());
 		}
 
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Long> fetchObservationIdsList(Long startPoint) {
+		Session session = sessionFactory.openSession();
+		String qry = "select id from observation where is_deleted = false offset :startPoint limit 30000";
+		List<Long> result = null;
+		try {
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			query.setParameter("startPoint", startPoint);
+			result = query.getResultList();
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		return result;
 	}
 
@@ -130,10 +162,9 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			qry = qry + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
 
 		qry = qry + "group by max_voted_reco_id order by count(id) desc limit 10 offset " + offset;
-		
-		
-		String qry1 = "select count(id) from observation "
-				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
+
+		String qry1 = "select count(id) from observation " + "where is_deleted = false and  author_id = " + authorId
+				+ " and max_voted_reco_id is not NULL ";
 		if (sGroup != null)
 			qry1 = qry1 + " and s_group = " + sGroup;
 		if (hasMedia)
@@ -152,11 +183,11 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			for (Object object[] : objectList) {
 				maxVotedRecoFreq.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
 			}
-			
+
 			Query<Object> query2 = session.createNativeQuery(qry1);
 			Object obj = query2.getSingleResult();
 			maxVotedRecoFreq.put(null, Long.parseLong(obj.toString()));
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
