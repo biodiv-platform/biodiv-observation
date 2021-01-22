@@ -4,8 +4,11 @@
 package com.strandls.observation.es.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.controllers.EsServicesApi;
@@ -60,7 +63,7 @@ public class ReindexLatchManager extends Thread {
 		int length = observationIds.size();
 
 		int i = 0;
-		List<ShowData> result = new ArrayList<ShowData>();
+		Map<Long, ShowData> result = new HashMap<Long, ShowData>();
 		CountDownLatch latch = new CountDownLatch(5);
 		length = length - 5;
 		for (Long id : observationIds) {
@@ -75,13 +78,30 @@ public class ReindexLatchManager extends Thread {
 					latch.await();
 					System.out.println("INNER LATCH AWAIT START POINT :" + startPoint);
 
+					System.out.println();
+					System.out.println();
+					System.out.println();
+					System.out.println("map size :" + result.size());
+					System.out.println();
+					System.out.println();
+					System.out.println();
+
 					if (result.size() == 500 || result.size() == length) {
+						List<ShowData> showDataList = result.values().stream()
+								.collect(Collectors.toCollection(ArrayList::new));
+						String jsonArray = om.writeValueAsString(showDataList);
+						System.out.println();
+						System.out.println();
+						System.out.println();
+						System.out.println(showDataList);
+						System.out.println();
+						System.out.println();
+						System.out.println();
+						esService.bulkUpload("extended_observation123", ObservationIndex.type.getValue(), jsonArray);
 
+						result.clear();
 					}
-					String jsonArray = om.writeValueAsString(result);
-					esService.bulkUpload("extended_observation123", ObservationIndex.type.getValue(), jsonArray);
 
-					result.clear();
 					if (length <= 5) {
 						i = 0;
 						latch = new CountDownLatch(length);
