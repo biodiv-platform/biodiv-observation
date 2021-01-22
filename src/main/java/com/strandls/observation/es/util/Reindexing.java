@@ -44,7 +44,14 @@ public class Reindexing {
 			System.out.println("---------------------------");
 			Long total = observationDao.findTotalObservation();
 			Integer batchSize = 30000;
-			long totalNumberLatch = (total / batchSize) + ((total % batchSize > 0) ? 1 : 0);
+
+			long totalNumberLatch = total / batchSize;
+			System.out.println("TOTAL :" + total);
+			System.out.println("total / batchSize :" + total / batchSize);
+			System.out.println("total % batchSize :" + total % batchSize);
+			if (total % batchSize > 0)
+				totalNumberLatch = totalNumberLatch + 1L;
+
 			System.out.println("TOTAL NUMBER OF OUT LATCH REQ : " + totalNumberLatch);
 			int length = (int) totalNumberLatch;
 			CountDownLatch latch = new CountDownLatch(4);
@@ -56,7 +63,7 @@ public class Reindexing {
 				manager.start();
 				startPoint = startPoint + 30000L;
 
-				if (i % 4 == 0) {
+				if (i % 4 == 0 || i == totalNumberLatch) {
 					try {
 						latch.await();
 

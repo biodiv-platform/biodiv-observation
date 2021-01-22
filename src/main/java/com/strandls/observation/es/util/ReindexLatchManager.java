@@ -61,8 +61,8 @@ public class ReindexLatchManager extends Thread {
 
 		int i = 0;
 		List<ShowData> result = new ArrayList<ShowData>();
-		CountDownLatch latch = new CountDownLatch(1000);
-		length = length - 1000;
+		CountDownLatch latch = new CountDownLatch(5);
+		length = length - 5;
 		for (Long id : observationIds) {
 
 			System.out.println("Inner Latch  observation Id: " + id);
@@ -70,20 +70,24 @@ public class ReindexLatchManager extends Thread {
 			reindexLatch.start();
 			i++;
 
-			if (i % 1000 == 0) {
+			if (i % 5 == 0 || i % length == 0) {
 				try {
 					latch.await();
 					System.out.println("INNER LATCH AWAIT START POINT :" + startPoint);
 
-					String jsonArray = om.writeValueAsString(result);
-					esService.bulkUpload("extended_observation123", ObservationIndex.type.getValue(), jsonArray);
+					if (result.size() == 500 || result.size() == length) {
+						String jsonArray = om.writeValueAsString(result);
+						esService.bulkUpload("extended_observation123", ObservationIndex.type.getValue(), jsonArray);
 
-					result.clear();
-					if (length <= 1000)
+						result.clear();
+					}
+
+					if (length <= 5) {
+						i = 0;
 						latch = new CountDownLatch(length);
-					else {
-						latch = new CountDownLatch(1000);
-						length = length - 1000;
+					} else {
+						latch = new CountDownLatch(5);
+						length = length - 5;
 					}
 
 				} catch (Exception e) {
