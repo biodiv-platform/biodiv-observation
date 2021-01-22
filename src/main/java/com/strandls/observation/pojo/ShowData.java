@@ -33,6 +33,7 @@ public class ShowData implements Serializable {
 	/**
 	 * 
 	 */
+	private Long id;
 	private Observation observation;
 	private List<FactValuePair> factValuePair;
 	private List<ObservationResourceUser> observationResource;
@@ -98,6 +99,14 @@ public class ShowData implements Serializable {
 		this.allRecoVotes = allRecoVotes;
 		this.observationNearBy = observationNearBy;
 		this.activityCount = activityCount;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public Observation getObservation() {
