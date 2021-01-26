@@ -41,7 +41,7 @@ public interface ObservationListService {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
-			String state, String tags, String publicationGrade, String authorVoted);
+			String state, String tags, String publicationGrade, String authorVoted,Integer lifeListOffset);
 
 	public FilterPanelData getAllFilter();
 
