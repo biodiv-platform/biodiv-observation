@@ -47,6 +47,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.es.util.ConstructESDocument;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -129,11 +130,15 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private ConstructESDocument es;
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
+		es.getESDocumentStub("81700");
 		return "pong Observation";
 	}
 

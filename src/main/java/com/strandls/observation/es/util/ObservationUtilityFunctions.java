@@ -333,8 +333,8 @@ public class ObservationUtilityFunctions {
 			}
 		}
 		if (maxVotedReco != null) {
-			map.replace(taxonomicValues[2],
-					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
+//			map.replace(taxonomicValues[2],
+//					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
 			List<Hierarchy> hierarchy = maxVotedReco.getHierarchy();
 			if (hierarchy != null) {
 				String value = "";
