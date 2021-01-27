@@ -1202,28 +1202,31 @@ public class ObservationServiceImpl implements ObservationService {
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
 
-			List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
+			if (!geoPrivacyTraitsValue.equals("NA")) {
+				List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
 
-			for (Observation observation : observationList) {
-				System.out.println("--------START---------");
-				System.out.println("Observation Id : " + observation.getId());
-				System.out.println("---------END----------");
+				for (Observation observation : observationList) {
+					System.out.println("--------START---------");
+					System.out.println("Observation Id : " + observation.getId());
+					System.out.println("---------END----------");
 
-				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
-					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
-					if (taxonId != null) {
+					if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+						Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+						if (taxonId != null) {
 
-						if (geoPrivateTaxonId.contains(taxonId)) {
-							System.out.println("---------BEGIN----------");
-							System.out.println("Observation Id : " + observation.getId());
-							observation.setGeoPrivacy(true);
-							observationDao.update(observation);
-							produceToRabbitMQ(observation.getId().toString(), "Observation Core");
-							System.out.println("----------END------------");
+							if (geoPrivateTaxonId.contains(taxonId)) {
+								System.out.println("---------BEGIN----------");
+								System.out.println("Observation Id : " + observation.getId());
+								observation.setGeoPrivacy(true);
+								observationDao.update(observation);
+								produceToRabbitMQ(observation.getId().toString(), "Observation Core");
+								System.out.println("----------END------------");
+							}
+
 						}
-
 					}
 				}
+
 			}
 
 		} catch (Exception e) {
