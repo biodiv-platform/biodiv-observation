@@ -1298,7 +1298,7 @@ class Taxon_detail {
 	private String name;
 	private String canonical_form;
 	private String scientific_name;
-	private Long rank;
+	private String rank;
 	private String status;
 	private String position;
 
@@ -1318,7 +1318,7 @@ class Taxon_detail {
 	 * @param status
 	 * @param position
 	 */
-	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, Long rank, String status,
+	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String rank, String status,
 			String position) {
 		super();
 		this.id = id;
@@ -1362,11 +1362,11 @@ class Taxon_detail {
 		this.scientific_name = scientific_name;
 	}
 
-	public Long getRank() {
+	public String getRank() {
 		return rank;
 	}
 
-	public void setRank(Long rank) {
+	public void setRank(String rank) {
 		this.rank = rank;
 	}
 
@@ -1523,7 +1523,7 @@ class Max_voted_reco {
 	private List<Common_names> common_names;
 	private List<Hierarchy> hierarchy;
 	private String scientific_name;
-	private Long rank;
+	private String rank;
 	private String ranktext;
 	private String taxonstatus;
 
@@ -1544,7 +1544,7 @@ class Max_voted_reco {
 	 * @param taxonstatus
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			Long rank, String ranktext, String taxonstatus) {
+			String rank, String ranktext, String taxonstatus) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
@@ -1587,11 +1587,11 @@ class Max_voted_reco {
 		this.scientific_name = scientific_name;
 	}
 
-	public Long getRank() {
+	public String getRank() {
 		return rank;
 	}
 
-	public void setRank(Long rank) {
+	public void setRank(String rank) {
 		this.rank = rank;
 	}
 
@@ -1670,7 +1670,7 @@ class Hierarchy {
 
 	private Long taxon_id;
 	private String normalized_name;
-	private Long rank;
+	private String rank;
 
 	/**
 	 * 
@@ -1684,19 +1684,11 @@ class Hierarchy {
 	 * @param normalized_name
 	 * @param rank
 	 */
-	public Hierarchy(Long taxon_id, String normalized_name, Long rank) {
+	public Hierarchy(Long taxon_id, String normalized_name, String rank) {
 		super();
 		this.taxon_id = taxon_id;
 		this.normalized_name = normalized_name;
 		this.rank = rank;
-	}
-
-	public String getNormalized_name() {
-		return normalized_name;
-	}
-
-	public void setNormalized_name(String normalized_name) {
-		this.normalized_name = normalized_name;
 	}
 
 	public Long getTaxon_id() {
@@ -1707,13 +1699,22 @@ class Hierarchy {
 		this.taxon_id = taxon_id;
 	}
 
-	public Long getRank() {
+	public String getNormalized_name() {
+		return normalized_name;
+	}
+
+	public void setNormalized_name(String normalized_name) {
+		this.normalized_name = normalized_name;
+	}
+
+	public String getRank() {
 		return rank;
 	}
 
-	public void setRank(Long rank) {
+	public void setRank(String rank) {
 		this.rank = rank;
 	}
+
 }
 
 class User_group_observations {

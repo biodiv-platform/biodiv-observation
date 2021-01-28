@@ -73,7 +73,9 @@ import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.ObservationResourceUser;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceRating;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -184,6 +186,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationDownloadLogDAO downloadLogDao;
+
+	@Inject
+	private SpeciesServicesApi speciesGroupService;
+
+	@Inject
+	private TaxonomyTreeServicesApi taxonomyTreeService;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -584,7 +592,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<SpeciesGroup> result = null;
 		try {
-			result = taxonomyService.getAllSpeciesGroup();
+			result = speciesGroupService.getAllSpeciesGroup();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -685,8 +693,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
+					List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(entry.getValue().toString());
 					List<Long> validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 					if (validateAllowed.contains(entry.getValue()))
 						result.add(new MaxVotedRecoPermission(entry.getKey(), true));
@@ -717,12 +725,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
+				List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
 
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 				}
 			}
@@ -747,7 +755,7 @@ public class ObservationServiceImpl implements ObservationService {
 			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			Follow follow = userService.getFollowByObject("observation", observationId);
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<SpeciesPermission> speciesPermissions = taxonomyService.getSpeciesPermission();
+			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -770,7 +778,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
 				}

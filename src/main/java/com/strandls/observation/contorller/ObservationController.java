@@ -130,15 +130,11 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
-	@Inject
-	private ConstructESDocument es;
-
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
-		es.getESDocumentStub("81700");
 		return "pong Observation";
 	}
 
