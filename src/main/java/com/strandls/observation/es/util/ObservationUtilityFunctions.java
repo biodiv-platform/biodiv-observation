@@ -106,7 +106,7 @@ public class ObservationUtilityFunctions {
 			row.add(record.getLocationScale());
 			row.add(parseDate(record.getFromDate()));
 			row.add(parseDate(record.getToDate()));
-			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRanktext() : null);
+			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
 			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
 			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
 			row.addAll(record.getMaxVotedReco() != null

@@ -1524,7 +1524,6 @@ class Max_voted_reco {
 	private List<Hierarchy> hierarchy;
 	private String scientific_name;
 	private String rank;
-	private String ranktext;
 	private String taxonstatus;
 
 	/**
@@ -1540,18 +1539,16 @@ class Max_voted_reco {
 	 * @param hierarchy
 	 * @param scientific_name
 	 * @param rank
-	 * @param ranktext
 	 * @param taxonstatus
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			String rank, String ranktext, String taxonstatus) {
+			String rank, String taxonstatus) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
 		this.hierarchy = hierarchy;
 		this.scientific_name = scientific_name;
 		this.rank = rank;
-		this.ranktext = ranktext;
 		this.taxonstatus = taxonstatus;
 	}
 
@@ -1593,14 +1590,6 @@ class Max_voted_reco {
 
 	public void setRank(String rank) {
 		this.rank = rank;
-	}
-
-	public String getRanktext() {
-		return ranktext;
-	}
-
-	public void setRanktext(String ranktext) {
-		this.ranktext = ranktext;
 	}
 
 	public String getTaxonstatus() {
