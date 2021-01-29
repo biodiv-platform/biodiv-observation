@@ -44,7 +44,7 @@ public class ConstructESDocument {
 				+ "CASE WHEN     (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
 				+ "        from_date IS NOT NULL AND latitude IS NOT NULL AND "
 				+ "        longitude IS NOT NULL AND  (is_locked = true OR reco_vote_count >= 2)  AND "
-				+ "        (taxon_detail->'rank')\\:\\:text\\:\\:integer >=5  AND     flag_count = 0 AND"
+				+ "        flag_count = 0 AND"
 				+ "        (dataset_id != 1 OR dataset_id IS NULL)   THEN true   ELSE false "
 				+ "END AS is_publication_grade FROM "
 				+ "(SELECT id, author_id, created_on, group_id, latitude, longitude,  "

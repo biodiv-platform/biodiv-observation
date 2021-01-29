@@ -47,7 +47,6 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
-import com.strandls.observation.es.util.ConstructESDocument;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
