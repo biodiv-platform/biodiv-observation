@@ -346,7 +346,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observationData.getResources() != null && !observationData.getResources().isEmpty()) {
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationData.getResources());
-				if (resources == null) {
+				if (resources == null || resources.isEmpty()) {
 					observationDao.delete(observation);
 					return null;
 				}
@@ -1010,39 +1010,43 @@ public class ObservationServiceImpl implements ObservationService {
 
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationUpdate.getResources());
-				resourceService = headers.addResourceHeaders(resourceService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
-						resources);
 
-//				calculate reprImageof observation
+				if (resources != null && !resources.isEmpty()) {
+					resourceService = headers.addResourceHeaders(resourceService,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
+							resources);
 
-				Integer noOfImages = 0;
-				Integer noOfAudio = 0;
-				Integer noOfVideo = 0;
+//					calculate reprImageof observation
 
-				Long reprImage = null;
-				int rating = 0;
-				for (Resource res : resources) {
-					if (res.getType().equals("AUDIO"))
-						noOfAudio++;
-					else if (res.getType().equals("IMAGE")) {
-						noOfImages++;
-						if (reprImage == null)
-							reprImage = res.getId();
-						if (res.getRating() != null && res.getRating() > rating) {
-							reprImage = res.getId();
-							rating = res.getRating();
-						}
-					} else if (res.getType().equals("VIDEO"))
-						noOfVideo++;
+					Integer noOfImages = 0;
+					Integer noOfAudio = 0;
+					Integer noOfVideo = 0;
+
+					Long reprImage = null;
+					int rating = 0;
+					for (Resource res : resources) {
+						if (res.getType().equals("AUDIO"))
+							noOfAudio++;
+						else if (res.getType().equals("IMAGE")) {
+							noOfImages++;
+							if (reprImage == null)
+								reprImage = res.getId();
+							if (res.getRating() != null && res.getRating() > rating) {
+								reprImage = res.getId();
+								rating = res.getRating();
+							}
+						} else if (res.getType().equals("VIDEO"))
+							noOfVideo++;
+
+					}
+					observation.setNoOfAudio(noOfAudio);
+					observation.setNoOfImages(noOfImages);
+					observation.setNoOfVideos(noOfVideo);
+					observation.setReprImageId(reprImage);
+					observationDao.update(observation);
 
 				}
-				observation.setNoOfAudio(noOfAudio);
-				observation.setNoOfImages(noOfImages);
-				observation.setNoOfVideos(noOfVideo);
-				observation.setReprImageId(reprImage);
-				observationDao.update(observation);
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
