@@ -444,8 +444,7 @@
 					<executable>java</executable>
 					<mainClass>org.openapitools.codegen.OpenAPIGenerator</mainClass>
 					<commandlineArgs>
-						generate -i ${project.basedir}/target/swagger.json
-						-g java -o target/sdk --skip-validate-spec -c swagger-config.json
+						generate -i ${project.basedir}/target/swagger.json -g java -o target/sdk --skip-validate-spec -c swagger-config.json
 					</commandlineArgs>
 					<includeProjectDependencies>true</includeProjectDependencies>
 					<includePluginDependencies>true</includePluginDependencies>

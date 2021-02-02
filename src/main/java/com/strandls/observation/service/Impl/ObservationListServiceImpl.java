@@ -7,13 +7,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
@@ -33,7 +31,6 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
-import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -46,7 +43,6 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
-import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.service.ObservationListService;
 
 /**
@@ -58,9 +54,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 	private final Logger logger = LoggerFactory.getLogger(ObservationListServiceImpl.class);
 
 	@Inject
-	private RecommendationDao recoDao;
-
-	@Inject
 	private EsServicesApi esService;
 
 	@Inject
@@ -68,9 +61,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	@Inject
 	private ESUtility esUtility;
-
-	@Inject
-	private RecommendationServiceImpl recoService;
 
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
@@ -98,7 +88,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			else if (view.equalsIgnoreCase("stats")) {
 
 				statsAggregates = aggregationStatsResult;
-				// System.out.println(aggregationStatsResult.getGroupUniqueSpecies());
 
 			}
 
@@ -583,7 +572,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 		int size = lifeListOffset + 10;
 		int count = 1;
 
-
 		Map<String, Long> temp = mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword")
 				.getGroupAggregation();
 
@@ -594,24 +582,24 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
-			return aggregationStatsResponse;
+		} else {
 
-		}
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
 
-		for (Map.Entry<String, Long> entry : temp.entrySet()) {
-
-			if (count <= (size - 10)) {
-				count++;
-			} else {
-				if (count > size) {
-					break;
+				if (count <= (size - 10)) {
+					count++;
+				} else {
+					if (count > size) {
+						break;
+					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
 				}
-				t.put(entry.getKey(), entry.getValue());
-				count++;
 			}
-		}
 
-		aggregationStatsResponse.setGroupUniqueSpecies(t);
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+
+		}
 
 		return aggregationStatsResponse;
 
