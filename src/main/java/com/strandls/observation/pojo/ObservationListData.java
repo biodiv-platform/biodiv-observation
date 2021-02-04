@@ -19,6 +19,7 @@ public class ObservationListData {
 	private Long totalCount;
 	private Map<String, Long> geohashAggregation;
 	private MapAggregationResponse aggregationData;
+	private MapAggregationStatsResponse aggregateStatsData;
 	private List<ObservationListMinimalData> observationListMinimal;
 
 	/**
@@ -36,7 +37,7 @@ public class ObservationListData {
 	 * @param observationListMinimal
 	 */
 	public ObservationListData(List<ObservationListPageMapper> observationList, Long totalCount,
-			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData,
+			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData,MapAggregationStatsResponse aggregateStatsData,
 			List<ObservationListMinimalData> observationListMinimal) {
 		super();
 		this.observationList = observationList;
@@ -44,6 +45,16 @@ public class ObservationListData {
 		this.geohashAggregation = geohashAggregation;
 		this.aggregationData = aggregationData;
 		this.observationListMinimal = observationListMinimal;
+		this.aggregateStatsData=aggregateStatsData;
+
+	}
+
+	public MapAggregationStatsResponse getAggregateStatsData() {
+		return aggregateStatsData;
+	}
+
+	public void setAggregateStatsData(MapAggregationStatsResponse aggregateStatsData) {
+		this.aggregateStatsData = aggregateStatsData;
 	}
 
 	public List<ObservationListPageMapper> getObservationList() {

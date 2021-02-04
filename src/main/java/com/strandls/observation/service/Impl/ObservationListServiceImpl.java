@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,6 +38,7 @@ import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
@@ -63,7 +65,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField, MapAggregationResponse aggregationResult, String view) {
+			String termsAggregationField, MapAggregationResponse aggregationResult,
+			MapAggregationStatsResponse aggregationStatsResult, String view) {
 
 		ObservationListData listData = null;
 
@@ -72,6 +75,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<ObservationListPageMapper> observationList = new ArrayList<ObservationListPageMapper>();
 			List<ObservationListMinimalData> observationListMinimal = new ArrayList<ObservationListMinimalData>();
 			Long totalCount = null;
+			MapAggregationStatsResponse statsAggregates = null;
 			if (view.equalsIgnoreCase("map")) {
 				GeoHashAggregationData geoHashAggregationData = esService.getGeoHashAggregation(index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
@@ -79,17 +83,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 				geoHashResult = geoHashAggregationData.getGeoHashData();
 				totalCount = geoHashAggregationData.getTotalCount();
 
+			} else if (view.equalsIgnoreCase("stats")) {
+
+				statsAggregates = aggregationStatsResult;
+
 			} else {
-				long startMillis = System.currentTimeMillis();
+
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, null, querys);
-				long endMillis = System.currentTimeMillis();
 
-				System.out.println("\n\n\n\n***** ES Operation: " + (endMillis - startMillis) + "*****\n\n\n\n");
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
 
-				startMillis = System.currentTimeMillis();
 				if (view.equalsIgnoreCase("list_minimal")) {
 					for (MapDocument document : documents) {
 						try {
@@ -156,14 +161,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					}
 
 				}
-				endMillis = System.currentTimeMillis();
-
-				System.out.println("\n\n\n\n***** Other Operation: " + (endMillis - startMillis) + "*****\n\n\n\n");
 
 			}
 
 			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult,
-					observationListMinimal);
+					statsAggregates, observationListMinimal);
 
 		} catch (ApiException e) {
 			e.printStackTrace();
@@ -516,6 +518,88 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse.setGroupCustomField(cfMaps);
 
 		return aggregationResponse;
+
+	}
+
+	@Override
+	public MapAggregationStatsResponse mapAggregateStats(String index, String type, String sGroup, String taxon,
+			String user, String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,
+			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
+			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
+			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
+			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
+			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset) {
+
+		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+				classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate, status,
+				taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+		MapSearchQuery mapSearchQueryFilter;
+
+		String omiter = null;
+		MapAggregationStatsResponse aggregationStatsResponse = new MapAggregationStatsResponse();
+
+		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
+
+		int totalLatch = 1;
+//		latch count down
+		CountDownLatch latch = new CountDownLatch(totalLatch);
+
+		if (recoName != null && !recoName.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, omiter, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQueryFilter, mapAggStatsResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQuery, mapAggStatsResponse, latch, null);
+		}
+
+		try {
+			latch.await();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		int size = lifeListOffset + 10;
+		int count = 1;
+
+		Map<String, Long> temp = mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword")
+				.getGroupAggregation();
+
+		Map<String, Long> t = new LinkedHashMap<>();
+
+		if (recoName != null && !recoName.isEmpty()) {
+			t.put(recoName, temp.get(recoName));
+
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+
+		} else {
+
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
+
+				if (count <= (size - 10)) {
+					count++;
+				} else {
+					if (count > size) {
+						break;
+					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
+				}
+			}
+
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+
+		}
+
+		return aggregationStatsResponse;
 
 	}
 

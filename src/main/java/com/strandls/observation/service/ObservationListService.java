@@ -12,6 +12,7 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 
@@ -23,23 +24,32 @@ public interface ObservationListService {
 
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField, MapAggregationResponse aggregationResult, String view);
+			String termsAggregationField, MapAggregationResponse aggregationResult,
+			MapAggregationStatsResponse aggregationStatsResult, String view);
 
 	public MapAggregationResponse mapAggregate(String index, String type, String sGroup, String taxon, String user,
 			String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,
 			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
-			String maxvotedrecoid,String recoId, String createdOnMaxDate, String createdOnMinDate, String status, String taxonId,
-			String recoName, String geoAggregationField, String rank, String tahsil, String district, String state,
-			String tags, String publicationGrade,String auhtorVoted);
+			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
+			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
+			String state, String tags, String publicationGrade, String auhtorVoted);
+
+	public MapAggregationStatsResponse mapAggregateStats(String index, String type, String sGroup, String taxon,
+			String user, String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,
+			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
+			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
+			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
+			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
+			String state, String tags, String publicationGrade, String authorVoted,Integer lifeListOffset);
 
 	public FilterPanelData getAllFilter();
 
 	public List<ObservationHomePage> getObservation(String resourceUrls);
 
 	public ObservationListMinimalData getObservationMinimal(String observationId);
-	
+
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField);	
+			String termsAggregationField);
 }
