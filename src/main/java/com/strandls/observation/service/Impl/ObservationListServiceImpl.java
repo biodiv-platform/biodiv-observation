@@ -31,6 +31,7 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
+import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -43,6 +44,7 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
+import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
 
 /**
@@ -530,7 +532,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
-			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset) {
+			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,Integer uploadersoffset) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -544,7 +546,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 1;
+		int totalLatch = 2;
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -561,6 +563,23 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
 					mapSearchQuery, mapAggStatsResponse, latch, null);
+		}
+
+		// for top Uploaders
+
+		if (user != null && !user.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse,
+					latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
+					null);
 		}
 
 		try {
@@ -600,6 +619,53 @@ public class ObservationListServiceImpl implements ObservationListService {
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
 		}
+		
+		int uploadersSize = uploadersoffset + 10;
+		int uploadersCount = 1;
+		String authorIds = "";
+
+		List<Long> counts = new ArrayList<>();
+
+		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
+
+		for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
+
+			if (uploadersCount <= (uploadersSize - 10)) {
+				uploadersCount++;
+			}
+
+			else {
+				if (uploadersCount > uploadersSize) {
+					break;
+				} // t.put(entry.getKey(),
+				entry.getValue();
+				authorIds = authorIds + entry.getKey() + ",";
+				counts.add(entry.getValue());
+
+				uploadersCount++;
+			}
+
+		}
+
+		try {
+			List<UploadersInfo> allUploadersInfo = esService.getUploaderInfo("extended_observation", authorIds);
+			List<TopUploadersInfo> uploadersResult = new ArrayList<>();
+
+			for (int k = 0; k < allUploadersInfo.size(); k++) {
+				String name = allUploadersInfo.get(k).getName();
+				String pic = allUploadersInfo.get(k).getPic();
+				Long authorId = allUploadersInfo.get(k).getAuthorId();
+
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
+				uploadersResult.add(tempUploader);
+
+			}
+
+			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+		} catch (ApiException e) {
+			// TODO Auto-generated catch block e.printStackTrace(); }
+		}
+
 
 		return aggregationStatsResponse;
 
