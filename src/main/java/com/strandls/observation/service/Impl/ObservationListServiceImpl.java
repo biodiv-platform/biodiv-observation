@@ -627,21 +627,27 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
 
-		for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
+		if (user != null && !user.isEmpty()) {
+			authorIds = authorIds + user + ",";
+			counts.add(uploaders.get(user));
+		} else {
+			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
 
-			if (uploadersCount <= (uploadersSize - 10)) {
-				uploadersCount++;
-			}
+				if (uploadersCount <= (uploadersSize - 10)) {
+					uploadersCount++;
+				}
 
-			else {
-				if (uploadersCount > uploadersSize) {
-					break;
-				} // t.put(entry.getKey(),
-				entry.getValue();
-				authorIds = authorIds + entry.getKey() + ",";
-				counts.add(entry.getValue());
+				else {
+					if (uploadersCount > uploadersSize) {
+						break;
+					} // t.put(entry.getKey(),
+					entry.getValue();
+					authorIds = authorIds + entry.getKey() + ",";
+					counts.add(entry.getValue());
 
-				uploadersCount++;
+					uploadersCount++;
+				}
+
 			}
 
 		}
