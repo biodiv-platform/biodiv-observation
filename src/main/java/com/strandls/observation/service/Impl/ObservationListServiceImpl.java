@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -628,8 +629,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
 
 		if (user != null && !user.isEmpty()) {
-			authorIds = authorIds + user + ",";
-			counts.add(uploaders.get(user));
+
+			List<String> l = Arrays.asList(user.split(","));
+			for (int i = 0; i < l.size(); i++) {
+				authorIds = authorIds + l.get(i) + ",";
+				counts.add(uploaders.get(l.get(i)));
+			}
+
 		} else {
 			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
 
