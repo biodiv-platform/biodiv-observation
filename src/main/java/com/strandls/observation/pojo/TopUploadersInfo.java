@@ -2,10 +2,10 @@ package com.strandls.observation.pojo;
 
 public class TopUploadersInfo {
 	
-	String name;
-	String pic;
-	Long authorId;
-	Long count;
+	private String name;
+	private String pic;
+	private Long authorId;
+	private Long count;
 	
 	
 	public TopUploadersInfo(String name, String pic, Long authorId, Long count) {

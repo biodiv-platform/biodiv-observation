@@ -620,13 +620,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
 		}
+
+		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
+		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
+		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+
+		return aggregationStatsResponse;
+
+	}
+
+	private List<TopUploadersInfo> extractUploaders(Integer uploadersoffset, String user, Map<String, Long> uploaders) {
 		int uploadersSize = uploadersoffset + 10;
 		int uploadersCount = 1;
 		String authorIds = "";
 
 		List<Long> counts = new ArrayList<>();
-
-		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
 
 		if (user != null && !user.isEmpty()) {
 
@@ -646,7 +654,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 				else {
 					if (uploadersCount > uploadersSize) {
 						break;
-					} // t.put(entry.getKey(),
+					}
 					entry.getValue();
 					authorIds = authorIds + entry.getKey() + ",";
 					counts.add(entry.getValue());
@@ -672,12 +680,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			}
 
-			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
-		} catch (ApiException e) {
-			// TODO Auto-generated catch block e.printStackTrace(); }
+			return (uploadersResult);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
-
-		return aggregationStatsResponse;
+		return (null);
 
 	}
 
