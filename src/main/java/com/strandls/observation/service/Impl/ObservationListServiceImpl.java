@@ -633,11 +633,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 		int uploadersSize = uploadersoffset + 10;
 		int uploadersCount = 1;
 		String authorIds = "";
-
 		List<Long> counts = new ArrayList<>();
-
 		if (user != null && !user.isEmpty()) {
-
 			List<String> l = Arrays.asList(user.split(","));
 			for (int i = 0; i < l.size(); i++) {
 				authorIds = authorIds + l.get(i) + ",";
@@ -646,38 +643,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		} else {
 			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
-
 				if (uploadersCount <= (uploadersSize - 10)) {
 					uploadersCount++;
-				}
-
-				else {
+				} else {
 					if (uploadersCount > uploadersSize) {
 						break;
 					}
 					entry.getValue();
 					authorIds = authorIds + entry.getKey() + ",";
 					counts.add(entry.getValue());
-
 					uploadersCount++;
 				}
-
 			}
-
 		}
 
 		try {
 			List<UploadersInfo> allUploadersInfo = esService.getUploaderInfo("extended_observation", authorIds);
 			List<TopUploadersInfo> uploadersResult = new ArrayList<>();
-
 			for (int k = 0; k < allUploadersInfo.size(); k++) {
 				String name = allUploadersInfo.get(k).getName();
 				String pic = allUploadersInfo.get(k).getPic();
 				Long authorId = allUploadersInfo.get(k).getAuthorId();
-
 				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
 				uploadersResult.add(tempUploader);
-
 			}
 
 			return (uploadersResult);
@@ -685,7 +673,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			logger.error(e.getMessage());
 		}
 		return (null);
-
 	}
 
 //	for media data
