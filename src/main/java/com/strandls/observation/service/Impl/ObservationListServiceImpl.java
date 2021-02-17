@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -31,6 +32,7 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
+import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -43,6 +45,7 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
+import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
 
 /**
@@ -528,7 +531,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
-			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset) {
+			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
+			Integer uploadersoffset) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -542,7 +546,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 1;
+		int totalLatch = 2;
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -559,6 +563,23 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
 					mapSearchQuery, mapAggStatsResponse, latch, null);
+		}
+
+		// for top Uploaders
+
+		if (user != null && !user.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse,
+					latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
+					null);
 		}
 
 		try {
@@ -594,13 +615,62 @@ public class ObservationListServiceImpl implements ObservationListService {
 					count++;
 				}
 			}
-
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
 		}
 
+		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
+		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
+		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+
 		return aggregationStatsResponse;
 
+	}
+
+	private List<TopUploadersInfo> extractUploaders(Integer uploadersoffset, String user, Map<String, Long> uploaders) {
+		int uploadersSize = uploadersoffset + 10;
+		int uploadersCount = 1;
+		String authorIds = "";
+		List<Long> counts = new ArrayList<>();
+		if (user != null && !user.isEmpty()) {
+			List<String> l = Arrays.asList(user.split(","));
+			for (int i = 0; i < l.size(); i++) {
+				authorIds = authorIds + l.get(i) + ",";
+				counts.add(uploaders.get(l.get(i)));
+			}
+
+		} else {
+			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
+				if (uploadersCount <= (uploadersSize - 10)) {
+					uploadersCount++;
+				} else {
+					if (uploadersCount > uploadersSize) {
+						break;
+					}
+					entry.getValue();
+					authorIds = authorIds + entry.getKey() + ",";
+					counts.add(entry.getValue());
+					uploadersCount++;
+				}
+			}
+		}
+
+		try {
+			List<UploadersInfo> allUploadersInfo = esService.getUploaderInfo("extended_observation", authorIds);
+			List<TopUploadersInfo> uploadersResult = new ArrayList<>();
+			for (int k = 0; k < allUploadersInfo.size(); k++) {
+				String name = allUploadersInfo.get(k).getName();
+				String pic = allUploadersInfo.get(k).getPic();
+				Long authorId = allUploadersInfo.get(k).getAuthorId();
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
+				uploadersResult.add(tempUploader);
+			}
+
+			return (uploadersResult);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return (null);
 	}
 
 //	for media data
