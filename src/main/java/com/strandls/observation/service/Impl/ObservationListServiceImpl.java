@@ -27,6 +27,7 @@ import com.strandls.esmodule.pojo.AggregationResponse;
 import com.strandls.esmodule.pojo.CustomFields;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.GeoHashAggregationData;
+import com.strandls.esmodule.pojo.IdentifiersInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
@@ -45,6 +46,7 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
+import com.strandls.observation.pojo.TopIdentifiersInfo;
 import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
 
@@ -532,7 +534,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
-			Integer uploadersoffset) {
+
+			Integer uploadersoffset, Integer identifiersoffset) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -546,7 +549,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 2;
+		int totalLatch = 3;
+
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -575,11 +579,15 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse,
 					latch, null);
+			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQueryFilter,
+					mapAggStatsResponse, latch, null);
 
 		} else {
-
 			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
 					null);
+			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
+					mapAggStatsResponse, latch, null);
+
 		}
 
 		try {
@@ -597,7 +605,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> t = new LinkedHashMap<>();
 
 		if (recoName != null && !recoName.isEmpty()) {
-			t.put(recoName, temp.get(recoName));
+			if (temp.containsKey(recoName)) {
+				t.put(recoName, temp.get(recoName));
+			} else {
+				t.put(recoName, Long.valueOf(0));
+			}
 
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
@@ -623,7 +635,63 @@ public class ObservationListServiceImpl implements ObservationListService {
 		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
 		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
 
+		Map<String, Long> identifiers = mapAggStatsResponse.get("all_reco_vote.authors_voted.id").getGroupAggregation();
+		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
+
 		return aggregationStatsResponse;
+
+	}
+
+	private List<TopIdentifiersInfo> extractIdentifiers(Integer identifierssoffset, String user,
+			Map<String, Long> identifiers) {
+		int identifiersSize = identifierssoffset + 10;
+		int identifiersCount = 1;
+		String authorIds = "";
+		List<Long> counts = new ArrayList<>();
+		if (user != null && !user.isEmpty()) {
+			List<String> l = Arrays.asList(user.split(","));
+			for (int i = 0; i < l.size(); i++) {
+				authorIds = authorIds + l.get(i) + ",";
+				if (identifiers.containsKey(l.get(i))) {
+					counts.add(identifiers.get(l.get(i)));
+				} else {
+					counts.add(Long.valueOf(0));
+				}
+			}
+
+		} else {
+			for (Map.Entry<String, Long> entry : identifiers.entrySet()) {
+				if (identifiersCount <= (identifiersSize - 10)) {
+					identifiersCount++;
+				} else {
+					if (identifiersCount > identifiersSize) {
+						break;
+					}
+					entry.getValue();
+					authorIds = authorIds + entry.getKey() + ",";
+					counts.add(entry.getValue());
+					identifiersCount++;
+				}
+			}
+		}
+
+		try {
+			List<IdentifiersInfo> allIdentifiersInfo = esService.getIdentifierInfo("extended_observation", authorIds);
+			List<TopIdentifiersInfo> identifiersResult = new ArrayList<>();
+			for (int k = 0; k < allIdentifiersInfo.size(); k++) {
+				String name = allIdentifiersInfo.get(k).getName();
+				String pic = allIdentifiersInfo.get(k).getPic();
+				Long authorId = allIdentifiersInfo.get(k).getAuthorId();
+				TopIdentifiersInfo tempUploader = new TopIdentifiersInfo(name, pic, authorId, counts.get(k));
+				identifiersResult.add(tempUploader);
+			}
+
+			return (identifiersResult);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return (null);
 
 	}
 
@@ -636,7 +704,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<String> l = Arrays.asList(user.split(","));
 			for (int i = 0; i < l.size(); i++) {
 				authorIds = authorIds + l.get(i) + ",";
-				counts.add(uploaders.get(l.get(i)));
+				if (uploaders.containsKey(l.get(i))) {
+					counts.add(uploaders.get(l.get(i)));
+				} else {
+					counts.add(Long.valueOf(0));
+				}
+
 			}
 
 		} else {
