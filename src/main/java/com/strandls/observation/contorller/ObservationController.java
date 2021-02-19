@@ -368,7 +368,8 @@ public class ObservationController {
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
-			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset, @Context UriInfo uriInfo) {
+			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
 
 		try {
 
@@ -439,7 +440,8 @@ public class ObservationController {
 							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,uploadersoffset);
+							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
+							uploadersoffset,identifiersoffset);
 
 				}
 
