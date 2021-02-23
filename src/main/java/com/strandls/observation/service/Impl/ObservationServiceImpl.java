@@ -1285,7 +1285,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public void produceToRabbitMQ(String observationId, String updateType) {
 		try {
-			producer.setMessage("esmodule", observationId, updateType);
+			producer.setMessage("observation", observationId, updateType);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
