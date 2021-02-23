@@ -601,7 +601,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, Long> temp = mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword")
 				.getGroupAggregation();
-
 		Map<String, Long> t = new LinkedHashMap<>();
 
 		if (recoName != null && !recoName.isEmpty()) {
@@ -610,13 +609,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else {
 				t.put(recoName, Long.valueOf(0));
 			}
-
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
-
 		} else {
-
 			for (Map.Entry<String, Long> entry : temp.entrySet()) {
-
 				if (count <= (size - 10)) {
 					count++;
 				} else {
@@ -628,7 +623,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 				}
 			}
 			aggregationStatsResponse.setGroupUniqueSpecies(t);
-
 		}
 
 		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
@@ -639,8 +633,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
 		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 
-		return aggregationStatsResponse;
+		Long totalTaxa = Long.valueOf(temp.size());
+		Long totalUploaders = Long.valueOf(uploaders.size());
+		Long totalIdentifiers = Long.valueOf(identifiers.size());
 
+		Map<String, Long> totals = new HashMap<>();
+		totals.put("totalTaxa", totalTaxa);
+		totals.put("totalUploaders", totalUploaders);
+		totals.put("totalIdentifiers", totalIdentifiers);
+
+		aggregationStatsResponse.setTotalCounts(totals);
+
+		return aggregationStatsResponse;
 	}
 
 	private List<TopIdentifiersInfo> extractIdentifiers(Integer identifierssoffset, String user,
@@ -692,7 +696,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			logger.error(e.getMessage());
 		}
 		return (null);
-
 	}
 
 	private List<TopUploadersInfo> extractUploaders(Integer uploadersoffset, String user, Map<String, Long> uploaders) {
