@@ -8,7 +8,16 @@ public class MapAggregationStatsResponse {
 	private Map<String, Long> groupUniqueSpecies;
 	private List<TopUploadersInfo>groupTopUploaders;
 	private List<TopIdentifiersInfo>groupTopIdentifiers;
+	private Map<String,Long>totalCounts;
 	
+
+	public Map<String, Long> getTotalCounts() {
+		return totalCounts;
+	}
+
+	public void setTotalCounts(Map<String, Long> totalCounts) {
+		this.totalCounts = totalCounts;
+	}
 
 	public List<TopIdentifiersInfo> getGroupTopIdentifiers() {
 		return groupTopIdentifiers;
