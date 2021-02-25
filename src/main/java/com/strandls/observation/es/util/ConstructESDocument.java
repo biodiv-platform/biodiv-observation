@@ -106,9 +106,9 @@ public class ConstructESDocument {
 				+ "	language_id, language_name, accepted_name_id, hierarchy, path, " + "	CASE  "
 				+ "		WHEN t_id is not null THEN "
 				+ "		to_jsonb(row_to_json((SELECT t FROM (SELECT taxon_concept_id id,  name, canonical_form,  "
-				+ "		normalized_form AS scientific_name, rank, status, "
-				+ "		position )t))) " + "		ELSE NULL " + "	END AS taxon_detail " + "		 "
-				+ "	FROM  " + "		(  " + "		SELECT  "
+				+ "		normalized_form AS scientific_name, rank, status, " + "		position )t))) "
+				+ "		ELSE NULL " + "	END AS taxon_detail " + "		 " + "	FROM  " + "		(  "
+				+ "		SELECT  "
 				+ "		observation_id, id reco_vote_id, author_id voted_by_author_id, voted_by , confidence, recommendation_id, "
 				+ "		common_name_reco_id, voted_on, comment, taxon_concept_id, last_modified, profile_pic, recommendation_name, "
 				+ "		CASE  "
@@ -122,8 +122,8 @@ public class ConstructESDocument {
 				+ "		(SELECT id rid, taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
 				+ "		ON rid =  recommendation_id " + "		LEFT OUTER JOIN "
-				+ "		(SELECT id a_id, name voted_by, COALESCE(profile_pic,  icon) profile_pic from suser ) A ON a_id = author_id " + "		 "
-				+ "		UNION " + "		 " + "		SELECT  "
+				+ "		(SELECT id a_id, name voted_by, COALESCE(profile_pic,  icon) profile_pic from suser ) A ON a_id = author_id "
+				+ "		 " + "		UNION " + "		 " + "		SELECT  "
 				+ "		observation_id, id reco_vote_id, author_id voted_by_author_id, voted_by, confidence, recommendation_id,  "
 				+ "		common_name_reco_id, voted_on, comment, taxon_concept_id, last_modified, profile_pic, recommendation_name, "
 				+ "		CASE  "
@@ -342,7 +342,6 @@ public class ConstructESDocument {
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
-			System.out.println(qry);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
 			result = query.getSingleResult();
 			System.out.println();
