@@ -1377,15 +1377,16 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationMailData observationData = getObservationMailData(observationId);
 			List<UserGroupIbp> userGroupIbp = userGroupService.getObservationUserGroup(observationId.toString());
 			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
-			for (UserGroupIbp ugIbp : userGroupIbp) {
-				UserGroupMailData ugMailData = new UserGroupMailData();
-				ugMailData.setId(ugIbp.getId());
-				ugMailData.setIcon(ugIbp.getIcon());
-				ugMailData.setName(ugIbp.getName());
-				ugMailData.setWebAddress(ugIbp.getWebAddress());
-				userGroupData.add(ugMailData);
+			if (userGroupIbp != null && !userGroupIbp.isEmpty()) {
+				for (UserGroupIbp ugIbp : userGroupIbp) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ugIbp.getId());
+					ugMailData.setIcon(ugIbp.getIcon());
+					ugMailData.setName(ugIbp.getName());
+					ugMailData.setWebAddress(ugIbp.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
 			}
-
 			mailData = new MailData();
 			mailData.setObservationData(observationData);
 			mailData.setUserGroupData(userGroupData);
