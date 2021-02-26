@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
@@ -50,6 +49,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -122,6 +122,9 @@ public class ObservationController {
 	private ObservationMapperHelper observationHelper;
 
 	@Inject
+	private ESUpdate esUpdate;
+
+	@Inject
 	private ESUtility esUtility;
 
 	@Inject
@@ -138,6 +141,16 @@ public class ObservationController {
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
+		
+
+		List<Long> list = new ArrayList<Long>(
+				Arrays.asList(268852L,
+						271441L,
+						16096837L,
+						336376L));
+
+		esUpdate.esBulkUpload(list);
+		
 		return "pong Observation";
 	}
 
@@ -1354,7 +1367,8 @@ public class ObservationController {
 	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
 			observationService.observationBulkUpload(request, observationBulkData);

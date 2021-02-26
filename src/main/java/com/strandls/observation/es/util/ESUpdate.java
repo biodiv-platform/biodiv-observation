@@ -3,14 +3,19 @@
  */
 package com.strandls.observation.es.util;
 
+
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
@@ -46,6 +51,29 @@ public class ESUpdate {
 			System.out.println(response.getResult());
 
 		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+	}
+
+	public void esBulkUpload(List<Long> observationIds) {
+
+		String observationList = StringUtils.join(observationIds, ',');
+		try {
+			List<ObservationESDocument> ESObservationList = constructESDocument.getESDocumentStub(observationList);
+			if (!ESObservationList.isEmpty()) {
+				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> doc = om.convertValue(s, Map.class);
+					doc.putIfAbsent("id", s.getObservation_id());
+					return doc;
+				}).collect(Collectors.toList());
+
+				List<MapQueryResponse> response = esService.bulkUpdate("extended_observation", "_doc", bulkEsDoc);
+				System.out.println("--------------completed-------------observationId :" + response);
+
+			}
+
+		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
 	}
