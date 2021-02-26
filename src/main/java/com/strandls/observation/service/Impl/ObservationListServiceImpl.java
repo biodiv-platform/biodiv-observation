@@ -6,8 +6,10 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,11 +27,13 @@ import com.strandls.esmodule.pojo.AggregationResponse;
 import com.strandls.esmodule.pojo.CustomFields;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.GeoHashAggregationData;
+import com.strandls.esmodule.pojo.IdentifiersInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
+import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -37,10 +41,13 @@ import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
+import com.strandls.observation.pojo.TopIdentifiersInfo;
+import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
 
 /**
@@ -63,7 +70,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField, MapAggregationResponse aggregationResult, String view) {
+			String termsAggregationField, MapAggregationResponse aggregationResult,
+			MapAggregationStatsResponse aggregationStatsResult, String view) {
 
 		ObservationListData listData = null;
 
@@ -72,6 +80,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<ObservationListPageMapper> observationList = new ArrayList<ObservationListPageMapper>();
 			List<ObservationListMinimalData> observationListMinimal = new ArrayList<ObservationListMinimalData>();
 			Long totalCount = null;
+			MapAggregationStatsResponse statsAggregates = null;
 			if (view.equalsIgnoreCase("map")) {
 				GeoHashAggregationData geoHashAggregationData = esService.getGeoHashAggregation(index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
@@ -79,7 +88,15 @@ public class ObservationListServiceImpl implements ObservationListService {
 				geoHashResult = geoHashAggregationData.getGeoHashData();
 				totalCount = geoHashAggregationData.getTotalCount();
 
-			} else {
+			}
+
+			else if (view.equalsIgnoreCase("stats")) {
+
+				statsAggregates = aggregationStatsResult;
+
+			}
+
+			else {
 
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, querys);
@@ -156,7 +173,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 
 			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult,
-					observationListMinimal);
+					statsAggregates, observationListMinimal);
 
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
@@ -509,6 +526,227 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		return aggregationResponse;
 
+	}
+
+	@Override
+	public MapAggregationStatsResponse mapAggregateStats(String index, String type, String sGroup, String taxon,
+			String user, String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,
+			String isFlagged, String minDate, String maxDate, String validate, Map<String, List<String>> traitParams,
+			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
+			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
+			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
+			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
+			Integer uploadersoffset, Integer identifiersoffset) {
+
+		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+				classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate, status,
+				taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+		MapSearchQuery mapSearchQueryFilter;
+
+		String omiter = null;
+		MapAggregationStatsResponse aggregationStatsResponse = new MapAggregationStatsResponse();
+
+		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
+
+		int totalLatch = 3;
+//		latch count down
+		CountDownLatch latch = new CountDownLatch(totalLatch);
+
+		if (recoName != null && !recoName.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, omiter, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQueryFilter, mapAggStatsResponse, latch, null);
+
+		} else {
+
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQuery, mapAggStatsResponse, latch, null);
+		}
+
+		// for top Uploaders
+
+		if (user != null && !user.isEmpty()) {
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
+					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse,
+					latch, null);
+			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQueryFilter,
+					mapAggStatsResponse, latch, null);
+
+		} else {
+			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
+					null);
+			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
+					mapAggStatsResponse, latch, null);
+
+		}
+
+		try {
+			latch.await();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		int size = lifeListOffset + 10;
+		int count = 1;
+
+		Map<String, Long> temp = mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword")
+				.getGroupAggregation();
+		Map<String, Long> t = new LinkedHashMap<>();
+
+		if (recoName != null && !recoName.isEmpty()) {
+			if (temp.containsKey(recoName)) {
+				t.put(recoName, temp.get(recoName));
+			} else {
+				t.put(recoName, Long.valueOf(0));
+			}
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+		} else {
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
+				if (count <= (size - 10)) {
+					count++;
+				} else {
+					if (count > size) {
+						break;
+					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
+				}
+			}
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+		}
+
+		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
+		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
+		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+
+		Map<String, Long> identifiers = mapAggStatsResponse.get("all_reco_vote.authors_voted.id").getGroupAggregation();
+		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
+
+		Long totalTaxa = Long.valueOf(temp.size());
+		Long totalUploaders = Long.valueOf(uploaders.size());
+		Long totalIdentifiers = Long.valueOf(identifiers.size());
+
+		Map<String, Long> totals = new HashMap<>();
+		totals.put("totalTaxa", totalTaxa);
+		totals.put("totalUploaders", totalUploaders);
+		totals.put("totalIdentifiers", totalIdentifiers);
+
+		aggregationStatsResponse.setTotalCounts(totals);
+
+		return aggregationStatsResponse;
+	}
+
+	private List<TopIdentifiersInfo> extractIdentifiers(Integer identifierssoffset, String user,
+			Map<String, Long> identifiers) {
+		int identifiersSize = identifierssoffset + 10;
+		int identifiersCount = 1;
+		String authorIds = "";
+		List<Long> counts = new ArrayList<>();
+		if (user != null && !user.isEmpty()) {
+			List<String> l = Arrays.asList(user.split(","));
+			for (int i = 0; i < l.size(); i++) {
+				authorIds = authorIds + l.get(i) + ",";
+				if (identifiers.containsKey(l.get(i))) {
+					counts.add(identifiers.get(l.get(i)));
+				} else {
+					counts.add(Long.valueOf(0));
+				}
+			}
+
+		} else {
+			for (Map.Entry<String, Long> entry : identifiers.entrySet()) {
+				if (identifiersCount <= (identifiersSize - 10)) {
+					identifiersCount++;
+				} else {
+					if (identifiersCount > identifiersSize) {
+						break;
+					}
+					entry.getValue();
+					authorIds = authorIds + entry.getKey() + ",";
+					counts.add(entry.getValue());
+					identifiersCount++;
+				}
+			}
+		}
+
+		try {
+			List<IdentifiersInfo> allIdentifiersInfo = esService.getIdentifierInfo("extended_observation", authorIds);
+			List<TopIdentifiersInfo> identifiersResult = new ArrayList<>();
+			for (int k = 0; k < allIdentifiersInfo.size(); k++) {
+				String name = allIdentifiersInfo.get(k).getName();
+				String pic = allIdentifiersInfo.get(k).getPic();
+				Long authorId = allIdentifiersInfo.get(k).getAuthorId();
+				TopIdentifiersInfo tempUploader = new TopIdentifiersInfo(name, pic, authorId, counts.get(k));
+				identifiersResult.add(tempUploader);
+			}
+
+			return (identifiersResult);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return (null);
+	}
+
+	private List<TopUploadersInfo> extractUploaders(Integer uploadersoffset, String user, Map<String, Long> uploaders) {
+		int uploadersSize = uploadersoffset + 10;
+		int uploadersCount = 1;
+		String authorIds = "";
+		List<Long> counts = new ArrayList<>();
+		if (user != null && !user.isEmpty()) {
+			List<String> l = Arrays.asList(user.split(","));
+			for (int i = 0; i < l.size(); i++) {
+				authorIds = authorIds + l.get(i) + ",";
+				if (uploaders.containsKey(l.get(i))) {
+					counts.add(uploaders.get(l.get(i)));
+				} else {
+					counts.add(Long.valueOf(0));
+				}
+
+			}
+
+		} else {
+			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
+				if (uploadersCount <= (uploadersSize - 10)) {
+					uploadersCount++;
+				} else {
+					if (uploadersCount > uploadersSize) {
+						break;
+					}
+					entry.getValue();
+					authorIds = authorIds + entry.getKey() + ",";
+					counts.add(entry.getValue());
+					uploadersCount++;
+				}
+			}
+		}
+
+		try {
+			List<UploadersInfo> allUploadersInfo = esService.getUploaderInfo("extended_observation", authorIds);
+			List<TopUploadersInfo> uploadersResult = new ArrayList<>();
+			for (int k = 0; k < allUploadersInfo.size(); k++) {
+				String name = allUploadersInfo.get(k).getName();
+				String pic = allUploadersInfo.get(k).getPic();
+				Long authorId = allUploadersInfo.get(k).getAuthorId();
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
+				uploadersResult.add(tempUploader);
+			}
+
+			return (uploadersResult);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return (null);
 	}
 
 //	for media data

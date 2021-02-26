@@ -56,6 +56,7 @@ import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -365,7 +366,10 @@ public class ObservationController {
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
-			@QueryParam("publicationgrade") String publicationGrade, @Context UriInfo uriInfo) {
+			@QueryParam("publicationgrade") String publicationGrade,
+			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
+			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
 
 		try {
 
@@ -422,6 +426,7 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
 			MapAggregationResponse aggregationResult = null;
+			MapAggregationStatsResponse aggregationStatsResult = null;
 
 			if (offset == 0) {
 				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
@@ -430,11 +435,21 @@ public class ObservationController {
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
 						tahsil, district, state, tags, publicationGrade, authorVoted);
 
+				if (view.equalsIgnoreCase("stats")) {
+					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
+							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
+							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
+							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
+							uploadersoffset,identifiersoffset);
+
+				}
+
 			}
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					aggregationResult, view);
+					aggregationResult, aggregationStatsResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
