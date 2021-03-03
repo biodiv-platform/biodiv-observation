@@ -534,7 +534,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
-
 			Integer uploadersoffset, Integer identifiersoffset) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
@@ -633,9 +632,25 @@ public class ObservationListServiceImpl implements ObservationListService {
 		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
 		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 
-		Long totalTaxa = Long.valueOf(temp.size());
-		Long totalUploaders = Long.valueOf(uploaders.size());
-		Long totalIdentifiers = Long.valueOf(identifiers.size());
+		Long totalTaxa = Long.valueOf(0);
+		Long totalUploaders = Long.valueOf(0);
+		Long totalIdentifiers = Long.valueOf(0);
+
+		if (recoName != null && !recoName.isEmpty()) {
+			if (temp.containsKey(recoName)) {
+				totalTaxa++;
+			}
+		} else {
+			totalTaxa = Long.valueOf(temp.size());
+		}
+
+		if (user != null && !user.isEmpty()) {
+			totalUploaders = Long.valueOf(uploadersResult.size());
+			totalIdentifiers = Long.valueOf(identifiersResult.size());
+		} else {
+			totalUploaders = Long.valueOf(uploaders.size());
+			totalIdentifiers = Long.valueOf(identifiers.size());
+		}
 
 		Map<String, Long> totals = new HashMap<>();
 		totals.put("totalTaxa", totalTaxa);

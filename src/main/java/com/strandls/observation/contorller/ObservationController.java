@@ -456,7 +456,6 @@ public class ObservationController {
 							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
 							uploadersoffset, identifiersoffset);
 

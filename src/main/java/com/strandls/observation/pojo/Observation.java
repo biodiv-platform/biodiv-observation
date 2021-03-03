@@ -85,8 +85,9 @@ public class Observation implements Serializable {
 	private Long dataTableId;
 	private String dateAccuracy;
 	private Boolean isVerified;
-	
-	public Observation() {}
+
+	public Observation() {
+	}
 
 	public Observation(Long id, Long version, Long authorId, Date createdOn, Long groupId, Double latitude,
 			Double longitude, String notes, Date fromDate, String placeName, Integer rating, String reverseGeocodedName,
@@ -657,7 +658,7 @@ public class Observation implements Serializable {
 		this.dateAccuracy = dateAccuracy;
 	}
 
-	@Column(name = "is_verified",columnDefinition = "boolean default false")
+	@Column(name = "is_verified", columnDefinition = "boolean default false")
 	public Boolean getIsVerified() {
 		return isVerified;
 	}

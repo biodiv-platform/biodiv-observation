@@ -44,7 +44,6 @@ public interface ObservationListService {
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
 			Integer uploadersoffset, Integer identifiersoffset);
 
-
 	public FilterPanelData getAllFilter();
 
 	public List<ObservationHomePage> getObservation(String resourceUrls);
