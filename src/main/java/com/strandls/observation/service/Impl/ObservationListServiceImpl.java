@@ -554,20 +554,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
-		if (recoName != null && !recoName.isEmpty()) {
-			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
-					status, taxonId, omiter, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
-
-			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
-					mapSearchQueryFilter, mapAggStatsResponse, latch, null);
-
-		} else {
-
-			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
-					mapSearchQuery, mapAggStatsResponse, latch, null);
-		}
+		getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField, mapSearchQuery,
+				mapAggStatsResponse, latch, null);
 
 		// for top Uploaders
 
@@ -603,27 +591,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 				.getGroupAggregation();
 		Map<String, Long> t = new LinkedHashMap<>();
 
-		if (recoName != null && !recoName.isEmpty()) {
-			if (temp.containsKey(recoName)) {
-				t.put(recoName, temp.get(recoName));
+		for (Map.Entry<String, Long> entry : temp.entrySet()) {
+			if (count <= (size - 10)) {
+				count++;
 			} else {
-				t.put(recoName, Long.valueOf(0));
-			}
-			aggregationStatsResponse.setGroupUniqueSpecies(t);
-		} else {
-			for (Map.Entry<String, Long> entry : temp.entrySet()) {
-				if (count <= (size - 10)) {
-					count++;
-				} else {
-					if (count > size) {
-						break;
-					}
-					t.put(entry.getKey(), entry.getValue());
-					count++;
+				if (count > size) {
+					break;
 				}
+				t.put(entry.getKey(), entry.getValue());
+				count++;
 			}
-			aggregationStatsResponse.setGroupUniqueSpecies(t);
 		}
+		aggregationStatsResponse.setGroupUniqueSpecies(t);
 
 		Map<String, Long> uploaders = mapAggStatsResponse.get("author_id").getGroupAggregation();
 		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
@@ -633,17 +612,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
 		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 
-		Long totalTaxa = Long.valueOf(0);
 		Long totalUploaders = Long.valueOf(0);
 		Long totalIdentifiers = Long.valueOf(0);
-
-		if (recoName != null && !recoName.isEmpty()) {
-			if (temp.containsKey(recoName)) {
-				totalTaxa++;
-			}
-		} else {
-			totalTaxa = Long.valueOf(temp.size());
-		}
+		Long totalTaxa = Long.valueOf(temp.size());
 
 		if (user != null && !user.isEmpty()) {
 			totalUploaders = Long.valueOf(uploadersResult.size());
@@ -651,7 +622,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		} else {
 			totalUploaders = Long.valueOf(uploaders.size());
 			totalIdentifiers = Long.valueOf(identifiers.size());
-		}		
+		}
 
 		Map<String, Long> totals = new HashMap<>();
 		totals.put("totalTaxa", totalTaxa);
