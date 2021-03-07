@@ -159,6 +159,9 @@ public class Observation implements Serializable {
 		this.basisOfData = basisOfData;
 	}
 
+	
+	
+	
 	@Id
 	@Column(name = "id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.AUTO)

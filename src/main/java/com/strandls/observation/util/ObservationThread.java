@@ -22,11 +22,21 @@ public class ObservationThread implements Runnable {
     public void run() {
         try {
             List<Observation> observationList = observationDAO.getObservationCountForDatatable(datatableId);
+            String ObservationIds = null;
+            
+            
             for (Observation observation: observationList) {
+            	ObservationIds = ObservationIds + ","+observation.getId().toString();
+            	if(ObservationIds.length() >= 100 ) {
+            		//call BulkUpload function as a thread;
+            		//clear observation;
+            	}
+            	
                 queue.put(observation.getId());
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
+    
 }

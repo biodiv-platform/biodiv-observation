@@ -62,6 +62,8 @@ public class ObservationTask implements Runnable {
                     observationData.getDataRow(), observationData.getUserGroupsList(), observation.getId());
             mapper.updateGeoPrivacy(observation);
             mapper.updateUserGroupFilter(observationData.getRequest(), observation);
+            //put observstion id to a global queue
+            //
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.error(ex.getMessage());

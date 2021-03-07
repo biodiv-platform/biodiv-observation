@@ -48,6 +48,12 @@ import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.*;
 import net.minidev.json.JSONArray;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +61,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -506,8 +514,8 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
-			userGroupData.setUgFilterData(observationHelper.getUGFilterObvData(
-					observationDao.findById(Long.parseLong(observationId))));
+			userGroupData.setUgFilterData(
+					observationHelper.getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -1126,6 +1134,24 @@ public class ObservationServiceImpl implements ObservationService {
 				startPoint = totalObservation + 1;
 				observationHelper.updateGeoPrivacy(observationList);
 			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+	}
+
+	private void updateGeoPrivacy(List<Observation> observationList) {
+
+		try {
+
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
 
@@ -1514,25 +1540,68 @@ public class ObservationServiceImpl implements ObservationService {
 		Long userId = Long.parseLong(profile.getId());
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
 		dataTable = dataTableDAO.save(dataTable);
+		
 
-		try {
+		try (XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()))) {
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
+			XSSFSheet sheet = workbook.getSheetAt(0);
+			Iterator<Row> rows = sheet.iterator();
+			List<Long> observationIds = new ArrayList<Long>();
 
-			final int THREAD_COUNT = 5;
-			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
-			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
-			for (int i = 0; i < THREAD_COUNT - 1; i++) {
-				service.submit(new ObservationTask(queue, observationBulkMapperHelper, observationDao));
+			Row dataRow;
+			// skip header
+			rows.next();
+
+			int counter = 1;
+
+			while (rows.hasNext()) {
+
+				dataRow = rows.next();
+				System.out.println("Counter======" + counter);
+				counter++;
+
+				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
+						dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
+
+				Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
+				observationIds.add(obsId);
+
+				if (observationIds.size() >= 1500) {
+					esUpdate.esBulkUpload(observationIds);
+					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
+					Thread thread = new Thread(updateThread);
+					thread.start();
+//					observationIds.clear();
+				}
+
 			}
+			System.out.println("out of ewhile loop");
 
-			service.submit(new FileTask(queue, observationBulkData.getColumns(), observationBulkData.getFilename(),
-					request, dataTable, getAllSpeciesGroup(), traitsList,
-					userGroupIbpList, licenseList))
-					.get();
-			service.shutdownNow();
-			service.awaitTermination(6, TimeUnit.HOURS);
+			if (!rows.hasNext() && !observationIds.isEmpty()) {
+				
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
+				Thread thread = new Thread(updateThread);
+				thread.start();
+//				observationIds.clear();
+			}
+//			final int THREAD_COUNT = 5;
+//			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
+//			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
+//			for (int i = 0; i < THREAD_COUNT - 1; i++) {
+//				//consumer 4
+//				service.submit(new ObservationTask(queue, observationBulkMapperHelper, observationDao));
+//			}
+//
+//			//publisher 1
+//			service.submit(new FileTask(queue, observationBulkData.getColumns(), observationBulkData.getFilename(),
+//					request, dataTable, getAllSpeciesGroup(), traitsList,
+//					userGroupIbpList, licenseList))
+//					.get();
+//			service.shutdownNow();
+//			service.awaitTermination(6, TimeUnit.HOURS);
 
 //			BlockingQueue<Long> observationQueue = new ArrayBlockingQueue<>(200);
 //			ExecutorService elasticService = Executors.newFixedThreadPool(THREAD_COUNT);

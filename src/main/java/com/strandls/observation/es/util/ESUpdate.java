@@ -3,7 +3,6 @@
  */
 package com.strandls.observation.es.util;
 
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
@@ -40,7 +40,7 @@ public class ESUpdate {
 	public void pushToElastic(String observationId) {
 		try {
 			System.out.println("Observation getting pushed to elastic, ID:" + observationId);
-			List<ObservationESDocument> result = constructESDocument.getESDocumentStub(observationId);
+			List<ObservationESDocument> result =constructESDocument.getESDocumentStub(observationId);
 //			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 //			om.setDateFormat(df);
 			String resultString = om.writeValueAsString(result.get(0));
@@ -58,8 +58,11 @@ public class ESUpdate {
 	public void esBulkUpload(List<Long> observationIds) {
 
 		String observationList = StringUtils.join(observationIds, ',');
+		System.out.println("--------------------observation es Bulk Upload Started---------"+observationList);
 		try {
-			List<ObservationESDocument> ESObservationList = constructESDocument.getESDocumentStub(observationList);
+			List<ObservationESDocument> ESObservationList;
+			
+			ESObservationList = constructESDocument.getESDocumentStub(observationList);
 			if (!ESObservationList.isEmpty()) {
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					@SuppressWarnings("unchecked")
@@ -68,12 +71,14 @@ public class ESUpdate {
 					return doc;
 				}).collect(Collectors.toList());
 
-				List<MapQueryResponse> response = esService.bulkUpdate("extended_observation", "_doc", bulkEsDoc);
+				String json = om.writeValueAsString(bulkEsDoc);
+				System.out.println("COnverted json to string" + json.toString());
+				List<MapQueryResponse> response = esService.bulkUpload("extended_observation", "_doc", json.toString());
 				System.out.println("--------------completed-------------observationId :" + response);
 
 			}
 
-		} catch (ApiException e) {
+		} catch (ApiException | JsonProcessingException e) {
 			logger.error(e.getMessage());
 		}
 	}
