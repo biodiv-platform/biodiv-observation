@@ -141,12 +141,6 @@ public class ObservationController {
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
-
-		List<Long> list = new ArrayList<Long>(Arrays.asList(14787752L
-				));
-
-		esUpdate.esBulkUpload(list);
-
 		return "pong Observation";
 	}
 

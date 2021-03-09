@@ -69,7 +69,7 @@ public class ConstructESDocument {
 				+ "visit_count, max_voted_reco_id, is_checklist, to_date,  " + "checklist_annotations,  "
 				+ "is_locked, language_id, location_scale,  "
 				+ "dataset_id, repr_image_id, protocol, no_of_images, no_of_videos, no_of_audio,  "
-				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted = false AND id in ( "
+				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted IS NOT TRUE AND id in ( "
 				+ observationId + " )) O " + "LEFT OUTER JOIN  "
 				+ "(SELECT id r_id, file_name AS repr_image_url FROM resource) I ON I.r_id = O.repr_image_id   "
 				+ "LEFT OUTER JOIN "

@@ -1554,14 +1554,9 @@ public class ObservationServiceImpl implements ObservationService {
 			// skip header
 			rows.next();
 
-			int counter = 1;
-
 			while (rows.hasNext()) {
 
 				dataRow = rows.next();
-				System.out.println("Counter======" + counter);
-				counter++;
-
 				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
@@ -1569,23 +1564,20 @@ public class ObservationServiceImpl implements ObservationService {
 				Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
 				observationIds.add(obsId);
 
-				if (observationIds.size() >= 1500) {
+				if (observationIds.size() >= 1000) {
 					esUpdate.esBulkUpload(observationIds);
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
 					Thread thread = new Thread(updateThread);
 					thread.start();
-//					observationIds.clear();
+					observationIds.clear();
 				}
 
 			}
-			System.out.println("out of ewhile loop");
 
 			if (!rows.hasNext() && !observationIds.isEmpty()) {
-				
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
 				Thread thread = new Thread(updateThread);
 				thread.start();
-//				observationIds.clear();
 			}
 //			final int THREAD_COUNT = 5;
 //			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
@@ -1613,7 +1605,6 @@ public class ObservationServiceImpl implements ObservationService {
 //			elasticService.shutdownNow();
 //			elasticService.awaitTermination(6, TimeUnit.HOURS);
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 	}
