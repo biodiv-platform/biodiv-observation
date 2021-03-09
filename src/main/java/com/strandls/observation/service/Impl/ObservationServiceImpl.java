@@ -220,7 +220,7 @@ public class ObservationServiceImpl implements ObservationService {
 					authorScore = score.getRecord().get(0).get("details");
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
-				observationResource = resourceService.getImageResource(id.toString());
+				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
@@ -1090,7 +1090,8 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setHidePreciseLocation(observation.getGeoPrivacy());
 
 //				resources Data
-				List<ResourceData> resourceData = resourceService.getImageResource(observationId.toString());
+				List<ResourceData> resourceData = resourceService.getImageResource("observation",
+						observationId.toString());
 				editData.setResources(observationHelper.createEditResourceMapping(resourceData));
 			} else {
 				throw new ObservationInputException("USER NOT ALLOWED TO EDIT THE PAGE");
@@ -1393,7 +1394,7 @@ public class ObservationServiceImpl implements ObservationService {
 			List<ResourceData> resources = new ArrayList<ResourceData>();
 			;
 			if (observation.getReprImageId() != null)
-				resources = resourceService.getImageResource(observation.getId().toString());
+				resources = resourceService.getImageResource("observation", observation.getId().toString());
 
 			for (ResourceData resource : resources) {
 				if (observation.getReprImageId().equals(resource.getResource().getId()))
