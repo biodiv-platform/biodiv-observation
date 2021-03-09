@@ -7,7 +7,7 @@ package com.strandls.observation.pojo;
  * @author Abhishek Rudra
  *
  */
-public class ResourceData {
+public class ObservationResourceData {
 
 	private String path;
 	private String url;
@@ -19,7 +19,7 @@ public class ResourceData {
 	/**
 	 * 
 	 */
-	public ResourceData() {
+	public ObservationResourceData() {
 		super();
 	}
 
@@ -31,7 +31,7 @@ public class ResourceData {
 	 * @param rating
 	 * @param licenceId
 	 */
-	public ResourceData(String path, String url, String type, String caption, Integer rating, Long licenceId) {
+	public ObservationResourceData(String path, String url, String type, String caption, Integer rating, Long licenceId) {
 		super();
 		this.path = path;
 		this.url = url;
