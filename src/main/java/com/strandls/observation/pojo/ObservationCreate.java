@@ -53,7 +53,74 @@ public class ObservationCreate {
 	private List<Long> userGroupId;
 
 //	-----Resource Data--------
-	private List<ResourceDataObs> resources;
+	private List<ObservationResourceData> resources;
+
+	/**
+	 * 
+	 */
+	public ObservationCreate() {
+		super();
+	}
+
+	/**
+	 * @param sGroup
+	 * @param helpIdentify
+	 * @param createdOn
+	 * @param fromDate
+	 * @param toDate
+	 * @param recoData
+	 * @param dateAccuracy
+	 * @param observedOn
+	 * @param protocol
+	 * @param basisOfRecords
+	 * @param obsvLanguageId
+	 * @param observedAt
+	 * @param reverseGeocoded
+	 * @param locationScale
+	 * @param latitude
+	 * @param longitude
+	 * @param useDegMinSec
+	 * @param degMinSec
+	 * @param hidePreciseLocation
+	 * @param facts
+	 * @param notes
+	 * @param tags
+	 * @param userGroupId
+	 * @param resources
+	 */
+	public ObservationCreate(Long sGroup, Boolean helpIdentify, Date createdOn, Date fromDate, Date toDate,
+			RecoData recoData, String dateAccuracy, Date observedOn, String protocol, String basisOfRecords,
+			Long obsvLanguageId, String observedAt, String reverseGeocoded, String locationScale, Double latitude,
+			Double longitude, Boolean useDegMinSec, String degMinSec, Boolean hidePreciseLocation,
+			Map<String, List<Long>> facts, String notes, List<Tags> tags, List<Long> userGroupId,
+			List<com.strandls.observation.pojo.ObservationResourceData> resources) {
+		super();
+		this.sGroup = sGroup;
+		this.helpIdentify = helpIdentify;
+		this.createdOn = createdOn;
+		this.fromDate = fromDate;
+		this.toDate = toDate;
+		this.recoData = recoData;
+		this.dateAccuracy = dateAccuracy;
+		this.observedOn = observedOn;
+		this.protocol = protocol;
+		this.basisOfRecords = basisOfRecords;
+		this.obsvLanguageId = obsvLanguageId;
+		this.observedAt = observedAt;
+		this.reverseGeocoded = reverseGeocoded;
+		this.locationScale = locationScale;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.useDegMinSec = useDegMinSec;
+		this.degMinSec = degMinSec;
+		this.hidePreciseLocation = hidePreciseLocation;
+		this.facts = facts;
+		this.notes = notes;
+		this.tags = tags;
+		this.userGroupId = userGroupId;
+		this.resources = resources;
+	}
+
 //	-----GETTERS AND SETTERS----
 
 	public Long getsGroup() {
@@ -240,41 +307,11 @@ public class ObservationCreate {
 		this.userGroupId = userGroupId;
 	}
 
-	public List<ResourceDataObs> getResources() {
+	public List<ObservationResourceData> getResources() {
 		return resources;
 	}
 
-	public void setResources(List<ResourceDataObs> resources) {
+	public void setResources(List<ObservationResourceData> resources) {
 		this.resources = resources;
-	}
-
-	@Override
-	public String toString() {
-		return "ObservationCreate{" +
-				"sGroup=" + sGroup +
-				", helpIdentify=" + helpIdentify +
-				", createdOn=" + createdOn +
-				", fromDate=" + fromDate +
-				", toDate=" + toDate +
-				", recoData=" + recoData +
-				", dateAccuracy='" + dateAccuracy + '\'' +
-				", observedOn=" + observedOn +
-				", protocol='" + protocol + '\'' +
-				", basisOfRecords='" + basisOfRecords + '\'' +
-				", obsvLanguageId=" + obsvLanguageId +
-				", observedAt='" + observedAt + '\'' +
-				", reverseGeocoded='" + reverseGeocoded + '\'' +
-				", locationScale='" + locationScale + '\'' +
-				", latitude=" + latitude +
-				", longitude=" + longitude +
-				", useDegMinSec=" + useDegMinSec +
-				", degMinSec='" + degMinSec + '\'' +
-				", hidePreciseLocation=" + hidePreciseLocation +
-				", facts=" + facts +
-				", notes='" + notes + '\'' +
-				", tags=" + tags +
-				", userGroupId=" + userGroupId +
-				", resources=" + resources +
-				'}';
 	}
 }
