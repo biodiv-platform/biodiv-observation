@@ -790,11 +790,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 			List<Long> userGroupIdList = new ArrayList<Long>();
 			List<UserGroupIbp> featureableGroup = new ArrayList<UserGroupIbp>();
-			for (UserGroupIbp userGroup : associatedUserGroup) {
-				userGroupIdList.add(userGroup.getId());
-				if (userGroupFeatureRole.contains(userGroup.getId()))
-					featureableGroup.add(userGroup);
-
+			if (associatedUserGroup != null && !associatedUserGroup.isEmpty()) {
+				for (UserGroupIbp userGroup : associatedUserGroup) {
+					userGroupIdList.add(userGroup.getId());
+					if (userGroupFeatureRole.contains(userGroup.getId()))
+						featureableGroup.add(userGroup);
+				}
 			}
 
 			cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -1365,13 +1366,15 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationMailData observationData = getObservationMailData(observationId);
 			List<UserGroupIbp> userGroupIbp = userGroupService.getObservationUserGroup(observationId.toString());
 			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
-			for (UserGroupIbp ugIbp : userGroupIbp) {
-				UserGroupMailData ugMailData = new UserGroupMailData();
-				ugMailData.setId(ugIbp.getId());
-				ugMailData.setIcon(ugIbp.getIcon());
-				ugMailData.setName(ugIbp.getName());
-				ugMailData.setWebAddress(ugIbp.getWebAddress());
-				userGroupData.add(ugMailData);
+			if (userGroupIbp != null && !userGroupIbp.isEmpty()) {
+				for (UserGroupIbp ugIbp : userGroupIbp) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ugIbp.getId());
+					ugMailData.setIcon(ugIbp.getIcon());
+					ugMailData.setName(ugIbp.getName());
+					ugMailData.setWebAddress(ugIbp.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
 			}
 
 			mailData = new MailData();
