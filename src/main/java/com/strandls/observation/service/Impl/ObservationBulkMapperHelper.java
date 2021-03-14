@@ -239,6 +239,7 @@ public class ObservationBulkMapperHelper {
 			observation.setLatitude(latitude);
 			observation.setLongitude(longitude);
 			observation.setNotes(notes);
+			observation.setIsDeleted(false);
 			observation.setFromDate(fromDate);
 			observation.setPlaceName(observedAt); // place name given by user
 			observation.setRating(0);// what to insert
@@ -261,7 +262,8 @@ public class ObservationBulkMapperHelper {
 			observation.setNoOfIdentifications(1);
 			observation.setDataTableId(null);//
 			observation.setDateAccuracy(dateAccuracy);
-
+			observation.setFlagCount(0);
+			observation.setVisitCount(0L);
 			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
 			observation.setChecklistAnnotations(null);// from data set
@@ -453,7 +455,8 @@ public class ObservationBulkMapperHelper {
 
 				resourceServicesApi = headers.addResourceHeaders(resourceServicesApi,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				resourceServicesApi.createResource("OBSERVATION", String.valueOf(observation.getId()), resources);
+				List<Resource> response = resourceServicesApi.createResource("OBSERVATION",
+						String.valueOf(observation.getId()), resources);
 
 				Integer noOfImages = 0;
 				Integer noOfAudio = 0;
@@ -461,7 +464,7 @@ public class ObservationBulkMapperHelper {
 
 				Long reprImage = null;
 				int rating = 0;
-				for (Resource res : resources) {
+				for (Resource res : response) {
 					switch (res.getType()) {
 					case "AUDIO":
 						noOfAudio++;

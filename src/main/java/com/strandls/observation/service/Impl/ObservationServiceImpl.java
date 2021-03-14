@@ -52,6 +52,7 @@ import net.minidev.json.JSONArray;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pac4j.core.profile.CommonProfile;
@@ -1540,7 +1541,6 @@ public class ObservationServiceImpl implements ObservationService {
 		Long userId = Long.parseLong(profile.getId());
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
 		dataTable = dataTableDAO.save(dataTable);
-		
 
 		try (XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()))) {
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
@@ -1555,16 +1555,15 @@ public class ObservationServiceImpl implements ObservationService {
 			rows.next();
 
 			while (rows.hasNext()) {
-
 				dataRow = rows.next();
-				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
-						dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
+				if (dataRow.getCell(0, MissingCellPolicy.RETURN_BLANK_AS_NULL) != null) {
+					ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+					ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow,
+							request, dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
 
-				Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
-				observationIds.add(obsId);
-
-				if (observationIds.size() >= 1000) {
+					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
+					observationIds.add(obsId);
+				} else if (observationIds.size() >= 1000) {
 					esUpdate.esBulkUpload(observationIds);
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
 					Thread thread = new Thread(updateThread);

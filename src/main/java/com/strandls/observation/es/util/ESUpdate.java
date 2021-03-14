@@ -19,6 +19,7 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
+import com.strandls.observation.pojo.ShowData;
 
 /**
  * @author Abhishek Rudra
@@ -40,7 +41,7 @@ public class ESUpdate {
 	public void pushToElastic(String observationId) {
 		try {
 			System.out.println("Observation getting pushed to elastic, ID:" + observationId);
-			List<ObservationESDocument> result =constructESDocument.getESDocumentStub(observationId);
+			List<ObservationESDocument> result = constructESDocument.getESDocumentStub(observationId);
 //			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 //			om.setDateFormat(df);
 			String resultString = om.writeValueAsString(result.get(0));
@@ -58,19 +59,19 @@ public class ESUpdate {
 	public void esBulkUpload(List<Long> observationIds) {
 
 		String observationList = StringUtils.join(observationIds, ',');
-		System.out.println("--------------------observation es Bulk Upload Started---------"+observationList);
+		System.out.println("--------------------observation es Bulk Upload Started---------" + observationList);
 		try {
 			List<ObservationESDocument> ESObservationList;
-			
+
 			ESObservationList = constructESDocument.getESDocumentStub(observationList);
 			if (!ESObservationList.isEmpty()) {
+
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					@SuppressWarnings("unchecked")
 					Map<String, Object> doc = om.convertValue(s, Map.class);
 					doc.putIfAbsent("id", s.getObservation_id());
 					return doc;
 				}).collect(Collectors.toList());
-
 				String json = om.writeValueAsString(bulkEsDoc);
 				System.out.println("Converted json to string" + json.toString());
 				esService.bulkUpload("extended_observation", "_doc", json.toString());
