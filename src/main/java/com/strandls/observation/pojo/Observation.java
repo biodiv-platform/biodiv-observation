@@ -85,7 +85,6 @@ public class Observation implements Serializable {
 	private Long dataTableId;
 	private String dateAccuracy;
 	private Boolean isVerified;
-	private String basisOfData;
 
 	public Observation() {}
 
@@ -156,7 +155,6 @@ public class Observation implements Serializable {
 		this.noOfIdentifications = noOfIdentifications;
 		this.dataTableId = dataTableId;
 		this.dateAccuracy = dateAccuracy;
-		this.basisOfData = basisOfData;
 	}
 
 	
@@ -700,15 +698,6 @@ public class Observation implements Serializable {
 
 	public void setLocked(Boolean locked) {
 		isLocked = locked;
-	}
-
-	@Column(name = "basis_of_data", nullable = false)
-	public String getBasisOfData() {
-		return basisOfData;
-	}
-
-	public void setBasisOfData(String basisOfData) {
-		this.basisOfData = basisOfData;
 	}
 
 }
