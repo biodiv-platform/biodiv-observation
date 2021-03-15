@@ -1,56 +1,25 @@
+/**
+ * 
+ */
 package com.strandls.observation.service.Impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.activity.controller.ActivitySerivceApi;
-import com.strandls.activity.pojo.MailData;
-import com.strandls.activity.pojo.ObservationMailData;
-import com.strandls.activity.pojo.UserGroupMailData;
-import com.strandls.activity.pojo.*;
-import com.strandls.authentication_utility.util.AuthUtil;
-import com.strandls.esmodule.ApiException;
-import com.strandls.esmodule.controllers.EsServicesApi;
-import com.strandls.esmodule.pojo.*;
-import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
-import com.strandls.naksha.controller.LayerServiceApi;
-import com.strandls.naksha.pojo.ObservationLocationInfo;
-import com.strandls.observation.Headers;
-import com.strandls.observation.dao.DataTableDAO;
-import com.strandls.observation.dao.ObservationDAO;
-import com.strandls.observation.dao.ObservationDownloadLogDAO;
-import com.strandls.observation.dao.RecommendationVoteDao;
-import com.strandls.observation.dto.ObservationBulkDTO;
-import com.strandls.observation.es.util.*;
-import com.strandls.observation.pojo.*;
-import com.strandls.observation.service.ObservationService;
-import com.strandls.observation.util.*;
-import com.strandls.resource.controllers.LicenseControllerApi;
-import com.strandls.resource.controllers.ResourceServicesApi;
-import com.strandls.resource.pojo.License;
-import com.strandls.resource.pojo.ObservationResourceUser;
-import com.strandls.resource.pojo.Resource;
-import com.strandls.resource.pojo.ResourceData;
-import com.strandls.resource.pojo.ResourceRating;
-import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
-import com.strandls.taxonomy.pojo.SpeciesGroup;
-import com.strandls.taxonomy.pojo.SpeciesPermission;
-import com.strandls.taxonomy.pojo.TaxonTree;
-import com.strandls.traits.controller.TraitsServiceApi;
-import com.strandls.traits.pojo.*;
-import com.strandls.user.controller.UserServiceApi;
-import com.strandls.user.pojo.Follow;
-import com.strandls.user.pojo.UserIbp;
-import com.strandls.userGroup.controller.CustomFieldServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
-import com.strandls.userGroup.pojo.CustomFieldValues;
-import com.strandls.userGroup.pojo.Featured;
-import com.strandls.userGroup.pojo.*;
-import com.strandls.utility.controller.UtilityServiceApi;
-import com.strandls.utility.pojo.Tags;
-import com.strandls.utility.pojo.*;
-import net.minidev.json.JSONArray;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -59,16 +28,105 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.ActivityLoggingData;
+import com.strandls.activity.pojo.CommentLoggingData;
+import com.strandls.activity.pojo.MailData;
+import com.strandls.activity.pojo.ObservationMailData;
+import com.strandls.activity.pojo.UserGroupMailData;
+import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.ApiException;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
+import com.strandls.esmodule.pojo.MapDocument;
+import com.strandls.esmodule.pojo.MapQueryResponse;
+import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
+import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
+import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationNearBy;
+import com.strandls.esmodule.pojo.UserScore;
+import com.strandls.naksha.controller.LayerServiceApi;
+import com.strandls.naksha.pojo.ObservationLocationInfo;
+import com.strandls.observation.Headers;
+import com.strandls.observation.dao.DataTableDAO;
+import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.dto.ObservationBulkDTO;
+import com.strandls.observation.es.util.ESBulkUploadThread;
+import com.strandls.observation.es.util.ESCreateThread;
+import com.strandls.observation.es.util.ESUpdate;
+import com.strandls.observation.es.util.ObservationIndex;
+import com.strandls.observation.es.util.ObservationListElasticMapping;
+import com.strandls.observation.es.util.ObservationUtilityFunctions;
+import com.strandls.observation.es.util.RabbitMQProducer;
+import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.DataTable;
+import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ListPagePermissions;
+import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationBulkData;
+import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
+import com.strandls.observation.pojo.ObservationUpdateData;
+import com.strandls.observation.pojo.ObservationUserPageInfo;
+import com.strandls.observation.pojo.ObservationUserPermission;
+import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.UniqueSpeciesInfo;
+import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.util.ObservationInputException;
+import com.strandls.resource.controllers.LicenseControllerApi;
+import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceData;
+import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.ResourceRating;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.taxonomy.pojo.SpeciesPermission;
+import com.strandls.taxonomy.pojo.TaxonTree;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsCreateData;
+import com.strandls.traits.pojo.FactsUpdateData;
+import com.strandls.traits.pojo.TraitsValue;
+import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.Follow;
+import com.strandls.user.pojo.UserIbp;
+import com.strandls.userGroup.controller.CustomFieldServiceApi;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.pojo.CustomFieldDetails;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsertData;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.CustomFieldPermission;
+import com.strandls.userGroup.pojo.CustomFieldValues;
+import com.strandls.userGroup.pojo.Featured;
+import com.strandls.userGroup.pojo.FeaturedCreate;
+import com.strandls.userGroup.pojo.FeaturedCreateData;
+import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
+import com.strandls.userGroup.pojo.UserGroupMemberRole;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
+import com.strandls.userGroup.pojo.UserGroupPermissions;
+import com.strandls.userGroup.pojo.UserGroupSpeciesGroup;
+import com.strandls.utility.controller.UtilityServiceApi;
+import com.strandls.utility.pojo.FlagCreateData;
+import com.strandls.utility.pojo.FlagIbp;
+import com.strandls.utility.pojo.FlagShow;
+import com.strandls.utility.pojo.Language;
+import com.strandls.utility.pojo.Tags;
+import com.strandls.utility.pojo.TagsMapping;
+import com.strandls.utility.pojo.TagsMappingData;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.*;
+import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
@@ -92,9 +150,6 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ResourceServicesApi resourceService;
-
-	@Inject
-	private LicenseControllerApi licenseControllerApi;
 
 	@Inject
 	private UserGroupSerivceApi userGroupService;
@@ -145,13 +200,16 @@ public class ObservationServiceImpl implements ObservationService {
 	private ObservationDownloadLogDAO downloadLogDao;
 
 	@Inject
-	private ObservationBulkMapperHelper observationBulkMapperHelper;
-
-	@Inject
 	private DataTableHelper dataTableHelper;
 
 	@Inject
 	private DataTableDAO dataTableDAO;
+
+	@Inject
+	private LicenseControllerApi licenseControllerApi;
+
+	@Inject
+	private ObservationBulkMapperHelper observationBulkMapperHelper;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -368,7 +426,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 				userGroupData.setUserGroups(observationData.getUserGroupId());
 				userGroupData.setMailData(null);
-				userGroupData.setUgFilterData(observationHelper.getUGFilterObvData(observation));
+				userGroupData.setUgFilterData(getUGFilterObvData(observation));
 				userGroupService = headers.addUserGroupHeader(userGroupService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
@@ -402,11 +460,11 @@ public class ObservationServiceImpl implements ObservationService {
 //			----------------GEO PRIVACY CHECK-------------
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
-			observationHelper.updateGeoPrivacy(observationList);
+			updateGeoPrivacy(observationList);
 
 //			---------------USER GROUP FILTER RULE----------
 			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-			ugObvFilterData = observationHelper.getUGFilterObvData(observation);
+			ugObvFilterData = getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupService.getFilterRule(ugObvFilterData);
@@ -459,7 +517,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observationDao.update(observation);
 			List<Observation> observationList = new ArrayList<Observation>();
 			observationList.add(observation);
-			observationHelper.updateGeoPrivacy(observationList);
+			updateGeoPrivacy(observationList);
 			return maxVotedReco;
 		}
 		return observation.getMaxVotedRecoId();
@@ -507,6 +565,22 @@ public class ObservationServiceImpl implements ObservationService {
 		return facts;
 	}
 
+	private UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
 	@Override
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
 			List<Long> userGroupList) {
@@ -515,8 +589,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 			userGroupData.setUserGroups(userGroupList);
-			userGroupData.setUgFilterData(
-					observationHelper.getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
+			userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -993,10 +1066,10 @@ public class ObservationServiceImpl implements ObservationService {
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
-				observationHelper.updateGeoPrivacy(observationList);
+				updateGeoPrivacy(observationList);
 //				------------BG rules-----------------
 				UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-				ugObvFilterData = observationHelper.getUGFilterObvData(observation);
+				ugObvFilterData = getUGFilterObvData(observation);
 				userGroupService = headers.addUserGroupHeader(userGroupService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				userGroupService.getFilterRule(ugObvFilterData);
@@ -1072,7 +1145,7 @@ public class ObservationServiceImpl implements ObservationService {
 				startPoint = totalObservation + 1;
 				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
 				for (Observation observation : observationList) {
-					ugObvFilterDataList.add(observationHelper.getUGFilterObvData(observation));
+					ugObvFilterDataList.add(getUGFilterObvData(observation));
 				}
 				userGroupService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
 			}
@@ -1105,7 +1178,7 @@ public class ObservationServiceImpl implements ObservationService {
 				List<Observation> observationList = observationDao.fecthByListOfIds(idList);
 				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
 				for (Observation observation : observationList) {
-					ugObvFilterDataList.add(observationHelper.getUGFilterObvData(observation));
+					ugObvFilterDataList.add(getUGFilterObvData(observation));
 				}
 				userGroupService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
 			}
@@ -1133,8 +1206,9 @@ public class ObservationServiceImpl implements ObservationService {
 					hasNext = false;
 				totalObservation = totalObservation + observationList.size();
 				startPoint = totalObservation + 1;
-				observationHelper.updateGeoPrivacy(observationList);
+				updateGeoPrivacy(observationList);
 			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1428,7 +1502,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			Observation observation = observationDao.findById(observationId);
 			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-			ugObvFilterData = observationHelper.getUGFilterObvData(observation);
+			ugObvFilterData = getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupService.getFilterRule(ugObvFilterData);
