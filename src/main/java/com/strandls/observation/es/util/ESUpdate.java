@@ -73,7 +73,6 @@ public class ESUpdate {
 					return doc;
 				}).collect(Collectors.toList());
 				String json = om.writeValueAsString(bulkEsDoc);
-				System.out.println("Converted json to string" + json.toString());
 				esService.bulkUpload("extended_observation", "_doc", json.toString());
 				System.out.println("--------------completed-------------observationId");
 
