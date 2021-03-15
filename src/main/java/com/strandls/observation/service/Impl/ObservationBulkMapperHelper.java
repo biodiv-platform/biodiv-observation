@@ -104,6 +104,13 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 
+			if (fieldMapping.get("user") != null) {
+				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (userCell != null) {
+					userCell.setCellType(CellType.NUMERIC);
+					userId = (long) userCell.getNumericCellValue();
+				}
+			}
 			SpeciesGroup speciesGroup = null;
 			if (fieldMapping.get("sGroup") != null) {
 				Cell sGroupCell = dataRow.getCell(fieldMapping.get("sGroup"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -260,7 +267,7 @@ public class ObservationBulkMapperHelper {
 			observation.setNoOfVideos(0);
 
 			observation.setNoOfIdentifications(1);
-			observation.setDataTableId(null);//
+			observation.setDataTableId(dataTable.getId());//
 			observation.setDateAccuracy(dateAccuracy);
 			observation.setFlagCount(0);
 			observation.setVisitCount(0L);
