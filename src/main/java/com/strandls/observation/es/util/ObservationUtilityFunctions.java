@@ -17,9 +17,14 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,22 +223,30 @@ public class ObservationUtilityFunctions {
 		try {
 			Observation observation = null;
 			CommonProfile profile = AuthUtil.getProfileFromRequest(observationData.getRequest());
+			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
+			Row dataRow = observationData.getDataRow();
 			Long userId = Long.parseLong(profile.getId());
-			observation = mapper.creationObservationMapping(userId, observationData.getFieldMapping(),
-					observationData.getDataRow(), observationData.getDataTable(),
-					observationData.getSpeciesGroupList());
+
+			if (fieldMapping.get("user") != null) {
+				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (userCell != null) {
+					userCell.setCellType(CellType.NUMERIC);
+					userId = (long) userCell.getNumericCellValue();
+				}
+			}
+
+			observation = mapper.creationObservationMapping(userId, fieldMapping, dataRow,
+					observationData.getDataTable(), observationData.getSpeciesGroupList());
 			if (observation != null) {
 				observation = observationDAO.save(observation);
-				mapper.createObservationResource(observationData.getRequest(), observationData.getDataRow(),
-						observationData.getFieldMapping(), observationData.getLicenses(), userId, observation);
-				mapper.createRecoMapping(observationData.getRequest(), observationData.getFieldMapping(),
-						observationData.getDataRow(), observation, userId);
-				mapper.createFactsMapping(observationData.getRequest(), observationData.getFieldMapping(),
-						observationData.getDataRow(), observationData.getPairs(), observation.getId());
-				mapper.createTags(observationData.getRequest(), observationData.getFieldMapping(),
-						observationData.getDataRow(), observation.getId());
-				mapper.createUserGroupMapping(observationData.getRequest(), observationData.getFieldMapping(),
-						observationData.getDataRow(), observationData.getUserGroupsList(), observation.getId());
+				mapper.createObservationResource(observationData.getRequest(), dataRow, fieldMapping,
+						observationData.getLicenses(), userId, observation);
+				mapper.createRecoMapping(observationData.getRequest(), fieldMapping, dataRow, observation, userId);
+				mapper.createFactsMapping(observationData.getRequest(), fieldMapping, dataRow,
+						observationData.getPairs(), observation.getId());
+				mapper.createTags(observationData.getRequest(), fieldMapping, dataRow, observation.getId());
+				mapper.createUserGroupMapping(observationData.getRequest(), fieldMapping, dataRow,
+						observationData.getUserGroupsList(), observation.getId());
 				mapper.updateGeoPrivacy(observation);
 				mapper.updateUserGroupFilter(observationData.getRequest(), observation);
 			}
@@ -244,7 +257,7 @@ public class ObservationUtilityFunctions {
 			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
-		
+
 		return 1L;
 
 	}

@@ -104,13 +104,6 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 
-			if (fieldMapping.get("user") != null) {
-				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (userCell != null) {
-					userCell.setCellType(CellType.NUMERIC);
-					userId = (long) userCell.getNumericCellValue();
-				}
-			}
 			SpeciesGroup speciesGroup = null;
 			if (fieldMapping.get("sGroup") != null) {
 				Cell sGroupCell = dataRow.getCell(fieldMapping.get("sGroup"), MissingCellPolicy.RETURN_BLANK_AS_NULL);

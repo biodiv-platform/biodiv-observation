@@ -1637,12 +1637,13 @@ public class ObservationServiceImpl implements ObservationService {
 
 					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
 					observationIds.add(obsId);
-				} else if (observationIds.size() >= 1000) {
-					esUpdate.esBulkUpload(observationIds);
-					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
-					Thread thread = new Thread(updateThread);
-					thread.start();
-					observationIds.clear();
+					if (observationIds.size() >= 100) {
+						esUpdate.esBulkUpload(observationIds);
+						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
+						Thread thread = new Thread(updateThread);
+						thread.start();
+						observationIds.clear();
+					}
 				}
 
 			}
