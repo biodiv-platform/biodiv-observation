@@ -537,7 +537,7 @@ public class ObservationMapperHelper {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();

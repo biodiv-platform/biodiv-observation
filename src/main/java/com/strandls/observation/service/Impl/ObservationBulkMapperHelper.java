@@ -283,7 +283,6 @@ public class ObservationBulkMapperHelper {
 
 			return observation;
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 		return null;
@@ -316,7 +315,6 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 	}
@@ -357,7 +355,7 @@ public class ObservationBulkMapperHelper {
 			traitServiceApi.createFacts("species.participation.Observation", String.valueOf(observationId),
 					factsCreateData);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -373,7 +371,7 @@ public class ObservationBulkMapperHelper {
 				observationDAO.update(observation);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -419,7 +417,7 @@ public class ObservationBulkMapperHelper {
 
 			recoCreate = observationMapperHelper.createRecoMapping(recoData);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 		return recoCreate;
@@ -492,7 +490,7 @@ public class ObservationBulkMapperHelper {
 			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
 					observation.getId(), "observation", null, "Observation created", null);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -555,7 +553,7 @@ public class ObservationBulkMapperHelper {
 				resources.add(resource);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 		return resources;
@@ -596,7 +594,7 @@ public class ObservationBulkMapperHelper {
 			// custom field function call
 			createCustomFieldMapping(request, fieldMapping, dataRow, userGroupIds, observationId);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -674,7 +672,7 @@ public class ObservationBulkMapperHelper {
 				cfServiceApi.addUpdateCustomFieldData(customFieldFactsInsertData);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -686,7 +684,7 @@ public class ObservationBulkMapperHelper {
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupServiceApi.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}
@@ -695,7 +693,7 @@ public class ObservationBulkMapperHelper {
 		try {
 			observationMapperHelper.updateGeoPrivacy(Collections.singletonList(observation));
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 	}

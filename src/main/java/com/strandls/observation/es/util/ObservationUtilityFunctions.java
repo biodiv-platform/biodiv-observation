@@ -254,7 +254,7 @@ public class ObservationUtilityFunctions {
 			return observation.getId();
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error(ex.getMessage());
 		}
 

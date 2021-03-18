@@ -65,7 +65,7 @@ public class ObservationTask implements Runnable {
             //put observstion id to a global queue
             //
         } catch (Exception ex) {
-            ex.printStackTrace();
+            
             logger.error(ex.getMessage());
         }
     }

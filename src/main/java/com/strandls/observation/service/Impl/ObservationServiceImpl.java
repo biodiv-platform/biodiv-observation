@@ -1225,7 +1225,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
@@ -1637,7 +1637,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
 					observationIds.add(obsId);
-					if (observationIds.size() >= 100) {
+					if (observationIds.size() >= 300) {
 						esUpdate.esBulkUpload(observationIds);
 						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
 						Thread thread = new Thread(updateThread);

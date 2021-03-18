@@ -75,7 +75,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 						configuration.addAnnotatedClass(cls);
 					}
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
 
@@ -187,8 +186,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		try {
 			channel.getConnection().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		super.contextDestroyed(servletContextEvent);

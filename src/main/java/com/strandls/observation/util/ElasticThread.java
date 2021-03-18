@@ -44,7 +44,7 @@ public class ElasticThread implements Runnable {
             executorService.shutdownNow();
             executorService.awaitTermination(5, TimeUnit.MINUTES);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            
             logger.error(ex.getMessage());
         }
     }
