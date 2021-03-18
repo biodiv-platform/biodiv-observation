@@ -4,7 +4,6 @@ import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
-import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.DataTable;
 import com.strandls.observation.pojo.Observation;
@@ -43,9 +42,6 @@ import javax.ws.rs.core.HttpHeaders;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class ObservationBulkMapperHelper {
 
@@ -355,7 +351,7 @@ public class ObservationBulkMapperHelper {
 			traitServiceApi.createFacts("species.participation.Observation", String.valueOf(observationId),
 					factsCreateData);
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -371,7 +367,7 @@ public class ObservationBulkMapperHelper {
 				observationDAO.update(observation);
 			}
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -417,16 +413,17 @@ public class ObservationBulkMapperHelper {
 
 			recoCreate = observationMapperHelper.createRecoMapping(recoData);
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 		return recoCreate;
 	}
 
 	public void createObservationResource(HttpServletRequest request, Row dataRow, Map<String, Integer> fieldMapping,
-			List<License> licenses, Long userId, Observation observation) {
+			List<License> licenses, Long userId, Observation observation, Map<String, String> myImageUpload) {
+		List<String> filesWithPath = new ArrayList<>();
 		try {
-			if (fieldMapping.get("fileName") == null)
+			if (fieldMapping.get("fileName") == null || myImageUpload.isEmpty())
 				return;
 			Cell cell = dataRow.getCell(fieldMapping.get("fileName"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 			if (cell == null)
@@ -438,13 +435,22 @@ public class ObservationBulkMapperHelper {
 			if (cellFiles.isEmpty())
 				return;
 
+			for (String file : cellFiles) {
+				if (myImageUpload.containsKey(file)) {
+					filesWithPath.add(myImageUpload.get(file));
+				}
+			}
+
+			if (filesWithPath.isEmpty())
+				return;
+
 			FilesDTO files = new FilesDTO();
-			files.setFiles(cellFiles);
+			files.setFiles(filesWithPath);
 			files.setFolder("observations");
 			files.setModule("observation");
 
 			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION));
-			Map<String, Object> fileResponse = fileUploadApi.handleBulkUploadMoveFiles(files);
+			Map<String, Object> fileResponse = fileUploadApi.moveFiles(files);
 			if (fileResponse != null && !fileResponse.isEmpty()) {
 				List<Resource> resources = mapFileResponseToResource(fieldMapping, dataRow, licenses, fileResponse,
 						userId);
@@ -490,7 +496,7 @@ public class ObservationBulkMapperHelper {
 			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
 					observation.getId(), "observation", null, "Observation created", null);
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -553,7 +559,7 @@ public class ObservationBulkMapperHelper {
 				resources.add(resource);
 			}
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 		return resources;
@@ -594,7 +600,7 @@ public class ObservationBulkMapperHelper {
 			// custom field function call
 			createCustomFieldMapping(request, fieldMapping, dataRow, userGroupIds, observationId);
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -672,7 +678,7 @@ public class ObservationBulkMapperHelper {
 				cfServiceApi.addUpdateCustomFieldData(customFieldFactsInsertData);
 			}
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -684,7 +690,7 @@ public class ObservationBulkMapperHelper {
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupServiceApi.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}
@@ -693,7 +699,7 @@ public class ObservationBulkMapperHelper {
 		try {
 			observationMapperHelper.updateGeoPrivacy(Collections.singletonList(observation));
 		} catch (Exception ex) {
-			
+
 			logger.error(ex.getMessage());
 		}
 	}

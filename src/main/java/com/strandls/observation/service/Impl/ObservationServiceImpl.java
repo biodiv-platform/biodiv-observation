@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +44,8 @@ import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
 import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
+import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
@@ -210,6 +213,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationBulkMapperHelper observationBulkMapperHelper;
+
+	@Inject
+	private UploadApi fileUploadApi;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -1623,6 +1629,14 @@ public class ObservationServiceImpl implements ObservationService {
 			XSSFSheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rows = sheet.iterator();
 			List<Long> observationIds = new ArrayList<Long>();
+			FilesDTO filesDto = new FilesDTO();
+			filesDto.setFolder("observations");
+			filesDto.setModule("observation");
+			Map<String, String> myImageUpload = headers
+					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
+					.getAllFilePathsByUser(filesDto).entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+			;
 
 			Row dataRow;
 			// skip header
@@ -1635,7 +1649,8 @@ public class ObservationServiceImpl implements ObservationService {
 					ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow,
 							request, dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
 
-					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data);
+					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data,
+							myImageUpload);
 					observationIds.add(obsId);
 					if (observationIds.size() >= 300) {
 						esUpdate.esBulkUpload(observationIds);

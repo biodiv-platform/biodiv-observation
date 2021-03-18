@@ -218,7 +218,7 @@ public class ObservationUtilityFunctions {
 	}
 
 	public Long createObservationAndMappings(ObservationBulkMapperHelper mapper, ObservationDAO observationDAO,
-			ObservationBulkData observationData) {
+			ObservationBulkData observationData, Map<String, String> myImageUpload) {
 
 		try {
 			Observation observation = null;
@@ -240,7 +240,7 @@ public class ObservationUtilityFunctions {
 			if (observation != null) {
 				observation = observationDAO.save(observation);
 				mapper.createObservationResource(observationData.getRequest(), dataRow, fieldMapping,
-						observationData.getLicenses(), userId, observation);
+						observationData.getLicenses(), userId, observation,myImageUpload);
 				mapper.createRecoMapping(observationData.getRequest(), fieldMapping, dataRow, observation, userId);
 				mapper.createFactsMapping(observationData.getRequest(), fieldMapping, dataRow,
 						observationData.getPairs(), observation.getId());
