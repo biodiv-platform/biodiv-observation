@@ -1653,9 +1653,7 @@ public class ObservationServiceImpl implements ObservationService {
 							myImageUpload);
 					observationIds.add(obsId);
 					if (observationIds.size() >= 100) {
-						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
-						Thread thread = new Thread(updateThread);
-						thread.start();
+						esUpdate.esBulkUpload(observationIds);
 						observationIds.clear();
 					}
 				}
@@ -1667,7 +1665,7 @@ public class ObservationServiceImpl implements ObservationService {
 				Thread thread = new Thread(updateThread);
 				thread.start();
 			}
-//			final int THREAD_COUNT = 5;
+			//			final int THREAD_COUNT = 5;
 //			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
 //			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
 //			for (int i = 0; i < THREAD_COUNT - 1; i++) {

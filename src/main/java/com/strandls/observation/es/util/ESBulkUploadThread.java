@@ -27,7 +27,7 @@ public class ESBulkUploadThread implements Runnable  {
 
 	@Override
 	public void run() {
-		esUpdate.esBulkUpload(observationIds);;
+		esUpdate.esBulkUpload(observationIds);
 	}
 
 }
