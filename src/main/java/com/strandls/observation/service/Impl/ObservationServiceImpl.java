@@ -73,7 +73,9 @@ import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -185,6 +187,12 @@ public class ObservationServiceImpl implements ObservationService {
 	@Inject
 	private ObservationDownloadLogDAO downloadLogDao;
 
+	@Inject
+	private SpeciesServicesApi speciesGroupService;
+
+	@Inject
+	private TaxonomyTreeServicesApi taxonomyTreeService;
+
 	@Override
 	public ShowData findById(Long id) {
 
@@ -216,7 +224,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				in.close();
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
-				if (!score.getRecord().isEmpty()) {
+				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
@@ -338,7 +346,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observationData.getResources() != null && !observationData.getResources().isEmpty()) {
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationData.getResources());
-				if (resources == null) {
+				if (resources == null || resources.isEmpty()) {
 					observationDao.delete(observation);
 					return null;
 				}
@@ -584,7 +592,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<SpeciesGroup> result = null;
 		try {
-			result = taxonomyService.getAllSpeciesGroup();
+			result = speciesGroupService.getAllSpeciesGroup();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -685,8 +693,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
+					List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(entry.getValue().toString());
 					List<Long> validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 					if (validateAllowed.contains(entry.getValue()))
 						result.add(new MaxVotedRecoPermission(entry.getKey(), true));
@@ -717,12 +725,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
+				List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
 
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 				}
 			}
@@ -747,7 +755,7 @@ public class ObservationServiceImpl implements ObservationService {
 			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			Follow follow = userService.getFollowByObject("observation", observationId);
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<SpeciesPermission> speciesPermissions = taxonomyService.getSpeciesPermission();
+			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -770,7 +778,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
 				}
@@ -1002,39 +1010,43 @@ public class ObservationServiceImpl implements ObservationService {
 
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationUpdate.getResources());
-				resourceService = headers.addResourceHeaders(resourceService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
-						resources);
 
-//				calculate reprImageof observation
+				if (resources != null && !resources.isEmpty()) {
+					resourceService = headers.addResourceHeaders(resourceService,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
+							resources);
 
-				Integer noOfImages = 0;
-				Integer noOfAudio = 0;
-				Integer noOfVideo = 0;
+//					calculate reprImageof observation
 
-				Long reprImage = null;
-				int rating = 0;
-				for (Resource res : resources) {
-					if (res.getType().equals("AUDIO"))
-						noOfAudio++;
-					else if (res.getType().equals("IMAGE")) {
-						noOfImages++;
-						if (reprImage == null)
-							reprImage = res.getId();
-						if (res.getRating() != null && res.getRating() > rating) {
-							reprImage = res.getId();
-							rating = res.getRating();
-						}
-					} else if (res.getType().equals("VIDEO"))
-						noOfVideo++;
+					Integer noOfImages = 0;
+					Integer noOfAudio = 0;
+					Integer noOfVideo = 0;
+
+					Long reprImage = null;
+					int rating = 0;
+					for (Resource res : resources) {
+						if (res.getType().equals("AUDIO"))
+							noOfAudio++;
+						else if (res.getType().equals("IMAGE")) {
+							noOfImages++;
+							if (reprImage == null)
+								reprImage = res.getId();
+							if (res.getRating() != null && res.getRating() > rating) {
+								reprImage = res.getId();
+								rating = res.getRating();
+							}
+						} else if (res.getType().equals("VIDEO"))
+							noOfVideo++;
+
+					}
+					observation.setNoOfAudio(noOfAudio);
+					observation.setNoOfImages(noOfImages);
+					observation.setNoOfVideos(noOfVideo);
+					observation.setReprImageId(reprImage);
+					observationDao.update(observation);
 
 				}
-				observation.setNoOfAudio(noOfAudio);
-				observation.setNoOfImages(noOfImages);
-				observation.setNoOfVideos(noOfVideo);
-				observation.setReprImageId(reprImage);
-				observationDao.update(observation);
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
@@ -1203,28 +1215,31 @@ public class ObservationServiceImpl implements ObservationService {
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
 
-			List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
+			if (!geoPrivacyTraitsValue.equals("NA")) {
+				List<Long> geoPrivateTaxonId = traitService.getTaxonListByValueId(geoPrivacyTraitsValue);
 
-			for (Observation observation : observationList) {
-				System.out.println("--------START---------");
-				System.out.println("Observation Id : " + observation.getId());
-				System.out.println("---------END----------");
+				for (Observation observation : observationList) {
+					System.out.println("--------START---------");
+					System.out.println("Observation Id : " + observation.getId());
+					System.out.println("---------END----------");
 
-				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
-					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
-					if (taxonId != null) {
+					if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+						Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+						if (taxonId != null) {
 
-						if (geoPrivateTaxonId.contains(taxonId)) {
-							System.out.println("---------BEGIN----------");
-							System.out.println("Observation Id : " + observation.getId());
-							observation.setGeoPrivacy(true);
-							observationDao.update(observation);
-							produceToRabbitMQ(observation.getId().toString(), "Observation Core");
-							System.out.println("----------END------------");
+							if (geoPrivateTaxonId.contains(taxonId)) {
+								System.out.println("---------BEGIN----------");
+								System.out.println("Observation Id : " + observation.getId());
+								observation.setGeoPrivacy(true);
+								observationDao.update(observation);
+								produceToRabbitMQ(observation.getId().toString(), "Observation Core");
+								System.out.println("----------END------------");
+							}
+
 						}
-
 					}
 				}
+
 			}
 
 		} catch (Exception e) {
@@ -1270,7 +1285,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public void produceToRabbitMQ(String observationId, String updateType) {
 		try {
-			producer.setMessage("esmodule", observationId, updateType);
+			producer.setMessage("observation", observationId, updateType);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1362,15 +1377,16 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationMailData observationData = getObservationMailData(observationId);
 			List<UserGroupIbp> userGroupIbp = userGroupService.getObservationUserGroup(observationId.toString());
 			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
-			for (UserGroupIbp ugIbp : userGroupIbp) {
-				UserGroupMailData ugMailData = new UserGroupMailData();
-				ugMailData.setId(ugIbp.getId());
-				ugMailData.setIcon(ugIbp.getIcon());
-				ugMailData.setName(ugIbp.getName());
-				ugMailData.setWebAddress(ugIbp.getWebAddress());
-				userGroupData.add(ugMailData);
+			if (userGroupIbp != null && !userGroupIbp.isEmpty()) {
+				for (UserGroupIbp ugIbp : userGroupIbp) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ugIbp.getId());
+					ugMailData.setIcon(ugIbp.getIcon());
+					ugMailData.setName(ugIbp.getName());
+					ugMailData.setWebAddress(ugIbp.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
 			}
-
 			mailData = new MailData();
 			mailData.setObservationData(observationData);
 			mailData.setUserGroupData(userGroupData);

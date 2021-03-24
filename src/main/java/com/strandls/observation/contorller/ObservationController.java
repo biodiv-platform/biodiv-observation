@@ -421,11 +421,16 @@ public class ObservationController {
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
-			MapAggregationResponse aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon,
-					user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-					validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-					district, state, tags, publicationGrade, authorVoted);
+			MapAggregationResponse aggregationResult = null;
+
+			if (offset == 0) {
+				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
+						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
+						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
+						tahsil, district, state, tags, publicationGrade, authorVoted);
+
+			}
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
@@ -1160,7 +1165,7 @@ public class ObservationController {
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
 			@QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("") @QueryParam("notes") String notes,
-			@NotBlank @NotEmpty @NotNull @QueryParam("authorid") String authorId,
+			@NotBlank @NotEmpty @NotNull @QueryParam("authorId") String authorId,
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
