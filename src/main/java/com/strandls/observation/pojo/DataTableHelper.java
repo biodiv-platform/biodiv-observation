@@ -23,7 +23,7 @@ public class DataTableHelper {
 		dataTable.setColumns(new ArrayList<String>().toString()); // ask
 		dataTable.setCreatedOn(boDTO.getCreatedOn());
 		dataTable.setCustomFields(new HashMap<String, String>().toString()); // ask
-		dataTable.setDatasetid(boDTO.getDataset());
+		dataTable.setDatasetId(boDTO.getDataset());
 		dataTable.setDataTableType("OBSERVATIONS");
 		dataTable.setDeleted(false);
 		dataTable.setDescription(boDTO.getDescription());
