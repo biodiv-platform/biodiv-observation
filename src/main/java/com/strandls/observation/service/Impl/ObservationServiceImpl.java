@@ -265,7 +265,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(),true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
