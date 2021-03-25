@@ -284,7 +284,7 @@ public class ObservationBulkMapperHelper {
 		return null;
 	}
 
-	public void createTags(HttpServletRequest request, Map<String, Integer> fieldMapping, Row dataRow,
+	public void createTags(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			Long observationId) {
 		try {
 			if (fieldMapping.get("tags") != null) {
@@ -306,7 +306,7 @@ public class ObservationBulkMapperHelper {
 					tagsMappingData.setMailData(null);
 
 					utilityServiceApi = headers.addUtilityHeaders(utilityServiceApi,
-							request.getHeader(HttpHeaders.AUTHORIZATION));
+							requestAuthHeader);
 					utilityServiceApi.createTags("observation", tagsMappingData);
 				}
 			}
@@ -316,7 +316,7 @@ public class ObservationBulkMapperHelper {
 	}
 
 	@SuppressWarnings("deprecation")
-	public void createFactsMapping(HttpServletRequest request, Map<String, Integer> fieldMapping, Row dataRow,
+	public void createFactsMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<TraitsValuePair> pairs, Long observationId) {
 		try {
 			Map<String, List<Long>> facts = new HashMap<>();
@@ -347,7 +347,7 @@ public class ObservationBulkMapperHelper {
 			FactsCreateData factsCreateData = new FactsCreateData();
 			factsCreateData.setFactValuePairs(facts);
 			factsCreateData.setMailData(null);
-			traitServiceApi = headers.addTraitsHeaders(traitServiceApi, request.getHeader(HttpHeaders.AUTHORIZATION));
+			traitServiceApi = headers.addTraitsHeaders(traitServiceApi, requestAuthHeader);
 			traitServiceApi.createFacts("species.participation.Observation", String.valueOf(observationId),
 					factsCreateData);
 		} catch (Exception ex) {
@@ -419,10 +419,11 @@ public class ObservationBulkMapperHelper {
 		return recoCreate;
 	}
 
-	public void createObservationResource(HttpServletRequest request, Row dataRow, Map<String, Integer> fieldMapping,
+	public void createObservationResource(String requestAuthHeader, Row dataRow, Map<String, Integer> fieldMapping,
 			List<License> licenses, Long userId, Observation observation, Map<String, String> myImageUpload) {
 		List<String> filesWithPath = new ArrayList<>();
 		try {
+			
 			if (fieldMapping.get("fileName") == null || myImageUpload.isEmpty())
 				return;
 			Cell cell = dataRow.getCell(fieldMapping.get("fileName"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -449,7 +450,7 @@ public class ObservationBulkMapperHelper {
 			files.setFolder("observations");
 			files.setModule("observation");
 
-			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION));
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
 			Map<String, Object> fileResponse = fileUploadApi.moveFiles(files);
 			if (fileResponse != null && !fileResponse.isEmpty()) {
 				List<Resource> resources = mapFileResponseToResource(fieldMapping, dataRow, licenses, fileResponse,
@@ -458,7 +459,7 @@ public class ObservationBulkMapperHelper {
 					return;
 
 				resourceServicesApi = headers.addResourceHeaders(resourceServicesApi,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
+						requestAuthHeader);
 				List<Resource> response = resourceServicesApi.createResource("OBSERVATION",
 						String.valueOf(observation.getId()), resources);
 
@@ -493,7 +494,7 @@ public class ObservationBulkMapperHelper {
 				observation.setReprImageId(reprImage);
 				observationDAO.update(observation);
 			}
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
+			logActivities.LogActivity(requestAuthHeader, null, observation.getId(),
 					observation.getId(), "observation", null, "Observation created", null);
 		} catch (Exception ex) {
 
@@ -565,7 +566,7 @@ public class ObservationBulkMapperHelper {
 		return resources;
 	}
 
-	public void createUserGroupMapping(HttpServletRequest request, Map<String, Integer> fieldMapping, Row dataRow,
+	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<UserGroupIbp> userGroupsList, Long observationId) {
 		try {
 			if (fieldMapping.get("userGroups") == null)
@@ -593,23 +594,23 @@ public class ObservationBulkMapperHelper {
 			userGroupMappingCreateData.setMailData(null);
 
 			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
+					requestAuthHeader);
 			userGroupServiceApi.createObservationUserGroupMapping(String.valueOf(observationId),
 					userGroupMappingCreateData);
 
 			// custom field function call
-			createCustomFieldMapping(request, fieldMapping, dataRow, userGroupIds, observationId);
+			createCustomFieldMapping(requestAuthHeader, fieldMapping, dataRow, userGroupIds, observationId);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
 		}
 	}
 
-	public void createCustomFieldMapping(HttpServletRequest request, Map<String, Integer> fieldMapping, Row dataRow,
+	public void createCustomFieldMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<Long> userGroupIds, Long observationId) {
 		try {
 			List<CustomFieldFactsInsert> customFieldFactsInsertList = new ArrayList<>();
-			cfServiceApi = headers.addCFHeaders(cfServiceApi, request.getHeader(HttpHeaders.AUTHORIZATION));
+			cfServiceApi = headers.addCFHeaders(cfServiceApi, requestAuthHeader);
 			for (Long userGroupId : userGroupIds) {
 				List<CustomFieldDetails> customFieldDetails = cfServiceApi
 						.getUserGroupCustomFields(String.valueOf(userGroupId));
@@ -683,11 +684,11 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
-	public void updateUserGroupFilter(HttpServletRequest request, Observation observation) {
+	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvFilterData ugObvFilterData = observationMapperHelper.getUGFilterObvData(observation);
 			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
+					requestAuthHeader);
 			userGroupServiceApi.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
 

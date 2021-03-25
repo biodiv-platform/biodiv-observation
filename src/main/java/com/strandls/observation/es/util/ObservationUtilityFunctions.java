@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -217,15 +220,12 @@ public class ObservationUtilityFunctions {
 		return observationGrade;
 	}
 
-	public Long createObservationAndMappings(ObservationBulkMapperHelper mapper, ObservationDAO observationDAO,
-			ObservationBulkData observationData, Map<String, String> myImageUpload) {
-
+	public Long createObservationAndMappings(String requestAuthHeader,ObservationBulkMapperHelper mapper, ObservationDAO observationDAO,
+			ObservationBulkData observationData, Map<String, String> myImageUpload, Long userId) {
+		Observation observation = null;
 		try {
-			Observation observation = null;
-			CommonProfile profile = AuthUtil.getProfileFromRequest(observationData.getRequest());
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
-			Long userId = Long.parseLong(profile.getId());
 
 			if (fieldMapping.get("user") != null) {
 				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -239,26 +239,26 @@ public class ObservationUtilityFunctions {
 					observationData.getDataTable(), observationData.getSpeciesGroupList());
 			if (observation != null) {
 				observation = observationDAO.save(observation);
-				mapper.createObservationResource(observationData.getRequest(), dataRow, fieldMapping,
-						observationData.getLicenses(), userId, observation,myImageUpload);
+				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,
+						observationData.getLicenses(), userId, observation, myImageUpload);
 				mapper.createRecoMapping(observationData.getRequest(), fieldMapping, dataRow, observation, userId);
-				mapper.createFactsMapping(observationData.getRequest(), fieldMapping, dataRow,
+				mapper.createFactsMapping(requestAuthHeader, fieldMapping, dataRow,
 						observationData.getPairs(), observation.getId());
-				mapper.createTags(observationData.getRequest(), fieldMapping, dataRow, observation.getId());
-				mapper.createUserGroupMapping(observationData.getRequest(), fieldMapping, dataRow,
+				mapper.createTags(requestAuthHeader, fieldMapping, dataRow, observation.getId());
+				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
 						observationData.getUserGroupsList(), observation.getId());
 				mapper.updateGeoPrivacy(observation);
-				mapper.updateUserGroupFilter(observationData.getRequest(), observation);
+				mapper.updateUserGroupFilter(requestAuthHeader, observation);
 			}
 
 			return observation.getId();
-
 		} catch (Exception ex) {
-			
 			logger.error(ex.getMessage());
 		}
 
+		
 		return 1L;
+		
 
 	}
 

@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,9 +20,10 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -58,12 +58,10 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.dto.ObservationBulkDTO;
-import com.strandls.observation.es.util.ESBulkUploadThread;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
-import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DataTable;
@@ -71,7 +69,6 @@ import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
-import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -83,6 +80,7 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -207,12 +205,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private DataTableDAO dataTableDAO;
+	
+	@Inject
+	private  ObservationBulkMapperHelper observationBulkMapperHelper;
 
 	@Inject
 	private LicenseControllerApi licenseControllerApi;
-
-	@Inject
-	private ObservationBulkMapperHelper observationBulkMapperHelper;
 
 	@Inject
 	private UploadApi fileUploadApi;
@@ -1616,82 +1614,37 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public void observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
 		dataTable = dataTableDAO.save(dataTable);
+		try {
 
-		try (XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()))) {
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()));
+			HttpServletRequest requestData = request;
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
-			XSSFSheet sheet = workbook.getSheetAt(0);
-			Iterator<Row> rows = sheet.iterator();
-			List<Long> observationIds = new ArrayList<Long>();
 			FilesDTO filesDto = new FilesDTO();
 			filesDto.setFolder("observations");
-			filesDto.setModule("observation");
+			filesDto.setModule("observation");			
 			Map<String, String> myImageUpload = headers
 					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
 					.getAllFilePathsByUser(filesDto).entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-			;
+			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, requestData,
+					observationDao,observationBulkMapperHelper,esUpdate,
+					dataTable,userId,getAllSpeciesGroup(), traitsList, 
+					userGroupIbpList, licenseList, workbook, myImageUpload);
+			Thread thread = new Thread(uploadThread);
+			thread.start();
 
-			Row dataRow;
-			// skip header
-			rows.next();
-
-			while (rows.hasNext()) {
-				dataRow = rows.next();
-				if (dataRow.getCell(0, MissingCellPolicy.RETURN_BLANK_AS_NULL) != null) {
-					ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-					ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow,
-							request, dataTable, getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList);
-
-					Long obsId = obUtil.createObservationAndMappings(observationBulkMapperHelper, observationDao, data,
-							myImageUpload);
-					observationIds.add(obsId);
-					if (observationIds.size() >= 100) {
-						esUpdate.esBulkUpload(observationIds);
-						observationIds.clear();
-					}
-				}
-
-			}
-
-			if (!rows.hasNext() && !observationIds.isEmpty()) {
-				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
-				Thread thread = new Thread(updateThread);
-				thread.start();
-			}
-			//			final int THREAD_COUNT = 5;
-//			BlockingQueue<ObservationBulkData> queue = new ArrayBlockingQueue<>(100);
-//			ExecutorService service = Executors.newFixedThreadPool(THREAD_COUNT);
-//			for (int i = 0; i < THREAD_COUNT - 1; i++) {
-//				//consumer 4
-//				service.submit(new ObservationTask(queue, observationBulkMapperHelper, observationDao));
-//			}
-//
-//			//publisher 1
-//			service.submit(new FileTask(queue, observationBulkData.getColumns(), observationBulkData.getFilename(),
-//					request, dataTable, getAllSpeciesGroup(), traitsList,
-//					userGroupIbpList, licenseList))
-//					.get();
-//			service.shutdownNow();
-//			service.awaitTermination(6, TimeUnit.HOURS);
-
-//			BlockingQueue<Long> observationQueue = new ArrayBlockingQueue<>(200);
-//			ExecutorService elasticService = Executors.newFixedThreadPool(THREAD_COUNT);
-//			for (int i = 0; i < THREAD_COUNT - 1; i++) {
-//				elasticService.submit(new ElasticThread(observationQueue, esUpdate));
-//			}
-//
-//			elasticService.submit(new ObservationThread(observationQueue, observationDao, dataTable.getId())).get();
-//			elasticService.shutdownNow();
-//			elasticService.awaitTermination(6, TimeUnit.HOURS);
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
+
+		return dataTable.getId();
 	}
 }

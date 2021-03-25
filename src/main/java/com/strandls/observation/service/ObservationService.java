@@ -154,6 +154,6 @@ public interface ObservationService {
 
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
-	public void observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
+	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
 
 }

@@ -447,7 +447,7 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset,identifiersoffset);
+							uploadersoffset, identifiersoffset);
 
 				}
 
@@ -1361,8 +1361,8 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
-			observationService.observationBulkUpload(request, observationBulkData);
-			return Response.status(Status.OK).build();
+			Long result = observationService.observationBulkUpload(request, observationBulkData);
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
