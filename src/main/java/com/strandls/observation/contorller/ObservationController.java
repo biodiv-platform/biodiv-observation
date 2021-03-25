@@ -124,9 +124,6 @@ public class ObservationController {
 	private ObservationMapperHelper observationHelper;
 
 	@Inject
-	private ESUpdate esUpdate;
-
-	@Inject
 	private ESUtility esUtility;
 
 	@Inject
@@ -1403,7 +1400,7 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.BULK + ApiConstants.UPLOAD + ApiConstants.OBSERVATION)
+	@Path(ApiConstants.BULK + ApiConstants.OBSERVATION)
 	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
