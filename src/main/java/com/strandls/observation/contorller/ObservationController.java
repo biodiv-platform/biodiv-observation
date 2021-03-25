@@ -32,6 +32,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import com.strandls.observation.dto.ObservationBulkDTO;
+import com.strandls.observation.pojo.*;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.activity.pojo.Activity;
@@ -48,6 +50,7 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dto.BulkObservationDTO;
+import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -119,6 +122,9 @@ public class ObservationController {
 
 	@Inject
 	private ObservationMapperHelper observationHelper;
+
+	@Inject
+	private ESUpdate esUpdate;
 
 	@Inject
 	private ESUtility esUtility;
@@ -1394,6 +1400,22 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 
+	}
+
+	@POST
+	@Path(ApiConstants.BULK + ApiConstants.UPLOAD + ApiConstants.OBSERVATION)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
+	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+		try {
+			Long result = observationService.observationBulkUpload(request, observationBulkData);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
 	}
 
 }

@@ -37,5 +37,7 @@
 		<mapping class="com.strandls.observation.pojo.Recommendation" />
 		<mapping
 			class="com.strandls.observation.pojo.RecommendationVote" />
+		<mapping class="com.strandls.observation.pojo.DataTable"/>
+		<mapping class="com.strandls.observation.pojo.Dataset"/>
 	</session-factory>
 </hibernate-configuration>

@@ -96,7 +96,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, null, querys);
-
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
 

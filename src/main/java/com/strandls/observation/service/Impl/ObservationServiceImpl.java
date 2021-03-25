@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,11 +14,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +44,8 @@ import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
 import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
+import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
@@ -49,13 +58,14 @@ import com.strandls.observation.dao.DataTableDAO;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
-import com.strandls.observation.dto.BulkObservationDTO;
+import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
+import com.strandls.observation.pojo.DataTable;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -71,10 +81,13 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
@@ -189,10 +202,19 @@ public class ObservationServiceImpl implements ObservationService {
 	private ObservationDownloadLogDAO downloadLogDao;
 
 	@Inject
-	private UploadApi fileUpload;
+	private DataTableHelper dataTableHelper;
 
 	@Inject
 	private DataTableDAO dataTableDAO;
+	
+	@Inject
+	private  ObservationBulkMapperHelper observationBulkMapperHelper;
+
+	@Inject
+	private LicenseControllerApi licenseControllerApi;
+
+	@Inject
+	private UploadApi fileUploadApi;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -1210,7 +1232,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
@@ -2263,5 +2285,40 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
 				identifiedSpeciesCount);
 		return result;
+	}
+
+	@Override
+	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		Long userId = Long.parseLong(profile.getId());
+		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
+		dataTable = dataTableDAO.save(dataTable);
+		try {
+
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()));
+			HttpServletRequest requestData = request;
+			List<TraitsValuePair> traitsList = traitService.getAllTraits();
+			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
+			List<License> licenseList = licenseControllerApi.getAllLicenses();
+			FilesDTO filesDto = new FilesDTO();
+			filesDto.setFolder("observations");
+			filesDto.setModule("observation");			
+			Map<String, String> myImageUpload = headers
+					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
+					.getAllFilePathsByUser(filesDto).entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, requestData,
+					observationDao,observationBulkMapperHelper,esUpdate,
+					dataTable,userId,getAllSpeciesGroup(), traitsList, 
+					userGroupIbpList, licenseList, workbook, myImageUpload);
+			Thread thread = new Thread(uploadThread);
+			thread.start();
+
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+
+		return dataTable.getId();
 	}
 }

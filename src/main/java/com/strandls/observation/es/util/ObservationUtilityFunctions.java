@@ -17,14 +17,28 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
+import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationBulkData;
+import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
 
 /**
  * @author ashish
@@ -45,7 +59,7 @@ public class ObservationUtilityFunctions {
 	public String getCsvFileNameDownloadPath() {
 
 		Date date = new Date();
-		String fileName = "obv_"+date.getTime()+".csv";
+		String fileName = "obv_" + date.getTime() + ".csv";
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
@@ -206,6 +220,48 @@ public class ObservationUtilityFunctions {
 		return observationGrade;
 	}
 
+	public Long createObservationAndMappings(String requestAuthHeader,ObservationBulkMapperHelper mapper, ObservationDAO observationDAO,
+			ObservationBulkData observationData, Map<String, String> myImageUpload, Long userId) {
+		Observation observation = null;
+		try {
+			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
+			Row dataRow = observationData.getDataRow();
+
+			if (fieldMapping.get("user") != null) {
+				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (userCell != null) {
+					userCell.setCellType(CellType.NUMERIC);
+					userId = (long) userCell.getNumericCellValue();
+				}
+			}
+
+			observation = mapper.creationObservationMapping(userId, fieldMapping, dataRow,
+					observationData.getDataTable(), observationData.getSpeciesGroupList());
+			if (observation != null) {
+				observation = observationDAO.save(observation);
+				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,
+						observationData.getLicenses(), userId, observation, myImageUpload);
+				mapper.createRecoMapping(observationData.getRequest(), fieldMapping, dataRow, observation, userId);
+				mapper.createFactsMapping(requestAuthHeader, fieldMapping, dataRow,
+						observationData.getPairs(), observation.getId());
+				mapper.createTags(requestAuthHeader, fieldMapping, dataRow, observation.getId());
+				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
+						observationData.getUserGroupsList(), observation.getId());
+				mapper.updateGeoPrivacy(observation);
+				mapper.updateUserGroupFilter(requestAuthHeader, observation);
+			}
+
+			return observation.getId();
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+
+		
+		return 1L;
+		
+
+	}
+
 	private String fetchMaxVotedCommonName(Max_voted_reco reco) {
 		List<Common_names> names = reco.getCommon_names();
 		String value = "";
@@ -343,7 +399,7 @@ public class ObservationUtilityFunctions {
 							+ level.getTaxon_id() + " | ";
 				}
 				if (value.length() > 3) {
-					map.replace(taxonomicValues[3], value.substring(0, value.length()-3));
+					map.replace(taxonomicValues[3], value.substring(0, value.length() - 3));
 				}
 			}
 		}
@@ -395,7 +451,7 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchTemporalForCsv(List<String> temporal, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(temporal);
-		String[] temporalFields = {"observedInMonth", "lastRevised","toDate"};
+		String[] temporalFields = { "observedInMonth", "lastRevised", "toDate" };
 		map.replace(temporalFields[0], document.getObservedInMonth());
 		map.replace(temporalFields[1], document.getLastRevised());
 		map.replace(temporalFields[2], document.getToDate());
@@ -404,9 +460,8 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchMiscForCsv(List<String> misc, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(misc);
-		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", 
-				"flagCount", "organismRemarks","annotations", "tags", 
-				"userGroup","noOfImages","speciesGroup" };
+		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", "flagCount", "organismRemarks",
+				"annotations", "tags", "userGroup", "noOfImages", "speciesGroup" };
 		map.replace(miscFields[0], document.getDatasetTitle());
 		map.replace(miscFields[1], document.getContainsMedia().toString());
 		map.replace(miscFields[2], document.getUploadProtocol());
@@ -424,7 +479,7 @@ public class ObservationUtilityFunctions {
 	private String fetchTags(List<Tags> tags) {
 		String value = "";
 		for (Tags tag : tags) {
-			value += tag.getName()+" | ";
+			value += tag.getName() + " | ";
 		}
 		if (value.length() > 3)
 			return value.substring(0, value.length() - 3);
@@ -448,24 +503,22 @@ public class ObservationUtilityFunctions {
 		}
 		return map;
 	}
-	
+
 	private String parseDate(String date) {
-        DateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy"); 
-        DateFormat secondaryFormat = new SimpleDateFormat("yyyy-MM-dd");
-        if(!(date == null)) {
-	        if(date.contains("-") || date.contains("T")) {
-	        	try {
-	        		return originalFormat.format(new Date(secondaryFormat.parse(date).getTime())).toString();
+		DateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy");
+		DateFormat secondaryFormat = new SimpleDateFormat("yyyy-MM-dd");
+		if (!(date == null)) {
+			if (date.contains("-") || date.contains("T")) {
+				try {
+					return originalFormat.format(new Date(secondaryFormat.parse(date).getTime())).toString();
 				} catch (ParseException e) {
-					logger.error("Date Parsing Error - "+e.getMessage());
+					logger.error("Date Parsing Error - " + e.getMessage());
 				}
-	        }
-	        else
-	        {
-	        	return originalFormat.format(new Date(Long.parseLong(date))).toString();
-	        }
-        }
-        return "";
+			} else {
+				return originalFormat.format(new Date(Long.parseLong(date))).toString();
+			}
+		}
+		return "";
 
 	}
 }

@@ -31,8 +31,9 @@ import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
-import com.strandls.observation.pojo.DataTable;
+import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationResourceData;
@@ -41,10 +42,10 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
-import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
-import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -78,6 +79,15 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
+
+	@Inject
+	private RabbitMQProducer rabbitMQProducer;
+
+	@Inject
+	ObservationDAO observationDAO;
+
+	@Inject
+	private TraitsServiceApi traitsServiceApi;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -381,7 +391,6 @@ public class ObservationMapperHelper {
 
 	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
-
 			List<ObservationResourceData> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
@@ -570,178 +579,65 @@ public class ObservationMapperHelper {
 
 	}
 
-	@SuppressWarnings("deprecation")
-	public Observation bulkUploadPayload(Row dataRow, Map<String, Integer> fieldMapping, DataTable dataTable,
-			List<SpeciesGroup> speciesGroupList, Long languageId, Long authorId) {
-		Observation observation = null;
-		try {
-			SpeciesGroup speciesGroup = null;
-			Cell sGroupCell = dataRow.getCell(fieldMapping.get("sGroup"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (sGroupCell != null) {
-				sGroupCell.setCellType(CellType.STRING);
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
 
-				speciesGroup = speciesGroupList.stream().filter(group -> {
-					final String sGroup = sGroupCell.getStringCellValue();
-					return group.getName().equalsIgnoreCase(sGroup);
-				}).findFirst().orElse(null);
-
-			} else { // get value from dataTable metadata if not mentioned in excel
-				speciesGroup = new SpeciesGroup();
-				speciesGroup.setId(Long.parseLong(dataTable.getTaxonomicCoverageGroupIds().split(",")[0].trim()));
-			}
-
-			String helpIdentify = "";
-			Cell helpIdentifyCell = dataRow.getCell(fieldMapping.get("helpIdentify"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (helpIdentifyCell != null) {
-				helpIdentifyCell.setCellType(CellType.STRING);
-				helpIdentify = helpIdentifyCell.getStringCellValue();
-			}
-
-			Date fromDate = null;
-			Cell fromDateCell = dataRow.getCell(fieldMapping.get("fromDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (fromDateCell != null) {
-				fromDate = fromDateCell.getDateCellValue();
-			} else { // get value from dataTable metadata if not mentioned in excel
-				fromDate = dataTable.getTemporalCoverageFromDate();
-			}
-
-			Date toDate = null;
-			Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (toDateCell != null) {
-				fromDate = fromDateCell.getDateCellValue();
-			}
-
-			String dateAccuracy = "ACCURATE";
-			Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (dateAccuracyCell != null) {
-				dateAccuracyCell.setCellType(CellType.STRING);
-				dateAccuracy = dateAccuracyCell.getStringCellValue();
-			}
-
-			String notes = "";
-			Cell notesCell = dataRow.getCell(fieldMapping.get("notes"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (notesCell != null) {
-				notesCell.setCellType(CellType.STRING);
-				notes = notesCell.getStringCellValue();
-			}
-
-			String observedAt = "";
-			Cell observedAtCell = dataRow.getCell(fieldMapping.get("observedAt"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (observedAtCell != null) {
-				observedAtCell.setCellType(CellType.STRING);
-				observedAt = observedAtCell.getStringCellValue();
-			}
-
-			String locationScale = "APPROXIMATE";
-			Cell locationScaleCell = dataRow.getCell(fieldMapping.get("locationScale"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (locationScaleCell != null) {
-				locationScaleCell.setCellType(CellType.STRING);
-				locationScale = locationScaleCell.getStringCellValue();
-			}
-
-			Double latitude = null;
-			Cell latitudeCell = dataRow.getCell(fieldMapping.get("latitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (latitudeCell != null) {
-				latitudeCell.setCellType(CellType.STRING);
-				latitude = Double.parseDouble(latitudeCell.getStringCellValue());
-			} else { // get value from dataTable metadata if not mentioned in excel
-				latitude = dataTable.getGeographicalCoverageLatitude();
-			}
-
-			Double longitude = null;
-			Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (longitudeCell != null) {
-				longitudeCell.setCellType(CellType.STRING);
-				System.out.println("\n\n***** Excel Longitude: "
-						+ Double.parseDouble(longitudeCell.getStringCellValue()) + " *****\n\n");
-				longitude = Double.parseDouble(longitudeCell.getStringCellValue());
-			} else { // get value from dataTable metadata if not mentioned in excel
-				longitude = dataTable.getGeographicalCoverageLongitude();
-			}
-
-			Boolean geoPrivacy = new Boolean(Boolean.TRUE);
-			Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (geoPrivacyCell != null) {
-				geoPrivacyCell.setCellType(CellType.BOOLEAN);
-				geoPrivacy = geoPrivacyCell.getBooleanCellValue();
-			}
-
-			Geometry topology = null;
-			if (latitude != null && longitude != null) {
-				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
-				DecimalFormat df = new DecimalFormat("#.####");
-				df.setRoundingMode(RoundingMode.HALF_EVEN);
-				double lat = Double.parseDouble(df.format(latitude));
-				double lon = Double.parseDouble(df.format(longitude));
-				Coordinate c = new Coordinate(lat, lon);
-				topology = geofactory.createPoint(c);
-			}
-
-			observation = new Observation(null, 0L, authorId, new Date(), speciesGroup.getId(), latitude, longitude,
-					notes, fromDate, observedAt, 0, null, 0, geoPrivacy, null, false, new Date(), null, 0L, null, null,
-					true, false, false, null, toDate, topology, null /* checklist annotations */, 0, false, 822L,
-					languageId, locationScale, null, null, null, null, null, null, null, null, null, null, null, null,
-					null, null, "LIST", "HUMAN_OBSERVATION", 0, 0, 0,
-					helpIdentify != null && helpIdentify.equalsIgnoreCase("YES") ? 0 : 1, dataTable.getId(),
-					dateAccuracy, false);
-
-			System.out.println("\n***** Observation Prepared *****\n");
-			System.out.println(observation.toString());
-
-			return observation;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error(ex.getMessage());
-		}
-
-		return null;
+		return ugFilterData;
 	}
 
-	@SuppressWarnings("deprecation")
-	public RecoCreate createRecoMapping(Row dataRow, Map<String, Integer> fieldMapping) {
-		RecoCreate recoCreate = null;
+	public void updateGeoPrivacy(List<Observation> observationList) {
+
 		try {
-			RecoData recoData = new RecoData();
-			String commonName = null;
-			Cell commonNameCell = dataRow.getCell(fieldMapping.get("commonName"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (commonNameCell != null) {
-				commonNameCell.setCellType(CellType.STRING);
-				commonName = commonNameCell.getStringCellValue();
 
-				recoData.setTaxonCommonName(commonName);
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
+			in.close();
+
+			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
+
+			for (Observation observation : observationList) {
+				System.out.println("--------START---------");
+				System.out.println("Observation Id : " + observation.getId());
+				System.out.println("---------END----------");
+
+				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						if (geoPrivateTaxonId.contains(taxonId)) {
+							System.out.println("---------BEGIN----------");
+							System.out.println("Observation Id : " + observation.getId());
+							observation.setGeoPrivacy(true);
+							observationDAO.update(observation);
+							rabbitMQProducer.setMessage("esmodule", observation.getId().toString(), "Observation Core");
+							System.out.println("----------END------------");
+						}
+
+					}
+				}
 			}
 
-			String scientificName = null;
-			Cell scientificNameCell = dataRow.getCell(fieldMapping.get("scientificName"),
-					MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (scientificNameCell != null) {
-				scientificNameCell.setCellType(CellType.STRING);
-				scientificName = scientificNameCell.getStringCellValue();
-
-				recoData.setTaxonCommonName(scientificName);
-			}
-
-			String comment = null;
-			Cell commentCell = dataRow.getCell(fieldMapping.get("comment"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (commentCell != null) {
-				commentCell.setCellType(CellType.STRING);
-				comment = commentCell.getStringCellValue();
-
-				recoData.setRecoComment(comment);
-			}
-
-			recoCreate = createRecoMapping(recoData);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			logger.error(ex.getMessage());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
-		return recoCreate;
+
 	}
 
 }
