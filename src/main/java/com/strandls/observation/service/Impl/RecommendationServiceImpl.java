@@ -562,6 +562,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		try {
 
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getIsLocked())
+				return null;
+
 			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
@@ -620,7 +624,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 						recoVote = finalFilteredList.get(0);
 				}
 				Long maxVotedReco = recoVote.getRecommendationId();
-				Observation observation = observationDao.findById(observationId);
 				observation.setIsLocked(true);
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observation.setLastRevised(new Date());

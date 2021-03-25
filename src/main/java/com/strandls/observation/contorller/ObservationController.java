@@ -1331,4 +1331,27 @@ public class ObservationController {
 
 	}
 
+	@POST
+	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "validate the observation pulled to speciesPage", notes = "returns Boolean Values", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to validate the Observations", response = String.class) })
+
+	public Response speciesPullObservationValidation(@Context HttpServletRequest request,
+			@PathParam("taxonId") String taxonId, @ApiParam(name = "observationList") List<Long> observationIds) {
+		try {
+			Long taxId = Long.parseLong(taxonId);
+			Boolean result = observationService.speciesObservationValidate(request, taxId, observationIds);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }
