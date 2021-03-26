@@ -162,4 +162,5 @@ public interface ObservationService {
 
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
 
+	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
 }
