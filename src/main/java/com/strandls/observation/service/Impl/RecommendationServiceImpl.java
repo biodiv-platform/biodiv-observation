@@ -243,9 +243,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
+		String userAuthToken  = request.getAttribute("userAuthToken") != null?(String) request.getAttribute("userAuthToken"): request.getHeader(HttpHeaders.AUTHORIZATION);
 		observationDao.update(observation);
 		if (createObservation) {
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+			logActivities.LogActivity(userAuthToken, description, observationId,
 					observationId, "observation", recoVote.getId(), "Suggested species name", null);
 
 			return maxRecoVote;
@@ -253,7 +254,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 //			Bg process for userGroup filter rule
 			observaitonService.bgfilterRule(request, observationId);
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+			logActivities.LogActivity(userAuthToken, description, observationId,
 					observationId, "observation", recoVote.getId(), "Suggested species name",
 					observaitonService.generateMailData(observationId));
 			return maxRecoVote;

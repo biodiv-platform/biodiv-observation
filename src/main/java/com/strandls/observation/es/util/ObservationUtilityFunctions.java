@@ -21,24 +21,22 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
 import com.opencsv.CSVWriter;
-import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
+import com.strandls.observation.util.TokenGenerator;
+import com.strandls.user.controller.UserServiceApi;
 
 /**
  * @author ashish
@@ -220,18 +218,28 @@ public class ObservationUtilityFunctions {
 		return observationGrade;
 	}
 
-	public Long createObservationAndMappings(String requestAuthHeader,ObservationBulkMapperHelper mapper, ObservationDAO observationDAO,
-			ObservationBulkData observationData, Map<String, String> myImageUpload, Long userId) {
+	public Long createObservationAndMappings(String requestAuthHeader, ObservationBulkMapperHelper mapper,
+			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
+			Map<String, String> myImageUpload, Long userId) {
 		Observation observation = null;
 		try {
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
+			TokenGenerator tokenGenerator = new TokenGenerator();
 
 			if (fieldMapping.get("user") != null) {
 				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (userCell != null) {
 					userCell.setCellType(CellType.NUMERIC);
-					userId = (long) userCell.getNumericCellValue();
+					Long userIdCell = (long) userCell.getNumericCellValue();
+					try {
+						if (userService.getUser(userIdCell.toString()) != null)
+							requestAuthHeader = tokenGenerator.generate(userService.getUser(userIdCell.toString()));
+						userId = userIdCell;
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+
+					}
 				}
 			}
 
@@ -241,9 +249,10 @@ public class ObservationUtilityFunctions {
 				observation = observationDAO.save(observation);
 				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,
 						observationData.getLicenses(), userId, observation, myImageUpload);
-				mapper.createRecoMapping(observationData.getRequest(), fieldMapping, dataRow, observation, userId);
-				mapper.createFactsMapping(requestAuthHeader, fieldMapping, dataRow,
-						observationData.getPairs(), observation.getId());
+				mapper.createRecoMapping(observationData.getRequest(), requestAuthHeader, fieldMapping, dataRow,
+						observation, userId);
+				mapper.createFactsMapping(requestAuthHeader, fieldMapping, dataRow, observationData.getPairs(),
+						observation.getId());
 				mapper.createTags(requestAuthHeader, fieldMapping, dataRow, observation.getId());
 				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
 						observationData.getUserGroupsList(), observation.getId());
@@ -251,14 +260,11 @@ public class ObservationUtilityFunctions {
 				mapper.updateUserGroupFilter(requestAuthHeader, observation);
 			}
 
-			return observation.getId();
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
 
-		
-		return 1L;
-		
+		return observation.getId();
 
 	}
 
@@ -349,7 +355,9 @@ public class ObservationUtilityFunctions {
 		if (fieldType.equalsIgnoreCase("single categorical"))
 			return values.getSingle_categorical_data();
 		if (fieldType.equalsIgnoreCase("multiple categorical"))
-			return String.join(";", values.getMultiple_categorical_data() != null ? values.getMultiple_categorical_data() : new ArrayList());
+			return String.join(";",
+					values.getMultiple_categorical_data() != null ? values.getMultiple_categorical_data()
+							: new ArrayList());
 		return null;
 
 	}

@@ -305,8 +305,7 @@ public class ObservationBulkMapperHelper {
 					tagsMappingData.setTagsMapping(tagsMapping);
 					tagsMappingData.setMailData(null);
 
-					utilityServiceApi = headers.addUtilityHeaders(utilityServiceApi,
-							requestAuthHeader);
+					utilityServiceApi = headers.addUtilityHeaders(utilityServiceApi, requestAuthHeader);
 					utilityServiceApi.createTags("observation", tagsMappingData);
 				}
 			}
@@ -356,9 +355,10 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
-	public void createRecoMapping(HttpServletRequest request, Map<String, Integer> fieldMapping, Row dataRow,
-			Observation observation, Long userId) {
+	public void createRecoMapping(HttpServletRequest request, String requestAuthHeader,
+			Map<String, Integer> fieldMapping, Row dataRow, Observation observation, Long userId) {
 		try {
+			request.setAttribute("userAuthToken", requestAuthHeader);
 			RecoCreate recoCreate = prepareRecoMapping(dataRow, fieldMapping);
 			if (recoCreate != null) {
 				Long maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
@@ -423,7 +423,7 @@ public class ObservationBulkMapperHelper {
 			List<License> licenses, Long userId, Observation observation, Map<String, String> myImageUpload) {
 		List<String> filesWithPath = new ArrayList<>();
 		try {
-			
+
 			if (fieldMapping.get("fileName") == null || myImageUpload.isEmpty())
 				return;
 			Cell cell = dataRow.getCell(fieldMapping.get("fileName"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -458,8 +458,7 @@ public class ObservationBulkMapperHelper {
 				if (resources == null)
 					return;
 
-				resourceServicesApi = headers.addResourceHeaders(resourceServicesApi,
-						requestAuthHeader);
+				resourceServicesApi = headers.addResourceHeaders(resourceServicesApi, requestAuthHeader);
 				List<Resource> response = resourceServicesApi.createResource("OBSERVATION",
 						String.valueOf(observation.getId()), resources);
 
@@ -494,8 +493,8 @@ public class ObservationBulkMapperHelper {
 				observation.setReprImageId(reprImage);
 				observationDAO.update(observation);
 			}
-			logActivities.LogActivity(requestAuthHeader, null, observation.getId(),
-					observation.getId(), "observation", null, "Observation created", null);
+			logActivities.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(), "observation",
+					null, "Observation created", null);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
@@ -593,8 +592,7 @@ public class ObservationBulkMapperHelper {
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);
 
-			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi,
-					requestAuthHeader);
+			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi, requestAuthHeader);
 			userGroupServiceApi.createObservationUserGroupMapping(String.valueOf(observationId),
 					userGroupMappingCreateData);
 
@@ -687,8 +685,7 @@ public class ObservationBulkMapperHelper {
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvFilterData ugObvFilterData = observationMapperHelper.getUGFilterObvData(observation);
-			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi,
-					requestAuthHeader);
+			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi, requestAuthHeader);
 			userGroupServiceApi.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
 

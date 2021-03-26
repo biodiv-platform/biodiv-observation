@@ -207,9 +207,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private DataTableDAO dataTableDAO;
-	
+
 	@Inject
-	private  ObservationBulkMapperHelper observationBulkMapperHelper;
+	private ObservationBulkMapperHelper observationBulkMapperHelper;
 
 	@Inject
 	private LicenseControllerApi licenseControllerApi;
@@ -361,7 +361,8 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
-			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString() + " ***** \n\n\n");
+			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString()
+					+ " ***** \n\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
@@ -2298,21 +2299,19 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 
 			XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()));
-			HttpServletRequest requestData = request;
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
 			FilesDTO filesDto = new FilesDTO();
 			filesDto.setFolder("observations");
-			filesDto.setModule("observation");			
+			filesDto.setModule("observation");
 			Map<String, String> myImageUpload = headers
 					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
 					.getAllFilePathsByUser(filesDto).entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, requestData,
-					observationDao,observationBulkMapperHelper,esUpdate,
-					dataTable,userId,getAllSpeciesGroup(), traitsList, 
-					userGroupIbpList, licenseList, workbook, myImageUpload);
+			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
+					observationDao, observationBulkMapperHelper, esUpdate, userService,dataTable, userId, getAllSpeciesGroup(),
+					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 

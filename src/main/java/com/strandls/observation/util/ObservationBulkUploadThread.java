@@ -23,6 +23,7 @@ import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
 import com.strandls.resource.pojo.License;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 
 public class ObservationBulkUploadThread implements Runnable {
@@ -32,6 +33,7 @@ public class ObservationBulkUploadThread implements Runnable {
 	private final ObservationDAO observationDao;
 	private final ObservationBulkMapperHelper observationBulkMapperHelper;
 	private final ESUpdate esUpdate;
+	private final UserServiceApi userService;
 	private final DataTable dataTable;
 	private final Long userId;
 	private final List<SpeciesGroup> speciesGroupList;
@@ -44,7 +46,7 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	public ObservationBulkUploadThread(ObservationBulkDTO observationBulkData, HttpServletRequest request,
 			ObservationDAO observationDao, ObservationBulkMapperHelper observationBulkMapperHelper, ESUpdate esUpdate,
-			DataTable dataTable,Long userId, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> traitsList,
+			UserServiceApi userService, DataTable dataTable, Long userId, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> traitsList,
 			List<UserGroupIbp> userGroupIbpList, List<License> licenseList, XSSFWorkbook workbook,
 			Map<String, String> myImageUpload) {
 		super();
@@ -52,8 +54,9 @@ public class ObservationBulkUploadThread implements Runnable {
 		this.observationDao = observationDao;
 		this.observationBulkMapperHelper = observationBulkMapperHelper;
 		this.esUpdate = esUpdate;
+		this.userService  = userService;
 		this.dataTable = dataTable;
-		this.userId  = userId;
+		this.userId = userId;
 		this.request = request;
 		this.speciesGroupList = speciesGroupList;
 		this.traitsList = traitsList;
@@ -80,8 +83,8 @@ public class ObservationBulkUploadThread implements Runnable {
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList);
 
-				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader,observationBulkMapperHelper, observationDao, data,
-						myImageUpload,userId);
+				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
+						observationDao, userService,data, myImageUpload, userId);
 				observationIds.add(obsId);
 				if (observationIds.size() >= 100) {
 					esUpdate.esBulkUpload(observationIds);
