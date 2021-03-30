@@ -2,11 +2,10 @@ package com.strandls.observation.es.util;
 
 import java.util.List;
 
-public class ESBulkUploadThread implements Runnable  {
-	
-	
+public class ESBulkUploadThread implements Runnable {
+
 	private ESUpdate esUpdate;
-	private List<Long> observationIds;
+	private String observationIds;
 
 	/**
 	 * 
@@ -17,17 +16,19 @@ public class ESBulkUploadThread implements Runnable  {
 
 	/**
 	 * @param esUpdate
-	 * @param observationIds
+	 * @param observationList
 	 */
-	public ESBulkUploadThread(ESUpdate esUpdate, List<Long> observationIds) {
+	public ESBulkUploadThread(ESUpdate esUpdate, String observationList) {
 		super();
 		this.esUpdate = esUpdate;
-		this.observationIds = observationIds;
+		this.observationIds = observationList;
 	}
 
 	@Override
 	public void run() {
+
 		esUpdate.esBulkUpload(observationIds);
+
 	}
 
 }

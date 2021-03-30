@@ -56,14 +56,12 @@ public class ESUpdate {
 		}
 	}
 
-	public void esBulkUpload(List<Long> observationIds) {
-
-		String observationList = StringUtils.join(observationIds, ',');
-		System.out.println("--------------------observation es Bulk Upload Started---------" + observationList);
+	public void esBulkUpload(String observationIds) {
+		System.out.println("--------------------observation es Bulk Upload Started---------" + observationIds);
 		try {
 			List<ObservationESDocument> ESObservationList;
 
-			ESObservationList = constructESDocument.getESDocumentStub(observationList);
+			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 			if (!ESObservationList.isEmpty()) {
 
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {

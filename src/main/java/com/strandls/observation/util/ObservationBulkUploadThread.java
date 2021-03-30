@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -87,7 +88,10 @@ public class ObservationBulkUploadThread implements Runnable {
 						observationDao, userService,data, myImageUpload, userId);
 				observationIds.add(obsId);
 				if (observationIds.size() >= 100) {
-					esUpdate.esBulkUpload(observationIds);
+				    String observationList = StringUtils.join(observationIds, ',');
+					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+					Thread thread = new Thread(updateThread);
+					thread.start();
 					observationIds.clear();
 				}
 			}
@@ -95,7 +99,8 @@ public class ObservationBulkUploadThread implements Runnable {
 		}
 
 		if (!rows.hasNext() && !observationIds.isEmpty()) {
-			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationIds);
+			String observationList = StringUtils.join(observationIds, ',');
+			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 			Thread thread = new Thread(updateThread);
 			thread.start();
 		}

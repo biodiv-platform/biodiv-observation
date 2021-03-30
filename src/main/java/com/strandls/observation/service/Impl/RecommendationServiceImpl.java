@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
@@ -202,7 +203,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonid,
 			RecoCreate recoCreate, Boolean createObservation) {
-
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
 			recoVoteDao.delete(previousVote);
@@ -243,20 +243,21 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
-		String userAuthToken  = request.getAttribute("userAuthToken") != null?(String) request.getAttribute("userAuthToken"): request.getHeader(HttpHeaders.AUTHORIZATION);
+		String userAuthToken = request.getAttribute("userAuthToken") != null
+				? (String) request.getAttribute("userAuthToken")
+				: request.getHeader(HttpHeaders.AUTHORIZATION);
 		observationDao.update(observation);
 		if (createObservation) {
-			logActivities.LogActivity(userAuthToken, description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name", null);
+			logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+					recoVote.getId(), "Suggested species name", null);
 
 			return maxRecoVote;
 		} else {
 			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 //			Bg process for userGroup filter rule
 			observaitonService.bgfilterRule(request, observationId);
-			logActivities.LogActivity(userAuthToken, description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name",
-					observaitonService.generateMailData(observationId));
+			logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+					recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
 			return maxRecoVote;
 		}
 
