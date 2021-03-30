@@ -32,8 +32,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import com.strandls.observation.dto.ObservationBulkDTO;
-import com.strandls.observation.pojo.*;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.activity.pojo.Activity;
@@ -50,7 +48,7 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dto.BulkObservationDTO;
-import com.strandls.observation.es.util.ESUpdate;
+import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -1412,6 +1410,29 @@ public class ObservationController {
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "validate the observation pulled to speciesPage", notes = "returns Boolean Values", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to validate the Observations", response = String.class) })
+
+	public Response speciesPullObservationValidation(@Context HttpServletRequest request,
+			@PathParam("taxonId") String taxonId, @ApiParam(name = "observationList") List<Long> observationIds) {
+		try {
+			Long taxId = Long.parseLong(taxonId);
+			Boolean result = observationService.speciesObservationValidate(request, taxId, observationIds);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
 

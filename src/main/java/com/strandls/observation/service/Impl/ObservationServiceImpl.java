@@ -20,10 +20,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -44,13 +40,12 @@ import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
 import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
-import com.strandls.file.api.UploadApi;
-import com.strandls.file.model.FilesDTO;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
@@ -79,6 +74,7 @@ import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
@@ -86,9 +82,9 @@ import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
-import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
@@ -265,7 +261,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(),true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -2320,5 +2316,23 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 
 		return dataTable.getId();
+	}
+	
+	@Override
+	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationIdList) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			for (Long observationId : observationIdList) {
+				RecoSet recoSet = new RecoSet(taxonId, null, null);
+				recoService.validateReco(request, profile, observationId, userId, recoSet);
+			}
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
 	}
 }
