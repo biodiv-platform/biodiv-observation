@@ -10,7 +10,7 @@ import java.util.List;
 public class ESBulkUpload implements Runnable {
 
 	private ESUpdate esUpdate;
-	private List<Long> observationIds;
+	private String observationIds;
 
 	/**
 	 * 
@@ -23,7 +23,7 @@ public class ESBulkUpload implements Runnable {
 	 * @param esUpdate
 	 * @param observationId
 	 */
-	public ESBulkUpload(ESUpdate esUpdate, List<Long> observationIds) {
+	public ESBulkUpload(ESUpdate esUpdate, String observationIds) {
 		super();
 		this.esUpdate = esUpdate;
 		this.observationIds = observationIds;
