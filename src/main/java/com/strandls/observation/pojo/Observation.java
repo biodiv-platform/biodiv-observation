@@ -98,7 +98,7 @@ public class Observation implements Serializable {
 					   String externalId, String externalUrl, String informationWithheld, Date lastCrawled, Date lastInterpreted,
 					   String originalAuthor, String publishingCountry, Long reprImageId, String viaCode, String viaId,
 					   String protocol, String basisOfRecord, Integer noOfImages, Integer noOfVideos, Integer noOfAudio,
-					   Integer noOfIdentifications, Long dataTableId, String dateAccuracy, String basisOfData) {
+					   Integer noOfIdentifications, Long dataTableId, String dateAccuracy, Boolean isVerified) {
 		super();
 		this.id = id;
 		this.version = version;
@@ -155,6 +155,7 @@ public class Observation implements Serializable {
 		this.noOfIdentifications = noOfIdentifications;
 		this.dataTableId = dataTableId;
 		this.dateAccuracy = dateAccuracy;
+		this.isVerified = isVerified;
 	}
 
 	
