@@ -32,6 +32,7 @@ public class ObservationBulkDTO {
     private String locationAccuracy;
     private String observedAt;
     private String reverseGeocoded;
+    private String wktString;
     private Double latitude;
     private Double longitude;
     private Boolean useDegMinSec;
@@ -44,10 +45,12 @@ public class ObservationBulkDTO {
     private String basisOfData;
 
     // other fields related to bulk upload
+    private Boolean isVerified;
     private Long dataset;
     private String filename;
     private Long languageId;
     private Map<String, Integer> columns;
+    private Map<String, Integer> checklistAnnotation;
 
     public String getTitle() {
         return title;
@@ -211,4 +214,22 @@ public class ObservationBulkDTO {
     public void setColumns(Map<String, Integer> columns) {
         this.columns = columns;
     }
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
+	}
+	public Map<String, Integer> getChecklistAnnotation() {
+		return checklistAnnotation;
+	}
+	public void setChecklistAnnotation(Map<String, Integer> checklistAnnotation) {
+		this.checklistAnnotation = checklistAnnotation;
+	}
+	public String getWktString() {
+		return wktString;
+	}
+	public void setWktString(String wktString) {
+		this.wktString = wktString;
+	}
 }

@@ -18,6 +18,7 @@ public class ObservationDAOModule extends AbstractModule {
 		bind(RecommendationDao.class).in(Scopes.SINGLETON);
 		bind(RecommendationVoteDao.class).in(Scopes.SINGLETON);
 		bind(ObservationDownloadLogDAO.class).in(Scopes.SINGLETON);
+		bind(DataSetDAO.class).in(Scopes.SINGLETON);
 	}
 
 }

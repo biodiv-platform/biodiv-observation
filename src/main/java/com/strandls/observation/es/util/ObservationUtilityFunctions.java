@@ -222,10 +222,19 @@ public class ObservationUtilityFunctions {
 			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
 			Map<String, String> myImageUpload, Long userId) {
 		Observation observation = null;
+		Boolean isVerified = observationData.getIsVerified() ? observationData.getIsVerified() : false;
 		try {
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
 			TokenGenerator tokenGenerator = new TokenGenerator();
+
+			if (fieldMapping.get("isVerified") != null) {
+				Cell verifiedCell = dataRow.getCell(fieldMapping.get("isVerified"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (verifiedCell != null) {
+					isVerified = Boolean.parseBoolean(verifiedCell.getStringCellValue());
+				}
+			}
 
 			if (fieldMapping.get("user") != null) {
 				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -244,7 +253,8 @@ public class ObservationUtilityFunctions {
 			}
 
 			observation = mapper.creationObservationMapping(userId, fieldMapping, dataRow,
-					observationData.getDataTable(), observationData.getSpeciesGroupList());
+					observationData.getDataTable(), observationData.getSpeciesGroupList(),
+					observationData.getChecklistAnnotaion(), isVerified);
 			if (observation != null) {
 				observation = observationDAO.save(observation);
 				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,
