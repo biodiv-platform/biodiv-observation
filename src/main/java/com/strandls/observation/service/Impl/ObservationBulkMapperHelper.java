@@ -1,5 +1,7 @@
 package com.strandls.observation.service.Impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
@@ -42,6 +44,7 @@ import javax.ws.rs.core.HttpHeaders;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ObservationBulkMapperHelper {
 
@@ -78,6 +81,9 @@ public class ObservationBulkMapperHelper {
 	ObservationMapperHelper observationMapperHelper;
 
 	@Inject
+	private ObjectMapper om;
+
+	@Inject
 	ObservationDAO observationDAO;
 
 	@Inject
@@ -88,9 +94,12 @@ public class ObservationBulkMapperHelper {
 
 	@SuppressWarnings("deprecation")
 	public Observation creationObservationMapping(Long userId, Map<String, Integer> fieldMapping, Row dataRow,
-			DataTable dataTable, List<SpeciesGroup> speciesGroupList) {
+			DataTable dataTable, List<SpeciesGroup> speciesGroupList, Map<String, Integer> checklistAnnotation,
+			Boolean isVerified) {
 		try {
 			Boolean geoPrivacy = Boolean.TRUE;
+			Observation observation = new Observation();
+			String checkListAnnotation = null;
 			if (fieldMapping.get("geoPrivacy") != null) {
 				Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"),
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -214,6 +223,30 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 
+			String checklistString = null;
+			if (!checklistAnnotation.isEmpty()) {
+
+				Map<String, String> checklistMap = new HashMap<String, String>();
+				checklistAnnotation.forEach((k, v) -> {
+
+					Cell cellValue = dataRow.getCell(v, MissingCellPolicy.RETURN_BLANK_AS_NULL);
+					if (cellValue != null) {
+						cellValue.setCellType(CellType.STRING);
+						checklistMap.put(k, cellValue.getStringCellValue());
+					} else {
+						checklistMap.put(k, "");
+					}
+
+				});
+
+				try {
+					checklistString = om.writeValueAsString(checklistMap).toString();
+				} catch (JsonProcessingException e) {
+					logger.error(e.getMessage());
+				}
+
+			}
+
 			Geometry topology = null;
 			if (latitude != null && longitude != null) {
 				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -225,13 +258,11 @@ public class ObservationBulkMapperHelper {
 				topology = geofactory.createPoint(c);
 			}
 
-			Observation observation = new Observation();
-
 			observation.setAuthorId(userId);
 			observation.setIsShowable(true);
 			observation.setVersion(0L);
 			observation.setCreatedOn(new Date());
-			observation.setGroupId(speciesGroup != null ? speciesGroup.getId() : null);
+			observation.setGroupId(speciesGroup != null ? speciesGroup.getId() : 830);
 			observation.setLatitude(latitude);
 			observation.setLongitude(longitude);
 			observation.setNotes(notes);
@@ -262,7 +293,7 @@ public class ObservationBulkMapperHelper {
 			observation.setVisitCount(0L);
 			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
-			observation.setChecklistAnnotations(null);// from data set
+			observation.setChecklistAnnotations(checklistString);// from data set
 			observation.setAccessRights(null);// null for nrml case only used in GBIF
 			observation.setCatalogNumber(null);// null for nrml case only used in GBIF
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
@@ -276,9 +307,12 @@ public class ObservationBulkMapperHelper {
 			observation.setPublishingCountry(null);// from IP address
 			observation.setViaCode(null);// null for nrml case only used in GBIF
 			observation.setViaId(null);// null for nrml case only used in GBIF
+			observation.setIsVerified(isVerified);
 
 			return observation;
-		} catch (Exception ex) {
+		} catch (
+
+		Exception ex) {
 			logger.error(ex.getMessage());
 		}
 		return null;
@@ -358,7 +392,7 @@ public class ObservationBulkMapperHelper {
 	public void createRecoMapping(HttpServletRequest request, String requestAuthHeader,
 			Map<String, Integer> fieldMapping, Row dataRow, Observation observation, Long userId) {
 		try {
-			request.setAttribute("userAuthToken", requestAuthHeader);	
+			request.setAttribute("userAuthToken", requestAuthHeader);
 			RecoCreate recoCreate = prepareRecoMapping(dataRow, fieldMapping);
 			if (recoCreate != null) {
 				Long maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),

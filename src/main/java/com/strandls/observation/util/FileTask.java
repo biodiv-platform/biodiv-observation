@@ -55,9 +55,9 @@ public class FileTask implements Runnable {
             while (rows.hasNext()) {
                 dataRow = rows.next();
                 ObservationBulkData observationBulkData = new ObservationBulkData(fieldMapping, dataRow,
-                        request, dataTable, speciesGroupList, pairs, userGroupsList, licenses);
+                        request, dataTable, speciesGroupList, pairs, userGroupsList, licenses,false, fieldMapping);
                 queue.put(observationBulkData);
-            }
+            }			
         } catch (Exception ex) {
             ex.printStackTrace();
         }

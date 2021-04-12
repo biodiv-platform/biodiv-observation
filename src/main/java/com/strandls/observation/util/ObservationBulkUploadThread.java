@@ -47,15 +47,15 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	public ObservationBulkUploadThread(ObservationBulkDTO observationBulkData, HttpServletRequest request,
 			ObservationDAO observationDao, ObservationBulkMapperHelper observationBulkMapperHelper, ESUpdate esUpdate,
-			UserServiceApi userService, DataTable dataTable, Long userId, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> traitsList,
-			List<UserGroupIbp> userGroupIbpList, List<License> licenseList, XSSFWorkbook workbook,
-			Map<String, String> myImageUpload) {
+			UserServiceApi userService, DataTable dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
+			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
+			XSSFWorkbook workbook, Map<String, String> myImageUpload) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
 		this.observationBulkMapperHelper = observationBulkMapperHelper;
 		this.esUpdate = esUpdate;
-		this.userService  = userService;
+		this.userService = userService;
 		this.dataTable = dataTable;
 		this.userId = userId;
 		this.request = request;
@@ -82,13 +82,14 @@ public class ObservationBulkUploadThread implements Runnable {
 			if (true) {
 				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
-						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList);
+						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
+						observationBulkData.getIsVerified(),observationBulkData.getChecklistAnnotation());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-						observationDao, userService,data, myImageUpload, userId);
+						observationDao, userService, data, myImageUpload, userId);
 				observationIds.add(obsId);
 				if (observationIds.size() >= 100) {
-				    String observationList = StringUtils.join(observationIds, ',');
+					String observationList = StringUtils.join(observationIds, ',');
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 					Thread thread = new Thread(updateThread);
 					thread.start();
