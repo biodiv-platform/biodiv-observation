@@ -65,6 +65,7 @@ import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
@@ -241,7 +242,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(), true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -1591,5 +1592,23 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
 				identifiedSpeciesCount);
 		return result;
+	}
+
+	@Override
+	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationIdList) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			for (Long observationId : observationIdList) {
+				RecoSet recoSet = new RecoSet(taxonId, null, null);
+				recoService.validateReco(request, profile, observationId, userId, recoSet);
+			}
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
 	}
 }
