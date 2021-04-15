@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.strandls.observation.pojo.Dataset;
 import com.strandls.observation.util.AbstractDAO;
 
-/**	
+/**
  * 
  * @author vishnu
  *
@@ -43,10 +43,11 @@ public class DataSetDAO extends AbstractDAO<Dataset, Long> {
 	@SuppressWarnings("unchecked")
 	public Dataset findDataSetByTitle(String title) {
 		Session session = sessionFactory.openSession();
-		String qry = "select * from dataset where is_deleted = false and title =" + title;
+		String qry = "select * from dataset1 where is_deleted = false and title = :keyword limit 1";
+
 		Dataset result = null;
 		try {
-			Query<Dataset> query = session.createNativeQuery(qry);
+			Query<Dataset> query = session.createNativeQuery(qry, Dataset.class).setParameter("keyword", title);
 			result = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
