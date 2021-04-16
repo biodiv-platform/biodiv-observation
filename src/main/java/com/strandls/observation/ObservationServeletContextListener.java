@@ -44,6 +44,7 @@ import com.strandls.observation.contorller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.es.util.ESUtilModule;
 import com.strandls.observation.es.util.RabbitMQConsumer;
+import com.strandls.observation.gbif.GbifModule;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -120,7 +121,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 			}
 		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
-				new ESUtilModule());
+				new ESUtilModule(), new GbifModule());
 
 		try {
 			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();

@@ -48,11 +48,13 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationESDocument;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
+import com.strandls.observation.gbif.GbifObservationService;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
@@ -130,12 +132,28 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private GbifObservationService gbifService;
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong Observation";
+	}
+
+	@POST
+	@Path(ApiConstants.INGESTGBIFDATA)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Ingest gbif data into elastic search", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 404, message = "Observation not found", response = String.class),
+			@ApiResponse(code = 400, message = "Invalid ID", response = String.class) })
+	public String gbif() {
+		String response = gbifService.gbifData();
+		return response;
 	}
 
 	@GET
@@ -441,7 +459,7 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset,identifiersoffset);
+							uploadersoffset, identifiersoffset);
 
 				}
 

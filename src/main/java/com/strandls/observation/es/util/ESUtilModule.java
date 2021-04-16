@@ -20,5 +20,6 @@ public class ESUtilModule extends AbstractModule {
 		bind(RabbitMQConsumer.class).in(Scopes.SINGLETON);
 		bind(ConstructESDocument.class).in(Scopes.SINGLETON);
 		bind(ESCreateThread.class).in(Scopes.SINGLETON);
+		bind(GbifObservationESMapper.class).in(Scopes.SINGLETON);
 	}
 }
