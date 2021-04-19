@@ -40,11 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ObservationBulkMapperHelper {
 
@@ -99,7 +97,6 @@ public class ObservationBulkMapperHelper {
 		try {
 			Boolean geoPrivacy = Boolean.TRUE;
 			Observation observation = new Observation();
-			String checkListAnnotation = null;
 			if (fieldMapping.get("geoPrivacy") != null) {
 				Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"),
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);

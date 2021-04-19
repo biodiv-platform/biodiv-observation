@@ -45,8 +45,6 @@ public class DatasetStandaloneHelper {
 			Dataset res = null;
 			res = datasetDao.findDataSetByTitle(title);
 			if (res == null) {
-				System.out.println("came in");
-
 				String topleft = "";
 				String bottomright = "";
 				String GeoCoverageLat = "";

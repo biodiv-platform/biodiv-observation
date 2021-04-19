@@ -2290,7 +2290,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
-		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId);
+		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,request.getHeader(HttpHeaders.AUTHORIZATION));
 		dataTable = dataTableDAO.save(dataTable);
 		try {
 
