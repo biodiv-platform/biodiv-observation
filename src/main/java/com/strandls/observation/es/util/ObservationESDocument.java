@@ -970,7 +970,6 @@ class Trait_value {
 	private Date from_date;
 	private Date to_date;
 	private Long trait_value_id;
-	private String description;
 	private String icon;
 	private String value;
 	private String trait_aggregation;
@@ -991,14 +990,13 @@ class Trait_value {
 	 * @param from_date
 	 * @param to_date
 	 * @param trait_value_id
-	 * @param description
 	 * @param icon
 	 * @param value
 	 * @param trait_aggregation
 	 * @param trait_filter
 	 */
 	public Trait_value(Long fact_id, Long contributor_id, String from_value, String to_value, Date from_date,
-			Date to_date, Long trait_value_id, String description, String icon, String value, String trait_aggregation,
+			Date to_date, Long trait_value_id, String icon, String value, String trait_aggregation,
 			String trait_filter) {
 		super();
 		this.fact_id = fact_id;
@@ -1008,7 +1006,6 @@ class Trait_value {
 		this.from_date = from_date;
 		this.to_date = to_date;
 		this.trait_value_id = trait_value_id;
-		this.description = description;
 		this.icon = icon;
 		this.value = value;
 		this.trait_aggregation = trait_aggregation;
@@ -1071,14 +1068,6 @@ class Trait_value {
 		this.trait_value_id = trait_value_id;
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
 	public String getIcon() {
 		return icon;
 	}
@@ -1117,7 +1106,6 @@ class Facts {
 	private Long trait_id;
 	private String description;
 	private Long field_id;
-	private String trait_icon;
 	private String name;
 	private Boolean is_participatory;
 	private String units;
@@ -1136,7 +1124,6 @@ class Facts {
 	 * @param trait_id
 	 * @param description
 	 * @param field_id
-	 * @param trait_icon
 	 * @param name
 	 * @param is_participatory
 	 * @param units
@@ -1144,14 +1131,12 @@ class Facts {
 	 * @param data_types
 	 * @param trait_value
 	 */
-	public Facts(Long trait_id, String description, Long field_id, String trait_icon, String name,
-			Boolean is_participatory, String units, String trait_types, String data_types,
-			List<Trait_value> trait_value) {
+	public Facts(Long trait_id, String description, Long field_id, String name, Boolean is_participatory, String units,
+			String trait_types, String data_types, List<Trait_value> trait_value) {
 		super();
 		this.trait_id = trait_id;
 		this.description = description;
 		this.field_id = field_id;
-		this.trait_icon = trait_icon;
 		this.name = name;
 		this.is_participatory = is_participatory;
 		this.units = units;
@@ -1182,14 +1167,6 @@ class Facts {
 
 	public void setField_id(Long field_id) {
 		this.field_id = field_id;
-	}
-
-	public String getTrait_icon() {
-		return trait_icon;
-	}
-
-	public void setTrait_icon(String trait_icon) {
-		this.trait_icon = trait_icon;
 	}
 
 	public String getName() {
@@ -1321,11 +1298,9 @@ class Taxon_detail {
 	private String name;
 	private String canonical_form;
 	private String scientific_name;
-	private String italicised_form;
-	private Long rank;
+	private String rank;
 	private String status;
 	private String position;
-	private String species_id;
 
 	/**
 	 * 
@@ -1339,56 +1314,20 @@ class Taxon_detail {
 	 * @param name
 	 * @param canonical_form
 	 * @param scientific_name
-	 * @param italicised_form
 	 * @param rank
 	 * @param status
 	 * @param position
-	 * @param species_id
 	 */
-	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String italicised_form,
-			Long rank, String status, String position, String species_id) {
+	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String rank, String status,
+			String position) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.canonical_form = canonical_form;
 		this.scientific_name = scientific_name;
-		this.italicised_form = italicised_form;
 		this.rank = rank;
 		this.status = status;
 		this.position = position;
-		this.species_id = species_id;
-	}
-
-	public String getPosition() {
-		return position;
-	}
-
-	public void setPosition(String position) {
-		this.position = position;
-	}
-
-	public String getCanonical_form() {
-		return canonical_form;
-	}
-
-	public void setCanonical_form(String canonical_form) {
-		this.canonical_form = canonical_form;
-	}
-
-	public String getItalicised_form() {
-		return italicised_form;
-	}
-
-	public void setItalicised_form(String italicised_form) {
-		this.italicised_form = italicised_form;
-	}
-
-	public String getScientific_name() {
-		return scientific_name;
-	}
-
-	public void setScientific_name(String scientific_name) {
-		this.scientific_name = scientific_name;
 	}
 
 	public Long getId() {
@@ -1399,6 +1338,38 @@ class Taxon_detail {
 		this.id = id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getCanonical_form() {
+		return canonical_form;
+	}
+
+	public void setCanonical_form(String canonical_form) {
+		this.canonical_form = canonical_form;
+	}
+
+	public String getScientific_name() {
+		return scientific_name;
+	}
+
+	public void setScientific_name(String scientific_name) {
+		this.scientific_name = scientific_name;
+	}
+
+	public String getRank() {
+		return rank;
+	}
+
+	public void setRank(String rank) {
+		this.rank = rank;
+	}
+
 	public String getStatus() {
 		return status;
 	}
@@ -1407,28 +1378,12 @@ class Taxon_detail {
 		this.status = status;
 	}
 
-	public String getSpecies_id() {
-		return species_id;
+	public String getPosition() {
+		return position;
 	}
 
-	public void setSpecies_id(String species_id) {
-		this.species_id = species_id;
-	}
-
-	public Long getRank() {
-		return rank;
-	}
-
-	public void setRank(Long rank) {
-		this.rank = rank;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	public void setPosition(String position) {
+		this.position = position;
 	}
 
 }
@@ -1568,10 +1523,8 @@ class Max_voted_reco {
 	private List<Common_names> common_names;
 	private List<Hierarchy> hierarchy;
 	private String scientific_name;
-	private Long rank;
-	private String ranktext;
+	private String rank;
 	private String taxonstatus;
-	private Long species_id;
 
 	/**
 	 * 
@@ -1586,21 +1539,17 @@ class Max_voted_reco {
 	 * @param hierarchy
 	 * @param scientific_name
 	 * @param rank
-	 * @param ranktext
 	 * @param taxonstatus
-	 * @param species_id
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			Long rank, String ranktext, String taxonstatus, Long species_id) {
+			String rank, String taxonstatus) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
 		this.hierarchy = hierarchy;
 		this.scientific_name = scientific_name;
 		this.rank = rank;
-		this.ranktext = ranktext;
 		this.taxonstatus = taxonstatus;
-		this.species_id = species_id;
 	}
 
 	public Long getId() {
@@ -1635,20 +1584,12 @@ class Max_voted_reco {
 		this.scientific_name = scientific_name;
 	}
 
-	public Long getRank() {
+	public String getRank() {
 		return rank;
 	}
 
-	public void setRank(Long rank) {
+	public void setRank(String rank) {
 		this.rank = rank;
-	}
-
-	public String getRanktext() {
-		return ranktext;
-	}
-
-	public void setRanktext(String ranktext) {
-		this.ranktext = ranktext;
 	}
 
 	public String getTaxonstatus() {
@@ -1657,14 +1598,6 @@ class Max_voted_reco {
 
 	public void setTaxonstatus(String taxonstatus) {
 		this.taxonstatus = taxonstatus;
-	}
-
-	public Long getSpecies_id() {
-		return species_id;
-	}
-
-	public void setSpecies_id(Long species_id) {
-		this.species_id = species_id;
 	}
 
 }
@@ -1726,7 +1659,7 @@ class Hierarchy {
 
 	private Long taxon_id;
 	private String normalized_name;
-	private Long rank;
+	private String rank;
 
 	/**
 	 * 
@@ -1740,19 +1673,11 @@ class Hierarchy {
 	 * @param normalized_name
 	 * @param rank
 	 */
-	public Hierarchy(Long taxon_id, String normalized_name, Long rank) {
+	public Hierarchy(Long taxon_id, String normalized_name, String rank) {
 		super();
 		this.taxon_id = taxon_id;
 		this.normalized_name = normalized_name;
 		this.rank = rank;
-	}
-
-	public String getNormalized_name() {
-		return normalized_name;
-	}
-
-	public void setNormalized_name(String normalized_name) {
-		this.normalized_name = normalized_name;
 	}
 
 	public Long getTaxon_id() {
@@ -1763,13 +1688,22 @@ class Hierarchy {
 		this.taxon_id = taxon_id;
 	}
 
-	public Long getRank() {
+	public String getNormalized_name() {
+		return normalized_name;
+	}
+
+	public void setNormalized_name(String normalized_name) {
+		this.normalized_name = normalized_name;
+	}
+
+	public String getRank() {
 		return rank;
 	}
 
-	public void setRank(Long rank) {
+	public void setRank(String rank) {
 		this.rank = rank;
 	}
+
 }
 
 class User_group_observations {

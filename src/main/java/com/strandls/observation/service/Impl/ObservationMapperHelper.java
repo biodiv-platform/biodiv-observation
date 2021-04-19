@@ -41,13 +41,11 @@ import com.strandls.observation.pojo.ObservationResourceData;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.pojo.ResourceDataObs;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
-import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
-import com.strandls.traits.controller.TraitsServiceApi;
-import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -393,11 +391,11 @@ public class ObservationMapperHelper {
 
 	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
-			List<ObservationResourceData> resourceDataList) {
+			List<ResourceDataObs> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
-			for (ObservationResourceData rd : resourceDataList) {
+			for (ResourceDataObs rd : resourceDataList) {
 				if (rd.getPath() != null && rd.getPath().trim().length() > 0)
 					fileList.add(rd.getPath());
 			}
@@ -412,7 +410,7 @@ public class ObservationMapperHelper {
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
-			for (ObservationResourceData resourceData : resourceDataList) {
+			for (ResourceDataObs resourceData : resourceDataList) {
 				Resource resource = new Resource();
 				resource.setVersion(0L);
 				if (resourceData.getCaption() != null)
@@ -569,11 +567,11 @@ public class ObservationMapperHelper {
 		return latlon;
 	}
 
-	public List<ObservationResourceData> createEditResourceMapping(List<ResourceData> resources) {
-		List<ObservationResourceData> editResource = new ArrayList<ObservationResourceData>();
+	public List<ResourceDataObs> createEditResourceMapping(List<ResourceData> resources) {
+		List<ResourceDataObs> editResource = new ArrayList<ResourceDataObs>();
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
-			editResource.add(new ObservationResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
+			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
 					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
 
 		}

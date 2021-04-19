@@ -118,7 +118,7 @@ public class ObservationUtilityFunctions {
 			row.add(record.getLocationScale());
 			row.add(parseDate(record.getFromDate()));
 			row.add(parseDate(record.getToDate()));
-			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRanktext() : null);
+			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
 			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
 			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
 			row.addAll(record.getMaxVotedReco() != null
@@ -199,9 +199,9 @@ public class ObservationUtilityFunctions {
 		observationGrade.setIsLocationDefined(
 				(observation.getLatitude() != null || observation.getLongitude() != null) ? true : false);
 
-		observationGrade.setHasfamilyRankOrLower(
-				observation.getMaxVotedReco() != null ? (observation.getMaxVotedReco().getRank() >= 5 ? true : false)
-						: false);
+//		observationGrade.setHasfamilyRankOrLower(
+//				observation.getMaxVotedReco() != null ? (observation.getMaxVotedReco().getRank() >= 5 ? true : false)
+//						: false);
 		observationGrade.setHasTaxonName(observation.getMaxVotedReco() != null
 				? (observation.getMaxVotedReco().getScientific_name() != null ? true : false)
 				: false);
@@ -294,16 +294,16 @@ public class ObservationUtilityFunctions {
 
 	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy) {
 		List<String> hierarchyValues = new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null));
-		for (Hierarchy h : hierarchy) {
-			int rank = h.getRank().intValue();
-			if (rank == 7) {
-				rank -= 1;
-			} else if (rank == 9) {
-				rank -= 2;
-			}
-			if (rank >= 0 && rank <= 7)
-				hierarchyValues.set(rank, h.getNormalized_name());
-		}
+//		for (Hierarchy h : hierarchy) {
+//			int rank = h.getRank().intValue();
+//			if (rank == 7) {
+//				rank -= 1;
+//			} else if (rank == 9) {
+//				rank -= 2;
+//			}
+//			if (rank >= 0 && rank <= 7)
+//				hierarchyValues.set(rank, h.getNormalized_name());
+//		}
 		return hierarchyValues;
 	}
 
@@ -407,8 +407,8 @@ public class ObservationUtilityFunctions {
 			}
 		}
 		if (maxVotedReco != null) {
-			map.replace(taxonomicValues[2],
-					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
+//			map.replace(taxonomicValues[2],
+//					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
 			List<Hierarchy> hierarchy = maxVotedReco.getHierarchy();
 			if (hierarchy != null) {
 				String value = "";

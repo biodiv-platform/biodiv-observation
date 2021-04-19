@@ -47,7 +47,9 @@ import com.strandls.observation.es.util.RabbitMQConsumer;
 import com.strandls.observation.service.Impl.DatasetConfigHelper;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
@@ -106,6 +108,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(RabbitMQProducer.class).toInstance(producer);
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
+				bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
+				bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
 				bind(CustomFieldServiceApi.class).in(Scopes.SINGLETON);
 				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
