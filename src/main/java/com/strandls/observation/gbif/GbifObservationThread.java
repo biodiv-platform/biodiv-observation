@@ -113,8 +113,6 @@ public class GbifObservationThread implements Runnable {
 					scientificName = reco.getName();
 				}
 
-				TaxonomyInfo taxonInfo;
-				Long idTaxon;
 				Long rank = null;
 				Long speciesId = null;
 				String taxonStatus = null;
@@ -129,7 +127,6 @@ public class GbifObservationThread implements Runnable {
 				List<Map<String, String>> hierarchy = new ArrayList<>();
 
 				if (taxonId != null) {
-					idTaxon = Long.parseLong(taxonDetails.getId().toString());
 					rank = Long.parseLong(taxonDetails.getRank().toString());
 
 					if (taxonDetails.getAcceptedIds() != null) {
@@ -199,7 +196,8 @@ public class GbifObservationThread implements Runnable {
 
 					batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
 
-					ESPushThread esPushThread = new ESPushThread("test", "_doc", batchEsJson, esService);
+					ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson,
+							esService);
 					Thread t1 = new Thread(esPushThread);
 					t1.start();
 					observations.clear();
@@ -216,7 +214,7 @@ public class GbifObservationThread implements Runnable {
 				}).collect(Collectors.toList());
 
 				batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
-				ESPushThread esPushThread = new ESPushThread("test", "_doc", batchEsJson, esService);
+				ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson, esService);
 				Thread t2 = new Thread(esPushThread);
 				t2.start();
 			}
