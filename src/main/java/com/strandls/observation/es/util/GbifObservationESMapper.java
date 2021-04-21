@@ -3,14 +3,13 @@ package com.strandls.observation.es.util;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import com.strandls.esmodule.pojo.TaxonHierarchy;
+import java.util.Map;
 
 public class GbifObservationESMapper {
 
 	public ObservationESDocument mapToESDocument(Date date, String month, double lat, double lon, Long recoId,
-			Long taxonId, Long rank, Long speciesid, String taxonStatus, List<TaxonHierarchy> hierarchy,
-			String scientificName, String cannonicalName, Long acceptedNameId, String italisicedForm, String position,
+			Long taxonId, Long rank, Long speciesid, String taxonStatus, List<Map<String, String>> hierarchy,
+			String scientificName, String cannonicalName, Long acceptedNameIds, String italisicedForm, String position,
 			Long id, Date dateIdentified, String name, String state, String district, String tahsil, Long groupId,
 			String groupName, String externalReferenceLink) {
 
@@ -35,7 +34,7 @@ public class GbifObservationESMapper {
 			sId = String.valueOf(speciesid);
 		}
 
-		mapAllRecoVote(reco, recoId, scientificName, cannonicalName, acceptedNameId, taxonId, italisicedForm, rank,
+		mapAllRecoVote(reco, recoId, scientificName, cannonicalName, acceptedNameIds, taxonId, italisicedForm, rank,
 				taxonStatus, position, sId, dateIdentified, name);
 		allRecoVote.add(reco);
 		gbifObs.setAll_reco_vote(allRecoVote);
@@ -82,7 +81,7 @@ public class GbifObservationESMapper {
 	}
 
 	private void mapMaxvotedreco(Max_voted_reco maxVotedeReco, Long recoId, Long taxonId, Long rank, Long speciesId,
-			String taxonStatus, List<TaxonHierarchy> hierarchy, String scientificName) {
+			String taxonStatus, List<Map<String, String>> hierarchy, String scientificName) {
 
 		maxVotedeReco.setId(recoId);
 		maxVotedeReco.setRank(rank);
@@ -92,11 +91,11 @@ public class GbifObservationESMapper {
 
 		List<Hierarchy> list = new ArrayList<>();
 		if (hierarchy != null) {
-			for (TaxonHierarchy node : hierarchy) {
+			for (Map<String, String> node : hierarchy) {
 				Hierarchy h = new Hierarchy();
-				h.setNormalized_name(node.getNormalizedName());
-				h.setRank(node.getRank());
-				h.setTaxon_id(node.getTaxonId());
+				h.setNormalized_name(node.get("normalised_name"));
+				h.setRank(Long.parseLong(node.get("rank")));
+				h.setTaxon_id(Long.parseLong(node.get("taxon_id").toString()));
 				list.add(h);
 			}
 		}

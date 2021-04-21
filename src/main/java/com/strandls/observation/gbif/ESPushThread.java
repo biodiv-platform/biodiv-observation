@@ -1,15 +1,8 @@
 package com.strandls.observation.gbif;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapQueryResponse;
-import com.strandls.observation.es.util.ObservationESDocument;
 
 public class ESPushThread implements Runnable {
 

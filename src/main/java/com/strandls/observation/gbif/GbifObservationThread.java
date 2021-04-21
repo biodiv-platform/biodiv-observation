@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
-import com.strandls.esmodule.pojo.TaxonHierarchy;
+import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.TaxonomyInfo;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.LocationInfo;
@@ -69,7 +69,7 @@ public class GbifObservationThread implements Runnable {
 
 			List<ObservationESDocument> observations = new ArrayList<>();
 			while ((row = csvReader.readNext()) != null) {
-				String externalReferenceLink=row[headerIndex.get("occurrenceID")];
+				String externalReferenceLink = row[headerIndex.get("occurrenceID")];
 				String gbifId = row[headerIndex.get("gbifID")];
 				String datetime = row[headerIndex.get("eventDate")];
 				LocalDateTime dateTime = LocalDateTime.parse(datetime);
@@ -82,7 +82,7 @@ public class GbifObservationThread implements Runnable {
 				} else {
 					lastModified = null;
 				}
-              
+
 				String month = row[headerIndex.get("month")];
 				String monthName = getMonthName(month);
 
@@ -94,9 +94,18 @@ public class GbifObservationThread implements Runnable {
 				RecoData recoData = new RecoData();
 				recoData.setTaxonScientificName(verbatimScientificName);
 
-				Map<String, Long> recoAndTaxonId = getRecoAndTaxonId(recoData);
-				Long recoId = recoAndTaxonId.get("recoId");
-				Long taxonId = recoAndTaxonId.get("taxonId");
+				Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData);
+				Long recoId = null;
+				Long taxonId = null;
+				if (recoAndTaxonId.get("recoId") != null) {
+					recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
+				}
+
+				if (recoAndTaxonId.get("taxonId") != null) {
+					taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+				}
+
+				ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
 
 				String scientificName = null;
 				if (recoId != null) {
@@ -110,44 +119,72 @@ public class GbifObservationThread implements Runnable {
 				Long speciesId = null;
 				String taxonStatus = null;
 
-				Long acceptedNameId = null;
+				Long acceptedNameIds = null;
 				String italicisedForm = null;
 				String position = null;
 				String cannonicalName = null;
 				String name = null;
 				Long groupId = null;
 				String groupName = null;
-				List<TaxonHierarchy> hierarchy = new ArrayList<>();
+				List<Map<String, String>> hierarchy = new ArrayList<>();
 
 				if (taxonId != null) {
-					taxonInfo = esService.getTaxonomyDetails(taxonId);
-					idTaxon = taxonInfo.getId();
-					rank = taxonInfo.getRank();
-					if (taxonInfo.getSpeciesId() != null) {
-						speciesId = taxonInfo.getSpeciesId();
-					}
-					taxonStatus = taxonInfo.getTaxonstatus();
-					hierarchy = taxonInfo.getHierarchy();
-					acceptedNameId = taxonInfo.getAcceptedNameId();
-					italicisedForm = taxonInfo.getItalicisedForm();
-					position = taxonInfo.getPosition();
-					cannonicalName = taxonInfo.getCannonicalName();
-					name = taxonInfo.getCannonicalName();
-					groupId = taxonInfo.getGroupId();
-					groupName = taxonInfo.getGroupName();
+					idTaxon = Long.parseLong(taxonDetails.getId().toString());
+					rank = Long.parseLong(taxonDetails.getRank().toString());
 
+					if (taxonDetails.getAcceptedIds() != null) {
+						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
+					} else {
+						acceptedNameIds = taxonId;
+					}
+
+					if (taxonDetails.getItalicisedForm() != null) {
+						italicisedForm = taxonDetails.getItalicisedForm().toString();
+					}
+
+					if (taxonDetails.getPosition() != null) {
+						position = taxonDetails.getPosition().toString();
+					}
+
+					if (taxonDetails.getCanonicalForm() != null) {
+						cannonicalName = taxonDetails.getCanonicalForm();
+					}
+
+					if (taxonDetails.getGroupId() != null) {
+						groupId = (long) Math.round(taxonDetails.getGroupId());
+					}
+
+					if (taxonDetails.getGroupName() != null) {
+						groupName = taxonDetails.getGroupName().toString();
+					}
+
+					if (taxonDetails.getPath() != null) {
+						String[] taxonPath = taxonDetails.getPath().toString().split("_");
+						hierarchy = getHierarchy(taxonPath);
+					}
+
+					if (taxonDetails.getName() != null) {
+						name = taxonDetails.getName().toString();
+					}
+
+					if (taxonDetails.getStatus() != null) {
+						taxonStatus = taxonDetails.getStatus().toString();
+					}
+
+					if (taxonDetails.getSpeciesId() != null) {
+						speciesId = Long.parseLong(taxonDetails.getSpeciesId().toString());
+					}
 				}
 
 				LocationInfo locationInfo = layerService.fetchLocationInfo(String.valueOf(lat), String.valueOf(lon));
 				String state = locationInfo.getState();
 				String district = locationInfo.getDistrict();
 				String tahsil = locationInfo.getTahsil();
-				
 
 				ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, recoId, taxonId, rank,
-						speciesId, taxonStatus, hierarchy, scientificName, cannonicalName, acceptedNameId,
+						speciesId, taxonStatus, hierarchy, scientificName, cannonicalName, acceptedNameIds,
 						italicisedForm, position, Long.parseLong(gbifId), lastModified, name, state, district, tahsil,
-						groupId, groupName,externalReferenceLink);
+						groupId, groupName, externalReferenceLink);
 
 				observations.add(obj);
 				ObjectMapper objectMapper = new ObjectMapper();
@@ -195,8 +232,8 @@ public class GbifObservationThread implements Runnable {
 		return monthName;
 	}
 
-	private Map<String, Long> getRecoAndTaxonId(RecoData recoData) throws Exception {
-		Map<String, Long> result = new HashMap<String, Long>();
+	private Map<String, Object> getRecoAndTaxonId(RecoData recoData) throws Exception {
+		Map<String, Object> result = new HashMap<String, Object>();
 		try {
 			String providedSciName = recoData.getTaxonScientificName();
 			ParsedName parsedName = utilityService.getNameParsed(providedSciName);
@@ -222,10 +259,39 @@ public class GbifObservationThread implements Runnable {
 					result.put("recoId", resultList.get(0).getId());
 				}
 			}
+			result.put("etd", esResult);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			throw e;
 		}
 		return result;
+	}
+
+	private List<Map<String, String>> getHierarchy(String[] taxonIds) {
+
+		MapDocument taxonDoc;
+		try {
+
+			List<Map<String, String>> hierarchy = new ArrayList<>();
+
+			for (String id : taxonIds) {
+				taxonDoc = esService.fetch("extended_taxon_definition", "_doc", id);
+				@SuppressWarnings("unchecked")
+				Map<String, Object> taxonResponse = new ObjectMapper().readValue(taxonDoc.getDocument().toString(),
+						HashMap.class);
+				String taxonId = taxonResponse.get("id").toString();
+				String normalisedName = taxonResponse.get("name").toString();
+				String rank = taxonResponse.get("rank").toString();
+				Map<String, String> node = new HashMap<>();
+				node.put("taxon_id", taxonId);
+				node.put("normalised_name", normalisedName);
+				node.put("rank", rank);
+				hierarchy.add(node);
+			}
+			return hierarchy;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
