@@ -12,7 +12,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.strandls.file.api.UploadApi;
+import com.strandls.file.model.FilesDTO;
+import com.strandls.observation.Headers;
+import com.strandls.observation.dao.DataTableDAO;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESBulkUploadThread;
@@ -21,7 +27,12 @@ import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.pojo.DataTable;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
+import com.strandls.observation.service.Impl.ObservationServiceImpl;
+import com.strandls.resource.ApiException;
+import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.UFile;
+import com.strandls.resource.pojo.UFileCreateData;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
@@ -29,9 +40,15 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
 
 public class ObservationBulkUploadThread implements Runnable {
 
+	private static final Logger logger = LoggerFactory.getLogger(ObservationBulkUploadThread.class);
+
 	private final ObservationBulkDTO observationBulkData;
 	private final HttpServletRequest request;
 	private final ObservationDAO observationDao;
+	private final DataTableDAO dataTableDAO;
+	private ResourceServicesApi resourceService;
+	private UploadApi fileUploadApi;
+	private final Headers headers;
 	private final ObservationBulkMapperHelper observationBulkMapperHelper;
 	private final ESUpdate esUpdate;
 	private final UserServiceApi userService;
@@ -49,11 +66,16 @@ public class ObservationBulkUploadThread implements Runnable {
 			ObservationDAO observationDao, ObservationBulkMapperHelper observationBulkMapperHelper, ESUpdate esUpdate,
 			UserServiceApi userService, DataTable dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
-			XSSFWorkbook workbook, Map<String, String> myImageUpload) {
+			XSSFWorkbook workbook, Map<String, String> myImageUpload, DataTableDAO dataTableDAO,
+			ResourceServicesApi resourceService, UploadApi fileUploadApi, Headers headers) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
+		this.dataTableDAO = dataTableDAO;
 		this.observationBulkMapperHelper = observationBulkMapperHelper;
+		this.resourceService = resourceService;
+		this.fileUploadApi = fileUploadApi;
+		this.headers = headers;
 		this.esUpdate = esUpdate;
 		this.userService = userService;
 		this.dataTable = dataTable;
@@ -73,6 +95,8 @@ public class ObservationBulkUploadThread implements Runnable {
 		XSSFSheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> rows = sheet.iterator();
 		List<Long> observationIds = new ArrayList<Long>();
+		fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
+		resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 		Row dataRow;
 		// skip header
 		rows.next();
@@ -83,7 +107,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
-						observationBulkData.getIsVerified(),observationBulkData.getChecklistAnnotation());
+						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 						observationDao, userService, data, myImageUpload, userId);
@@ -104,6 +128,36 @@ public class ObservationBulkUploadThread implements Runnable {
 			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 			Thread thread = new Thread(updateThread);
 			thread.start();
+
+			try {
+				List<String> myUploadFilesPath = new ArrayList<String>();
+				myUploadFilesPath.add(observationBulkData.getFilename());
+				UFile uFileData = null;
+				FilesDTO filesDto = new FilesDTO();
+				filesDto.setFolder("datatables");
+				filesDto.setModule("DATASETS");
+				filesDto.setFiles(myUploadFilesPath);
+				Map<String, Object> fileRes;
+				fileRes = fileUploadApi.moveFiles(filesDto);
+				List<UFileCreateData> createUfileList = new ArrayList<>();
+				fileRes.entrySet().forEach((item) -> {
+					@SuppressWarnings("unchecked")
+					Map<String, String> values = (Map<String, String>) item.getValue();
+					UFileCreateData createUFileData = new UFileCreateData();
+					createUFileData.setWeight(0);
+					createUFileData.setSize(values.get("size"));
+					createUFileData.setPath(values.get("name"));
+					createUfileList.add(createUFileData);
+
+				});
+
+				uFileData = resourceService.createUFile(createUfileList.get(0));
+				dataTable.setuFileId(uFileData.getId());
+				dataTableDAO.update(dataTable);
+			} catch (com.strandls.file.ApiException | ApiException e) {
+				logger.error(e.getMessage());
+			}
+
 		}
 
 	}

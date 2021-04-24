@@ -2307,7 +2307,7 @@ public class ObservationServiceImpl implements ObservationService {
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 					observationDao, observationBulkMapperHelper, esUpdate, userService,dataTable, userId, getAllSpeciesGroup(),
-					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload);
+					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,dataTableDAO,resourceService,fileUploadApi,headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 
