@@ -89,12 +89,14 @@ public class DataTableHelper {
 		Long datasetid = observationBulkData.getDataset() != null ? observationBulkData.getDataset() : dataset.getId();
 		UFile uFileData = null;
 		uploadApi = headers.addFileUploadHeader(uploadApi, jwtToken);
+		resourceApi = headers.addResourceHeaders(resourceApi, jwtToken);
 
 		try {
 			List<String> myUploadFilesPath = new ArrayList<String>();
 			myUploadFilesPath.add(observationBulkData.getFilename());
 			FilesDTO filesDto = new FilesDTO();
 			filesDto.setFolder("datatables");
+			filesDto.setModule("DATASETS");
 			filesDto.setFiles(myUploadFilesPath);
 			Map<String, Object> fileRes = uploadApi.moveFiles(filesDto);
 			List<UFileCreateData> createUfileList = new ArrayList<>();
