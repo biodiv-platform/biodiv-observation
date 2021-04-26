@@ -306,7 +306,7 @@ public class ObservationESDocument {
 	public void setProfile_pic(String profile_pic) {
 		this.profile_pic = profile_pic;
 	}
-
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getCreated_on() {
 		return created_on;
 	}
@@ -940,7 +940,6 @@ class Featured {
 	public void setId(Long id) {
 		this.id = id;
 	}
-
 	public Date getCreated_on() {
 		return created_on;
 	}

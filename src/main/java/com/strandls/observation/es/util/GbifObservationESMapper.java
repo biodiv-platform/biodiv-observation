@@ -1,6 +1,8 @@
 package com.strandls.observation.es.util;
 
 import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.time.Clock;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +16,22 @@ public class GbifObservationESMapper {
 			String groupName, String externalReferenceLink) {
 
 		ObservationESDocument gbifObs = new ObservationESDocument();
+		Clock clock = Clock.systemUTC();
+		Date createdOnDate = Date.from(clock.instant());
+
 		gbifObs.setFrom_date(date);
+		gbifObs.setCreated_on(createdOnDate);
 		gbifObs.setObserved_in_month(month);
 		gbifObs.setLocation(new Location(lat, lon));
 		gbifObs.setObservation_id(id);
 		gbifObs.setExternal_reference_link(externalReferenceLink);
 		gbifObs.setIs_external(true);
 		gbifObs.setData_source("gbif.org");
+		gbifObs.setIs_checklist(false);
+		gbifObs.setNo_media(0);
+		gbifObs.setNo_of_audio(0);
+		gbifObs.setNo_of_images(0);
+		gbifObs.setNo_of_videos(0);
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);
