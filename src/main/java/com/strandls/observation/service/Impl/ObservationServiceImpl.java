@@ -2290,11 +2290,23 @@ public class ObservationServiceImpl implements ObservationService {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
+		String dir =  storageBasePath+File.separatorChar + "myUploads"+ File.separatorChar
+			+ userId;
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,request.getHeader(HttpHeaders.AUTHORIZATION));
 		dataTable = dataTableDAO.save(dataTable);
 		try {
 
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()));
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(dir+observationBulkData.getFilename()));
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
