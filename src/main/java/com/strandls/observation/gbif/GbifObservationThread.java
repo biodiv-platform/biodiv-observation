@@ -17,7 +17,6 @@ import com.opencsv.CSVReader;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.esmodule.pojo.MapDocument;
-import com.strandls.esmodule.pojo.TaxonomyInfo;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.LocationInfo;
 import com.strandls.observation.dao.RecommendationDao;
@@ -88,6 +87,11 @@ public class GbifObservationThread implements Runnable {
 
 				double lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
 				double lon = Double.parseDouble(row[headerIndex.get("decimalLongitude")]);
+				String placeName = row[headerIndex.get("locality")];
+
+				if (placeName.equals("")) {
+					placeName = null;
+				}
 
 				String verbatimScientificName = row[headerIndex.get("verbatimScientificName")];
 
@@ -101,14 +105,16 @@ public class GbifObservationThread implements Runnable {
 					recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
 				}
 
+				String scientificName = verbatimScientificName;
 				if (recoAndTaxonId.get("taxonId") != null) {
 					taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+
 				}
 
 				ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
-
-				String scientificName = null;
-				if (recoId != null) {
+				if (taxonId != null) {
+					scientificName = taxonDetails.getName();
+				} else if (recoId != null) {
 					Recommendation reco = recoDao.findById(recoId);
 					scientificName = reco.getName();
 				}
@@ -178,10 +184,10 @@ public class GbifObservationThread implements Runnable {
 				String district = locationInfo.getDistrict();
 				String tahsil = locationInfo.getTahsil();
 
-				ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, recoId, taxonId, rank,
-						speciesId, taxonStatus, hierarchy, scientificName, cannonicalName, acceptedNameIds,
-						italicisedForm, position, Long.parseLong(gbifId), lastModified, name, state, district, tahsil,
-						groupId, groupName, externalReferenceLink);
+				ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName, recoId,
+						taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
+						acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name, state,
+						district, tahsil, groupId, groupName, externalReferenceLink);
 
 				observations.add(obj);
 				ObjectMapper objectMapper = new ObjectMapper();

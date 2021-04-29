@@ -9,11 +9,11 @@ import java.util.Map;
 
 public class GbifObservationESMapper {
 
-	public ObservationESDocument mapToESDocument(Date date, String month, double lat, double lon, Long recoId,
-			Long taxonId, Long rank, Long speciesid, String taxonStatus, List<Map<String, String>> hierarchy,
-			String scientificName, String cannonicalName, Long acceptedNameIds, String italisicedForm, String position,
-			Long id, Date dateIdentified, String name, String state, String district, String tahsil, Long groupId,
-			String groupName, String externalReferenceLink) {
+	public ObservationESDocument mapToESDocument(Date date, String month, double lat, double lon, String placeName,
+			Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
+			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
+			String italisicedForm, String position, Long id, Date dateIdentified, String name, String state,
+			String district, String tahsil, Long groupId, String groupName, String externalReferenceLink) {
 
 		ObservationESDocument gbifObs = new ObservationESDocument();
 		Clock clock = Clock.systemUTC();
@@ -28,10 +28,12 @@ public class GbifObservationESMapper {
 		gbifObs.setIs_external(true);
 		gbifObs.setData_source("gbif.org");
 		gbifObs.setIs_checklist(false);
-		gbifObs.setNo_media(0);
+		gbifObs.setNo_media(1);
 		gbifObs.setNo_of_audio(0);
 		gbifObs.setNo_of_images(0);
 		gbifObs.setNo_of_videos(0);
+		gbifObs.setPlace_name(placeName);
+		
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);
@@ -112,6 +114,39 @@ public class GbifObservationESMapper {
 		}
 
 		maxVotedeReco.setHierarchy(list);
+		if(rank!=null) {
+			maxVotedeReco.setRanktext(getRankText(rank));
+		}
+
+	}
+
+	private String getRankText(Long rank) {
+
+		if (rank == 0) {
+			return ("Kingdom");
+		} else if (rank == 1) {
+			return ("Phylum");
+		} else if (rank == 2) {
+			return ("Class");
+		} else if (rank == 3) {
+			return ("Order");
+		} else if (rank == 4) {
+			return ("Superfamily");
+		} else if (rank == 5) {
+			return ("Family");
+		} else if (rank == 6) {
+			return ("Subfamily");
+		} else if (rank == 7) {
+			return ("Genus");
+		} else if (rank == 8) {
+			return ("Subgenus");
+		} else if (rank == 9) {
+			return ("Species");
+		} else if (rank == 10) {
+			return ("Infraspecies");
+		} else {
+			return null;
+		}
 
 	}
 
