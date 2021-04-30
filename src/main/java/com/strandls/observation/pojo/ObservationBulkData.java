@@ -11,63 +11,67 @@ import java.util.List;
 import java.util.Map;
 
 public class ObservationBulkData {
-    private final Map<String, Integer> fieldMapping;
-    private final Map<String, Integer> checklistAnnotaion;
-    private final Row dataRow;
-    private final HttpServletRequest request;
-    private final DataTable dataTable;
-    private final List<SpeciesGroup> speciesGroupList;
-    private final List<TraitsValuePair> pairs;
-    private final List<UserGroupIbp> userGroupsList;
-    private final List<License> licenses;
-    private final Boolean isVerified;
+	private final Map<String, Integer> fieldMapping;
+	private final Map<String, Integer> checklistAnnotaion;
+	private final Row dataRow;
+	private final HttpServletRequest request;
+	private final DataTable dataTable;
+	private final List<SpeciesGroup> speciesGroupList;
+	private final List<TraitsValuePair> pairs;
+	private final List<UserGroupIbp> userGroupsList;
+	private final List<License> licenses;
+	private final Boolean isVerified;
+	private final String basisOfRecord;
+	
 
-    public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
-                               DataTable dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
-                               List<UserGroupIbp> userGroupsList, List<License> licenses,Boolean isVerified,Map<String, Integer> checklistAnnotaion) {
-        this.fieldMapping = fieldMapping;
+	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
+			DataTable dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
+			List<UserGroupIbp> userGroupsList, List<License> licenses, Boolean isVerified,
+			Map<String, Integer> checklistAnnotaion, String basisOfRecord) {
+		this.fieldMapping = fieldMapping;
 		this.checklistAnnotaion = checklistAnnotaion;
-        this.dataRow = dataRow;
-        this.request = request;
-        this.dataTable = dataTable;
+		this.dataRow = dataRow;
+		this.request = request;
+		this.dataTable = dataTable;
 		this.isVerified = isVerified;
-        this.speciesGroupList = speciesGroupList;
-        this.pairs = pairs;
-        this.userGroupsList = userGroupsList;
-        this.licenses = licenses;
-    }
+		this.speciesGroupList = speciesGroupList;
+		this.pairs = pairs;
+		this.userGroupsList = userGroupsList;
+		this.licenses = licenses;
+		this.basisOfRecord = basisOfRecord;
+	}
 
-    public Map<String, Integer> getFieldMapping() {
-        return fieldMapping;
-    }
+	public Map<String, Integer> getFieldMapping() {
+		return fieldMapping;
+	}
 
-    public Row getDataRow() {
-        return dataRow;
-    }
+	public Row getDataRow() {
+		return dataRow;
+	}
 
-    public HttpServletRequest getRequest() {
-        return request;
-    }
+	public HttpServletRequest getRequest() {
+		return request;
+	}
 
-    public List<SpeciesGroup> getSpeciesGroupList() {
-        return speciesGroupList;
-    }
+	public List<SpeciesGroup> getSpeciesGroupList() {
+		return speciesGroupList;
+	}
 
-    public List<TraitsValuePair> getPairs() {
-        return pairs;
-    }
+	public List<TraitsValuePair> getPairs() {
+		return pairs;
+	}
 
-    public List<UserGroupIbp> getUserGroupsList() {
-        return userGroupsList;
-    }
+	public List<UserGroupIbp> getUserGroupsList() {
+		return userGroupsList;
+	}
 
-    public List<License> getLicenses() {
-        return licenses;
-    }
+	public List<License> getLicenses() {
+		return licenses;
+	}
 
-    public DataTable getDataTable() {
-        return dataTable;
-    }
+	public DataTable getDataTable() {
+		return dataTable;
+	}
 
 	public Boolean getIsVerified() {
 		return isVerified;
@@ -75,5 +79,9 @@ public class ObservationBulkData {
 
 	public Map<String, Integer> getChecklistAnnotaion() {
 		return checklistAnnotaion;
+	}
+
+	public String getBasisOfRecord() {
+		return basisOfRecord;
 	}
 }

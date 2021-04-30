@@ -2299,11 +2299,23 @@ public class ObservationServiceImpl implements ObservationService {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
+		String dir =  storageBasePath+File.separatorChar + "myUploads"+ File.separatorChar
+			+ userId;
 		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,request.getHeader(HttpHeaders.AUTHORIZATION));
 		dataTable = dataTableDAO.save(dataTable);
 		try {
 
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(observationBulkData.getFilename()));
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(dir+observationBulkData.getFilename()));
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
@@ -2316,7 +2328,7 @@ public class ObservationServiceImpl implements ObservationService {
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 					observationDao, observationBulkMapperHelper, esUpdate, userService,dataTable, userId, getAllSpeciesGroup(),
-					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload);
+					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,dataTableDAO,resourceService,fileUploadApi,headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 

@@ -238,7 +238,7 @@ public class ObservationUtilityFunctions {
 
 			if (fieldMapping.get("user") != null) {
 				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (userCell != null) {
+				if (userCell != null && userCell.getCellType() == CellType.NUMERIC) {
 					userCell.setCellType(CellType.NUMERIC);
 					Long userIdCell = (long) userCell.getNumericCellValue();
 					try {
@@ -254,7 +254,7 @@ public class ObservationUtilityFunctions {
 
 			observation = mapper.creationObservationMapping(userId, fieldMapping, dataRow,
 					observationData.getDataTable(), observationData.getSpeciesGroupList(),
-					observationData.getChecklistAnnotaion(), isVerified);
+					observationData.getChecklistAnnotaion(), isVerified, observationData.getBasisOfRecord());
 			if (observation != null) {
 				observation = observationDAO.save(observation);
 				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,

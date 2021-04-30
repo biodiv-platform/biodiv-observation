@@ -93,7 +93,7 @@ public class ObservationBulkMapperHelper {
 	@SuppressWarnings("deprecation")
 	public Observation creationObservationMapping(Long userId, Map<String, Integer> fieldMapping, Row dataRow,
 			DataTable dataTable, List<SpeciesGroup> speciesGroupList, Map<String, Integer> checklistAnnotation,
-			Boolean isVerified) {
+			Boolean isVerified, String basisOfRecord) {
 		try {
 			Boolean geoPrivacy = Boolean.TRUE;
 			Observation observation = new Observation();
@@ -278,7 +278,7 @@ public class ObservationBulkMapperHelper {
 
 			observation.setReprImageId(null);
 			observation.setProtocol("LIST");
-			observation.setBasisOfRecord("PRIMARY_OBSERVATION");
+			observation.setBasisOfRecord(basisOfRecord != null ? basisOfRecord : "PRIMARY_OBSERVATION");
 			observation.setNoOfImages(0);
 			observation.setNoOfAudio(0);
 			observation.setNoOfVideos(0);
@@ -468,9 +468,12 @@ public class ObservationBulkMapperHelper {
 				return;
 
 			for (String file : cellFiles) {
-				if (myImageUpload.containsKey(file)) {
-					filesWithPath.add(myImageUpload.get(file));
-				}
+				myImageUpload.forEach((k,v)->{
+					if (k.contains(file)) {
+						filesWithPath.add(myImageUpload.get(k));
+					}
+				});
+				
 			}
 
 			if (filesWithPath.isEmpty())

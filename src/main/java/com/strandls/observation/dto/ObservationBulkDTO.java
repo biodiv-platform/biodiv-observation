@@ -43,6 +43,7 @@ public class ObservationBulkDTO {
     private String project;
     private String methods;
     private String basisOfData;
+    private String basisOfRecord;
 
     // other fields related to bulk upload
     private Boolean isVerified;
@@ -231,5 +232,11 @@ public class ObservationBulkDTO {
 	}
 	public void setWktString(String wktString) {
 		this.wktString = wktString;
+	}
+	public String getBasisOfRecord() {
+		return basisOfRecord;
+	}
+	public void setBasisOfRecord(String basisOfRecord) {
+		this.basisOfRecord = basisOfRecord;
 	}
 }
