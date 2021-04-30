@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -103,28 +105,30 @@ public class ObservationBulkUploadThread implements Runnable {
 
 		while (rows.hasNext()) {
 			dataRow = rows.next();
-			if (true) {
-				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
-						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
-						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
-						observationBulkData.getBasisOfData());
+			if (isEmptyRow(dataRow)) {
+				break;
+			}
 
-				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-						observationDao, userService, data, myImageUpload, userId);
-				observationIds.add(obsId);
-				if (observationIds.size() >= 100) {
-					String observationList = StringUtils.join(observationIds, ',');
-					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-					Thread thread = new Thread(updateThread);
-					thread.start();
-					observationIds.clear();
-				}
+			ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+			ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
+					dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
+					observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
+					observationBulkData.getBasisOfData());
+
+			Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
+					observationDao, userService, data, myImageUpload, userId);
+			observationIds.add(obsId);
+			if (observationIds.size() >= 100) {
+				String observationList = StringUtils.join(observationIds, ',');
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+				Thread thread = new Thread(updateThread);
+				thread.start();
+				observationIds.clear();
 			}
 
 		}
 
-		if (!rows.hasNext() && !observationIds.isEmpty()) {
+		if (!observationIds.isEmpty()) {
 			String observationList = StringUtils.join(observationIds, ',');
 			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 			Thread thread = new Thread(updateThread);
@@ -161,6 +165,17 @@ public class ObservationBulkUploadThread implements Runnable {
 
 		}
 
+	}
+
+	private boolean isEmptyRow(Row row) {
+		boolean isEmptyRow = true;
+		for (int cellNum = row.getFirstCellNum(); cellNum < row.getLastCellNum(); cellNum++) {
+			Cell cell = row.getCell(cellNum);
+			if (cell != null && cell.getCellType() != CellType.BLANK && StringUtils.isNotBlank(cell.toString())) {
+				isEmptyRow = false;
+			}
+		}
+		return isEmptyRow;
 	}
 
 }
