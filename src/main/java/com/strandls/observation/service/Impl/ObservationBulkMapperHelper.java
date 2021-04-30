@@ -468,9 +468,12 @@ public class ObservationBulkMapperHelper {
 				return;
 
 			for (String file : cellFiles) {
-				if (myImageUpload.containsKey(file)) {
-					filesWithPath.add(myImageUpload.get(file));
-				}
+				myImageUpload.forEach((k,v)->{
+					if (k.contains(file)) {
+						filesWithPath.add(myImageUpload.get(k));
+					}
+				});
+				
 			}
 
 			if (filesWithPath.isEmpty())
