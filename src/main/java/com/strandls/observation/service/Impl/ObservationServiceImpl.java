@@ -214,6 +214,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private UploadApi fileUploadApi;
+	
+	@Inject
 	private SpeciesServicesApi speciesGroupService;
 
 	@Inject
@@ -623,6 +625,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			result = speciesGroupService.getAllSpeciesGroup();
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return result;
