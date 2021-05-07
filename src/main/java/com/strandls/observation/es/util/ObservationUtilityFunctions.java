@@ -222,6 +222,7 @@ public class ObservationUtilityFunctions {
 			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
 			Map<String, String> myImageUpload, Long userId) {
 		Observation observation = null;
+		String resourceAuthHeader = requestAuthHeader;
 		Boolean isVerified = observationData.getIsVerified() ? observationData.getIsVerified() : false;
 		try {
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
@@ -257,7 +258,7 @@ public class ObservationUtilityFunctions {
 					observationData.getChecklistAnnotaion(), isVerified, observationData.getBasisOfRecord());
 			if (observation != null) {
 				observation = observationDAO.save(observation);
-				mapper.createObservationResource(requestAuthHeader, dataRow, fieldMapping,
+				mapper.createObservationResource(resourceAuthHeader, dataRow, fieldMapping,
 						observationData.getLicenses(), userId, observation, myImageUpload);
 				mapper.createRecoMapping(observationData.getRequest(), requestAuthHeader, fieldMapping, dataRow,
 						observation, userId);
