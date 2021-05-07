@@ -29,6 +29,7 @@ import com.strandls.observation.pojo.ShowData;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.pojo.Follow;
@@ -68,7 +69,7 @@ public interface ObservationService {
 	public List<Tags> updateTags(HttpServletRequest request, TagsMapping tagsMapping);
 
 	public List<FactValuePair> updateTraits(HttpServletRequest request, String observationId, String traitId,
-			List<Long> valueList);
+			FactsUpdateData updateData);
 
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
 			List<Long> userGroupList);

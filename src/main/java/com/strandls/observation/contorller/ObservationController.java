@@ -78,6 +78,7 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.pojo.Follow;
@@ -441,7 +442,7 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset,identifiersoffset);
+							uploadersoffset, identifiersoffset);
 
 				}
 
@@ -513,9 +514,9 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "Unable to Update the Traits", response = String.class) })
 
 	public Response updateTraits(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@PathParam("traitId") String traitId, @ApiParam(name = "valueList") List<Long> valueList) {
+			@PathParam("traitId") String traitId, @ApiParam(name = "updateData") FactsUpdateData updateData) {
 		try {
-			List<FactValuePair> result = observationService.updateTraits(request, observationId, traitId, valueList);
+			List<FactValuePair> result = observationService.updateTraits(request, observationId, traitId, updateData);
 
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
