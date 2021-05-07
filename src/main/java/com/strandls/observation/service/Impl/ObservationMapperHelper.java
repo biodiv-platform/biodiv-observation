@@ -76,6 +76,9 @@ public class ObservationMapperHelper {
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
+	private Long defaultLicenseId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
+
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
 			String topleft = "";
@@ -170,7 +173,7 @@ public class ObservationMapperHelper {
 			observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
 											// group
 			observation.setIsLocked(false);// update field , initially false
-			observation.setLicenseId(822L);// default 822
+			observation.setLicenseId(defaultLicenseId);// default 822
 			observation.setLanguageId(observationData.getObsvLanguageId());
 			observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
