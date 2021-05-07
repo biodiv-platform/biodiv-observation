@@ -37,7 +37,6 @@ import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.DataTable;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
-import com.strandls.observation.pojo.ObservationResourceData;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
