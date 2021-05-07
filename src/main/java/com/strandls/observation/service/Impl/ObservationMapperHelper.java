@@ -36,6 +36,7 @@ import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -71,6 +72,9 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
+
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -430,7 +434,7 @@ public class ObservationMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(205L);
+				resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
