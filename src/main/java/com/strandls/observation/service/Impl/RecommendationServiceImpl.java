@@ -369,6 +369,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		for (Recommendation recommendation : recoList) {
 
 			try {
+				System.out.println("RECO ID : " + recommendation.getId());
 				ParsedName parsedName = utilityService.getNameParsed(recommendation.getName());
 				if (parsedName == null)
 					errorList.add(recommendation.getId());
