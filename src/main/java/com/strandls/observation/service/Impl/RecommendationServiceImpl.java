@@ -568,11 +568,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked())
 				return null;
-
-			Observation observation = observationDao.findById(observationId);
-			if (observation.getIsLocked())
-				return null;
-
+			
 			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
