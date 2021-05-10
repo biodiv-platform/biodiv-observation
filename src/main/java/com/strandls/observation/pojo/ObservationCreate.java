@@ -42,8 +42,9 @@ public class ObservationCreate {
 	private Boolean hidePreciseLocation;
 
 //	-----Traits Data---------
-	private Map<String, List<Long>> facts;
-//	traitId:[valueId list] patter
+	private Map<String, List<Long>> factValuePairs;
+//	traitId:[valueId list] pattern
+	private Map<String, List<String>> factValueStringPairs;
 
 //	-----Notes and tags-------
 	private String notes;
@@ -208,12 +209,20 @@ public class ObservationCreate {
 		this.hidePreciseLocation = hidePreciseLocation;
 	}
 
-	public Map<String, List<Long>> getFacts() {
-		return facts;
+	public Map<String, List<Long>> getFactValuePairs() {
+		return factValuePairs;
 	}
 
-	public void setFacts(Map<String, List<Long>> facts) {
-		this.facts = facts;
+	public void setFactValuePairs(Map<String, List<Long>> factValuePairs) {
+		this.factValuePairs = factValuePairs;
+	}
+
+	public Map<String, List<String>> getFactValueStringPairs() {
+		return factValueStringPairs;
+	}
+
+	public void setFactValueStringPairs(Map<String, List<String>> factValueStringPairs) {
+		this.factValueStringPairs = factValueStringPairs;
 	}
 
 	public String getNotes() {
