@@ -441,7 +441,7 @@ public class ObservationMapperHelper {
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
-				resource.setLicenseId(resourceData.getLicenceId());
+				resource.setLicenseId(resourceData.getLicenseId());
 
 				resources.add(resource);
 			}

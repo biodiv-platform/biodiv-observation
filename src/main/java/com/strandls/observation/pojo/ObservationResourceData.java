@@ -14,7 +14,7 @@ public class ObservationResourceData {
 	private String type;
 	private String caption;
 	private Integer rating;
-	private Long licenceId;
+	private Long licenseId;
 
 	/**
 	 * 
@@ -29,16 +29,17 @@ public class ObservationResourceData {
 	 * @param type
 	 * @param caption
 	 * @param rating
-	 * @param licenceId
+	 * @param licenseId
 	 */
-	public ObservationResourceData(String path, String url, String type, String caption, Integer rating, Long licenceId) {
+	public ObservationResourceData(String path, String url, String type, String caption, Integer rating,
+			Long licenseId) {
 		super();
 		this.path = path;
 		this.url = url;
 		this.type = type;
 		this.caption = caption;
 		this.rating = rating;
-		this.licenceId = licenceId;
+		this.licenseId = licenseId;
 	}
 
 	public String getPath() {
@@ -81,12 +82,12 @@ public class ObservationResourceData {
 		this.rating = rating;
 	}
 
-	public Long getLicenceId() {
-		return licenceId;
+	public Long getLicenseId() {
+		return licenseId;
 	}
 
-	public void setLicenceId(Long licenceId) {
-		this.licenceId = licenceId;
+	public void setLicenseId(Long licenseId) {
+		this.licenseId = licenseId;
 	}
 
 }
