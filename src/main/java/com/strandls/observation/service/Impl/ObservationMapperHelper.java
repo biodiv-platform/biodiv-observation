@@ -44,6 +44,7 @@ import com.strandls.observation.pojo.ResourceDataObs;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.License;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -90,6 +91,11 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private TraitsServiceApi traitsServiceApi;
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
+
+	private Long defaultLicenseId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -185,7 +191,7 @@ public class ObservationMapperHelper {
 			observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
 											// group
 			observation.setIsLocked(false);// update field , initially false
-			observation.setLicenseId(822L);// default 822
+			observation.setLicenseId(defaultLicenseId);// default 822
 			observation.setLanguageId(observationData.getObsvLanguageId());
 			observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
@@ -449,7 +455,7 @@ public class ObservationMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(205L);
+				resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
