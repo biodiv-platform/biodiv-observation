@@ -97,12 +97,7 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private TraitsServiceApi traitsServiceApi;
-	private Long defaultLanguageId = Long
-			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
-
-	private Long defaultLicenseId = Long
-			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
-
+	
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
 			String topleft = "";
