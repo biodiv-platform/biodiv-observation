@@ -43,7 +43,7 @@ public class ConstructESDocument {
 				+ "custom_fields\\:\\:text custom_fields,   "
 				+ "user_group_observations\\:\\:text user_group_observations, (tags)\\:\\:text AS tags, (flags\\:\\:text) flags, (featured\\:\\:text) AS featured,  "
 				+ "(facts)\\:\\:text facts, "
-				+ "CASE WHEN    (is_verified = true) OR ((no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
+				+ "CASE WHEN    (is_verified = true) OR (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
 				+ "        from_date IS NOT NULL AND latitude IS NOT NULL AND "
 				+ "        longitude IS NOT NULL AND  (is_locked = true OR reco_vote_count >= 2)  AND "
 				+ "        flag_count = 0 AND"
