@@ -133,12 +133,8 @@ public class ObservationBulkMapperHelper {
 				if (fromDateCell != null) {
 					fromDateCell.setCellType(CellType.NUMERIC);
 					fromDate = fromDateCell.getDateCellValue();
-				} else { // get value from dataTable metadata if not mentioned in excel
-					fromDate = dataTable.getTemporalCoverageFromDate();
-				}
-			} else { // get value from dataTable metadata if not mentioned in excel
-				fromDate = dataTable.getTemporalCoverageFromDate();
-			}
+				} 
+			} 
 
 			Date toDate = null;
 			if (fieldMapping.get("toDate") != null) {
@@ -146,12 +142,8 @@ public class ObservationBulkMapperHelper {
 				if (toDateCell != null) {
 					toDateCell.setCellType(CellType.NUMERIC);
 					toDate = toDateCell.getDateCellValue();
-				} else { // get value from dataTable metadata if not mentioned in excel
-					toDate = dataTable.getTemporalCoverageToDate();
-				}
-			} else { // get value from dataTable metadata if not mentioned in excel
-				toDate = dataTable.getTemporalCoverageToDate();
-			}
+				} 
+			} 
 
 			String observedAt = "";
 			if (fieldMapping.get("observedAt") != null) {
