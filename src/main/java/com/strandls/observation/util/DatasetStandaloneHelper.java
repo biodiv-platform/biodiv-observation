@@ -66,7 +66,7 @@ public class DatasetStandaloneHelper {
 				topleft = properties.getProperty("topLeft");
 				bottomright = properties.getProperty("bottomRight");
 				GeoCoverageLat = properties.getProperty("geoCoverageLat");
-				GeoCoverageLon = properties.getProperty("GeoCoverageLon");
+				GeoCoverageLon = properties.getProperty("geoCoverageLon");
 				GeoCoveragePlacename = properties.getProperty("geoCoveragePlacename");
 				String point1[] = topleft.split(",");
 				String point2[] = bottomright.split(",");
