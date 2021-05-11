@@ -82,6 +82,12 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
+	
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
+	
+	private Long defaultLicenseId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
 
 	@Inject
 	private RabbitMQProducer rabbitMQProducer;
@@ -459,7 +465,7 @@ public class ObservationMapperHelper {
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
-				resource.setLicenseId(resourceData.getLicenceId());
+				resource.setLicenseId(resourceData.getLicenseId());
 
 				resources.add(resource);
 			}

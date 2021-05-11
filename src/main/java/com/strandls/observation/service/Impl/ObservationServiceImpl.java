@@ -424,9 +424,12 @@ public class ObservationServiceImpl implements ObservationService {
 				observationDao.update(observation);
 			}
 
-			if (observationData.getFacts() != null && !observationData.getFacts().isEmpty()) {
+			if ((observationData.getFactValuePairs() != null && !observationData.getFactValuePairs().isEmpty())
+					|| (observationData.getFactValueStringPairs() != null
+							&& !observationData.getFactValueStringPairs().isEmpty())) {
 				FactsCreateData factsCreateData = new FactsCreateData();
-				factsCreateData.setFactValuePairs(observationData.getFacts());
+				factsCreateData.setFactValuePairs(observationData.getFactValuePairs());
+				factsCreateData.setFactValueString(observationData.getFactValueStringPairs());
 				factsCreateData.setMailData(null);
 				traitService = headers.addTraitsHeaders(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
@@ -557,17 +560,14 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public List<FactValuePair> updateTraits(HttpServletRequest request, String observationId, String traitId,
-			List<Long> valueList) {
+			FactsUpdateData updateData) {
 
 		List<FactValuePair> facts = null;
 		try {
 
-			FactsUpdateData factsUpdatedata = new FactsUpdateData();
-			factsUpdatedata.setTraitValueList(valueList);
-			factsUpdatedata.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
+			updateData.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
 			traitService = headers.addTraitsHeaders(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId,
-					factsUpdatedata);
+			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId, updateData);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
