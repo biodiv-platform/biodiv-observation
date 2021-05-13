@@ -942,6 +942,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 		for (Recommendation reco : recoList) {
 			if (reco.getId() != latestRecoId) {
 				recoDao.delete(reco);
+			} else {
+				if (!reco.getIsScientificName()) {
+					reco.setIsScientificName(true);
+					recoDao.update(reco);
+				}
+
 			}
 		}
 	}
