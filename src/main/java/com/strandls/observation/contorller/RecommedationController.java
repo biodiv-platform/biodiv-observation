@@ -238,4 +238,18 @@ public class RecommedationController {
 
 	}
 
+	@GET
+	@Path(ApiConstants.RECOVOTE + ApiConstants.CLEANUP)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	public Response cleanRecoVote() {
+		try {
+			recoService.recoCleanUp();
+			return Response.status(Status.OK).entity("started").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+
+	}
+
 }

@@ -73,6 +73,7 @@ public class ApiConstants {
 	public static final String VALIDATE = "/validate";
 	public static final String UNLOCK = "/unlock";
 	public static final String RECALCULATE = "/recalculate";
+	public static final String CLEANUP = "/cleanup";
 
 	// Observation List Controller
 	public static final String LIST = "/list";
