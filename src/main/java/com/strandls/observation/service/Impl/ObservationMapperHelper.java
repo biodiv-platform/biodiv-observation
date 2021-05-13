@@ -498,7 +498,7 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ObservationResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
 
 		}
 		return editResource;
