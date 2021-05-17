@@ -15,6 +15,7 @@ public class ResourceDataObs {
 	private String caption;
 	private Integer rating;
 	private Long licenseId;
+	private String context;
 
 	/**
 	 * 
@@ -30,8 +31,10 @@ public class ResourceDataObs {
 	 * @param caption
 	 * @param rating
 	 * @param licenseId
+	 * @param context
 	 */
-	public ResourceDataObs(String path, String url, String type, String caption, Integer rating, Long licenseId) {
+	public ResourceDataObs(String path, String url, String type, String caption, Integer rating, Long licenseId,
+			String context) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -39,6 +42,7 @@ public class ResourceDataObs {
 		this.caption = caption;
 		this.rating = rating;
 		this.licenseId = licenseId;
+		this.context = context;
 	}
 
 	public String getPath() {
@@ -87,6 +91,14 @@ public class ResourceDataObs {
 
 	public void setLicenseId(Long licenseId) {
 		this.licenseId = licenseId;
+	}
+
+	public String getContext() {
+		return context;
+	}
+
+	public void setContext(String context) {
+		this.context = context;
 	}
 
 }

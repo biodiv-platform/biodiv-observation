@@ -72,10 +72,10 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
-	
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
-	
+
 	private Long defaultLicenseId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
 
@@ -95,6 +95,9 @@ public class ObservationMapperHelper {
 			topleft = properties.getProperty("topLeft");
 			bottomright = properties.getProperty("bottomRight");
 			in.close();
+
+			if (topleft.equalsIgnoreCase("NA") || bottomright.equalsIgnoreCase("NA"))
+				return true;
 
 			String point1[] = topleft.split(",");
 			String point2[] = bottomright.split(",");
@@ -498,7 +501,7 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
 
 		}
 		return editResource;

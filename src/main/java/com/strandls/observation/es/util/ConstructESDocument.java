@@ -9,6 +9,8 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.observation.util.PropertyFileUtil;
+
 import javax.inject.Inject;
 
 /**
@@ -21,6 +23,8 @@ public class ConstructESDocument {
 
 	@Inject
 	private SessionFactory sessionFactory;
+
+	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
 	public ObservationESDocument getESDocumentStub(String observationId) {
 
@@ -143,10 +147,10 @@ public class ConstructESDocument {
 				+ "		position    " + "		FROM "
 				+ "		( SELECT id t_id, canonical_form, normalized_form, name, rank, status, position "
 				+ "		FROM  " + "		taxonomy_definition where is_deleted = false ) T " + "		LEFT OUTER JOIN "
-				+ "		( SELECT id tr_id, taxon_definition_id, path from taxonomy_registry where classification_id = 1 ) TR "
-				+ "		ON T.t_id = TR.taxon_definition_id " + "		LEFT OUTER JOIN  "
-				+ "		pull_path P ON P.tr_id = TR.tr_id " + "		) Taxons " + "	ON taxon_concept_id = t_id  "
-				+ "	LEFT OUTER JOIN "
+				+ "		( SELECT id tr_id, taxon_definition_id, path from taxonomy_registry where classification_id = "
+				+ classificationId + " ) TR " + "		ON T.t_id = TR.taxon_definition_id "
+				+ "		LEFT OUTER JOIN  " + "		pull_path P ON P.tr_id = TR.tr_id " + "		) Taxons "
+				+ "	ON taxon_concept_id = t_id  " + "	LEFT OUTER JOIN "
 				+ "	(SELECT id l_id, name language_name FROM language) Lang ON l_id = language_id " + "	) R  "
 				+ "	GROUP BY observation_id, recommendation_id "
 				+ "	) O) OG GROUP BY observation_id) OG_unnest ) OG) ORV "
@@ -319,10 +323,28 @@ public class ConstructESDocument {
 				+ "		jsonb_agg(DISTINCT etrait_instance) trait_instance " + "		FROM  " + "		( "
 				+ "			SELECT observation_fact_id, trait_id, description, field_id,  name, is_participatory, units,  "
 				+ "			trait_types,data_types,row_to_json(( SELECT t FROM (SELECT fact_id fact_id, contributor_id, fact_value from_value,  "
-				+ "			to_value, from_date, to_date, tv_id trait_value_id, tv_icon icon,  "
-				+ "			value, CONCAT(name,'|',value) AS trait_aggregation , "
-				+ "			CONCAT(trait_id,'|',name,'|',trait_types,'|',value,'|',tv_icon) AS trait_filter)t))\\:\\:jsonb etrait_instance "
-				+ "			FROM 	 " + "			( "
+				+ "			to_value, from_date, to_date, tv_id trait_value_id, tv_icon icon,  " + "			value, "
+
+				+ "CASE " + "				WHEN value IS NOT NULL THEN  "
+				+ "			 		CONCAT(name,'|',value)  " + "			 	WHEN fact_value IS NOT NULL THEN  "
+				+ "					CASE " + "						WHEN to_value IS NOT NULL THEN  "
+				+ "							CONCAT(name,'|',fact_value,'-',to_value)  " + "						ELSE "
+				+ "							CONCAT(name,'|',fact_value) " + "					END "
+				+ "				ELSE " + "					CONCAT(name,'|',from_date,'-',to_date) "
+				+ "			END AS trait_aggregation , "
+
+				+ "CASE " + "				WHEN value IS NOT NULL THEN  "
+				+ "					CONCAT(trait_id,'|',name,'|',trait_types,'|',value,'|',COALESCE(tv_icon,'0')) "
+				+ "				WHEN fact_value IS NOT NULL THEN  " + "					CASE "
+				+ "						WHEN to_value IS NOT NULL THEN  "
+				+ "							CONCAT(trait_id,'|',name,'|',trait_types,'|',fact_value,'-',to_value,'|',COALESCE(tv_icon,'0')) "
+				+ "						ELSE "
+				+ "							CONCAT(trait_id,'|',name,'|',trait_types,'|',fact_value,'|',COALESCE(tv_icon,'0')) "
+				+ "					END " + "				ELSE "
+				+ "					CONCAT(trait_id,'|',name,'|',trait_types,'|',from_date,'-',to_date,'|',COALESCE(tv_icon,'0')) "
+				+ "			END AS trait_filter "
+
+				+ ")t))\\:\\:jsonb etrait_instance " + "			FROM 	 " + "			( "
 				+ "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
 				+ "				trait_instance_id, trait_value_id, value fact_value, to_value, from_date, to_date "
 				+ "				FROM fact WHERE object_type = 'species.participation.Observation' and is_deleted = false  "
