@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.es.util;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -131,8 +133,10 @@ public class ObservationListPageMapper {
 //	---------FACT VALUE PAIR-----------
 
 	@JsonProperty(value = "facts")
-	private void unpackFacts(List<Facts> facts) {
+	private void unpackFacts(List<Facts> facts) throws ParseException {
 		factValuePair = new ArrayList<FactValuePair>();
+		String pattern = "yyyy-MM-dd";
+		SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 		if (facts != null) {
 			for (Facts fact : facts) {
 				FactValuePair fvp = new FactValuePair();
@@ -142,8 +146,24 @@ public class ObservationListPageMapper {
 				fvp.setIsParticipatry(fact.getIs_participatory());
 				if (fact.getTrait_value() != null) {
 					for (Trait_value value : fact.getTrait_value()) {
-						fvp.setValue(toTitleCase(value.getValue()));
-						fvp.setValueId(value.getTrait_value_id());
+						
+						
+						if (value.getTrait_value_id() != null) {
+							fvp.setValue(toTitleCase(value.getValue()));
+							fvp.setValueId(value.getTrait_value_id());
+						} else if (value.getFrom_value() != null) {
+							if (value.getTo_value() != null)
+								fvp.setValue(value.getFrom_value() + " : " + value.getTo_value());
+							else
+								fvp.setValue(value.getFrom_value());
+						} else {
+
+							if (value.getFrom_date() != null)
+								fvp.setFromDate(sdf.parse(value.getFrom_date().toString()));
+							if (value.getTo_date() != null)
+								fvp.setFromDate(sdf.parse(value.getTo_date().toString()));
+						}
+						
 						factValuePair.add(fvp);
 						fvp = new FactValuePair();
 						fvp.setNameId(fact.getTrait_id());
