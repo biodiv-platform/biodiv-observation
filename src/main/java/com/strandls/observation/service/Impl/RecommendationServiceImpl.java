@@ -533,9 +533,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 							rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 						}
-						if (recoSet.getCommonName().trim().length() > 0)
+						if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
 							rvActivity.setCommonName(recoSet.getCommonName());
-						if (recoSet.getScientificName().trim().length() > 0)
+						if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
 							rvActivity.setGivenName(recoSet.getScientificName());
 
 						description = objectMapper.writeValueAsString(rvActivity);
@@ -648,9 +648,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 				}
-				if (recoSet.getCommonName().trim().length() > 0)
+				if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
 					rvActivity.setCommonName(recoSet.getCommonName());
-				if (recoSet.getScientificName().trim().length() > 0)
+				if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
@@ -660,6 +660,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
 						observationId, "observation", recoVote.getId(), "obv locked",
 						observaitonService.generateMailData(observationId));
+
+				observaitonService.produceToRabbitMQ(observationId.toString(), "obv locked");
 
 				return result;
 			}
