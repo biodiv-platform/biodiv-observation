@@ -37,6 +37,7 @@ import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -79,6 +80,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Inject
 	private UserServiceApi userService;
+
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	@Override
 	public RecoIbp fetchRecoVote(Long id) {
@@ -357,7 +361,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific) {
-		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific, 205L,
+		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific, defaultLanguageId,
 				name.toLowerCase(), null, false, null, canonicalName);
 
 		Recommendation result = recoDao.save(reco);
@@ -372,6 +376,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		for (Recommendation recommendation : recoList) {
 
 			try {
+				System.out.println("RECO ID : " + recommendation.getId());
 				ParsedName parsedName = utilityService.getNameParsed(recommendation.getName());
 				if (parsedName == null)
 					errorList.add(recommendation.getId());
