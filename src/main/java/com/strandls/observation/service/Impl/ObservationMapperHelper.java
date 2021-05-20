@@ -243,6 +243,7 @@ public class ObservationMapperHelper {
 	public RecoCreate createRecoMapping(RecoData recoData) throws Exception {
 
 		Long commonNameId = null;
+		Long taxonId = null;
 		String commonName = recoData.getTaxonCommonName();
 		Long scientificNameId = null;
 		String scientificName = recoData.getTaxonScientificName();
@@ -258,8 +259,12 @@ public class ObservationMapperHelper {
 			commonNameId = commonNameMapper(commonName, recoData.getLanguageId());
 		}
 
-		if (scientificResult != null)
+		if (scientificResult != null) {
 			scientificNameId = scientificResult.get("recoId");
+			taxonId = scientificResult.get("taxonId");
+		}
+			
+			
 
 		RecoCreate recoCreate = new RecoCreate();
 		recoCreate.setConfidence(recoData.getConfidence());
@@ -268,6 +273,7 @@ public class ObservationMapperHelper {
 		recoCreate.setCommonNameId(commonNameId);
 		recoCreate.setScientificName(scientificName);
 		recoCreate.setScientificNameId(scientificNameId);
+		recoCreate.setTaxonId(taxonId);
 		if (scientificResult != null && scientificResult.isEmpty() == false && scientificResult.get("flag") == 1L)
 			recoCreate.setFlag(true);
 		else
@@ -288,6 +294,9 @@ public class ObservationMapperHelper {
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
 						recoData.getScientificNameTaxonId(), canonicalName, true);
 			}
+			Long taxonId = recommendation.getAcceptedNameId() != null ?recommendation.getAcceptedNameId()
+					:recommendation.getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", recommendation.getId());
 			result.put("flag", 0L);
 		} catch (Exception e) {
@@ -330,6 +339,9 @@ public class ObservationMapperHelper {
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
 						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
+							: resultList.get(0).getTaxonConceptId();
+					result.put("taxonId",taxonId);
 					result.put("recoId", resultList.get(0).getId());
 					result.put("flag", 0L);
 				} else {
@@ -358,6 +370,10 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return taxonIdExists(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
+					? filteredList.get(0).getAcceptedNameId():
+				filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -376,6 +392,10 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return fullNameSearch(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
+					? filteredList.get(0).getAcceptedNameId():
+				filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -388,14 +408,21 @@ public class ObservationMapperHelper {
 	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
 
 		Map<String, Long> result = new HashMap<String, Long>();
+		long taxonId = recommendations.get(0).getAcceptedNameId() != null 
+				?recommendations.get(0).getAcceptedNameId():
+					recommendations.get(0).getTaxonConceptId();
 		for (Recommendation recommendation : recommendations) {
 			if (recommendation.getName().equals(providedSciName)) {
+				 taxonId = recommendation.getAcceptedNameId() != null 
+						?recommendation.getAcceptedNameId():
+							recommendation.getTaxonConceptId();
 				result.put("recoId", recommendation.getId());
 				result.put("flag", 0L);
 				return result;
 			}
 
 		}
+		result.put("taxonId",taxonId);
 		result.put("recoId", recommendations.get(0).getId());
 		result.put("flag", 1L);
 		return result;

@@ -385,7 +385,7 @@ public class ObservationBulkMapperHelper {
 			RecoCreate recoCreate = prepareRecoMapping(dataRow, fieldMapping);
 			if (recoCreate != null) {
 				Long maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
-						recoCreate.getScientificNameId(), recoCreate, true);
+						recoCreate.getTaxonId(), recoCreate, true);
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observationDAO.update(observation);
 			}
