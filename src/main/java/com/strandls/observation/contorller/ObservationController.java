@@ -56,6 +56,7 @@ import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.gbif.GbifObservationService;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ExternalShowData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
@@ -141,6 +142,21 @@ public class ObservationController {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong Observation";
+	}
+
+	@GET
+	@ApiOperation(value = "external show page data ", notes = "external show page data", response = ExternalShowData.class)
+	@Path("/show/external/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response externalShowData(@PathParam("id") String id) {
+
+		ExternalShowData data=observationService.externalObsfindById(id);
+
+		if (data != null)
+			return Response.status(Status.OK).entity(data).build();
+		else
+			return Response.status(Status.NOT_FOUND).build();
 	}
 
 	@POST

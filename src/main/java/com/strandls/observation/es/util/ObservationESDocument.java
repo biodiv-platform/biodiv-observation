@@ -146,13 +146,14 @@ public class ObservationESDocument {
 	@Column(columnDefinition = "json")
 	private List<Facts> facts;
 	private Boolean is_publication_grade;
-	@Transient
-	private boolean is_external;
-	@Transient
-	private String data_source;
-	@Transient
-	private String external_reference_link;
 
+	/*
+	 * @Transient private boolean is_external;
+	 * 
+	 * @Transient private String data_source;
+	 * 
+	 * @Transient private String external_reference_link;
+	 */
 	/**
 	 * 
 	 */
@@ -220,8 +221,7 @@ public class ObservationESDocument {
 			String date_accuracy, Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
 			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
 			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
-			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade, Boolean is_external,
-			String data_source, String external_reference_link) {
+			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -270,9 +270,10 @@ public class ObservationESDocument {
 		this.featured = featured;
 		this.facts = facts;
 		this.is_publication_grade = is_publication_grade;
-		this.is_external = is_external;
-		this.data_source = data_source;
-		this.external_reference_link = external_reference_link;
+		/*
+		 * this.is_external = is_external; this.data_source = data_source;
+		 * this.external_reference_link = external_reference_link;
+		 */
 	}
 
 	public Long getObservation_id() {
@@ -370,7 +371,6 @@ public class ObservationESDocument {
 	public void setNotes(String notes) {
 		this.notes = notes;
 	}
-
 	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getFrom_date() {
 		return from_date;
@@ -654,29 +654,23 @@ public class ObservationESDocument {
 
 	// sequence
 
-	public boolean isIs_external() {
-		return is_external;
-	}
-
-	public void setIs_external(boolean is_external) {
-		this.is_external = is_external;
-	}
-
-	public String getData_source() {
-		return data_source;
-	}
-
-	public void setData_source(String data_source) {
-		this.data_source = data_source;
-	}
-
-	public String getExternal_reference_link() {
-		return external_reference_link;
-	}
-
-	public void setExternal_reference_link(String external_reference_link) {
-		this.external_reference_link = external_reference_link;
-	}
+	/*
+	 * public boolean isIs_external() { return is_external; }
+	 * 
+	 * public void setIs_external(boolean is_external) { this.is_external =
+	 * is_external; }
+	 * 
+	 * public String getData_source() { return data_source; }
+	 * 
+	 * public void setData_source(String data_source) { this.data_source =
+	 * data_source; }
+	 * 
+	 * public String getExternal_reference_link() { return external_reference_link;
+	 * }
+	 * 
+	 * public void setExternal_reference_link(String external_reference_link) {
+	 * this.external_reference_link = external_reference_link; }
+	 */
 
 }
 

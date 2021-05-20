@@ -6,6 +6,9 @@ package com.strandls.observation.service.Impl;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,6 +61,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ExternalShowData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
@@ -134,7 +138,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationDAO observationDao;
-	
+
 	@Inject
 	private RecommendationDao recoDao;
 
@@ -270,6 +274,164 @@ public class ObservationServiceImpl implements ObservationService {
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public ExternalShowData externalObsfindById(String id) {
+
+		try {
+			ExternalShowData data = new ExternalShowData();
+			Observation observation = new Observation();
+
+			MapDocument observationDoc = esService.fetch(ObservationIndex.index.getValue(),
+					ObservationIndex.type.getValue(), id);
+
+			Map<String, Object> observationResponse = new ObjectMapper()
+					.readValue(observationDoc.getDocument().toString(), HashMap.class);
+
+			Long obsId = null;
+			Date createdOn = null;
+			Date observedOn = null;
+			Long groupId = null;
+			String placeName = null;
+			String fromDate = null;
+			Double latitude = null;
+			Double longitude = null;
+			Long maxVotedRecoId = null;
+			Boolean isChecklist = false;
+			Boolean isLocked = false;
+			Integer noOfImages = null;
+			Integer noOfVideos = null;
+			Integer noOfAudio = null;
+			ObservationInfo esLayerInfo = null;
+			ObservationLocationInfo layerInfo = null;
+			String externalGbifReferencelink = null;
+			String externalOriginalReferenceLink = null;
+
+			obsId = Long.valueOf(observationResponse.get("observation_id").toString());
+
+			String createdOnDate = observationResponse.get("created_on").toString();
+			createdOn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(createdOnDate);
+
+			fromDate = observationResponse.get("from_date").toString();
+			observedOn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(fromDate);
+
+			if (observationResponse.get("group_id") != null) {
+				groupId = Long.valueOf(observationResponse.get("group_id").toString());
+			}
+
+			if (observationResponse.get("place_name") != null) {
+				placeName = observationResponse.get("place_name").toString();
+			}
+
+			if (observationResponse.get("location") != null) {
+				Map<String, Object> location = (Map<String, Object>) observationResponse.get("location");
+				latitude = Double.valueOf(location.get("lat").toString());
+				longitude = Double.valueOf(location.get("lon").toString());
+
+			}
+
+			if (observationResponse.get("max_voted_reco") != null) {
+
+				Map<String, Object> maxVotedReco = (Map<String, Object>) observationResponse.get("max_voted_reco");
+				maxVotedRecoId = Long.valueOf(maxVotedReco.get("id").toString());
+				RecoIbp reco = new RecoIbp();
+
+				reco.setScientificName(maxVotedReco.get("scientific_name").toString());
+
+				if (maxVotedReco.get("species_id") != null) {
+					reco.setSpeciesId(Long.valueOf(maxVotedReco.get("species_id").toString()));
+				}
+
+				if (maxVotedReco.get("taxonstatus") != null) {
+					reco.setStatus(maxVotedReco.get("taxonstatus").toString());
+				}
+
+				if (!((List<Map<String, Object>>) maxVotedReco.get("hierarchy")).isEmpty()) {
+					List<Map<String, Object>> hierarchy = (List<Map<String, Object>>) maxVotedReco.get("hierarchy");
+					Map<String, Object> node = hierarchy.get(hierarchy.size() - 1);
+					Long taxonId = null;
+					List<BreadCrumb> breadCrumbs = new ArrayList<>();
+
+					for (Map<String, Object> breadcrumb : hierarchy) {
+						Long breadcrumbId = Long.valueOf(breadcrumb.get("taxon_id").toString());
+						String breadcrumbName = breadcrumb.get("normalized_name").toString();
+						BreadCrumb breadcrumbNode = new BreadCrumb();
+						breadcrumbNode.setId(breadcrumbId);
+						breadcrumbNode.setName(breadcrumbName);
+						breadCrumbs.add(breadcrumbNode);
+					}
+
+					reco.setBreadCrumbs(breadCrumbs);
+					if (node.get("taxon_id") != null) {
+						taxonId = Long.valueOf(node.get("taxon_id").toString());
+					}
+					reco.setTaxonId(taxonId);
+				}
+
+				esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
+						ObservationIndex.type.getValue(), maxVotedRecoId.toString());
+				data.setRecoIbp(reco);
+
+				layerInfo = layerService.getLayerInfo(latitude.toString(), longitude.toString());
+				data.setLayerInfo(layerInfo);
+
+			}
+
+			if (observationResponse.get("no_of_images") != null) {
+				noOfImages = Integer.valueOf(observationResponse.get("no_of_images").toString());
+			}
+
+			if (observationResponse.get("no_of_videos") != null) {
+				noOfVideos = Integer.valueOf(observationResponse.get("no_of_videos").toString());
+			}
+
+			if (observationResponse.get("no_of_audio") != null) {
+				noOfAudio = Integer.valueOf(observationResponse.get("no_of_audio").toString());
+			}
+
+			List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
+					ObservationIndex.index.getValue(), ObservationIndex.type.getValue(), latitude.toString(),
+					longitude.toString());
+
+			if (observationResponse.get("is_checklist") != null) {
+				isChecklist = Boolean.valueOf(observationResponse.get("is_checklist").toString());
+			}
+
+			if (observationResponse.get("is_locked") != null) {
+				isLocked = Boolean.valueOf(observationResponse.get("is_locked").toString());
+			}
+
+			externalGbifReferencelink = observationResponse.get("external_gbif_reference_link").toString();
+			externalOriginalReferenceLink = observationResponse.get("external_original_reference_link").toString();
+
+			observation.setId(obsId);
+			observation.setCreatedOn(createdOn);
+			observation.setFromDate(observedOn);
+			observation.setGroupId(groupId);
+			observation.setPlaceName(placeName);
+			observation.setLatitude(latitude);
+			observation.setLongitude(longitude);
+			observation.setMaxVotedRecoId(maxVotedRecoId);
+			observation.setNoOfAudio(noOfAudio);
+			observation.setNoOfImages(noOfImages);
+			observation.setNoOfVideos(noOfVideos);
+			observation.setIsChecklist(isChecklist);
+			observation.setIsLocked(isLocked);
+
+			data.setObservation(observation);
+			data.setEsLayerInfo(esLayerInfo);
+			data.setObservationNearBy(observationNearBy);
+			data.setDataSource("gbif");
+			data.setExternalGbifReferenceLink(externalGbifReferencelink);
+			data.setExternalOriginalReferenceLink(externalOriginalReferenceLink);
+
+			return data;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 		return null;
 	}

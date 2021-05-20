@@ -19,6 +19,7 @@ import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.LocationInfo;
+import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.es.util.GbifObservationESMapper;
 import com.strandls.observation.es.util.ObservationESDocument;
@@ -55,6 +56,8 @@ public class GbifObservationThread implements Runnable {
 		try {
 
 			String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
+			String excludingPublishingOrgKey = PropertyFileUtil.fetchProperty("config.properties",
+					"excludingPublishingOrgKey");
 			FileReader filereader = new FileReader(path);
 			CSVReader csvReader = new CSVReader(filereader, '\t');
 
@@ -68,146 +71,159 @@ public class GbifObservationThread implements Runnable {
 
 			List<ObservationESDocument> observations = new ArrayList<>();
 			while ((row = csvReader.readNext()) != null) {
-				String externalReferenceLink = row[headerIndex.get("occurrenceID")];
-				String gbifId = row[headerIndex.get("gbifID")];
-				String datetime = row[headerIndex.get("eventDate")];
-				LocalDateTime dateTime = LocalDateTime.parse(datetime);
-				Date date = Timestamp.valueOf(dateTime);
-				Date lastModified = null;
-				String lastModifiedDateString = row[headerIndex.get("dateIdentified")];
-				if (!lastModifiedDateString.isEmpty()) {
-					LocalDateTime dateTime2 = LocalDateTime.parse(lastModifiedDateString);
-					lastModified = Timestamp.valueOf(dateTime2);
-				} else {
-					lastModified = null;
-				}
+				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
 
-				String month = row[headerIndex.get("month")];
-				String monthName = getMonthName(month);
-
-				double lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
-				double lon = Double.parseDouble(row[headerIndex.get("decimalLongitude")]);
-				String placeName = row[headerIndex.get("locality")];
-
-				if (placeName.equals("")) {
-					placeName = null;
-				}
-
-				String verbatimScientificName = row[headerIndex.get("verbatimScientificName")];
-
-				RecoData recoData = new RecoData();
-				recoData.setTaxonScientificName(verbatimScientificName);
-
-				Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData);
-				Long recoId = null;
-				Long taxonId = null;
-				if (recoAndTaxonId.get("recoId") != null) {
-					recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
-				}
-
-				String scientificName = verbatimScientificName;
-				if (recoAndTaxonId.get("taxonId") != null) {
-					taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
-
-				}
-
-				ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
-				if (taxonId != null) {
-					scientificName = taxonDetails.getName();
-				} else if (recoId != null) {
-					Recommendation reco = recoDao.findById(recoId);
-					scientificName = reco.getName();
-				}
-
-				Long rank = null;
-				Long speciesId = null;
-				String taxonStatus = null;
-
-				Long acceptedNameIds = null;
-				String italicisedForm = null;
-				String position = null;
-				String cannonicalName = null;
-				String name = null;
-				Long groupId = null;
-				String groupName = null;
-				List<Map<String, String>> hierarchy = new ArrayList<>();
-
-				if (taxonId != null) {
-					rank = Long.parseLong(taxonDetails.getRank().toString());
-
-					if (taxonDetails.getAcceptedIds() != null) {
-						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
+				if (!publishingOrgKey.equals(excludingPublishingOrgKey)) {
+					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
+					String gbifId = row[headerIndex.get("gbifID")];
+					String datetime = row[headerIndex.get("eventDate")];
+					LocalDateTime dateTime = LocalDateTime.parse(datetime);
+					Date date = Timestamp.valueOf(dateTime);
+					Date lastModified = null;
+					String lastModifiedDateString = row[headerIndex.get("dateIdentified")];
+					if (!lastModifiedDateString.isEmpty()) {
+						LocalDateTime dateTime2 = LocalDateTime.parse(lastModifiedDateString);
+						lastModified = Timestamp.valueOf(dateTime2);
 					} else {
-						acceptedNameIds = taxonId;
+						lastModified = null;
 					}
 
-					if (taxonDetails.getItalicisedForm() != null) {
-						italicisedForm = taxonDetails.getItalicisedForm().toString();
+					String month = row[headerIndex.get("month")];
+					String monthName = getMonthName(month);
+
+					double lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
+					double lon = Double.parseDouble(row[headerIndex.get("decimalLongitude")]);
+					String placeName = row[headerIndex.get("locality")];
+
+					if (placeName.equals("")) {
+						placeName = null;
 					}
 
-					if (taxonDetails.getPosition() != null) {
-						position = taxonDetails.getPosition().toString();
+					String verbatimScientificName = row[headerIndex.get("verbatimScientificName")];
+
+					RecoData recoData = new RecoData();
+					recoData.setTaxonScientificName(verbatimScientificName);
+
+					Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData);
+					Long recoId = null;
+					Long taxonId = null;
+					if (recoAndTaxonId.get("recoId") != null) {
+						recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
 					}
 
-					if (taxonDetails.getCanonicalForm() != null) {
-						cannonicalName = taxonDetails.getCanonicalForm();
+					String scientificName = verbatimScientificName;
+					if (recoAndTaxonId.get("taxonId") != null) {
+						taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+
 					}
 
-					if (taxonDetails.getGroupId() != null) {
-						groupId = (long) Math.round(taxonDetails.getGroupId());
+					ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
+					if (taxonId != null) {
+						scientificName = taxonDetails.getName();
+					} else if (recoId != null) {
+						Recommendation reco = recoDao.findById(recoId);
+						scientificName = reco.getName();
 					}
 
-					if (taxonDetails.getGroupName() != null) {
-						groupName = taxonDetails.getGroupName().toString();
+					Long rank = null;
+					Long speciesId = null;
+					String taxonStatus = null;
+
+					Long acceptedNameIds = null;
+					String italicisedForm = null;
+					String position = null;
+					String cannonicalName = null;
+					String name = null;
+					Long groupId = null;
+					String groupName = null;
+					List<Map<String, String>> hierarchy = new ArrayList<>();
+
+					if (taxonId != null) {
+						rank = Long.parseLong(taxonDetails.getRank().toString());
+
+						if (taxonDetails.getAcceptedIds() != null) {
+							acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
+						} else {
+							acceptedNameIds = taxonId;
+						}
+
+						if (taxonDetails.getItalicisedForm() != null) {
+							italicisedForm = taxonDetails.getItalicisedForm().toString();
+						}
+
+						if (taxonDetails.getPosition() != null) {
+							position = taxonDetails.getPosition().toString();
+						}
+
+						if (taxonDetails.getCanonicalForm() != null) {
+							cannonicalName = taxonDetails.getCanonicalForm();
+						}
+
+						if (taxonDetails.getGroupId() != null) {
+							groupId = (long) Math.round(taxonDetails.getGroupId());
+						}
+
+						if (taxonDetails.getGroupName() != null) {
+							groupName = taxonDetails.getGroupName().toString();
+						}
+
+						if (taxonDetails.getPath() != null) {
+							String[] taxonPath = taxonDetails.getPath().toString().split("_");
+							hierarchy = getHierarchy(taxonPath);
+						}
+
+						if (taxonDetails.getName() != null) {
+							name = taxonDetails.getName().toString();
+						}
+
+						if (taxonDetails.getStatus() != null) {
+							taxonStatus = taxonDetails.getStatus().toString();
+						}
+
+						if (taxonDetails.getSpeciesId() != null) {
+							speciesId = Long.parseLong(taxonDetails.getSpeciesId().toString());
+						}
 					}
 
-					if (taxonDetails.getPath() != null) {
-						String[] taxonPath = taxonDetails.getPath().toString().split("_");
-						hierarchy = getHierarchy(taxonPath);
+					LocationInfo locationInfo = layerService.fetchLocationInfo(String.valueOf(lat),
+							String.valueOf(lon));
+					String state = locationInfo.getState();
+					String district = locationInfo.getDistrict();
+					String tahsil = locationInfo.getTahsil();
+
+					ObservationLocationInfo layerInfo = layerService.getLayerInfo(String.valueOf(lat),
+							String.valueOf(lon));
+
+					String externalGbifReferenceLink = "https://www.gbif.org/occurrence/" + gbifId.toString();
+
+					ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName, recoId,
+							taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
+							acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name,
+							state, district, tahsil, groupId, groupName, externalOriginalReferenceLink,
+							externalGbifReferenceLink, layerInfo);
+
+					observations.add(obj);
+					ObjectMapper objectMapper = new ObjectMapper();
+
+					if (observations.size() >= 100) {
+						List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
+							@SuppressWarnings("unchecked")
+							Map<String, Object> doc = objectMapper.convertValue(s, Map.class);
+							doc.put("id", "gbif-" + s.getObservation_id());
+							return doc;
+						}).collect(Collectors.toList());
+
+						batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
+
+						ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson,
+								esService);
+						Thread t1 = new Thread(esPushThread);
+						t1.start();
+						observations.clear();
 					}
 
-					if (taxonDetails.getName() != null) {
-						name = taxonDetails.getName().toString();
-					}
-
-					if (taxonDetails.getStatus() != null) {
-						taxonStatus = taxonDetails.getStatus().toString();
-					}
-
-					if (taxonDetails.getSpeciesId() != null) {
-						speciesId = Long.parseLong(taxonDetails.getSpeciesId().toString());
-					}
 				}
 
-				LocationInfo locationInfo = layerService.fetchLocationInfo(String.valueOf(lat), String.valueOf(lon));
-				String state = locationInfo.getState();
-				String district = locationInfo.getDistrict();
-				String tahsil = locationInfo.getTahsil();
-
-				ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName, recoId,
-						taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
-						acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name, state,
-						district, tahsil, groupId, groupName, externalReferenceLink);
-
-				observations.add(obj);
-				ObjectMapper objectMapper = new ObjectMapper();
-
-				if (observations.size() >= 100) {
-					List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> doc = objectMapper.convertValue(s, Map.class);
-						doc.put("id", "gbif-" + s.getObservation_id());
-						return doc;
-					}).collect(Collectors.toList());
-
-					batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
-
-					ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson,
-							esService);
-					Thread t1 = new Thread(esPushThread);
-					t1.start();
-					observations.clear();
-				}
 			}
 
 			ObjectMapper objectMapper = new ObjectMapper();

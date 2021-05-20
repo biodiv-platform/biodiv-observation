@@ -15,6 +15,7 @@ import com.bedatadriven.jackson.datatype.jts.serialization.GeometrySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.strandls.observation.util.JsonDateSerializer;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
@@ -116,6 +117,7 @@ public class Observation implements Serializable {
 	}
 
 	@Column(name = "created_on", nullable = false, length = 29)
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getCreatedOn() {
 		return this.createdOn;
 	}
@@ -161,6 +163,7 @@ public class Observation implements Serializable {
 	}
 
 	@Column(name = "from_date", length = 29)
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getFromDate() {
 		return this.fromDate;
 	}

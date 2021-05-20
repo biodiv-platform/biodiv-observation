@@ -7,15 +7,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.strandls.naksha.pojo.ObservationLocationInfo;
+
 public class GbifObservationESMapper {
 
 	public ObservationESDocument mapToESDocument(Date date, String month, double lat, double lon, String placeName,
 			Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long id, Date dateIdentified, String name, String state,
-			String district, String tahsil, Long groupId, String groupName, String externalReferenceLink) {
+			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
+			String externalGbifReferenceLink,ObservationLocationInfo layerInfo) {
 
-		ObservationESDocument gbifObs = new ObservationESDocument();
+		ExternalObservationESDocument gbifObs = new ExternalObservationESDocument();
 		Clock clock = Clock.systemUTC();
 		Date createdOnDate = Date.from(clock.instant());
 
@@ -24,16 +27,17 @@ public class GbifObservationESMapper {
 		gbifObs.setObserved_in_month(month);
 		gbifObs.setLocation(new Location(lat, lon));
 		gbifObs.setObservation_id(id);
-		gbifObs.setExternal_reference_link(externalReferenceLink);
 		gbifObs.setIs_external(true);
 		gbifObs.setData_source("gbif.org");
+		gbifObs.setExternal_original_reference_link(externalOriginalReferenceLink);
+		gbifObs.setExternal_gbif_reference_link(externalGbifReferenceLink);
 		gbifObs.setIs_checklist(false);
 		gbifObs.setNo_media(1);
 		gbifObs.setNo_of_audio(0);
 		gbifObs.setNo_of_images(0);
 		gbifObs.setNo_of_videos(0);
 		gbifObs.setPlace_name(placeName);
-		
+		gbifObs.setLayer_info(layerInfo);
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);
@@ -114,7 +118,7 @@ public class GbifObservationESMapper {
 		}
 
 		maxVotedeReco.setHierarchy(list);
-		if(rank!=null) {
+		if (rank != null) {
 			maxVotedeReco.setRanktext(getRankText(rank));
 		}
 
