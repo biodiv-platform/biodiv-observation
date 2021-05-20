@@ -261,7 +261,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(),true);
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(), true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -409,7 +409,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
+					maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
 						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
 
 				observation.setMaxVotedRecoId(maxVotedReco);
@@ -2300,13 +2300,13 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 
 		String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-		String dir =  storageBasePath+File.separatorChar + "myUploads"+ File.separatorChar
-			+ userId;
-		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,request.getHeader(HttpHeaders.AUTHORIZATION));
+		String dir = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId;
+		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,
+				request.getHeader(HttpHeaders.AUTHORIZATION));
 		dataTable = dataTableDAO.save(dataTable);
 		try {
 
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(dir+observationBulkData.getFilename()));
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(dir + observationBulkData.getFilename()));
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
@@ -2318,8 +2318,9 @@ public class ObservationServiceImpl implements ObservationService {
 					.getAllFilePathsByUser(filesDto).entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
-					observationDao, observationBulkMapperHelper, esUpdate, userService,dataTable, userId, getAllSpeciesGroup(),
-					traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,dataTableDAO,resourceService,fileUploadApi,headers);
+					observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
+					getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,
+					dataTableDAO, resourceService, fileUploadApi, headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 
@@ -2329,7 +2330,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		return dataTable.getId();
 	}
-	
+
 	@Override
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationIdList) {
 
