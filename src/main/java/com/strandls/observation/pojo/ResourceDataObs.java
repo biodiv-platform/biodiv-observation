@@ -3,10 +3,13 @@
  */
 package com.strandls.observation.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceDataObs {
 
 	private String path;
