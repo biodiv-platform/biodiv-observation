@@ -11,6 +11,7 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 	private String external_original_reference_link;
 	private String external_gbif_reference_link;
 	private ObservationLocationInfo layer_info;
+	private String unique_id_prefix;
 
 	public ExternalObservationESDocument() {
 		super();
@@ -39,13 +40,14 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 
 	public ExternalObservationESDocument(boolean is_external, String data_source,
 			String external_original_reference_link, String external_gbif_reference_link,
-			ObservationLocationInfo layer_info) {
+			ObservationLocationInfo layer_info, String unique_id_prefix) {
 		super();
 		this.is_external = is_external;
 		this.data_source = data_source;
 		this.external_original_reference_link = external_original_reference_link;
 		this.external_gbif_reference_link = external_gbif_reference_link;
 		this.layer_info = layer_info;
+		this.unique_id_prefix = unique_id_prefix;
 	}
 
 	public boolean isIs_external() {
@@ -86,6 +88,14 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 
 	public void setLayer_info(ObservationLocationInfo layer_info) {
 		this.layer_info = layer_info;
+	}
+
+	public String getUnique_id_prefix() {
+		return unique_id_prefix;
+	}
+
+	public void setUnique_id_prefix(String unique_id_prefix) {
+		this.unique_id_prefix = unique_id_prefix;
 	}
 
 }

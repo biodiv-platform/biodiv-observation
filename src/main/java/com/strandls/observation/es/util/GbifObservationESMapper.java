@@ -38,6 +38,7 @@ public class GbifObservationESMapper {
 		gbifObs.setNo_of_videos(0);
 		gbifObs.setPlace_name(placeName);
 		gbifObs.setLayer_info(layerInfo);
+		gbifObs.setUnique_id_prefix("gbif");
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);

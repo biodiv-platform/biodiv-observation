@@ -53,6 +53,7 @@ public class ObservationListPageMapper {
 	private String dataSource;
 	private String externalOriginalReferenceLink;
 	private String externalGbifReferenceLink;
+	private String uniqueIdPrefix;
 
 	@JsonProperty(value = "is_external")
 	private void unpackisExternal(Boolean is_external) {
@@ -72,6 +73,11 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "external_gbif_reference_link")
 	private void unpackExternalGbifReferenceLink(String external_gbif_reference_link) {
 		externalGbifReferenceLink = external_gbif_reference_link;
+	}
+
+	@JsonProperty(value = "unique_id_prefix")
+	private void unpackUniqueIdPrefix(String unique_id_prefix) {
+		uniqueIdPrefix = unique_id_prefix;
 	}
 
 	@JsonProperty("observation_id")
@@ -462,7 +468,7 @@ public class ObservationListPageMapper {
 			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
 			List<CustomFieldObservationData> customField, List<Tags> tags, Boolean isExternal, String dataSource,
-			String externalOriginalReferenceLink, String externalGbifReferenceLink) {
+			String externalOriginalReferenceLink, String externalGbifReferenceLink, String uniqueIdPrefix) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -486,6 +492,7 @@ public class ObservationListPageMapper {
 		this.dataSource = dataSource;
 		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
 		this.externalGbifReferenceLink = externalGbifReferenceLink;
+		this.uniqueIdPrefix = uniqueIdPrefix;
 
 	}
 
@@ -519,6 +526,14 @@ public class ObservationListPageMapper {
 
 	public void setExternalGbifReferenceLink(String externalGbifReferenceLink) {
 		this.externalGbifReferenceLink = externalGbifReferenceLink;
+	}
+
+	public String getUniqueIdPrefix() {
+		return uniqueIdPrefix;
+	}
+
+	public void setUniqueIdPrefix(String uniqueIdPrefix) {
+		this.uniqueIdPrefix = uniqueIdPrefix;
 	}
 
 	public Long getObservationId() {
