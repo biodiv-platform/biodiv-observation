@@ -91,9 +91,9 @@ public class ObservationBulkMapperHelper {
 	ESUpdate esUpdate;
 
 	@SuppressWarnings("deprecation")
-	public Observation creationObservationMapping(Long userId, Map<String, Integer> fieldMapping, Row dataRow,
-			DataTable dataTable, List<SpeciesGroup> speciesGroupList, Map<String, Integer> checklistAnnotation,
-			Boolean isVerified, String basisOfRecord) {
+	public Observation creationObservationMapping(Long userId, String requestAuthHeader,
+			Map<String, Integer> fieldMapping, Row dataRow, DataTable dataTable, List<SpeciesGroup> speciesGroupList,
+			Map<String, Integer> checklistAnnotation, Boolean isVerified, String basisOfRecord) {
 		try {
 			Boolean geoPrivacy = Boolean.TRUE;
 			Observation observation = new Observation();
@@ -133,8 +133,8 @@ public class ObservationBulkMapperHelper {
 				if (fromDateCell != null) {
 					fromDateCell.setCellType(CellType.NUMERIC);
 					fromDate = fromDateCell.getDateCellValue();
-				} 
-			} 
+				}
+			}
 
 			Date toDate = null;
 			if (fieldMapping.get("toDate") != null) {
@@ -142,8 +142,8 @@ public class ObservationBulkMapperHelper {
 				if (toDateCell != null) {
 					toDateCell.setCellType(CellType.NUMERIC);
 					toDate = toDateCell.getDateCellValue();
-				} 
-			} 
+				}
+			}
 
 			String observedAt = "";
 			if (fieldMapping.get("observedAt") != null) {
@@ -297,7 +297,11 @@ public class ObservationBulkMapperHelper {
 			observation.setViaCode(null);// null for nrml case only used in GBIF
 			observation.setViaId(null);// null for nrml case only used in GBIF
 			observation.setIsVerified(isVerified);
-
+			observation = observationDAO.save(observation);
+			if (observation != null) {
+				logActivities.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(),
+						"observation", null, "Observation created", null);
+			}
 			return observation;
 		} catch (
 
@@ -460,12 +464,12 @@ public class ObservationBulkMapperHelper {
 				return;
 
 			for (String file : cellFiles) {
-				myImageUpload.forEach((k,v)->{
+				myImageUpload.forEach((k, v) -> {
 					if (k.contains(file)) {
 						filesWithPath.add(myImageUpload.get(k));
 					}
 				});
-				
+
 			}
 
 			if (filesWithPath.isEmpty())
@@ -519,8 +523,7 @@ public class ObservationBulkMapperHelper {
 				observation.setReprImageId(reprImage);
 				observationDAO.update(observation);
 			}
-			logActivities.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(), "observation",
-					null, "Observation created", null);
+
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
