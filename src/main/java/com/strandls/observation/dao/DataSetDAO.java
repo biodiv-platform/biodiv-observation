@@ -51,6 +51,8 @@ public class DataSetDAO extends AbstractDAO<Dataset, Long> {
 			result = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 		return result;
 	}
