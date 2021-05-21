@@ -3,6 +3,9 @@ package com.strandls.observation.pojo;
 import com.vividsolutions.jts.geom.Geometry;
 
 import javax.persistence.*;
+
+import org.hibernate.annotations.ColumnDefault;
+
 import java.util.Date;
 import java.util.Objects;
 
@@ -57,7 +60,7 @@ public class DataTable {
     private Long uploaderId;
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long getId() {
         return id;
@@ -67,8 +70,7 @@ public class DataTable {
         this.id = id;
     }
 
-    @Basic
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     public Long getVersion() {
         return version;
     }
@@ -77,8 +79,7 @@ public class DataTable {
         this.version = version;
     }
 
-    @Basic
-    @Column(name = "access_license_id")
+    @Column(name = "access_license_id", nullable = false)
     public Long getAccessLicenseId() {
         return accessLicenseId;
     }
@@ -87,7 +88,6 @@ public class DataTable {
         this.accessLicenseId = accessLicenseId;
     }
 
-    @Basic
     @Column(name = "access_rights")
     public String getAccessRights() {
         return accessRights;
@@ -97,8 +97,7 @@ public class DataTable {
         this.accessRights = accessRights;
     }
 
-    @Basic
-    @Column(name = "agree_terms")
+    @Column(name = "agree_terms", nullable = false)
     public Boolean getAgreeTerms() {
         return agreeTerms;
     }
@@ -107,7 +106,6 @@ public class DataTable {
         this.agreeTerms = agreeTerms;
     }
 
-    @Basic
     @Column(name = "checklist_id")
     public Long getChecklistId() {
         return checklistId;
@@ -117,8 +115,7 @@ public class DataTable {
         this.checklistId = checklistId;
     }
 
-    @Basic
-    @Column(name = "columns")
+    @Column(name = "columns", nullable = false)
     public String getColumns() {
         return columns;
     }
@@ -127,9 +124,8 @@ public class DataTable {
         this.columns = columns;
     }
 
-    @Basic
-    @Column(name = "created_on")
-    @Temporal(TemporalType.TIMESTAMP)
+    
+    @Column(name = "created_on",nullable = false, length = 29)
     public Date getCreatedOn() {
         return createdOn;
     }
@@ -138,7 +134,7 @@ public class DataTable {
         this.createdOn = createdOn;
     }
 
-    @Basic
+    
     @Column(name = "custom_fields")
     public String getCustomFields() {
         return customFields;
@@ -148,8 +144,7 @@ public class DataTable {
         this.customFields = customFields;
     }
 
-    @Basic
-    @Column(name = "data_table_type")
+    @Column(name = "data_table_type", nullable = false)
     public String getDataTableType() {
         return dataTableType;
     }
@@ -158,7 +153,7 @@ public class DataTable {
         this.dataTableType = dataTableType;
     }
 
-    @Basic
+    
     @Column(name = "dataset_id")
     public Long getDatasetId() {
         return datasetId;
@@ -168,7 +163,7 @@ public class DataTable {
         this.datasetId = datasetId;
     }
 
-    @Basic
+    
     @Column(name = "description")
     public String getDescription() {
         return description;
@@ -178,7 +173,7 @@ public class DataTable {
         this.description = description;
     }
 
-    @Basic
+    
     @Column(name = "external_id")
     public String getExternalId() {
         return externalId;
@@ -188,7 +183,7 @@ public class DataTable {
         this.externalId = externalId;
     }
 
-    @Basic
+    
     @Column(name = "external_url")
     public String getExternalUrl() {
         return externalUrl;
@@ -198,8 +193,7 @@ public class DataTable {
         this.externalUrl = externalUrl;
     }
 
-    @Basic
-    @Column(name = "feature_count")
+    @Column(name = "feature_count", nullable = false)
     public Integer getFeatureCount() {
         return featureCount;
     }
@@ -208,8 +202,7 @@ public class DataTable {
         this.featureCount = featureCount;
     }
 
-    @Basic
-    @Column(name = "flag_count")
+    @Column(name = "flag_count", nullable = false)
     public Integer getFlagCount() {
         return flagCount;
     }
@@ -218,8 +211,7 @@ public class DataTable {
         this.flagCount = flagCount;
     }
 
-    @Basic
-    @Column(name = "geographical_coverage_geo_privacy")
+    @Column(name = "geographical_coverage_geo_privacy", nullable = false)
     public Boolean getGeographicalCoverageGeoPrivacy() {
         return geographicalCoverageGeoPrivacy;
     }
@@ -228,8 +220,7 @@ public class DataTable {
         this.geographicalCoverageGeoPrivacy = geographicalCoverageGeoPrivacy;
     }
 
-    @Basic
-    @Column(name = "geographical_coverage_latitude")
+    @Column(name = "geographical_coverage_latitude", nullable = false)
     public Double getGeographicalCoverageLatitude() {
         return geographicalCoverageLatitude;
     }
@@ -238,7 +229,7 @@ public class DataTable {
         this.geographicalCoverageLatitude = geographicalCoverageLatitude;
     }
 
-    @Basic
+    
     @Column(name = "geographical_coverage_location_accuracy")
     public String getGeographicalCoverageLocationAccuracy() {
         return geographicalCoverageLocationAccuracy;
@@ -248,8 +239,7 @@ public class DataTable {
         this.geographicalCoverageLocationAccuracy = geographicalCoverageLocationAccuracy;
     }
 
-    @Basic
-    @Column(name = "geographical_coverage_location_scale")
+    @Column(name = "geographical_coverage_location_scale", nullable = false)
     public String getGeographicalCoverageLocationScale() {
         return geographicalCoverageLocationScale;
     }
@@ -258,8 +248,7 @@ public class DataTable {
         this.geographicalCoverageLocationScale = geographicalCoverageLocationScale;
     }
 
-    @Basic
-    @Column(name = "geographical_coverage_longitude")
+    @Column(name = "geographical_coverage_longitude", nullable = false)
     public Double getGeographicalCoverageLongitude() {
         return geographicalCoverageLongitude;
     }
@@ -268,7 +257,7 @@ public class DataTable {
         this.geographicalCoverageLongitude = geographicalCoverageLongitude;
     }
 
-    @Basic
+    
     @Column(name = "geographical_coverage_place_name")
     public String getGeographicalCoveragePlaceName() {
         return geographicalCoveragePlaceName;
@@ -278,7 +267,7 @@ public class DataTable {
         this.geographicalCoveragePlaceName = geographicalCoveragePlaceName;
     }
 
-    @Basic
+    
     @Column(name = "geographical_coverage_topology")
     public Geometry getGeographicalCoverageTopology() {
         return geographicalCoverageTopology;
@@ -288,8 +277,7 @@ public class DataTable {
         this.geographicalCoverageTopology = geographicalCoverageTopology;
     }
 
-    @Basic
-    @Column(name = "is_deleted")
+    @Column(name = "is_deleted", nullable = false)
     public Boolean getDeleted() {
         return isDeleted;
     }
@@ -298,9 +286,7 @@ public class DataTable {
         isDeleted = deleted;
     }
 
-    @Basic
-    @Column(name = "last_revised")
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_revised", nullable = false, length = 29)
     public Date getLastRevised() {
         return lastRevised;
     }
@@ -309,7 +295,7 @@ public class DataTable {
         this.lastRevised = lastRevised;
     }
 
-    @Basic
+    
     @Column(name = "methods")
     public String getMethods() {
         return methods;
@@ -319,7 +305,7 @@ public class DataTable {
         this.methods = methods;
     }
 
-    @Basic
+    
     @Column(name = "party_attributions")
     public String getPartyAttributions() {
         return partyAttributions;
@@ -329,8 +315,7 @@ public class DataTable {
         this.partyAttributions = partyAttributions;
     }
 
-    @Basic
-    @Column(name = "party_contributor_id")
+    @Column(name = "party_contributor_id", nullable = false)
     public long getPartyContributorId() {
         return partyContributorId;
     }
@@ -339,8 +324,7 @@ public class DataTable {
         this.partyContributorId = partyContributorId;
     }
 
-    @Basic
-    @Column(name = "party_uploader_id")
+    @Column(name = "party_uploader_id", nullable = false)
     public long getPartyUploaderId() {
         return partyUploaderId;
     }
@@ -349,7 +333,7 @@ public class DataTable {
         this.partyUploaderId = partyUploaderId;
     }
 
-    @Basic
+    
     @Column(name = "project")
     public String getProject() {
         return project;
@@ -359,8 +343,7 @@ public class DataTable {
         this.project = project;
     }
 
-    @Basic
-    @Column(name = "rating")
+    @Column(name = "rating",nullable = false)
     public int getRating() {
         return rating;
     }
@@ -369,8 +352,8 @@ public class DataTable {
         this.rating = rating;
     }
 
-    @Basic
-    @Column(name = "taxonomic_coverage_group_ids")
+    
+    @Column(name = "taxonomic_coverage_group_ids",nullable = false)
     public String getTaxonomicCoverageGroupIds() {
         return taxonomicCoverageGroupIds;
     }
@@ -379,9 +362,8 @@ public class DataTable {
         this.taxonomicCoverageGroupIds = taxonomicCoverageGroupIds;
     }
 
-    @Basic
-    @Column(name = "temporal_coverage_from_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    
+    @Column(name = "temporal_coverage_from_date",nullable = false, length = 29)
     public Date getTemporalCoverageFromDate() {
         return temporalCoverageFromDate;
     }
@@ -390,9 +372,8 @@ public class DataTable {
         this.temporalCoverageFromDate = temporalCoverageFromDate;
     }
 
-    @Basic
-    @Column(name = "temporal_coverage_to_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    
+    @Column(name = "temporal_coverage_to_date",nullable = false, length = 29)
     public Date getTemporalCoverageToDate() {
         return temporalCoverageToDate;
     }
@@ -401,8 +382,8 @@ public class DataTable {
         this.temporalCoverageToDate = temporalCoverageToDate;
     }
 
-    @Basic
-    @Column(name = "title")
+    
+    @Column(name = "title",nullable = false)
     public String getTitle() {
         return title;
     }
@@ -411,7 +392,7 @@ public class DataTable {
         this.title = title;
     }
 
-    @Basic
+    
     @Column(name = "via_code")
     public String getViaCode() {
         return viaCode;
@@ -421,7 +402,7 @@ public class DataTable {
         this.viaCode = viaCode;
     }
 
-    @Basic
+    
     @Column(name = "via_id")
     public String getViaId() {
         return viaId;
@@ -431,7 +412,7 @@ public class DataTable {
         this.viaId = viaId;
     }
 
-    @Basic
+    
     @Column(name = "temporal_coverage_date_accuracy")
     public String getTemporalCoverageDateAccuracy() {
         return temporalCoverageDateAccuracy;
@@ -441,8 +422,7 @@ public class DataTable {
         this.temporalCoverageDateAccuracy = temporalCoverageDateAccuracy;
     }
 
-    @Basic
-    @Column(name = "summary")
+    @Column(name = "summary",nullable = false)
     public String getSummary() {
         return summary;
     }
@@ -451,8 +431,8 @@ public class DataTable {
         this.summary = summary;
     }
 
-    @Basic
-    @Column(name = "basis_of_data", columnDefinition = "varchar(255) default 'PRIMARY_OBSERVATION'")
+    @Column(name = "basis_of_data", columnDefinition = "varchar(255)")
+    @ColumnDefault("PRIMARY_OBSERVATION")
     public String getBasisOfData() {
         return basisOfData;
     }
@@ -461,7 +441,7 @@ public class DataTable {
         this.basisOfData = basisOfData;
     }
 
-    @Basic
+    
     @Column(name = "images_file_id")
     public Long getImagesFileId() {
         return imagesFileId;
@@ -471,8 +451,7 @@ public class DataTable {
         this.imagesFileId = imagesFileId;
     }
 
-    @Basic
-    @Column(name = "language_id")
+    @Column(name = "language_id", nullable = false)
     public Long getLanguageId() {
         return languageId;
     }
@@ -481,7 +460,7 @@ public class DataTable {
         this.languageId = languageId;
     }
 
-    @Basic
+    
     @Column(name = "trait_value_file_id")
     public Long getTraitValueFileId() {
         return traitValueFileId;
@@ -491,7 +470,6 @@ public class DataTable {
         this.traitValueFileId = traitValueFileId;
     }
 
-    @Basic
     @Column(name = "u_file_id", nullable = false)
     public Long getuFileId() {
         return uFileId;
@@ -501,7 +479,7 @@ public class DataTable {
         this.uFileId = uFileId;
     }
 
-    @Basic
+    
     @Column(name = "upload_log_id")
     public Long getUploadLogId() {
         return uploadLogId;
@@ -511,7 +489,6 @@ public class DataTable {
         this.uploadLogId = uploadLogId;
     }
 
-    @Basic
     @Column(name = "uploader_id", nullable = false)
     public Long getUploaderId() {
         return uploaderId;
@@ -519,18 +496,5 @@ public class DataTable {
 
     public void setUploaderId(Long uploaderId) {
         this.uploaderId = uploaderId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DataTable dataTable = (DataTable) o;
-        return Objects.equals(id, dataTable.id) && Objects.equals(version, dataTable.version) && Objects.equals(accessLicenseId, dataTable.accessLicenseId) && agreeTerms == dataTable.agreeTerms && Objects.equals(featureCount, dataTable.featureCount) && Objects.equals(flagCount, dataTable.flagCount) && geographicalCoverageGeoPrivacy == dataTable.geographicalCoverageGeoPrivacy && Double.compare(dataTable.geographicalCoverageLatitude, geographicalCoverageLatitude) == 0 && Double.compare(dataTable.geographicalCoverageLongitude, geographicalCoverageLongitude) == 0 && isDeleted == dataTable.isDeleted && Objects.equals(partyContributorId, dataTable.partyContributorId) && Objects.equals(partyUploaderId, dataTable.partyUploaderId) && Objects.equals(rating, dataTable.rating) && Objects.equals(accessRights, dataTable.accessRights) && Objects.equals(checklistId, dataTable.checklistId) && Objects.equals(columns, dataTable.columns) && Objects.equals(createdOn, dataTable.createdOn) && Objects.equals(customFields, dataTable.customFields) && Objects.equals(dataTableType, dataTable.dataTableType) && Objects.equals(description, dataTable.description) && Objects.equals(externalId, dataTable.externalId) && Objects.equals(externalUrl, dataTable.externalUrl) && Objects.equals(geographicalCoverageLocationAccuracy, dataTable.geographicalCoverageLocationAccuracy) && Objects.equals(geographicalCoverageLocationScale, dataTable.geographicalCoverageLocationScale) && Objects.equals(geographicalCoveragePlaceName, dataTable.geographicalCoveragePlaceName) && Objects.equals(geographicalCoverageTopology, dataTable.geographicalCoverageTopology) && Objects.equals(lastRevised, dataTable.lastRevised) && Objects.equals(methods, dataTable.methods) && Objects.equals(partyAttributions, dataTable.partyAttributions) && Objects.equals(project, dataTable.project) && Objects.equals(taxonomicCoverageGroupIds, dataTable.taxonomicCoverageGroupIds) && Objects.equals(temporalCoverageFromDate, dataTable.temporalCoverageFromDate) && Objects.equals(temporalCoverageToDate, dataTable.temporalCoverageToDate) && Objects.equals(title, dataTable.title) && Objects.equals(viaCode, dataTable.viaCode) && Objects.equals(viaId, dataTable.viaId) && Objects.equals(temporalCoverageDateAccuracy, dataTable.temporalCoverageDateAccuracy) && Objects.equals(summary, dataTable.summary) && Objects.equals(basisOfData, dataTable.basisOfData);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, version, accessLicenseId, accessRights, agreeTerms, checklistId, columns, createdOn, customFields, dataTableType, description, externalId, externalUrl, featureCount, flagCount, geographicalCoverageGeoPrivacy, geographicalCoverageLatitude, geographicalCoverageLocationAccuracy, geographicalCoverageLocationScale, geographicalCoverageLongitude, geographicalCoveragePlaceName, geographicalCoverageTopology, isDeleted, lastRevised, methods, partyAttributions, partyContributorId, partyUploaderId, project, rating, taxonomicCoverageGroupIds, temporalCoverageFromDate, temporalCoverageToDate, title, viaCode, viaId, temporalCoverageDateAccuracy, summary, basisOfData);
     }
 }

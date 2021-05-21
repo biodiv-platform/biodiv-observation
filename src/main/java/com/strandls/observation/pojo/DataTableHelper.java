@@ -66,7 +66,7 @@ public class DataTableHelper {
 		dataTable.setTitle(boDTO.getTitle());
 		dataTable.setTraitValueFileId(null);
 		dataTable.setuFileId(uFile.getId()); // uFile table id
-		dataTable.setVersion(2L);
+		dataTable.setVersion(0L);
 		dataTable.setViaCode(null);
 		dataTable.setViaId(null);
 		dataTable.setUploadLogId(null);

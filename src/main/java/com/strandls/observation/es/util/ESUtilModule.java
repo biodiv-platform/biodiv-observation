@@ -21,6 +21,7 @@ public class ESUtilModule extends AbstractModule {
 		bind(ConstructESDocument.class).in(Scopes.SINGLETON);
 		bind(ESCreateThread.class).in(Scopes.SINGLETON);
 		bind(Reindexing.class).in(Scopes.SINGLETON);
+		bind(ESBulkUploadThread.class).in(Scopes.SINGLETON);
 
 	}
 }

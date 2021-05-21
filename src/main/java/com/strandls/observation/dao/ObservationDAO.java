@@ -57,14 +57,17 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	public Long findTotalObservation() {
 		Session session = sessionFactory.openSession();
 		String qry = "select count(id) from observation where is_deleted = false";
-		BigInteger bigInt = null;
+		Long total = null;
 		try {
 			Query<BigInteger> query = session.createNativeQuery(qry);
-			bigInt = query.getSingleResult();
+			BigInteger bigInt = query.getSingleResult();
+			total = bigInt.longValue();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
-		return bigInt.longValue();
+		return total;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -97,6 +100,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 
 		return result;
@@ -114,6 +119,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 		return result;
 	}
@@ -199,7 +206,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
 	public List<Observation> getObservationCountForDatatable(Long datatableId) {
 		Session session = sessionFactory.openSession();
-		List<Observation> observationList = new ArrayList<>();
+		List<Observation> observationList = new ArrayList<Observation>();
 		String hql = "from Observation o where o.dataTableId = :datatable";
 		try {
 			Query query = session.createQuery(hql);
