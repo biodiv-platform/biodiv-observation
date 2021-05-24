@@ -268,13 +268,14 @@ public class ObservationUtilityFunctions {
 						observationData.getUserGroupsList(), observation.getId());
 				mapper.updateGeoPrivacy(observation);
 				mapper.updateUserGroupFilter(requestAuthHeader, observation);
+				return observation.getId();
 			}
 
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
 
-		return observation.getId();
+		return null;
 
 	}
 

@@ -151,7 +151,7 @@ public class Observation implements Serializable {
 		this.longitude = longitude;
 	}
 
-	@Column(name = "notes")
+	@Column(name = "notes",length = 500)
 	public String getNotes() {
 		return this.notes;
 	}
@@ -333,7 +333,7 @@ public class Observation implements Serializable {
 		this.topology = topology;
 	}
 
-	@Column(name = "checklist_annotations")
+	@Column(name = "checklist_annotations", length = 500)
 	public String getChecklistAnnotations() {
 		return this.checklistAnnotations;
 	}
