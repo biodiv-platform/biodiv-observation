@@ -150,11 +150,6 @@ public interface ObservationService {
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
 
-	public String handleBulkUpload(HttpServletRequest request, BulkObservationDTO observationDTO) throws Exception;
-
-	public String handleBulkUploadUGContext(HttpServletRequest request, BulkObservationDTO observationDTO)
-			throws Exception;
-
 	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId);
 
 	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);

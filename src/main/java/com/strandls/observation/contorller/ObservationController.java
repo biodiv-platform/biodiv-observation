@@ -1301,36 +1301,7 @@ public class ObservationController {
 		return Response.status(Status.OK).entity(response).build();
 	}
 
-	@POST
-	@Path(ApiConstants.BULK + ApiConstants.CREATE)
-	@ValidateUser
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Handle bulk upload", notes = "Handle bulk upload", response = String.class)
-
-	public Response bulkUpload(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
-		try {
-			observationService.handleBulkUpload(request, observationDTO);
-			return Response.status(Status.OK).build();
-		} catch (Exception ex) {
-			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
-		}
-	}
-
-	@POST
-	@Path(ApiConstants.BULK + ApiConstants.UGCONTEXT)
-	@ValidateUser
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Handle bulk upload UGContext", notes = "Handle bulk upload UGContext", response = String.class)
-	public Response bulkUploadUGContext(@Context HttpServletRequest request, BulkObservationDTO observationDTO) {
-		try {
-			observationService.handleBulkUploadUGContext(request, observationDTO);
-			return Response.status(Status.OK).build();
-		} catch (Exception ex) {
-			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
-		}
-	}
+	
 
 	@GET
 	@Path(ApiConstants.USERINFO + ApiConstants.UPLOADED + "/{userId}")
