@@ -116,7 +116,6 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
 			query.setParameter("startPoint", startPoint);
 			result = query.getResultList();
-
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {

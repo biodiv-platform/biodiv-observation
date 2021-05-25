@@ -55,7 +55,6 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
-import com.strandls.observation.es.util.Reindexing;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
@@ -134,9 +133,6 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
-	@Inject
-	private Reindexing reIndexing;
-
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
@@ -145,15 +141,6 @@ public class ObservationController {
 		return "pong Observation";
 	}
 
-	@GET
-	@Path(ApiConstants.REINDEXING)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.TEXT_PLAIN)
-
-	public Response reIndexing() {
-		reIndexing.reIndex();
-		return Response.status(Status.OK).entity("reIndexing started").build();
-	}
 
 	@GET
 	@Path(ApiConstants.SHOW + "/{observationId}")
