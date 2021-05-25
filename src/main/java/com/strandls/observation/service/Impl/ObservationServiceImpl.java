@@ -874,27 +874,34 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
-			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
-
-				MailData mailData = generateMailData(observationId);
-
-				observation.setIsDeleted(true);
-				MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), observationId.toString());
-				ResultEnum result = esResponse.getResult();
-				if (result.getValue().equals("DELETED")) {
-					observationDao.update(observation);
-					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId,
-							observationId, "observation", observationId, "Observation Deleted", mailData);
-					return "Observation Deleted Succesfully";
-				}
-
+			if (observation.getId() != null
+					&& (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN"))) {
+				deleteObservation(request, observation, true);
+				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
 		return null;
+	}
+
+	private void deleteObservation(HttpServletRequest request, Observation observation, Boolean hasMail)
+			throws ApiException {
+
+		Long observationId = observation.getId();
+		MailData mailData = hasMail ? generateMailData(observationId) : null;
+
+		observation.setIsDeleted(true);
+		MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
+				ObservationIndex.type.getValue(), observationId.toString());
+		ResultEnum result = esResponse.getResult();
+		if (result.getValue().equals("DELETED")) {
+			observationDao.update(observation);
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
+					"observation", observationId, "Observation Deleted", mailData);
+
+		}
 	}
 
 	@Override
@@ -1581,5 +1588,24 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
 				identifiedSpeciesCount);
 		return result;
+	}
+
+	@Override
+	public String removeObservationByDataTableId(Long dataTableId) {
+		List<Observation> observList = null;
+		List<Long> list = new ArrayList<Long>();
+		list.add(dataTableId);
+		try {
+			observList = observationDao.fetchByDataTableId(list);
+			if (observList != null && observList.size() > 0) {
+
+//				deleteObservation
+			}
+		} catch (Exception error) {
+			logger.error(error.getMessage());
+		}
+
+		return null;
+
 	}
 }

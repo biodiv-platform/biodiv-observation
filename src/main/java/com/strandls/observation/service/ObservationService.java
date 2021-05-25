@@ -152,4 +152,6 @@ public interface ObservationService {
 
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
+	public String removeObservationByDataTableId(Long dataTableId);
+
 }
