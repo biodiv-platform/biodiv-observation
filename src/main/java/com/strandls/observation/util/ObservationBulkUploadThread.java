@@ -118,6 +118,9 @@ public class ObservationBulkUploadThread implements Runnable {
 			Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 					observationDao, userService, data, myImageUpload, userId);
 			if (obsId != null) {
+				 if(observationIds.size() >= 100) {
+					 observationIds.clear();
+				 }
 				observationIds.add(obsId);
 			}
 
@@ -126,7 +129,6 @@ public class ObservationBulkUploadThread implements Runnable {
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread thread = new Thread(updateThread);
 				thread.start();
-				observationIds.clear();
 			}
 
 		}
