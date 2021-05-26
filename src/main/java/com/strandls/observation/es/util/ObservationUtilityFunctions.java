@@ -253,7 +253,7 @@ public class ObservationUtilityFunctions {
 				}
 			}
 
-			observation = mapper.creationObservationMapping(userId, requestAuthHeader,fieldMapping, dataRow,
+			observation = mapper.creationObservationMapping(userId, requestAuthHeader, fieldMapping, dataRow,
 					observationData.getDataTable(), observationData.getSpeciesGroupList(),
 					observationData.getChecklistAnnotaion(), isVerified, observationData.getBasisOfRecord());
 			if (observation != null) {
@@ -272,10 +272,11 @@ public class ObservationUtilityFunctions {
 			}
 
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 
-		return null;
+		return observation != null && observation.getId() != null ? observation.getId() : null;
 
 	}
 
