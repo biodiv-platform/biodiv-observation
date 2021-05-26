@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,8 +74,10 @@ public class GbifObservationThread implements Runnable {
 			List<ObservationESDocument> observations = new ArrayList<>();
 			while ((row = csvReader.readNext()) != null) {
 				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
+				String latitude = row[headerIndex.get("decimalLatitude")];
+				String longitude = row[headerIndex.get("decimalLongitude")];
 
-				if (!publishingOrgKey.equals(excludingPublishingOrgKey)) {
+				if (!publishingOrgKey.equals(excludingPublishingOrgKey) && !isBadRecord(latitude, longitude)) {
 					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
 					String gbifId = row[headerIndex.get("gbifID")];
 					String datetime = row[headerIndex.get("eventDate")];
@@ -90,9 +94,12 @@ public class GbifObservationThread implements Runnable {
 
 					String month = row[headerIndex.get("month")];
 					String monthName = getMonthName(month);
+					Double lat = null;
+					Double lon = null;
 
-					double lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
-					double lon = Double.parseDouble(row[headerIndex.get("decimalLongitude")]);
+					lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
+					lon = Double.parseDouble(row[headerIndex.get("decimalLongitude")]);
+
 					String placeName = row[headerIndex.get("locality")];
 
 					if (placeName.equals("")) {
@@ -100,6 +107,7 @@ public class GbifObservationThread implements Runnable {
 					}
 
 					String verbatimScientificName = row[headerIndex.get("verbatimScientificName")];
+					verbatimScientificName = WordUtils.capitalizeFully(verbatimScientificName);
 
 					RecoData recoData = new RecoData();
 					recoData.setTaxonScientificName(verbatimScientificName);
@@ -185,14 +193,17 @@ public class GbifObservationThread implements Runnable {
 						}
 					}
 
-					LocationInfo locationInfo = layerService.fetchLocationInfo(String.valueOf(lat),
-							String.valueOf(lon));
-					String state = locationInfo.getState();
-					String district = locationInfo.getDistrict();
-					String tahsil = locationInfo.getTahsil();
+					LocationInfo locationInfo = new LocationInfo();
+					ObservationLocationInfo layerInfo = new ObservationLocationInfo();
+					String state = null;
+					String district = null;
+					String tahsil = null;
 
-					ObservationLocationInfo layerInfo = layerService.getLayerInfo(String.valueOf(lat),
-							String.valueOf(lon));
+					locationInfo = layerService.fetchLocationInfo(String.valueOf(lat), String.valueOf(lon));
+					state = locationInfo.getState();
+					district = locationInfo.getDistrict();
+					tahsil = locationInfo.getTahsil();
+					layerInfo = layerService.getLayerInfo(String.valueOf(lat), String.valueOf(lon));
 
 					String externalGbifReferenceLink = "https://www.gbif.org/occurrence/" + gbifId.toString();
 
@@ -314,4 +325,15 @@ public class GbifObservationThread implements Runnable {
 		}
 		return null;
 	}
+
+	private Boolean isBadRecord(String lat, String lon) {
+
+		if (lat.isEmpty() || lon.isEmpty()) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
 }

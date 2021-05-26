@@ -11,7 +11,7 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 
 public class GbifObservationESMapper {
 
-	public ObservationESDocument mapToESDocument(Date date, String month, double lat, double lon, String placeName,
+	public ObservationESDocument mapToESDocument(Date date, String month, Double lat, Double lon, String placeName,
 			Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long id, Date dateIdentified, String name, String state,
