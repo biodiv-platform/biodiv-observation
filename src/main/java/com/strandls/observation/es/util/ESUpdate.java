@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.es.util;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -65,6 +66,8 @@ public class ESUpdate {
 			if (!ESObservationList.isEmpty()) {
 
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
+					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+					om.setDateFormat(df);
 					@SuppressWarnings("unchecked")
 					Map<String, Object> doc = om.convertValue(s, Map.class);
 					doc.putIfAbsent("id", s.getObservation_id());
