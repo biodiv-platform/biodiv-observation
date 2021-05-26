@@ -463,7 +463,6 @@ public class ObservationServiceImpl implements ObservationService {
 
 		return data;
 
-		// return null;
 	}
 
 	@Override

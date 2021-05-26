@@ -147,13 +147,6 @@ public class ObservationESDocument {
 	private List<Facts> facts;
 	private Boolean is_publication_grade;
 
-	/*
-	 * @Transient private boolean is_external;
-	 * 
-	 * @Transient private String data_source;
-	 * 
-	 * @Transient private String external_reference_link;
-	 */
 	/**
 	 * 
 	 */
@@ -270,10 +263,6 @@ public class ObservationESDocument {
 		this.featured = featured;
 		this.facts = facts;
 		this.is_publication_grade = is_publication_grade;
-		/*
-		 * this.is_external = is_external; this.data_source = data_source;
-		 * this.external_reference_link = external_reference_link;
-		 */
 	}
 
 	public Long getObservation_id() {
@@ -307,6 +296,7 @@ public class ObservationESDocument {
 	public void setProfile_pic(String profile_pic) {
 		this.profile_pic = profile_pic;
 	}
+
 	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getCreated_on() {
 		return created_on;
@@ -371,6 +361,7 @@ public class ObservationESDocument {
 	public void setNotes(String notes) {
 		this.notes = notes;
 	}
+
 	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getFrom_date() {
 		return from_date;
@@ -654,24 +645,6 @@ public class ObservationESDocument {
 
 	// sequence
 
-	/*
-	 * public boolean isIs_external() { return is_external; }
-	 * 
-	 * public void setIs_external(boolean is_external) { this.is_external =
-	 * is_external; }
-	 * 
-	 * public String getData_source() { return data_source; }
-	 * 
-	 * public void setData_source(String data_source) { this.data_source =
-	 * data_source; }
-	 * 
-	 * public String getExternal_reference_link() { return external_reference_link;
-	 * }
-	 * 
-	 * public void setExternal_reference_link(String external_reference_link) {
-	 * this.external_reference_link = external_reference_link; }
-	 */
-
 }
 
 //========Location========
@@ -934,6 +907,7 @@ class Featured {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public Date getCreated_on() {
 		return created_on;
 	}
