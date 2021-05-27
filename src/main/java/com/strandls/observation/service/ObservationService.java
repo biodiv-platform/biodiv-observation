@@ -18,6 +18,7 @@ import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -152,6 +153,9 @@ public interface ObservationService {
 
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
-	public String removeObservationByDataTableId(Long dataTableId);
-
+	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset);
+	
+	public String removeObservationByDataTableId(HttpServletRequest request,Long dataTableId);
+    
+	
 }

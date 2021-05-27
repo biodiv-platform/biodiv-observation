@@ -58,6 +58,7 @@ import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationHomePage;
@@ -441,7 +442,7 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset,identifiersoffset);
+							uploadersoffset, identifiersoffset);
 
 				}
 
@@ -1346,4 +1347,50 @@ public class ObservationController {
 
 	}
 
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
+			@DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit  = Integer.parseInt(Limit);
+			Integer offset  = Integer.parseInt(Offset);
+			List<Observation> result = observationService.fetchAllObservationByDataTableId(id,limit,offset);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@DELETE
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			String result = observationService.removeObservationByDataTableId(request, id);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
 }

@@ -886,7 +886,7 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 	}
 
-	private void deleteObservation(HttpServletRequest request, Observation observation, Boolean hasMail)
+	private Boolean deleteObservation(HttpServletRequest request, Observation observation, Boolean hasMail)
 			throws ApiException {
 
 		Long observationId = observation.getId();
@@ -901,7 +901,10 @@ public class ObservationServiceImpl implements ObservationService {
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
 					"observation", observationId, "Observation Deleted", mailData);
 
+			return true;
 		}
+
+		return null;
 	}
 
 	@Override
@@ -1591,15 +1594,36 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public String removeObservationByDataTableId(Long dataTableId) {
+	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset) {
+		List<Observation> observationList = null;
+		List<Long> list = new ArrayList<Long>();
+		list.add(dataTableId);
+		try {
+			observationList = observationDao.fetchByDataTableId(list,limit,offset);
+			return observationList;
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public String removeObservationByDataTableId(HttpServletRequest request, Long dataTableId) {
 		List<Observation> observList = null;
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
-			observList = observationDao.fetchByDataTableId(list);
+			observList = observationDao.fetchByDataTableId(list,null,0);
 			if (observList != null && observList.size() > 0) {
+				observList.forEach((item) -> {
+					try {
+						deleteObservation(request, item, true);
+					} catch (ApiException e) {
+						logger.error(e.getMessage());
+					}
+				});
 
-//				deleteObservation
+				return "Successfully Remove Observation for the Id" + dataTableId.toString();
 			}
 		} catch (Exception error) {
 			logger.error(error.getMessage());
@@ -1608,4 +1632,5 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 
 	}
+
 }
