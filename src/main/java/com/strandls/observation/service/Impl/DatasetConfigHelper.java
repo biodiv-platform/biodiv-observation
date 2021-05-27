@@ -1,6 +1,6 @@
 package com.strandls.observation.service.Impl;
 
-import import javax.inject.Inject;
+import javax.inject.Inject;
 
 import com.strandls.observation.util.DatasetStandaloneHelper;
 import com.strandls.observation.util.DatasetThreadRunner;

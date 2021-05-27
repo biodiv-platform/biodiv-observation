@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import import javax.inject.Inject;
+import javax.inject.Inject;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.DataSetDAO;
 import com.strandls.observation.pojo.Dataset;
