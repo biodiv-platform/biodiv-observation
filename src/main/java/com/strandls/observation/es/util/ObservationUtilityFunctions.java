@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -42,6 +44,9 @@ import com.strandls.user.controller.UserServiceApi;
  *
  */
 public class ObservationUtilityFunctions {
+	
+	@Inject 
+	private TokenGenerator tokenGenerator;
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationUtilityFunctions.class);
 
@@ -217,6 +222,7 @@ public class ObservationUtilityFunctions {
 		return observationGrade;
 	}
 
+	@SuppressWarnings("deprecation")
 	public Long createObservationAndMappings(String requestAuthHeader, ObservationBulkMapperHelper mapper,
 			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
 			Map<String, String> myImageUpload, Long userId) {
@@ -226,7 +232,6 @@ public class ObservationUtilityFunctions {
 		try {
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
-			TokenGenerator tokenGenerator = new TokenGenerator();
 
 			if (fieldMapping.get("isVerified") != null) {
 				Cell verifiedCell = dataRow.getCell(fieldMapping.get("isVerified"),

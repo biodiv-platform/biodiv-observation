@@ -399,6 +399,7 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private RecoCreate prepareRecoMapping(Row dataRow, Map<String, Integer> fieldMapping) {
 		RecoCreate recoCreate = null;
 		try {
@@ -446,6 +447,7 @@ public class ObservationBulkMapperHelper {
 		return recoCreate;
 	}
 
+	@SuppressWarnings("deprecation")
 	public void createObservationResource(String requestAuthHeader, Row dataRow, Map<String, Integer> fieldMapping,
 			List<License> licenses, Long userId, Observation observation, Map<String, String> myImageUpload) {
 		List<String> filesWithPath = new ArrayList<>();
@@ -530,6 +532,7 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
+	@SuppressWarnings({"deprecation","unchecked"})
 	private List<Resource> mapFileResponseToResource(Map<String, Integer> fieldMapping, Row dataRow,
 			List<License> licenses, Map<String, Object> fileResponse, Long userId) {
 		List<Resource> resources = new ArrayList<>();
@@ -594,6 +597,7 @@ public class ObservationBulkMapperHelper {
 		return resources;
 	}
 
+	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<UserGroupIbp> userGroupsList, Long observationId) {
 		try {
@@ -633,6 +637,7 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void createCustomFieldMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<Long> userGroupIds, Long observationId) {
 		try {
