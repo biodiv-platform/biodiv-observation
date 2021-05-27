@@ -42,7 +42,7 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
 
 public class ObservationBulkUploadThread implements Runnable {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationBulkUploadThread.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationBulkUploadThread.class);
 
 	private final ObservationBulkDTO observationBulkData;
 	private final HttpServletRequest request;

@@ -47,7 +47,6 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
-import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
@@ -332,7 +331,6 @@ public class ObservationController {
 			FilterPanelData result = observationListService.getAllFilter();
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
-			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -458,8 +456,6 @@ public class ObservationController {
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 
@@ -1244,7 +1240,6 @@ public class ObservationController {
 			thread.start();
 			return Response.status(Status.OK).build();
 		} catch (Exception e) {
-			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
@@ -1358,8 +1353,10 @@ public class ObservationController {
 
 	@POST
 	@Path(ApiConstants.BULK + ApiConstants.OBSERVATION)
-	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
 	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })

@@ -62,7 +62,7 @@ import com.strandls.utility.controller.UtilityServiceApi;
  */
 public class ObservationServeletContextListener extends GuiceServletContextListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
 
 	@Override
 	protected Injector getInjector() {
@@ -131,7 +131,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
 			injector.getInstance(DatasetConfigHelper.class).createStandaloneRecord("standalone_dataset");
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 

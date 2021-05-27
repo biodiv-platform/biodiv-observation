@@ -64,7 +64,6 @@ public class ApiConstants {
 	public static final String USERINFO = "/userinfo";
 	public static final String UPLOADED = "/uploaded";
 	public static final String IDENTIFIED = "/identified";
-	public static final String REINDEXING = "/reindexing";
 	public static final String PULL = "/pull";
 
 //	<-------------RECO Controller------------->

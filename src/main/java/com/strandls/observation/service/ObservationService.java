@@ -15,7 +15,6 @@ import org.pac4j.core.profile.CommonProfile;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
-import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;

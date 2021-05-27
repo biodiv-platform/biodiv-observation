@@ -42,7 +42,7 @@ import io.swagger.jaxrs.config.BeanConfig;
  */
 public class ApplicationConfig extends Application {
 
-	private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
+	private final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
 
 	/**
 	 * 

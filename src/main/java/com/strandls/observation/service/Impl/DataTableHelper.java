@@ -1,6 +1,6 @@
 package com.strandls.observation.service.Impl;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 import com.strandls.observation.dao.DataSetDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.pojo.DataTable;

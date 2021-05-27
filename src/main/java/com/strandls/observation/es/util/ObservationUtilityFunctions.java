@@ -28,7 +28,6 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
 import com.opencsv.CSVWriter;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.DownloadLog;
@@ -272,7 +271,6 @@ public class ObservationUtilityFunctions {
 			}
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 

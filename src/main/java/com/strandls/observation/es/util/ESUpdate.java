@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,6 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapQueryResponse;
-import com.strandls.observation.pojo.ShowData;
 
 /**
  * @author Abhishek Rudra
@@ -74,7 +72,8 @@ public class ESUpdate {
 					return doc;
 				}).collect(Collectors.toList());
 				String json = om.writeValueAsString(bulkEsDoc);
-				esService.bulkUpload("extended_observation", "_doc", json.toString());
+				esService.bulkUpload(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+						json.toString());
 				System.out.println("--------------completed-------------observationId");
 
 			}

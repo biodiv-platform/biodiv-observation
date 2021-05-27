@@ -53,7 +53,6 @@ import com.strandls.observation.dao.DataTableDAO;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
-import com.strandls.observation.dto.BulkObservationDTO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
@@ -135,7 +134,7 @@ import net.minidev.json.JSONArray;
  */
 public class ObservationServiceImpl implements ObservationService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
 
 	@Inject
 	private LogActivities logActivity;
@@ -294,7 +293,6 @@ public class ObservationServiceImpl implements ObservationService {
 						observationNearBy, activityCount);
 				return data;
 			} catch (Exception e) {
-				e.printStackTrace();
 				logger.error(e.getMessage());
 			}
 		}
@@ -491,7 +489,6 @@ public class ObservationServiceImpl implements ObservationService {
 			return findById(observation.getId());
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 
@@ -625,7 +622,6 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			result = speciesGroupService.getAllSpeciesGroup();
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return result;
@@ -1638,7 +1634,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			properties.load(in);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");

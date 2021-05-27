@@ -46,7 +46,6 @@ import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
-import com.strandls.observation.pojo.TopIdentifiersInfo;
 import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
 
@@ -172,7 +171,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 					statsAggregates, observationListMinimal);
 
 		} catch (ApiException e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return listData;
@@ -607,7 +605,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
 
 		Map<String, Long> identifiers = mapAggStatsResponse.get("all_reco_vote.authors_voted.id").getGroupAggregation();
-		List<TopIdentifiersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+		List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
 		aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 
 		Long totalUploaders = Long.valueOf(0);
@@ -632,7 +630,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return aggregationStatsResponse;
 	}
 
-	private List<TopIdentifiersInfo> extractIdentifiers(Integer identifierssoffset, String user,
+	private List<TopUploadersInfo> extractIdentifiers(Integer identifierssoffset, String user,
 			Map<String, Long> identifiers) {
 		int identifiersSize = identifierssoffset + 10;
 		int identifiersCount = 1;
@@ -667,12 +665,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		try {
 			List<IdentifiersInfo> allIdentifiersInfo = esService.getIdentifierInfo("extended_observation", authorIds);
-			List<TopIdentifiersInfo> identifiersResult = new ArrayList<>();
+			List<TopUploadersInfo> identifiersResult = new ArrayList<>();
 			for (int k = 0; k < allIdentifiersInfo.size(); k++) {
 				String name = allIdentifiersInfo.get(k).getName();
 				String pic = allIdentifiersInfo.get(k).getPic();
 				Long authorId = allIdentifiersInfo.get(k).getAuthorId();
-				TopIdentifiersInfo tempUploader = new TopIdentifiersInfo(name, pic, authorId, counts.get(k));
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
 				identifiersResult.add(tempUploader);
 			}
 
@@ -875,7 +873,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			result = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return result;

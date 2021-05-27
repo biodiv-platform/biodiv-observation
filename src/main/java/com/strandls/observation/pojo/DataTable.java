@@ -7,7 +7,6 @@ import javax.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.Date;
-import java.util.Objects;
 
 @Entity
 @Table(name = "data_table", schema = "public")
@@ -125,7 +124,7 @@ public class DataTable {
     }
 
     
-    @Column(name = "created_on",nullable = false, length = 29)
+    @Column(name = "created_on",nullable = false)
     public Date getCreatedOn() {
         return createdOn;
     }
@@ -286,7 +285,7 @@ public class DataTable {
         isDeleted = deleted;
     }
 
-    @Column(name = "last_revised", nullable = false, length = 29)
+    @Column(name = "last_revised", nullable = false)
     public Date getLastRevised() {
         return lastRevised;
     }
@@ -363,7 +362,7 @@ public class DataTable {
     }
 
     
-    @Column(name = "temporal_coverage_from_date",nullable = false, length = 29)
+    @Column(name = "temporal_coverage_from_date",nullable = false)
     public Date getTemporalCoverageFromDate() {
         return temporalCoverageFromDate;
     }
@@ -373,7 +372,7 @@ public class DataTable {
     }
 
     
-    @Column(name = "temporal_coverage_to_date",nullable = false, length = 29)
+    @Column(name = "temporal_coverage_to_date",nullable = false)
     public Date getTemporalCoverageToDate() {
         return temporalCoverageToDate;
     }
@@ -431,7 +430,7 @@ public class DataTable {
         this.summary = summary;
     }
 
-    @Column(name = "basis_of_data", columnDefinition = "varchar(255)")
+    @Column(name = "basis_of_data")
     @ColumnDefault("PRIMARY_OBSERVATION")
     public String getBasisOfData() {
         return basisOfData;

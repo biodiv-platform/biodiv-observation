@@ -3,7 +3,6 @@
  */
 package com.strandls.observation.dao;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,7 +30,7 @@ import com.strandls.observation.util.AbstractDAO;
  */
 public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
 
 	@Inject
 	protected ObservationDAO(SessionFactory sessionFactory) {
@@ -59,9 +58,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "select count(id) from observation where is_deleted = false";
 		Long total = null;
 		try {
-			Query<BigInteger> query = session.createNativeQuery(qry);
-			BigInteger bigInt = query.getSingleResult();
-			total = bigInt.longValue();
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			total = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
@@ -203,6 +201,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return maxVotedRecoFreq;
 	}
 
+	@SuppressWarnings({"unchecked","rawtypes"})
 	public List<Observation> getObservationCountForDatatable(Long datatableId) {
 		Session session = sessionFactory.openSession();
 		List<Observation> observationList = new ArrayList<Observation>();

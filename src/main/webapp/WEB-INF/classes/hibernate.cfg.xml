@@ -32,12 +32,5 @@
 		<property name="hibernate.hikari.idleTimeout">10000</property>
 
 		<property name="hibernate.jdbc.lob.non_contextual_creation">true</property>
-
-		<mapping class="com.strandls.observation.pojo.Observation" />
-		<mapping class="com.strandls.observation.pojo.Recommendation" />
-		<mapping
-			class="com.strandls.observation.pojo.RecommendationVote" />
-		<mapping class="com.strandls.observation.pojo.DataTable"/>
-		<mapping class="com.strandls.observation.pojo.Dataset"/>
 	</session-factory>
 </hibernate-configuration>
