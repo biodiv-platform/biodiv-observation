@@ -65,6 +65,7 @@ public class ApiConstants {
 	public static final String UPLOADED = "/uploaded";
 	public static final String IDENTIFIED = "/identified";
 	public static final String PULL = "/pull";
+	public static final String DATATABLEOBSERVATION = "dataTableObservation";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

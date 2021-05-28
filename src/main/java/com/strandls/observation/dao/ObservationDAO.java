@@ -200,6 +200,28 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		}
 		return maxVotedRecoFreq;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Observation> fetchByDataTableId(List<Long>  dataTableId,Integer limit,Integer offset) {
+		
+		String qry = "from Observation where isDeleted = false and dataTableId IN :ids";
+		Session session = sessionFactory.openSession();
+		List<Observation> result = null;
+		try {
+			Query<Observation> query = session.createQuery(qry);
+			query.setParameter("ids", dataTableId);
+			query.setFirstResult(offset);
+			if(limit != null) {
+				query.setMaxResults(limit);	
+			}
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return result;
+	}
+	
 
 	@SuppressWarnings({"unchecked","rawtypes"})
 	public List<Observation> getObservationCountForDatatable(Long datatableId) {

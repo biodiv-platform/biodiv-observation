@@ -20,6 +20,7 @@ import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -158,4 +159,9 @@ public interface ObservationService {
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
 
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
+	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset);
+	
+	public String removeObservationByDataTableId(HttpServletRequest request,Long dataTableId);
+    
+	
 }
