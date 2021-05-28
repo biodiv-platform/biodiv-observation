@@ -130,7 +130,7 @@ public class ObservationController {
 
 	@Inject
 	private MailService mailService;
-
+	
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
@@ -1352,7 +1352,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
+	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations",response = Observation.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
@@ -1381,7 +1381,7 @@ public class ObservationController {
 	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
-	public Response getObservationDatatableId(@Context HttpServletRequest request,
+	public Response deleteObservaionByDatatableId(@Context HttpServletRequest request,
 			@PathParam("dataTableId") String dataTableId) {
 
 		try {
