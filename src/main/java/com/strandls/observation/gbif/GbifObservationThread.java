@@ -23,6 +23,7 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.LocationInfo;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.es.util.ExternalObservationESDocument;
 import com.strandls.observation.es.util.GbifObservationESMapper;
 import com.strandls.observation.es.util.ObservationESDocument;
 import com.strandls.observation.pojo.RecoData;
@@ -71,7 +72,7 @@ public class GbifObservationThread implements Runnable {
 				headerIndex.put(row[j], j);
 			}
 
-			List<ObservationESDocument> observations = new ArrayList<>();
+			List<ExternalObservationESDocument> observations = new ArrayList<>();
 			while ((row = csvReader.readNext()) != null) {
 				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
 				String latitude = row[headerIndex.get("decimalLatitude")];
@@ -106,11 +107,10 @@ public class GbifObservationThread implements Runnable {
 						placeName = null;
 					}
 
-					String verbatimScientificName = row[headerIndex.get("verbatimScientificName")];
-					verbatimScientificName = WordUtils.capitalizeFully(verbatimScientificName);
+					String gbifScientificName = row[headerIndex.get("scientificName")];
 
 					RecoData recoData = new RecoData();
-					recoData.setTaxonScientificName(verbatimScientificName);
+					recoData.setTaxonScientificName(gbifScientificName);
 
 					Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData);
 					Long recoId = null;
@@ -119,7 +119,7 @@ public class GbifObservationThread implements Runnable {
 						recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
 					}
 
-					String scientificName = verbatimScientificName;
+					String scientificName = gbifScientificName;
 					if (recoAndTaxonId.get("taxonId") != null) {
 						taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
 
@@ -207,8 +207,8 @@ public class GbifObservationThread implements Runnable {
 
 					String externalGbifReferenceLink = "https://www.gbif.org/occurrence/" + gbifId.toString();
 
-					ObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName, recoId,
-							taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
+					ExternalObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName,
+							recoId, taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
 							acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name,
 							state, district, tahsil, groupId, groupName, externalOriginalReferenceLink,
 							externalGbifReferenceLink, layerInfo);
