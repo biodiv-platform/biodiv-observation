@@ -268,11 +268,11 @@ public class ESUtility {
 			if (!speciesNames.isEmpty()) {
 				if (speciesNames.size() < 2) {
 					String first = (String) speciesNames.toArray()[0];
-					if (first.equalsIgnoreCase("UNIDENTIFED")) {
+					if (first.equalsIgnoreCase("UNIDENTIFIED")) {
 						rangeAndLists
 								.add(assignAndRange(ObservationIndex.no_of_identifications.getValue(), 0, 0, null));
 					}
-					if (first.equalsIgnoreCase("IDENTIFED")) {
+					if (first.equalsIgnoreCase("IDENTIFIED")) {
 						rangeAndLists.add(assignAndRange(ObservationIndex.no_of_identifications.getValue(), 1,
 								Long.MAX_VALUE, null));
 					}
