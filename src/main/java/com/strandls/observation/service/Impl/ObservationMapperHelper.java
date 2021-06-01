@@ -397,6 +397,7 @@ public class ObservationMapperHelper {
 				FilesDTO filesDTO = new FilesDTO();
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
+				filesDTO.setModule("OBSERVATION");
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
@@ -441,7 +442,7 @@ public class ObservationMapperHelper {
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
-				resource.setLicenseId(resourceData.getLicenceId());
+				resource.setLicenseId(resourceData.getLicenseId());
 
 				resources.add(resource);
 			}
@@ -498,7 +499,7 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ObservationResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId()));
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
 
 		}
 		return editResource;

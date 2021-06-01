@@ -382,13 +382,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
 					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
-			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+			getAggregateLatch(index, type, "no_of_identifications", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
 
 		} else {
 
-			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+			getAggregateLatch(index, type, "no_of_identifications", geoAggregationField, mapSearchQuery, mapAggResponse,
+					latch, null);
 
 		}
 		if (taxonId != null && !taxonId.isEmpty()) {
@@ -488,8 +488,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse.setGroupVideo(getTotal(mapAggResponse.get("no_of_videos").getGroupAggregation()));
 		aggregationResponse.setGroupImages(getTotal(mapAggResponse.get("no_of_images").getGroupAggregation()));
 		aggregationResponse.setGroupNoMedia(getTotal(mapAggResponse.get("no_media").getGroupAggregation()));
-		aggregationResponse
-				.setGroupIdentificationNameExists(mapAggResponse.get("max_voted_reco").getGroupAggregation());
+		aggregationResponse.setGroupIdentificationNameExists(
+				getIdentificationSum(mapAggResponse.get("no_of_identifications").getGroupAggregation()));
 		aggregationResponse
 				.setGroupTaxonIDExists(mapAggResponse.get("max_voted_reco.taxonstatus").getGroupAggregation());
 
@@ -746,6 +746,22 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 		}
 		return sum;
+	}
+
+	private Map<String, Long> getIdentificationSum(Map<String, Long> identification) {
+		Long identified = 0L;
+		Long unIdentified = 0L;
+		for (Entry<String, Long> entry : identification.entrySet()) {
+			if (entry.getKey().equals("0")) {
+				unIdentified = entry.getValue();
+			} else {
+				identified += entry.getValue();
+			}
+		}
+		Map<String, Long> result = new HashMap<String, Long>();
+		result.put("available", identified);
+		result.put("missing", unIdentified);
+		return result;
 	}
 
 	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {

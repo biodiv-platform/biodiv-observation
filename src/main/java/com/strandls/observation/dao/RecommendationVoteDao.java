@@ -162,9 +162,8 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 			qry1 = qry1 + " and o.group_id = " + sGroup;
 		if (hasMedia)
 			qry1 = qry1 + " and (o.no_of_audio > 0 or o.no_of_videos > 0 or o.no_of_images > 0 ) ";
-		
+
 		qry1 = qry1 + " and o.is_deleted = false ";
-		
 
 		Session session = sessionFactory.openSession();
 
@@ -194,4 +193,39 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<RecommendationVote> findByRecoIdList(List<Long> recoIdList) {
+		String qry = "from RecommendationVote where recommendationId in :recoIdList ";
+		Session session = sessionFactory.openSession();
+		List<RecommendationVote> result = null;
+		try {
+			Query<RecommendationVote> query = session.createQuery(qry);
+			query.setParameter("recoIdList", recoIdList);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	
+	@SuppressWarnings("unchecked")
+	public List<RecommendationVote> findCommonNameMatchByRecoIdList(List<Long> recoIdList) {
+		String qry = "from RecommendationVote where commonNameRecoId in :recoIdList ";
+		Session session = sessionFactory.openSession();
+		List<RecommendationVote> result = null;
+		try {
+			Query<RecommendationVote> query = session.createQuery(qry);
+			query.setParameter("recoIdList", recoIdList);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+	
 }

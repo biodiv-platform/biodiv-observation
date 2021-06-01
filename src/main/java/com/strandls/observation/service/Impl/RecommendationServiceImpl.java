@@ -6,9 +6,11 @@ package com.strandls.observation.service.Impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -860,6 +862,94 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 
 		return null;
+	}
+
+	@Override
+	public void recoCleanUp() {
+		List<Recommendation> recoList = recoDao.findAll();
+		Map<Long, List<Recommendation>> taxonRecoListMap = new HashMap<Long, List<Recommendation>>();
+		List<Recommendation> duplicateRecoList = null;
+//		grouping reco on basis of taxonId
+		for (Recommendation reco : recoList) {
+			if (reco.getTaxonConceptId() != null) {
+				if (taxonRecoListMap.containsKey(reco.getTaxonConceptId())) {
+					duplicateRecoList = taxonRecoListMap.get(reco.getTaxonConceptId());
+					duplicateRecoList.add(reco);
+					taxonRecoListMap.put(reco.getTaxonConceptId(), duplicateRecoList);
+				} else {
+					duplicateRecoList = new ArrayList<Recommendation>();
+					duplicateRecoList.add(reco);
+					taxonRecoListMap.put(reco.getTaxonConceptId(), duplicateRecoList);
+				}
+			}
+		}
+//		filtering out taxon having multiple reco
+		for (Entry<Long, List<Recommendation>> entry : taxonRecoListMap.entrySet()) {
+			if (entry.getValue().size() > 1) {
+				Long latestRecoId = findLatestReco(entry.getValue());
+				cleanRecoVote(latestRecoId, entry.getValue());
+			}
+		}
+
+	}
+
+//	find the latest reco Id
+	private Long findLatestReco(List<Recommendation> recoList) {
+		Long recoId = recoList.get(0).getId();
+		Date recoDate = recoList.get(0).getLastModified();
+		for (Recommendation reco : recoList) {
+			if (reco.getLastModified().compareTo(recoDate) > 0) {
+				recoId = reco.getId();
+				recoDate = reco.getLastModified();
+			}
+		}
+
+		return recoId;
+	}
+
+//	update recoVote recommendationId, update maxVotedReco and delete extra recoId
+	private void cleanRecoVote(Long latestRecoId, List<Recommendation> recoList) {
+		Set<Long> observationIdSet = new HashSet<Long>();
+		List<Long> recoIdList = new ArrayList<Long>();
+		for (Recommendation reco : recoList) {
+			if (reco.getId() != latestRecoId) {
+				recoIdList.add(reco.getId());
+			}
+
+		}
+
+//		scientific name
+		List<RecommendationVote> recoVoteList = recoVoteDao.findByRecoIdList(recoIdList);
+		for (RecommendationVote recoVote : recoVoteList) {
+			observationIdSet.add(recoVote.getObservationId());
+			recoVote.setRecommendationId(latestRecoId);
+			recoVoteDao.update(recoVote);
+		}
+
+//		common name
+		List<RecommendationVote> recoCommonNameVoteList = recoVoteDao.findCommonNameMatchByRecoIdList(recoIdList);
+		for (RecommendationVote recoVote : recoCommonNameVoteList) {
+			observationIdSet.add(recoVote.getObservationId());
+			recoVote.setCommonNameRecoId(null);
+			recoVoteDao.update(recoVote);
+		}
+
+		for (Long obvId : observationIdSet) {
+			Long maxRecoVote = maxRecoVote(obvId);
+			observaitonService.updateMaxVotedReco(obvId, maxRecoVote);
+		}
+
+		for (Recommendation reco : recoList) {
+			if (reco.getId() != latestRecoId) {
+				recoDao.delete(reco);
+			} else {
+				if (!reco.getIsScientificName()) {
+					reco.setIsScientificName(true);
+					recoDao.update(reco);
+				}
+
+			}
+		}
 	}
 
 }

@@ -56,4 +56,6 @@ public interface RecommendationService {
 
 	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long sGroupId, Boolean hasMedia,
 			Long offset);
+
+	public void recoCleanUp();
 }
