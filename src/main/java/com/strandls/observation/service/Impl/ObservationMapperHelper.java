@@ -397,6 +397,7 @@ public class ObservationMapperHelper {
 				FilesDTO filesDTO = new FilesDTO();
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
+				filesDTO.setModule("OBSERVATION");
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
