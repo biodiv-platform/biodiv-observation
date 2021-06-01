@@ -37,6 +37,7 @@ public class ObservationListPageMapper {
 	private Date lastRevised;
 	private Date observedOn;
 	private String reverseGeocodedName;
+	private String palceName;
 	private Long speciesGroupId;
 	private String speciesGroup;
 	private Long noOfImages;
@@ -70,6 +71,15 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "from_date")
 	private void unpackObservedOnDate(Date observedDate) {
 		observedOn = observedDate;
+	}
+
+	@JsonProperty(value = "place_name")
+	public String getPalceName() {
+		return palceName;
+	}
+
+	public void setPalceName(String palceName) {
+		this.palceName = palceName;
 	}
 
 	@JsonProperty(value = "reverse_geocoded_name")
