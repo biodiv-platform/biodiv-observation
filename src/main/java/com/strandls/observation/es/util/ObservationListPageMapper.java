@@ -53,7 +53,7 @@ public class ObservationListPageMapper {
 	private String dataSource;
 	private String externalOriginalReferenceLink;
 	private String externalGbifReferenceLink;
-	private String uniqueIdPrefix;
+	private String id;
 
 	@JsonProperty(value = "is_external")
 	private void unpackisExternal(Boolean is_external) {
@@ -75,9 +75,9 @@ public class ObservationListPageMapper {
 		externalGbifReferenceLink = external_gbif_reference_link;
 	}
 
-	@JsonProperty(value = "unique_id_prefix")
-	private void unpackUniqueIdPrefix(String unique_id_prefix) {
-		uniqueIdPrefix = unique_id_prefix;
+	@JsonProperty(value = "id")
+	private void unpackId(String Id) {
+		id = Id;
 	}
 
 	@JsonProperty("observation_id")
@@ -468,7 +468,7 @@ public class ObservationListPageMapper {
 			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
 			List<CustomFieldObservationData> customField, List<Tags> tags, Boolean isExternal, String dataSource,
-			String externalOriginalReferenceLink, String externalGbifReferenceLink, String uniqueIdPrefix) {
+			String externalOriginalReferenceLink, String externalGbifReferenceLink, String id) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -492,7 +492,7 @@ public class ObservationListPageMapper {
 		this.dataSource = dataSource;
 		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
 		this.externalGbifReferenceLink = externalGbifReferenceLink;
-		this.uniqueIdPrefix = uniqueIdPrefix;
+		this.id = id;
 
 	}
 
@@ -528,12 +528,12 @@ public class ObservationListPageMapper {
 		this.externalGbifReferenceLink = externalGbifReferenceLink;
 	}
 
-	public String getUniqueIdPrefix() {
-		return uniqueIdPrefix;
+	public String getId() {
+		return id;
 	}
 
-	public void setUniqueIdPrefix(String uniqueIdPrefix) {
-		this.uniqueIdPrefix = uniqueIdPrefix;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public Long getObservationId() {

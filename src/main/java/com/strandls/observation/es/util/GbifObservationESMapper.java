@@ -11,12 +11,12 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 
 public class GbifObservationESMapper {
 
-	public ExternalObservationESDocument mapToESDocument(Date date, String month, Double lat, Double lon, String placeName,
-			Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
+	public ExternalObservationESDocument mapToESDocument(Date date, String month, Double lat, Double lon,
+			String placeName, Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
-			String italisicedForm, String position, Long id, Date dateIdentified, String name, String state,
+			String italisicedForm, String position, Long observationId, Date dateIdentified, String name, String state,
 			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
-			String externalGbifReferenceLink,ObservationLocationInfo layerInfo) {
+			String externalGbifReferenceLink, ObservationLocationInfo layerInfo) {
 
 		ExternalObservationESDocument gbifObs = new ExternalObservationESDocument();
 		Clock clock = Clock.systemUTC();
@@ -26,7 +26,7 @@ public class GbifObservationESMapper {
 		gbifObs.setCreated_on(createdOnDate);
 		gbifObs.setObserved_in_month(month);
 		gbifObs.setLocation(new Location(lat, lon));
-		gbifObs.setObservation_id(id);
+		gbifObs.setObservation_id(observationId);
 		gbifObs.setIs_external(true);
 		gbifObs.setData_source("gbif.org");
 		gbifObs.setExternal_original_reference_link(externalOriginalReferenceLink);
@@ -38,7 +38,7 @@ public class GbifObservationESMapper {
 		gbifObs.setNo_of_videos(0);
 		gbifObs.setPlace_name(placeName);
 		gbifObs.setLayer_info(layerInfo);
-		gbifObs.setUnique_id_prefix("gbif");
+//		gbifObs.setUnique_id_prefix("gbif");
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);

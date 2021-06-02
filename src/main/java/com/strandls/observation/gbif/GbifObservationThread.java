@@ -59,6 +59,8 @@ public class GbifObservationThread implements Runnable {
 		try {
 
 			String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
+			String dataSourcePrefix=PropertyFileUtil.fetchProperty("config.properties", "gbifUniqueIdPrefix");
+			
 			String excludingPublishingOrgKey = PropertyFileUtil.fetchProperty("config.properties",
 					"excludingPublishingOrgKey");
 			FileReader filereader = new FileReader(path);
