@@ -197,7 +197,9 @@ public class ObservationController {
 			if (observationHelper.checkIndiaBounds(observationData) == false) {
 				throw new ObservationInputException("Observation Not within India Bounds");
 			}
-
+			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
+				throw new ObservationInputException("Without resource observation");
+			}
 			ShowData result = observationService.createObservation(request, observationData);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
