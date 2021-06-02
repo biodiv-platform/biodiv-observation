@@ -49,6 +49,7 @@ import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.observation.util.ObservationUtilModule;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -119,6 +120,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
+				bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				bind(RabbitMQProducer.class).toInstance(producer);

@@ -69,6 +69,7 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
@@ -132,7 +133,7 @@ public class ObservationController {
 
 	@Inject
 	private MailService mailService;
-	
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
@@ -140,7 +141,6 @@ public class ObservationController {
 	public String ping() {
 		return "pong Observation";
 	}
-
 
 	@GET
 	@Path(ApiConstants.SHOW + "/{observationId}")
@@ -1297,8 +1297,6 @@ public class ObservationController {
 		return Response.status(Status.OK).entity(response).build();
 	}
 
-	
-
 	@GET
 	@Path(ApiConstants.USERINFO + ApiConstants.UPLOADED + "/{userId}")
 	@Consumes(MediaType.TEXT_PLAIN)
@@ -1369,14 +1367,37 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
-	
+
 	@GET
 	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations",response = Observation.class, responseContainer = "List")
+	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = ShowObervationDataTable.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId, @DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			ShowObervationDataTable result = observationService.showObservatioDataTable(request, id, limit, offset);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + ApiConstants.LIST + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = Observation.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
@@ -1385,9 +1406,9 @@ public class ObservationController {
 
 		try {
 			Long id = Long.parseLong(dataTableId);
-			Integer limit  = Integer.parseInt(Limit);
-			Integer offset  = Integer.parseInt(Offset);
-			List<Observation> result = observationService.fetchAllObservationByDataTableId(id,limit,offset);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			List<Observation> result = observationService.fetchAllObservationByDataTableId(id, limit, offset);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

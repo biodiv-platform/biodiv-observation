@@ -34,6 +34,7 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
@@ -60,7 +61,8 @@ import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
-import com.strandls.observation.pojo.DataTable;
+import com.strandls.dataTable.pojo.BulkDTO;
+import com.strandls.dataTable.pojo.DataTable;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -75,6 +77,7 @@ import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationBulkUploadThread;
@@ -85,6 +88,8 @@ import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
+import com.strandls.resource.pojo.UFile;
+import com.strandls.resource.pojo.UFileCreateData;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
@@ -203,6 +208,9 @@ public class ObservationServiceImpl implements ObservationService {
 	private DataTableHelper dataTableHelper;
 
 	@Inject
+	private UploadApi fileUploadApi;
+
+	@Inject
 	private DataTableDAO dataTableDAO;
 
 	@Inject
@@ -212,13 +220,13 @@ public class ObservationServiceImpl implements ObservationService {
 	private LicenseControllerApi licenseControllerApi;
 
 	@Inject
-	private UploadApi fileUploadApi;
-	
-	@Inject
 	private SpeciesServicesApi speciesGroupService;
 
 	@Inject
 	private TaxonomyTreeServicesApi taxonomyTreeService;
+
+	@Inject
+	private DataTableServiceApi dataTableService;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -415,7 +423,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-					maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
+				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
 						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
 
 				observation.setMaxVotedRecoId(maxVotedReco);
@@ -1582,7 +1590,6 @@ public class ObservationServiceImpl implements ObservationService {
 		return null;
 	}
 
-
 	@Override
 	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset) {
 
@@ -1633,28 +1640,81 @@ public class ObservationServiceImpl implements ObservationService {
 		return result;
 	}
 
+	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, HttpServletRequest request)
+			throws Exception {
+		try {
+			List<String> myUploadFilesPath = new ArrayList<String>();
+			myUploadFilesPath.add(observationBulkData.getFilename());
+			UFile uFileData = null;
+			FilesDTO filesDataTable = new FilesDTO();
+			Map<String, Object> result = new HashMap<String, Object>();
+			filesDataTable.setFolder("datatables");
+			filesDataTable.setModule("DATASETS");
+			filesDataTable.setFiles(myUploadFilesPath);
+			Map<String, Object> fileRes;
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION));
+			resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+			fileRes = fileUploadApi.moveFiles(filesDataTable);
+			List<UFileCreateData> createUfileList = new ArrayList<>();
+			fileRes.entrySet().forEach((item) -> {
+				@SuppressWarnings("unchecked")
+				Map<String, String> values = (Map<String, String>) item.getValue();
+				UFileCreateData createUFileData = new UFileCreateData();
+				createUFileData.setWeight(0);
+				createUFileData.setSize(values.get("size"));
+				createUFileData.setPath(values.get("name"));
+				createUfileList.add(createUFileData);
+
+			});
+
+			uFileData = resourceService.createUFile(createUfileList.get(0));
+			result.put("uFileId", uFileData.getId());
+			result.put("destinationPath", createUfileList.get(0).getPath());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			throw new Exception("Sheet Filename nout found");
+		}
+	}
+
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
-
 		Properties properties = new Properties();
+
 		try {
 			properties.load(in);
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
 
-		String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-		String dir = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId;
-		DataTable dataTable = dataTableHelper.createDataTable(observationBulkData, userId,
-				request.getHeader(HttpHeaders.AUTHORIZATION));
-		dataTable = dataTableDAO.save(dataTable);
 		try {
 
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(dir + observationBulkData.getFilename()));
+			if (observationBulkData.getFilename() == null || observationBulkData.getFilename().length() <= 0) {
+				throw new Exception("Sheet Filename nout found");
+			}
+
+//			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
+//
+//			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
+//			String dir = storageBasePath + File.separatorChar + "content/dataTables"
+//					+ sheetResult.get("destinationPath");
+
+			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
+//			dataTableDTO.setGetuFileId((Long) sheetResult.get("uFileId"));
+
+			dataTableService = headers.addDataTableHeaders(dataTableService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			DataTable dataTable = dataTableService.createDataTable(dataTableDTO);
+
+			if (dataTable == null) {
+				throw new Exception("Unable to create DataTable, Unresolved Constrain");
+			}
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(""));
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
@@ -1672,11 +1732,15 @@ public class ObservationServiceImpl implements ObservationService {
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 
+			return dataTable.getId();
+
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 
-		return dataTable.getId();
+		return null;
+
 	}
 
 	@Override
@@ -1696,12 +1760,13 @@ public class ObservationServiceImpl implements ObservationService {
 		return false;
 
 	}
-	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset) {
+
+	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId, Integer limit, Integer offset) {
 		List<Observation> observationList = null;
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
-			observationList = observationDao.fetchByDataTableId(list,limit,offset);
+			observationList = observationDao.fetchByDataTableId(list, limit, offset);
 			return observationList;
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
@@ -1715,7 +1780,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
-			observList = observationDao.fetchByDataTableId(list,null,0);
+			observList = observationDao.fetchByDataTableId(list, null, 0);
 			if (observList != null && observList.size() > 0) {
 				observList.forEach((item) -> {
 					try {
@@ -1733,6 +1798,49 @@ public class ObservationServiceImpl implements ObservationService {
 
 		return null;
 
+	}
+
+	@Override
+	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
+			Integer offset) {
+		Map<String, String> authorScore = null;
+		DataTable dataTable = null;
+		UserIbp user = null;
+		List<UserGroupIbp> userGroups = null;
+		Long userId = null;
+		ObservationLocationInfo locationInfo = null;
+		List<Observation> observationList = null;
+		ShowObervationDataTable dataTableRes = new ShowObervationDataTable();
+		dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+		try {
+			dataTable = dataTableService.showDataTable(dataTableId.toString());
+
+			if (dataTable == null) {
+				return null;
+			}
+			userId = dataTable.getPartyUploaderId();
+			user = userService.getUserIbp(userId.toString());
+			userGroups = userGroupService.getObservationUserGroup(dataTableId.toString());
+			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
+			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
+			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
+					dataTable.getGeographicalCoverageLongitude().toString());
+			dataTableRes.setAuthorInfo(user);
+			dataTableRes.setLayerInfo(null);
+			dataTableRes.setObservationList(observationList);
+			dataTableRes.setLayerInfo(locationInfo);
+			dataTableRes.setUserGroups(userGroups);
+			if (!score.getRecord().isEmpty()) {
+				authorScore = score.getRecord().get(0).get("details");
+				dataTableRes.setAuthorScore(authorScore);
+			}
+			return dataTableRes;
+		} catch (Exception er) {
+			logger.error(er.getMessage());
+		}
+
+		return null;
 	}
 
 }

@@ -26,7 +26,7 @@ import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESBulkUploadThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
-import com.strandls.observation.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTable;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
@@ -137,34 +137,34 @@ public class ObservationBulkUploadThread implements Runnable {
 			Thread thread = new Thread(updateThread);
 			thread.start();
 
-			try {
-				List<String> myUploadFilesPath = new ArrayList<String>();
-				myUploadFilesPath.add(observationBulkData.getFilename());
-				UFile uFileData = null;
-				FilesDTO filesDto = new FilesDTO();
-				filesDto.setFolder("datatables");
-				filesDto.setModule("DATASETS");
-				filesDto.setFiles(myUploadFilesPath);
-				Map<String, Object> fileRes;
-				fileRes = fileUploadApi.moveFiles(filesDto);
-				List<UFileCreateData> createUfileList = new ArrayList<>();
-				fileRes.entrySet().forEach((item) -> {
-					@SuppressWarnings("unchecked")
-					Map<String, String> values = (Map<String, String>) item.getValue();
-					UFileCreateData createUFileData = new UFileCreateData();
-					createUFileData.setWeight(0);
-					createUFileData.setSize(values.get("size"));
-					createUFileData.setPath(values.get("name"));
-					createUfileList.add(createUFileData);
-
-				});
-
-				uFileData = resourceService.createUFile(createUfileList.get(0));
-				dataTable.setuFileId(uFileData.getId());
-				dataTableDAO.update(dataTable);
-			} catch (com.strandls.file.ApiException | ApiException e) {
-				logger.error(e.getMessage());
-			}
+//			try {
+//				List<String> myUploadFilesPath = new ArrayList<String>();
+//				myUploadFilesPath.add(observationBulkData.getFilename());
+//				UFile uFileData = null;
+//				FilesDTO filesDto = new FilesDTO();
+//				filesDto.setFolder("datatables");
+//				filesDto.setModule("DATASETS");
+//				filesDto.setFiles(myUploadFilesPath);
+//				Map<String, Object> fileRes;
+//				fileRes = fileUploadApi.moveFiles(filesDto);
+//				List<UFileCreateData> createUfileList = new ArrayList<>();
+//				fileRes.entrySet().forEach((item) -> {
+//					@SuppressWarnings("unchecked")
+//					Map<String, String> values = (Map<String, String>) item.getValue();
+//					UFileCreateData createUFileData = new UFileCreateData();
+//					createUFileData.setWeight(0);
+//					createUFileData.setSize(values.get("size"));
+//					createUFileData.setPath(values.get("name"));
+//					createUfileList.add(createUFileData);
+//
+//				});
+//
+//				uFileData = resourceService.createUFile(createUfileList.get(0));
+//				dataTable.setuFileId(uFileData.getId());
+//				dataTableDAO.update(dataTable);
+//			} catch (com.strandls.file.ApiException | ApiException e) {
+//				logger.error(e.getMessage());
+//			}
 
 		}
 

@@ -315,20 +315,20 @@ public class DataTable {
     }
 
     @Column(name = "party_contributor_id", nullable = false)
-    public long getPartyContributorId() {
+    public Long getPartyContributorId() {
         return partyContributorId;
     }
 
-    public void setPartyContributorId(long partyContributorId) {
+    public void setPartyContributorId(Long partyContributorId) {
         this.partyContributorId = partyContributorId;
     }
 
     @Column(name = "party_uploader_id", nullable = false)
-    public long getPartyUploaderId() {
+    public Long getPartyUploaderId() {
         return partyUploaderId;
     }
 
-    public void setPartyUploaderId(long partyUploaderId) {
+    public void setPartyUploaderId(Long partyUploaderId) {
         this.partyUploaderId = partyUploaderId;
     }
 

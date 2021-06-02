@@ -4,6 +4,8 @@ import com.strandls.resource.pojo.License;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.dataTable.pojo.DataTable;
+
 import org.apache.poi.ss.usermodel.Row;
 
 import javax.servlet.http.HttpServletRequest;

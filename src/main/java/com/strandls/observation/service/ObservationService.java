@@ -29,6 +29,7 @@ import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
@@ -159,6 +160,9 @@ public interface ObservationService {
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
 
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
+	
+	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request,Long dataTableId,Integer limit, Integer offset);
+	
 	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset);
 	
 	public String removeObservationByDataTableId(HttpServletRequest request,Long dataTableId);

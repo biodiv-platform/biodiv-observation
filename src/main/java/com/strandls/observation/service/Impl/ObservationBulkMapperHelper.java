@@ -7,7 +7,7 @@ import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.es.util.ESUpdate;
-import com.strandls.observation.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTable;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;

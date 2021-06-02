@@ -104,7 +104,7 @@ public class DatasetStandaloneHelper {
 				Dataset standaloneDataset = new Dataset();
 				standaloneDataset.setTitle(title);
 				standaloneDataset.setSummary("");
-				standaloneDataset.setVersion(0);
+				standaloneDataset.setVersion(0L);
 				standaloneDataset.setRating(0);
 				standaloneDataset.setFeatureCount(0);
 				standaloneDataset.setFeatureCount(0);
@@ -115,10 +115,10 @@ public class DatasetStandaloneHelper {
 				standaloneDataset.setDataPackageId(5136151);
 				standaloneDataset.setLanguageId(205);
 
-				standaloneDataset.setPartyContributorId(1);
-				standaloneDataset.setPartyUploaderId(1);
+				standaloneDataset.setPartyContributorId(1L);
+				standaloneDataset.setPartyUploaderId(1L);
 				standaloneDataset.setDeleted(false);
-				standaloneDataset.setAccessLicenseId(822);
+				standaloneDataset.setAccessLicenseId(822L);
 
 				standaloneDataset.setCreatedOn(new Timestamp(new Date().getTime()));
 				standaloneDataset.setLastRevised(new Timestamp(new Date().getTime()));

@@ -7,7 +7,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.observation.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTable;
 import com.strandls.observation.util.AbstractDAO;
 
 public class DataTableDAO extends AbstractDAO<DataTable, Long> {
