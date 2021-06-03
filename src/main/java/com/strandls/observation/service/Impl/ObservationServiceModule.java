@@ -24,7 +24,6 @@ public class ObservationServiceModule extends AbstractModule {
 		bind(MailService.class).to(MailServiceImpl.class).in(Scopes.SINGLETON);
 		bind(ObservationMapperHelper.class).in(Scopes.SINGLETON);
 		bind(LogActivities.class).in(Scopes.SINGLETON);
-		bind(DatasetConfigHelper.class).in(Scopes.SINGLETON);
 		bind(UserGroupPostingFilterThread.class).in(Scopes.SINGLETON);
 		bind(UserGroupUnPostingFilterThread.class).in(Scopes.SINGLETON);
 		bind(GeoPrivacyBulkThread.class).in(Scopes.SINGLETON);

@@ -7,7 +7,7 @@ import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.es.util.ESUpdate;
-import com.strandls.dataTable.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
@@ -92,7 +92,7 @@ public class ObservationBulkMapperHelper {
 
 	@SuppressWarnings("deprecation")
 	public Observation creationObservationMapping(Long userId, String requestAuthHeader,
-			Map<String, Integer> fieldMapping, Row dataRow, DataTable dataTable, List<SpeciesGroup> speciesGroupList,
+			Map<String, Integer> fieldMapping, Row dataRow, DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList,
 			Map<String, Integer> checklistAnnotation, Boolean isVerified, String basisOfRecord) {
 		try {
 			Boolean geoPrivacy = Boolean.TRUE;

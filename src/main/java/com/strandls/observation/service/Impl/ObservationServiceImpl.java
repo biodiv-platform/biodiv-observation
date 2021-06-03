@@ -50,7 +50,6 @@ import com.strandls.file.model.FilesDTO;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
-import com.strandls.observation.dao.DataTableDAO;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
@@ -62,7 +61,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.dataTable.pojo.BulkDTO;
-import com.strandls.dataTable.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -209,9 +208,6 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private UploadApi fileUploadApi;
-
-	@Inject
-	private DataTableDAO dataTableDAO;
 
 	@Inject
 	private ObservationBulkMapperHelper observationBulkMapperHelper;
@@ -1698,23 +1694,23 @@ public class ObservationServiceImpl implements ObservationService {
 				throw new Exception("Sheet Filename nout found");
 			}
 
-//			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
-//
-//			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-//			String dir = storageBasePath + File.separatorChar + "content/dataTables"
-//					+ sheetResult.get("destinationPath");
+			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
+
+			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
+			String sheetDirectory = storageBasePath + File.separatorChar + "content/dataTables"
+					+ sheetResult.get("destinationPath");
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
-//			dataTableDTO.setGetuFileId((Long) sheetResult.get("uFileId"));
+			dataTableDTO.setUserFileId((Long) sheetResult.get("uFileId"));
 
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			DataTable dataTable = dataTableService.createDataTable(dataTableDTO);
+			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
 
 			if (dataTable == null) {
 				throw new Exception("Unable to create DataTable, Unresolved Constrain");
 			}
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(""));
+			XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory));
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
@@ -1728,7 +1724,7 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 					observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
 					getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,
-					dataTableDAO, resourceService, fileUploadApi, headers);
+					resourceService, fileUploadApi, headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 
@@ -1780,6 +1776,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
+			dataTableService.deleteDataTable(dataTableId.toString());
 			observList = observationDao.fetchByDataTableId(list, null, 0);
 			if (observList != null && observList.size() > 0) {
 				observList.forEach((item) -> {
@@ -1804,7 +1801,7 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
 			Integer offset) {
 		Map<String, String> authorScore = null;
-		DataTable dataTable = null;
+		DataTableWkt dataTable = null;
 		UserIbp user = null;
 		List<UserGroupIbp> userGroups = null;
 		Long userId = null;
@@ -1819,7 +1816,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (dataTable == null) {
 				return null;
 			}
-			userId = dataTable.getPartyUploaderId();
+			userId = dataTable.getUploaderId();
 			user = userService.getUserIbp(userId.toString());
 			userGroups = userGroupService.getObservationUserGroup(dataTableId.toString());
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
@@ -1831,7 +1828,8 @@ public class ObservationServiceImpl implements ObservationService {
 			dataTableRes.setObservationList(observationList);
 			dataTableRes.setLayerInfo(locationInfo);
 			dataTableRes.setUserGroups(userGroups);
-			if (!score.getRecord().isEmpty()) {
+			dataTableRes.setDatatable(dataTable);
+			if (score.getRecord() != null) {
 				authorScore = score.getRecord().get(0).get("details");
 				dataTableRes.setAuthorScore(authorScore);
 			}

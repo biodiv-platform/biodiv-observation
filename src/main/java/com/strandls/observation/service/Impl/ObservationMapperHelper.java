@@ -19,10 +19,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +30,6 @@ import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.es.util.RabbitMQProducer;
-import com.strandls.dataTable.pojo.DataTable;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.RecoCreate;
@@ -43,7 +38,6 @@ import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ResourceDataObs;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
-import com.strandls.resource.pojo.License;
 import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
@@ -492,68 +486,6 @@ public class ObservationMapperHelper {
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
-
-				resources.add(resource);
-			}
-			return resources;
-
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		return null;
-
-	}
-
-	@SuppressWarnings({ "unchecked", "deprecation" })
-	public List<Resource> createResourceMapping(HttpServletRequest request, List<License> licenses,
-			Map<String, Integer> fieldMapping, Row dataRow, Long userId, Map<String, Object> resourceDataList,
-			DataTable dataTable) {
-		List<Resource> resources = new ArrayList<Resource>();
-		try {
-			for (Map.Entry<String, Object> resourceData : resourceDataList.entrySet()) {
-				Map<String, String> values = (Map<String, String>) resourceData.getValue();
-				Resource resource = new Resource();
-				resource.setVersion(0L);
-				resource.setDescription(null);
-
-				resource.setMimeType(null);
-				if (values.get("mimeType").startsWith("image") || values.get("mimeType").equalsIgnoreCase("image"))
-					resource.setType("IMAGE");
-				else if (values.get("mimeType").startsWith("audio") || values.get("mimeType").equalsIgnoreCase("audio"))
-					resource.setType("AUDIO");
-				else if (values.get("mimeType").startsWith("video") || values.get("mimeType").equalsIgnoreCase("video"))
-					resource.setType("VIDEO");
-				resource.setFileName(values.get("name"));
-				resource.setUrl(null);
-				resource.setRating(null);
-				resource.setUploadTime(new Date());
-				resource.setUploaderId(userId);
-				resource.setContext("OBSERVATION");
-				resource.setLanguageId(205L);
-				resource.setAccessRights(null);
-				resource.setAnnotations(null);
-				resource.setGbifId(null);
-
-				License license = null;
-				Cell licenseCell = dataRow.getCell(fieldMapping.get("license"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (licenseCell != null) {
-					licenseCell.setCellType(CellType.STRING);
-
-					license = licenses.stream().filter(l -> {
-						final String docLicense;
-						docLicense = licenseCell.getStringCellValue().replaceAll("-", "_").toUpperCase();
-						return l.getName().endsWith(docLicense);
-					}).findAny().orElse(null);
-
-					if (license == null) {
-						return null;
-					}
-				} else {
-					license = new License();
-					license.setId(822L);
-				}
-
-				resource.setLicenseId(license.getId());
 
 				resources.add(resource);
 			}

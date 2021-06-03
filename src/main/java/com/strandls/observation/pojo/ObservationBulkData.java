@@ -4,7 +4,7 @@ import com.strandls.resource.pojo.License;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.dataTable.pojo.DataTable;
+import com.strandls.dataTable.pojo.DataTableWkt;
 
 import org.apache.poi.ss.usermodel.Row;
 
@@ -17,7 +17,7 @@ public class ObservationBulkData {
 	private final Map<String, Integer> checklistAnnotaion;
 	private final Row dataRow;
 	private final HttpServletRequest request;
-	private final DataTable dataTable;
+	private final DataTableWkt dataTable;
 	private final List<SpeciesGroup> speciesGroupList;
 	private final List<TraitsValuePair> pairs;
 	private final List<UserGroupIbp> userGroupsList;
@@ -27,7 +27,7 @@ public class ObservationBulkData {
 	
 
 	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
-			DataTable dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
+			DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
 			List<UserGroupIbp> userGroupsList, List<License> licenses, Boolean isVerified,
 			Map<String, Integer> checklistAnnotaion, String basisOfRecord) {
 		this.fieldMapping = fieldMapping;
@@ -71,7 +71,7 @@ public class ObservationBulkData {
 		return licenses;
 	}
 
-	public DataTable getDataTable() {
+	public DataTableWkt getDataTable() {
 		return dataTable;
 	}
 
