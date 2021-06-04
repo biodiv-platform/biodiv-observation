@@ -71,6 +71,7 @@ import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
+import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -134,6 +135,9 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private ObservationDataTableService observationDataTableService;
+	
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
@@ -1361,7 +1365,7 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
-			Long result = observationService.observationBulkUpload(request, observationBulkData);	
+			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);	
 			if(result != null) {
 				return Response.status(Status.OK).entity(result).build();
 			} else {
@@ -1388,7 +1392,7 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			ShowObervationDataTable result = observationService.showObservatioDataTable(request, id, limit, offset);
+			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit, offset);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1412,7 +1416,7 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			List<Observation> result = observationService.fetchAllObservationByDataTableId(id, limit, offset);
+			List<Observation> result = observationDataTableService.fetchAllObservationByDataTableId(id, limit, offset);
 			if (result != null) {
 				return Response.status(Status.OK).entity(result).build();
 			} else {
@@ -1440,7 +1444,7 @@ public class ObservationController {
 
 		try {
 			Long id = Long.parseLong(dataTableId);
-			String result = observationService.removeObservationByDataTableId(request, id);
+			String result = observationDataTableService.removeObservationByDataTableId(request, id);
 			if (result != null) {
 				return Response.status(Status.NOT_FOUND).entity(result).build();
 			} else {

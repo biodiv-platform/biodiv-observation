@@ -157,15 +157,5 @@ public interface ObservationService {
 
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
-	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) throws InterruptedException, ExecutionException;
-
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
-	
-	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request,Long dataTableId,Integer limit, Integer offset);
-	
-	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId,Integer limit,Integer offset);
-	
-	public String removeObservationByDataTableId(HttpServletRequest request,Long dataTableId);
-    
-	
 }
