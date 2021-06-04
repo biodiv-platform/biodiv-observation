@@ -1701,7 +1701,8 @@ public class ObservationServiceImpl implements ObservationService {
 					+ sheetResult.get("destinationPath");
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
-			dataTableDTO.setUserFileId((Long) sheetResult.get("uFileId"));
+			Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
+			dataTableDTO.setUserFileId(uFileId);
 
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));

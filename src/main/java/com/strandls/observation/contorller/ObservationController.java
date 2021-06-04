@@ -1401,7 +1401,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = Observation.class, responseContainer = "List")
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = Observation.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
