@@ -12,10 +12,11 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 	private String external_gbif_reference_link;
 	private ObservationLocationInfo layer_info;
 	private String id;
+	private String annotations;
 
-	// private String unique_id_prefix;
 	public ExternalObservationESDocument() {
 		super();
+		// TODO Auto-generated constructor stub
 	}
 
 	public ExternalObservationESDocument(Long observation_id, Long author_id, String created_by, String profile_pic,
@@ -37,11 +38,12 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 				protocol, no_of_images, no_of_videos, no_of_audio, no_media, no_of_identifications, data_table_id,
 				date_accuracy, max_voted_reco, all_reco_vote, observation_resource, custom_fields,
 				user_group_observations, tags, flags, featured, facts, is_publication_grade);
+		// TODO Auto-generated constructor stub
 	}
 
 	public ExternalObservationESDocument(boolean is_external, String data_source,
 			String external_original_reference_link, String external_gbif_reference_link,
-			ObservationLocationInfo layer_info, String id) {
+			ObservationLocationInfo layer_info, String id, String annotations) {
 		super();
 		this.is_external = is_external;
 		this.data_source = data_source;
@@ -49,6 +51,7 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 		this.external_gbif_reference_link = external_gbif_reference_link;
 		this.layer_info = layer_info;
 		this.id = id;
+		this.annotations = annotations;
 	}
 
 	public boolean isIs_external() {
@@ -97,6 +100,14 @@ public class ExternalObservationESDocument extends ObservationESDocument {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getAnnotations() {
+		return annotations;
+	}
+
+	public void setAnnotations(String annotations) {
+		this.annotations = annotations;
 	}
 
 }

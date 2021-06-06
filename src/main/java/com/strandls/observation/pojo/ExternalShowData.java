@@ -19,6 +19,7 @@ public class ExternalShowData extends ShowData {
 	private String dataSource;
 	private String externalGbifReferenceLink;
 	private String externalOriginalReferenceLink;
+	private String annotations;
 
 	public ExternalShowData() {
 		super();
@@ -34,11 +35,13 @@ public class ExternalShowData extends ShowData {
 				flag, tags, fetaured, authorInfo, authorScore, allRecoVotes, observationNearBy, activityCount);
 	}
 
-	public ExternalShowData(String dataSource, String externalGbifReferenceLink, String externalOriginalReferenceLink) {
+	public ExternalShowData(String dataSource, String externalGbifReferenceLink, String externalOriginalReferenceLink,
+			String annotations) {
 		super();
 		this.dataSource = dataSource;
 		this.externalGbifReferenceLink = externalGbifReferenceLink;
 		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
+		this.annotations = annotations;
 	}
 
 	public String getDataSource() {
@@ -63,6 +66,14 @@ public class ExternalShowData extends ShowData {
 
 	public void setExternalOriginalReferenceLink(String externalOriginalReferenceLink) {
 		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
+	}
+
+	public String getAnnotations() {
+		return annotations;
+	}
+
+	public void setAnnotations(String annotations) {
+		this.annotations = annotations;
 	}
 
 }

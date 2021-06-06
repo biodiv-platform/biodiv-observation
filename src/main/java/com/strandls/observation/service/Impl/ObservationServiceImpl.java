@@ -322,6 +322,7 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationLocationInfo layerInfo = null;
 		String externalGbifReferencelink = null;
 		String externalOriginalReferenceLink = null;
+		String annotations=null;
 
 		obsId = Long.valueOf(observationResponse.get("observation_id").toString());
 
@@ -439,6 +440,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 		externalGbifReferencelink = observationResponse.get("external_gbif_reference_link").toString();
 		externalOriginalReferenceLink = observationResponse.get("external_original_reference_link").toString();
+		
+		annotations=observationResponse.get("annotations").toString();
 
 		observation.setId(obsId);
 		observation.setCreatedOn(createdOn);
@@ -460,6 +463,7 @@ public class ObservationServiceImpl implements ObservationService {
 		data.setDataSource("gbif");
 		data.setExternalGbifReferenceLink(externalGbifReferencelink);
 		data.setExternalOriginalReferenceLink(externalOriginalReferenceLink);
+		data.setAnnotations(annotations);
 
 		return data;
 

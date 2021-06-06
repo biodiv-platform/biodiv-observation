@@ -1,5 +1,6 @@
 package com.strandls.observation.gbif;
 
+import java.io.File;
 import java.io.FileReader;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -11,9 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.strandls.esmodule.controllers.EsServicesApi;
@@ -32,6 +34,7 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
+
 import java.text.DateFormatSymbols;
 
 public class GbifObservationThread implements Runnable {
@@ -59,26 +62,37 @@ public class GbifObservationThread implements Runnable {
 		try {
 
 			String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
-			String dataSourcePrefix=PropertyFileUtil.fetchProperty("config.properties", "gbifUniqueIdPrefix");
-			
+			String dataSourcePrefix = PropertyFileUtil.fetchProperty("config.properties", "gbifUniqueIdPrefix");
+
 			String excludingPublishingOrgKey = PropertyFileUtil.fetchProperty("config.properties",
 					"excludingPublishingOrgKey");
 			FileReader filereader = new FileReader(path);
 			CSVReader csvReader = new CSVReader(filereader, '\t');
 
+			ObjectMapper jsonReadMapper = new ObjectMapper();
+
+			@SuppressWarnings("unchecked")
+			Map<String, Object> jsonFileMap = jsonReadMapper.readValue(new File("/home/prakhar/Desktop/metaData.json"),
+					HashMap.class);
+			System.out.println(jsonFileMap);
+
 			Map<String, Integer> headerIndex = new LinkedHashMap<>();
 			String batchEsJson = "";
 
 			String[] row = csvReader.readNext();
+			String[] columns = row.clone();
+			List<String> markedColumns = new ArrayList<>();
 			for (int j = 0; j < row.length; j++) {
 				headerIndex.put(row[j], j);
 			}
 
 			List<ExternalObservationESDocument> observations = new ArrayList<>();
 			while ((row = csvReader.readNext()) != null) {
+
 				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
 				String latitude = row[headerIndex.get("decimalLatitude")];
 				String longitude = row[headerIndex.get("decimalLongitude")];
+				String tempId = row[headerIndex.get("gbifID")];
 
 				if (!publishingOrgKey.equals(excludingPublishingOrgKey) && !isBadRecord(latitude, longitude)) {
 					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
@@ -209,16 +223,30 @@ public class GbifObservationThread implements Runnable {
 
 					String externalGbifReferenceLink = "https://www.gbif.org/occurrence/" + gbifId.toString();
 
+					markedColumns.add("publishingOrgKey");
+					markedColumns.add("decimalLatitude");
+					markedColumns.add("decimalLongitude");
+					markedColumns.add("gbifID");
+					markedColumns.add("occurrenceID");
+					markedColumns.add("eventDate");
+					markedColumns.add("dateIdentified");
+					markedColumns.add("month");
+					markedColumns.add("locality");
+					markedColumns.add("scientificName");
+
+					String annotations = getAnnotations(headerIndex, markedColumns, columns, row);
+					System.out.println(annotations);
+
 					ExternalObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName,
 							recoId, taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
 							acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name,
 							state, district, tahsil, groupId, groupName, externalOriginalReferenceLink,
-							externalGbifReferenceLink, layerInfo);
+							externalGbifReferenceLink, layerInfo, annotations);
 
 					observations.add(obj);
 					ObjectMapper objectMapper = new ObjectMapper();
 
-					if (observations.size() >= 100) {
+					if (observations.size() >= 1000) {
 						List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
 							@SuppressWarnings("unchecked")
 							Map<String, Object> doc = objectMapper.convertValue(s, Map.class);
@@ -276,6 +304,7 @@ public class GbifObservationThread implements Runnable {
 			String canonicalName = parsedName.getCanonicalName().getSimple();
 			ExtendedTaxonDefinition esResult = esService.matchPhrase("etd", "er", "name", providedSciName,
 					"canonical_form", canonicalName);
+			// System.out.println(esResult);
 
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
@@ -336,6 +365,26 @@ public class GbifObservationThread implements Runnable {
 			return false;
 		}
 
+	}
+
+	private String getAnnotations(Map<String, Integer> headerIndex, List<String> markedColums, String[] columns,
+			String[] row) {
+
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> annotations = new HashMap<>();
+		for (String column : columns) {
+			if (!markedColums.contains(column)) {
+				annotations.put(column, row[headerIndex.get(column)]);
+			}
+		}
+
+		try {
+			String annotationsString = mapper.writeValueAsString(annotations);
+			return annotationsString;
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

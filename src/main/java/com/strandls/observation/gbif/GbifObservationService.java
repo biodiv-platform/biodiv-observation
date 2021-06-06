@@ -25,6 +25,7 @@ public class GbifObservationService {
 	private LayerServiceApi layerService;
 
 	public String gbifData() {
+
 		GbifObservationThread gbifThread = new GbifObservationThread(utilityService, esService, recoDao, gbifMapper,
 				layerService);
 		Thread t = new Thread(gbifThread);

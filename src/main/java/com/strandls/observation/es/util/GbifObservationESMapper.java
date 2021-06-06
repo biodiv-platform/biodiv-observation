@@ -16,7 +16,7 @@ public class GbifObservationESMapper {
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long observationId, Date dateIdentified, String name, String state,
 			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
-			String externalGbifReferenceLink, ObservationLocationInfo layerInfo) {
+			String externalGbifReferenceLink, ObservationLocationInfo layerInfo,String annotations) {
 
 		ExternalObservationESDocument gbifObs = new ExternalObservationESDocument();
 		Clock clock = Clock.systemUTC();
@@ -38,6 +38,7 @@ public class GbifObservationESMapper {
 		gbifObs.setNo_of_videos(0);
 		gbifObs.setPlace_name(placeName);
 		gbifObs.setLayer_info(layerInfo);
+		gbifObs.setAnnotations(annotations);
 //		gbifObs.setUnique_id_prefix("gbif");
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
