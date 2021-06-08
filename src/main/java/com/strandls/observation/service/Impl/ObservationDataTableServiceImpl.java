@@ -38,6 +38,7 @@ import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.util.ObservationBulkUploadThread;
+import com.strandls.observation.util.ObservationDeleteThread;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -51,7 +52,7 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(ObservationDataTableServiceImpl.class);
 
 	@Inject
@@ -72,18 +73,14 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	@Inject
 	private EsServicesApi esService;
 
-
 	@Inject
 	private UserServiceApi userService;
 
 	@Inject
 	private ESUpdate esUpdate;
 
-
 	@Inject
 	private Headers headers;
-
-	
 
 	@Inject
 	private DataTableHelper dataTableHelper;
@@ -97,15 +94,14 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	@Inject
 	private LicenseControllerApi licenseControllerApi;
 
-
 	@Inject
 	private DataTableServiceApi dataTableService;
-	
+
 	@Inject
 	private ObservationServiceImpl observationImpl;
-	
+
 	@Override
-	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData){
+	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		Long userId = Long.parseLong(profile.getId());
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
@@ -144,7 +140,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			List<TraitsValuePair> traitsList = traitService.getAllTraits();
 			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 			List<License> licenseList = licenseControllerApi.getAllLicenses();
-			
+
 			FilesDTO filesDto = new FilesDTO();
 			filesDto.setFolder("observations");
 			filesDto.setModule("observation");
@@ -152,11 +148,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
 					.getAllFilePathsByUser(filesDto).entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-			
+
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 					observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
-					observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook, myImageUpload,
-					resourceService, fileUploadApi, headers);
+					observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook,
+					myImageUpload, resourceService, fileUploadApi, headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
 
@@ -212,7 +208,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 		return null;
 	}
-	
+
 	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, HttpServletRequest request)
 			throws Exception {
 		try {
@@ -274,14 +270,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			dataTableService.deleteDataTable(dataTableId.toString());
 			observList = observationDao.fetchByDataTableId(list, null, 0);
 			if (observList != null && observList.size() > 0) {
-				observList.forEach((item) -> {
-					try {
-						observationImpl.deleteObservation(request, item, false);
-					} catch (ApiException e) {
-						logger.error(e.getMessage());
-					}
-				});
-
+				ObservationDeleteThread deleteThread = new ObservationDeleteThread(observList, observationImpl,
+						request);
+				Thread thread = new Thread(deleteThread);
+				thread.start();
 				return "Successfully Remove Observation for the Id" + dataTableId.toString();
 			}
 		} catch (Exception error) {
