@@ -59,9 +59,9 @@ import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
-import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -137,7 +137,7 @@ public class ObservationController {
 
 	@Inject
 	private ObservationDataTableService observationDataTableService;
-	
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
@@ -1365,8 +1365,8 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
-			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);	
-			if(result != null) {
+			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);
+			if (result != null) {
 				return Response.status(Status.OK).entity(result).build();
 			} else {
 				return Response.status(Status.BAD_REQUEST).entity(result).build();
@@ -1392,7 +1392,8 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit, offset);
+			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit,
+					offset);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1405,7 +1406,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = Observation.class, responseContainer = "List")
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDataTableShow.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
@@ -1416,12 +1417,10 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			List<Observation> result = observationDataTableService.fetchAllObservationByDataTableId(id, limit, offset);
-			if (result != null) {
-				return Response.status(Status.OK).entity(result).build();
-			} else {
-				return Response.status(Status.NOT_FOUND).entity(result).build();
-			}
+			List<ObservationDataTableShow> result = observationDataTableService.fetchAllObservationByDataTableId(id,
+					limit, offset);
+
+			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -19,11 +19,12 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.dataTable.pojo.BulkDTO;
 import com.strandls.dataTable.pojo.DataTableWkt;
-import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.file.api.UploadApi;
@@ -35,6 +36,8 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationDataTableShow;
+import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.util.ObservationBulkUploadThread;
@@ -99,6 +102,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private ObservationServiceImpl observationImpl;
+
+	@Inject
+	private RecommendationServiceImpl recoService;
+	@Inject
+	private ObjectMapper om;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -174,7 +182,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		List<UserGroupIbp> userGroups = null;
 		Long userId = null;
 		ObservationLocationInfo locationInfo = null;
-		List<Observation> observationList = null;
+		List<ObservationDataTableShow> observationList = null;
 		ShowObervationDataTable dataTableRes = new ShowObervationDataTable();
 		dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
@@ -248,13 +256,45 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	}
 
 	@Override
-	public List<Observation> fetchAllObservationByDataTableId(Long dataTableId, Integer limit, Integer offset) {
+	public List<ObservationDataTableShow> fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
+			Integer offset) {
 		List<Observation> observationList = null;
 		List<Long> list = new ArrayList<Long>();
+		List<ObservationDataTableShow> showDataList = new ArrayList<ObservationDataTableShow>();
 		list.add(dataTableId);
 		try {
 			observationList = observationDao.fetchByDataTableId(list, limit, offset);
-			return observationList;
+			if (observationList.isEmpty()) {
+				return showDataList;
+			}
+
+			observationList.forEach((ob) -> {
+				Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
+				RecoIbp reco = null;
+				String commonName = null;
+				String scientificName = null;
+				try {
+					if (ob.getMaxVotedRecoId() != null) {
+						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
+						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
+						commonName = reco.getCommonName() != null ? reco.getCommonName() : null;
+					}
+					checkListAnnotation = ob.getChecklistAnnotations() != null
+							? om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
+							})
+							: null;
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				ObservationDataTableShow data = new ObservationDataTableShow(dataTableId, scientificName, commonName,
+						ob.getAuthorId(), ob.getGroupId(), null, ob.getFromDate(), ob.getPlaceName(),
+						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
+						ob.getGeoPrivacy(), checkListAnnotation);
+				showDataList.add(data);
+
+			});
+			return showDataList;
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}

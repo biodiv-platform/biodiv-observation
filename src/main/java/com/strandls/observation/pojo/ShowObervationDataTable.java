@@ -23,7 +23,7 @@ public class ShowObervationDataTable {
 	private ObservationLocationInfo layerInfo;
 	private UserIbp authorInfo;
 	private Map<String, String> authorScore;
-	private List<Observation> observationList;
+	private List<ObservationDataTableShow> observationList;
 	
 	/**
 	 * 
@@ -88,11 +88,11 @@ public class ShowObervationDataTable {
 		this.authorScore = authorScore;
 	}
 
-	public List<Observation> getObservationList() {
+	public List<ObservationDataTableShow> getObservationList() {
 		return observationList;
 	}
 
-	public void setObservationList(List<Observation> observationList) {
+	public void setObservationList(List<ObservationDataTableShow> observationList) {
 		this.observationList = observationList;
 	}
 	
