@@ -3,6 +3,7 @@ package com.strandls.observation.service.Impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -273,6 +274,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				RecoIbp reco = null;
 				String commonName = null;
 				String scientificName = null;
+				String fromDate = null;
+				if(ob.getFromDate()!= null) {
+					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+					fromDate  = dateFormat.format(ob.getFromDate());
+				}
+				
 				try {
 					if (ob.getMaxVotedRecoId() != null) {
 						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
@@ -287,8 +294,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					logger.error(e.getMessage());
 				}
 
-				ObservationDataTableShow data = new ObservationDataTableShow(dataTableId, scientificName, commonName,
-						ob.getAuthorId(), ob.getGroupId(), null, ob.getFromDate(), ob.getPlaceName(),
+				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName,
+						ob.getAuthorId(), ob.getGroupId(), null, fromDate, ob.getPlaceName(),
 						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
 						ob.getGeoPrivacy(), checkListAnnotation);
 				showDataList.add(data);
