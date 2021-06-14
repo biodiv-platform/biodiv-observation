@@ -272,6 +272,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			observationList.forEach((ob) -> {
 				Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 				RecoIbp reco = null;
+				UserIbp userInfo=null;
 				String commonName = null;
 				String scientificName = null;
 				String fromDate = null;
@@ -286,6 +287,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
 						commonName = reco.getCommonName() != null ? reco.getCommonName() : null;
 					}
+					
+					if(ob.getAuthorId() != null) {
+						userInfo = userService.getUserIbp(ob.getAuthorId().toString());
+					}
 					checkListAnnotation = ob.getChecklistAnnotations() != null
 							? om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
 							})
@@ -295,7 +300,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				}
 
 				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName,
-						ob.getAuthorId(), ob.getGroupId(), null, fromDate, ob.getPlaceName(),
+						userInfo, ob.getGroupId(), null, fromDate, ob.getPlaceName(),
 						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
 						ob.getGeoPrivacy(), checkListAnnotation);
 				showDataList.add(data);

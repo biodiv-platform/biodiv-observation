@@ -1,7 +1,8 @@
 package com.strandls.observation.pojo;
 
-import java.util.Date;
 import java.util.Map;
+
+import com.strandls.user.pojo.UserIbp;
 
 public class ObservationDataTableShow {
 
@@ -11,7 +12,7 @@ public class ObservationDataTableShow {
 
 	private String commonName;
 
-	private Long user;
+	private UserIbp userInfo;
 
 	private Long sGroup;
 
@@ -35,14 +36,14 @@ public class ObservationDataTableShow {
 
 	private Map<String, Object> checklistAnnotation;
 
-	public ObservationDataTableShow(Long id, String scientificName, String commonName, Long user, Long sGroup,
+	public ObservationDataTableShow(Long id, String scientificName, String commonName, UserIbp userInfo, Long sGroup,
 			Long userGroups, String fromDate, String observedAt, String locationScale, Double longitude, Double latitude,
 			String dateAccuracy, String notes, Boolean geoPrivacy, Map<String, Object> checklistAnnotation) {
 		super();
 		this.id = id;
 		this.scientificName = scientificName;
 		this.commonName = commonName;
-		this.user = user;
+		this.userInfo = userInfo;
 		this.sGroup = sGroup;
 		this.userGroups = userGroups;
 		this.fromDate = fromDate;
@@ -78,14 +79,6 @@ public class ObservationDataTableShow {
 
 	public void setCommonName(String commonName) {
 		this.commonName = commonName;
-	}
-
-	public Long getUser() {
-		return user;
-	}
-
-	public void setUser(Long user) {
-		this.user = user;
 	}
 
 	public Long getsGroup() {
@@ -174,6 +167,14 @@ public class ObservationDataTableShow {
 
 	public void setChecklistAnnotation(Map<String, Object> checklistAnnotation) {
 		this.checklistAnnotation = checklistAnnotation;
+	}
+
+	public UserIbp getUserInfo() {
+		return userInfo;
+	}
+
+	public void setUserInfo(UserIbp userInfo) {
+		this.userInfo = userInfo;
 	}
 
 }
