@@ -16,11 +16,12 @@ public class GbifObservationESMapper {
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long observationId, Date dateIdentified, String name, String state,
 			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
-			String externalGbifReferenceLink, ObservationLocationInfo layerInfo,String annotations) {
+			String externalGbifReferenceLink, ObservationLocationInfo layerInfo, String annotations,String dataSourcePrefix) {
 
 		ExternalObservationESDocument gbifObs = new ExternalObservationESDocument();
 		Clock clock = Clock.systemUTC();
 		Date createdOnDate = Date.from(clock.instant());
+		String uniqueId=dataSourcePrefix+"-"+observationId;
 
 		gbifObs.setFrom_date(date);
 		gbifObs.setCreated_on(createdOnDate);
@@ -37,9 +38,11 @@ public class GbifObservationESMapper {
 		gbifObs.setNo_of_images(0);
 		gbifObs.setNo_of_videos(0);
 		gbifObs.setPlace_name(placeName);
-		gbifObs.setLayer_info(layerInfo);
+		// gbifObs.setLayer_info(layerInfo);
 		gbifObs.setAnnotations(annotations);
 //		gbifObs.setUnique_id_prefix("gbif");
+		gbifObs.setId(uniqueId);
+	
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);
@@ -58,12 +61,14 @@ public class GbifObservationESMapper {
 		allRecoVote.add(reco);
 		gbifObs.setAll_reco_vote(allRecoVote);
 
-		LocationInformation locationInfo = new LocationInformation();
-		locationInfo.setState(state);
-		locationInfo.setDistrict(district);
-		locationInfo.setTahsil(tahsil);
+		/*
+		 * LocationInformation locationInfo = new LocationInformation();
+		 * locationInfo.setState(state); locationInfo.setDistrict(district);
+		 * locationInfo.setTahsil(tahsil);
+		 * 
+		 * gbifObs.setLocation_information(locationInfo);
+		 */
 
-		gbifObs.setLocation_information(locationInfo);
 		gbifObs.setGroup_id(groupId);
 		gbifObs.setGroup_name(groupName);
 		gbifObs.setIs_locked(false);

@@ -17,7 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.esmodule.pojo.MapDocument;
@@ -45,15 +48,20 @@ public class GbifObservationThread implements Runnable {
 	private final RecommendationDao recoDao;
 	private final GbifObservationESMapper gbifMapper;
 	private final LayerServiceApi layerService;
+	// private final Map<String, Integer> headerIndex;
+	private final int startRow;
+	private final int endRow;
 
 	public GbifObservationThread(UtilityServiceApi utilityService, EsServicesApi esService, RecommendationDao recoDao,
-			GbifObservationESMapper gbifMapper, LayerServiceApi layerService) {
+			GbifObservationESMapper gbifMapper, LayerServiceApi layerService, int startRow, int endRow) {
 		super();
 		this.utilityService = utilityService;
 		this.esService = esService;
 		this.recoDao = recoDao;
 		this.gbifMapper = gbifMapper;
 		this.layerService = layerService;
+		this.startRow = startRow;
+		this.endRow = endRow;
 	}
 
 	@Override
@@ -66,35 +74,64 @@ public class GbifObservationThread implements Runnable {
 
 			String excludingPublishingOrgKey = PropertyFileUtil.fetchProperty("config.properties",
 					"excludingPublishingOrgKey");
-			FileReader filereader = new FileReader(path);
-			CSVReader csvReader = new CSVReader(filereader, '\t');
+			FileReader filereader1 = new FileReader(path);
+			CSVReader csvReader1 = new CSVReader(filereader1, '\t');
+
+			String r[] = csvReader1.readNext();
+			String[] columns = r.clone();
+
+			List<String> markedColumns = new ArrayList<>();
+			Map<String, Integer> headerIndex = new LinkedHashMap<>();
+			for (int j = 0; j < r.length; j++) {
+				headerIndex.put(r[j], j);
+			}
+			FileReader filereader2 = new FileReader(path);
+			CSVReader csvReader = new CSVReader(filereader2, '\t', '"', startRow);
+
+			/*
+			 * CSVReader csvReader = new CSVReaderBuilder(filereader)
+			 * 
+			 * .withSkipLines(startRow).withCSVParser(new
+			 * CSVParserBuilder().withSeparator('\t').build()).build();
+			 */
 
 			ObjectMapper jsonReadMapper = new ObjectMapper();
 
-			@SuppressWarnings("unchecked")
-			Map<String, Object> jsonFileMap = jsonReadMapper.readValue(new File("/home/prakhar/Desktop/metaData.json"),
-					HashMap.class);
-			System.out.println(jsonFileMap);
+			/*
+			 * @SuppressWarnings("unchecked") Map<String, Object> jsonFileMap =
+			 * jsonReadMapper.readValue(new File("/home/prakhar/Desktop/metaData.json"),
+			 * HashMap.class); System.out.println(jsonFileMap);
+			 */
 
-			Map<String, Integer> headerIndex = new LinkedHashMap<>();
 			String batchEsJson = "";
 
-			String[] row = csvReader.readNext();
-			String[] columns = row.clone();
-			List<String> markedColumns = new ArrayList<>();
-			for (int j = 0; j < row.length; j++) {
-				headerIndex.put(row[j], j);
-			}
+			// String[] row = csvReader.readNext();
 
+			/*
+			 * for (int j = 0; j < row.length; j++) { headerIndex.put(row[j], j); }
+			 */
 			List<ExternalObservationESDocument> observations = new ArrayList<>();
-			while ((row = csvReader.readNext()) != null) {
-
+			// int ctr = startRow;
+			String[] row;
+			for (int i = startRow; i <= endRow; i++) {
+				row = csvReader.readNext();
+				/*
+				 * if (ctr > endRow) { break; } ctr++;
+				 */
+				// System.out.println(headerIndex);
+				if (row == null) {
+					System.out.println("row empty i=" + i);
+				}
+				if (row[headerIndex.get("publishingOrgKey")] == null) {
+					System.out.println("id=" + row[headerIndex.get("gbifID")]);
+				}
 				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
 				String latitude = row[headerIndex.get("decimalLatitude")];
 				String longitude = row[headerIndex.get("decimalLongitude")];
 				String tempId = row[headerIndex.get("gbifID")];
 
-				if (!publishingOrgKey.equals(excludingPublishingOrgKey) && !isBadRecord(latitude, longitude)) {
+				if (publishingOrgKey != null && !publishingOrgKey.equals(excludingPublishingOrgKey)
+						&& !isBadRecord(latitude, longitude)) {
 					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
 					String gbifId = row[headerIndex.get("gbifID")];
 					String datetime = row[headerIndex.get("eventDate")];
@@ -112,6 +149,13 @@ public class GbifObservationThread implements Runnable {
 					String month = row[headerIndex.get("month")];
 					String monthName = getMonthName(month);
 					Double lat = null;
+					/*
+					 * CSVReader csvReader = new CSVReaderBuilder(filereader)
+					 * 
+					 * .withSkipLines(startRow).withCSVParser(new
+					 * CSVParserBuilder().withSeparator('\t').build()).build();
+					 */
+
 					Double lon = null;
 
 					lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
@@ -144,10 +188,10 @@ public class GbifObservationThread implements Runnable {
 					ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
 					if (taxonId != null) {
 						scientificName = taxonDetails.getName();
-					} else if (recoId != null) {
-						Recommendation reco = recoDao.findById(recoId);
-						scientificName = reco.getName();
-					}
+					} /*
+						 * else if (recoId != null) { Recommendation reco = recoDao.findById(recoId);
+						 * scientificName = reco.getName(); }
+						 */
 
 					Long rank = null;
 					Long speciesId = null;
@@ -209,17 +253,17 @@ public class GbifObservationThread implements Runnable {
 						}
 					}
 
-					LocationInfo locationInfo = new LocationInfo();
-					ObservationLocationInfo layerInfo = new ObservationLocationInfo();
+					//LocationInfo locationInfo = new LocationInfo();
+				//	ObservationLocationInfo layerInfo = new ObservationLocationInfo();
 					String state = null;
 					String district = null;
 					String tahsil = null;
 
-					locationInfo = layerService.fetchLocationInfo(String.valueOf(lat), String.valueOf(lon));
-					state = locationInfo.getState();
-					district = locationInfo.getDistrict();
-					tahsil = locationInfo.getTahsil();
-					layerInfo = layerService.getLayerInfo(String.valueOf(lat), String.valueOf(lon));
+					/*
+					 * locationInfo = layerService.fetchLocationInfo(String.valueOf(lat),
+					 * String.valueOf(lon)); state = locationInfo.getState(); district =
+					 * locationInfo.getDistrict(); tahsil = locationInfo.getTahsil();
+					 */
 
 					String externalGbifReferenceLink = "https://www.gbif.org/occurrence/" + gbifId.toString();
 
@@ -241,25 +285,28 @@ public class GbifObservationThread implements Runnable {
 							recoId, taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
 							acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name,
 							state, district, tahsil, groupId, groupName, externalOriginalReferenceLink,
-							externalGbifReferenceLink, layerInfo, annotations);
+							externalGbifReferenceLink, null, annotations,dataSourcePrefix);
 
 					observations.add(obj);
 					ObjectMapper objectMapper = new ObjectMapper();
 
-					if (observations.size() >= 1000) {
-						List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
-							@SuppressWarnings("unchecked")
-							Map<String, Object> doc = objectMapper.convertValue(s, Map.class);
-							doc.put("id", "gbif-" + s.getObservation_id());
-							return doc;
-						}).collect(Collectors.toList());
+					if (observations.size() >= 100) {
+						/*
+						 * List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
+						 * 
+						 * @SuppressWarnings("unchecked") Map<String, Object> doc =
+						 * objectMapper.convertValue(s, Map.class); doc.put("id", "gbif-" +
+						 * s.getObservation_id()); return doc; }).collect(Collectors.toList());
+						 */
 
-						batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
+						batchEsJson = objectMapper.writeValueAsString(observations);
 
-						ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson,
-								esService);
-						Thread t1 = new Thread(esPushThread);
-						t1.start();
+						esService.bulkUpload("extended_observation", "_doc", batchEsJson);
+
+						/*
+						 * ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc",
+						 * batchEsJson, esService); Thread t1 = new Thread(esPushThread); t1.start();
+						 */
 						observations.clear();
 					}
 
@@ -268,7 +315,7 @@ public class GbifObservationThread implements Runnable {
 			}
 
 			ObjectMapper objectMapper = new ObjectMapper();
-			if ((row = csvReader.readNext()) == null && !observations.isEmpty()) {
+			if (!observations.isEmpty()) {
 				List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
 					@SuppressWarnings("unchecked")
 					Map<String, Object> doc = objectMapper.convertValue(s, Map.class);
@@ -277,9 +324,13 @@ public class GbifObservationThread implements Runnable {
 				}).collect(Collectors.toList());
 
 				batchEsJson = objectMapper.writeValueAsString(batchEsDoc);
-				ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc", batchEsJson, esService);
-				Thread t2 = new Thread(esPushThread);
-				t2.start();
+
+				esService.bulkUpload("extended_observation", "_doc", batchEsJson);
+
+				/*
+				 * ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc",
+				 * batchEsJson, esService); Thread t2 = new Thread(esPushThread); t2.start();
+				 */
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -308,19 +359,18 @@ public class GbifObservationThread implements Runnable {
 
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
-				Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
+				//Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
 
 				result.put("taxonId", Long.valueOf(esResult.getId()));
-				if (recommendation != null) {
-					result.put("recoId", recommendation.getId());
-				}
+				/*
+				 * if (recommendation != null) { result.put("recoId", recommendation.getId()); }
+				 */
 
-			} else {
-				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
-				if (!resultList.isEmpty()) {
-					result.put("recoId", resultList.get(0).getId());
-				}
-			}
+			} /*
+				 * else { List<Recommendation> resultList =
+				 * recoDao.findByCanonicalName(canonicalName); if (!resultList.isEmpty()) {
+				 * result.put("recoId", resultList.get(0).getId()); } }
+				 */
 			result.put("etd", esResult);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -374,6 +424,7 @@ public class GbifObservationThread implements Runnable {
 		Map<String, Object> annotations = new HashMap<>();
 		for (String column : columns) {
 			if (!markedColums.contains(column)) {
+				// System.out.println(row[0]);
 				annotations.put(column, row[headerIndex.get(column)]);
 			}
 		}
