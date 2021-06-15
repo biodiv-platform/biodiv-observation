@@ -299,10 +299,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					logger.error(e.getMessage());
 				}
 
-				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName,
-						userInfo, null, fromDate, ob.getPlaceName(),
+				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName, null, fromDate, ob.getPlaceName(),
 						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
-						ob.getGeoPrivacy(), checkListAnnotation);
+						ob.getGeoPrivacy(), checkListAnnotation,userInfo);
 				showDataList.add(data);
 
 			});
