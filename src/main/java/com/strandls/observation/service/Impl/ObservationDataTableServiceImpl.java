@@ -300,7 +300,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				}
 
 				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName,
-						userInfo, ob.getGroupId(), null, fromDate, ob.getPlaceName(),
+						userInfo, null, fromDate, ob.getPlaceName(),
 						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
 						ob.getGeoPrivacy(), checkListAnnotation);
 				showDataList.add(data);

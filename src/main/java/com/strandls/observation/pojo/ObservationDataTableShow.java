@@ -16,8 +16,6 @@ public class ObservationDataTableShow {
 
 	private Long sGroup;
 
-	private Long userGroups;
-
 	private String fromDate;
 
 	private String observedAt;
@@ -36,8 +34,7 @@ public class ObservationDataTableShow {
 
 	private Map<String, Object> checklistAnnotation;
 
-	public ObservationDataTableShow(Long id, String scientificName, String commonName, UserIbp userInfo, Long sGroup,
-			Long userGroups, String fromDate, String observedAt, String locationScale, Double longitude, Double latitude,
+	public ObservationDataTableShow(Long id, String scientificName, String commonName, UserIbp userInfo, Long sGroup,String fromDate, String observedAt, String locationScale, Double longitude, Double latitude,
 			String dateAccuracy, String notes, Boolean geoPrivacy, Map<String, Object> checklistAnnotation) {
 		super();
 		this.id = id;
@@ -45,7 +42,6 @@ public class ObservationDataTableShow {
 		this.commonName = commonName;
 		this.userInfo = userInfo;
 		this.sGroup = sGroup;
-		this.userGroups = userGroups;
 		this.fromDate = fromDate;
 		this.observedAt = observedAt;
 		this.locationScale = locationScale;
@@ -87,14 +83,6 @@ public class ObservationDataTableShow {
 
 	public void setsGroup(Long sGroup) {
 		this.sGroup = sGroup;
-	}
-
-	public Long getUserGroups() {
-		return userGroups;
-	}
-
-	public void setUserGroups(Long userGroups) {
-		this.userGroups = userGroups;
 	}
 
 	public String getFromDate() {
