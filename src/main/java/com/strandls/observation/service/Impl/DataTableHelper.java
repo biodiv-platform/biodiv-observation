@@ -33,6 +33,9 @@ public class DataTableHelper {
 		dataTableDto.setObservedToDate(observationBulkData.getObservedToDate());
 		dataTableDto.setTitle(observationBulkData.getTitle());
 		dataTableDto.setBasisOfData(observationBulkData.getBasisOfData());
+		dataTableDto.setBasisOfRecord(observationBulkData.getBasisOfRecord());
+		dataTableDto.setIsVerified(observationBulkData.getIsVerified());
+		dataTableDto.setFieldMapping(String.join(",", observationBulkData.getColumns().keySet()));
 
 	
 		return dataTableDto;

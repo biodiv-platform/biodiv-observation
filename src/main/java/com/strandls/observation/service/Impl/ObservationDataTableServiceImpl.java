@@ -41,6 +41,7 @@ import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
+import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
 import com.strandls.resource.controllers.LicenseControllerApi;
@@ -260,11 +261,13 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	public List<ObservationDataTableShow> fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
 			Integer offset) {
 		List<Observation> observationList = null;
+		DataTableWkt dataTable;
 		List<Long> list = new ArrayList<Long>();
 		List<ObservationDataTableShow> showDataList = new ArrayList<ObservationDataTableShow>();
 		list.add(dataTableId);
 		try {
 			observationList = observationDao.fetchByDataTableId(list, limit, offset);
+			dataTable = dataTableService.showDataTable(dataTableId.toString());
 			if (observationList.isEmpty()) {
 				return showDataList;
 			}
@@ -272,23 +275,23 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			observationList.forEach((ob) -> {
 				Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 				RecoIbp reco = null;
-				UserIbp userInfo=null;
+				UserIbp userInfo = null;
 				String commonName = null;
 				String scientificName = null;
 				String fromDate = null;
-				if(ob.getFromDate()!= null) {
+				if (ob.getFromDate() != null) {
 					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-					fromDate  = dateFormat.format(ob.getFromDate());
+					fromDate = dateFormat.format(ob.getFromDate());
 				}
-				
+
 				try {
 					if (ob.getMaxVotedRecoId() != null) {
 						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
 						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
 						commonName = reco.getCommonName() != null ? reco.getCommonName() : null;
 					}
-					
-					if(ob.getAuthorId() != null) {
+
+					if (ob.getAuthorId() != null) {
 						userInfo = userService.getUserIbp(ob.getAuthorId().toString());
 					}
 					checkListAnnotation = ob.getChecklistAnnotations() != null
@@ -298,10 +301,34 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				} catch (Exception e) {
 					logger.error(e.getMessage());
 				}
-
-				ObservationDataTableShow data = new ObservationDataTableShow(ob.getId(), scientificName, commonName, null, fromDate, ob.getPlaceName(),
-						ob.getLocationScale(), ob.getLongitude(), ob.getLatitude(), ob.getDateAccuracy(), ob.getNotes(),
-						ob.getGeoPrivacy(), checkListAnnotation,userInfo);
+				String[] fieldMapping = dataTable.getFieldMapping().split(",");
+				ObservationDataTableShow data = new ObservationDataTableShow();
+				data.setId(ob.getId());
+				data.setScientificName(scientificName);
+				data.setCommonName(commonName);
+				data.setUserInfo(userInfo);
+				data.setChecklistAnnotation(checkListAnnotation);
+				for (String field : fieldMapping) {
+					if (field == DataTableMappingField.sGroup.getValue()) {
+						data.setsGroup(ob.getGroupId());
+					} else if (field == DataTableMappingField.fromDate.getValue()) {
+						data.setFromDate(fromDate);
+					} else if (field == DataTableMappingField.observedAt.getValue()) {
+						data.setObservedAt(ob.getPlaceName());
+					} else if (field == DataTableMappingField.locationScale.getValue()) {
+						data.setLocationScale(ob.getLocationScale());
+					} else if (field == DataTableMappingField.longitude.getValue()) {
+						data.setLongitude(ob.getLongitude());
+					} else if (field == DataTableMappingField.latitude.getValue()) {
+						data.setLatitude(ob.getLatitude());
+					} else if (field == DataTableMappingField.dateAccuracy.getValue()) {
+						data.setDateAccuracy(ob.getDateAccuracy());
+					} else if (field == DataTableMappingField.notes.getValue()) {
+						data.setNotes(ob.getNotes());
+					} else if (field == DataTableMappingField.geoPrivacy.getValue()) {
+						data.setGeoPrivacy(ob.getGeoPrivacy());
+					} 
+				}
 				showDataList.add(data);
 
 			});

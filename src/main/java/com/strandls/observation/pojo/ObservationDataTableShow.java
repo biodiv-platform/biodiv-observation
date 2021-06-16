@@ -34,23 +34,8 @@ public class ObservationDataTableShow {
 	
 	private UserIbp userInfo;
 
-	public ObservationDataTableShow(Long id, String scientificName, String commonName, Long sGroup,String fromDate, String observedAt, String locationScale, Double longitude, Double latitude,
-			String dateAccuracy, String notes, Boolean geoPrivacy, Map<String, Object> checklistAnnotation,UserIbp userInfo) {
+	public ObservationDataTableShow() {
 		super();
-		this.id = id;
-		this.scientificName = scientificName;
-		this.commonName = commonName;
-		this.sGroup = sGroup;
-		this.fromDate = fromDate;
-		this.observedAt = observedAt;
-		this.locationScale = locationScale;
-		this.longitude = longitude;
-		this.latitude = latitude;
-		this.dateAccuracy = dateAccuracy;
-		this.notes = notes;
-		this.geoPrivacy = geoPrivacy;
-		this.checklistAnnotation = checklistAnnotation;
-		this.userInfo = userInfo;
 	}
 
 	public Long getId() {
