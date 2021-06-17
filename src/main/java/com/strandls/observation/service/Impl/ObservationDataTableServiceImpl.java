@@ -304,30 +304,33 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 				ObservationDataTableShow data = new ObservationDataTableShow();
 				data.setId(ob.getId());
-				data.setScientificName(scientificName);
-				data.setCommonName(commonName);
-				data.setUserInfo(userInfo);
 				data.setChecklistAnnotation(checkListAnnotation);
 				if (dataTable.getFieldMapping() != null) {
 					String[] fieldMapping = dataTable.getFieldMapping().split(",");
 					for (String field : fieldMapping) {
-						if (field == DataTableMappingField.sGroup.getValue()) {
+						if (field.contains(DataTableMappingField.sGroup.getValue())) {
 							data.setsGroup(ob.getGroupId());
-						} else if (field == DataTableMappingField.fromDate.getValue()) {
+						} else if (field.contains(DataTableMappingField.scientificName.getValue())) {
+							data.setScientificName(fromDate);
+						} else if (field.contains(DataTableMappingField.commonName.getValue())) {
+							data.setCommonName(commonName);
+						} else if (field.contains(DataTableMappingField.user.getValue())) {
+							data.setUserInfo(userInfo);
+						} else if (field.contains(DataTableMappingField.fromDate.getValue())) {
 							data.setFromDate(fromDate);
-						} else if (field == DataTableMappingField.observedAt.getValue()) {
+						} else if (field.contains(DataTableMappingField.observedAt.getValue())) {
 							data.setObservedAt(ob.getPlaceName());
-						} else if (field == DataTableMappingField.locationScale.getValue()) {
+						} else if (field.contains(DataTableMappingField.locationScale.getValue())) {
 							data.setLocationScale(ob.getLocationScale());
-						} else if (field == DataTableMappingField.longitude.getValue()) {
+						} else if (field.contains(DataTableMappingField.longitude.getValue())) {
 							data.setLongitude(ob.getLongitude());
-						} else if (field == DataTableMappingField.latitude.getValue()) {
+						} else if (field.contains(DataTableMappingField.latitude.getValue())) {
 							data.setLatitude(ob.getLatitude());
-						} else if (field == DataTableMappingField.dateAccuracy.getValue()) {
+						} else if (field.contains(DataTableMappingField.dateAccuracy.getValue())) {
 							data.setDateAccuracy(ob.getDateAccuracy());
-						} else if (field == DataTableMappingField.notes.getValue()) {
+						} else if (field.contains(DataTableMappingField.notes.getValue())) {
 							data.setNotes(ob.getNotes());
-						} else if (field == DataTableMappingField.geoPrivacy.getValue()) {
+						} else if (field.contains(DataTableMappingField.geoPrivacy.getValue())) {
 							data.setGeoPrivacy(ob.getGeoPrivacy());
 						}
 					}
