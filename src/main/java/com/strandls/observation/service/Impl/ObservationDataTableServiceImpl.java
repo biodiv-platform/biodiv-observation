@@ -129,16 +129,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				throw new Exception("Sheet Filename nout found");
 			}
 
-			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
-
 			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-			String sheetDirectory = storageBasePath + File.separatorChar + "content/dataTables"
-					+ sheetResult.get("destinationPath");
+			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId
+					+ File.separatorChar + observationBulkData.getFilename();	 
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
-			Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
-			dataTableDTO.setUserFileId(uFileId);
-
+			dataTableDTO.setUserFileId(1L);
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
@@ -165,7 +161,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					myImageUpload, resourceService, fileUploadApi, headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
-
+			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
+			Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
+			dataTable.setUfileId(uFileId);
+			dataTableService.updateDataTable(dataTable);
 			return dataTable.getId();
 
 		} catch (Exception ex) {
@@ -280,7 +279,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				String scientificName = null;
 				String fromDate = null;
 				if (ob.getFromDate() != null) {
-					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 					fromDate = dateFormat.format(ob.getFromDate());
 				}
 
@@ -311,7 +310,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						if (field.contains(DataTableMappingField.sGroup.getValue())) {
 							data.setsGroup(ob.getGroupId());
 						} else if (field.contains(DataTableMappingField.scientificName.getValue())) {
-							data.setScientificName(fromDate);
+							data.setScientificName(scientificName);
 						} else if (field.contains(DataTableMappingField.commonName.getValue())) {
 							data.setCommonName(commonName);
 						} else if (field.contains(DataTableMappingField.user.getValue())) {
