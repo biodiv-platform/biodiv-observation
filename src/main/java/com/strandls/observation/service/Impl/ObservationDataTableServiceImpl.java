@@ -130,8 +130,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			}
 
 			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId
-					+ File.separatorChar + observationBulkData.getFilename();	 
+			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId + observationBulkData.getFilename();	 
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
 			dataTableDTO.setUserFileId(1L);
