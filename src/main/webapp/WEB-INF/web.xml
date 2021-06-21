@@ -3,7 +3,6 @@
 	<display-name>ObservationModule</display-name>
 
 	<welcome-file-list>
-		<welcome-file>index.html</welcome-file>
 		<welcome-file>index.json</welcome-file>
 	</welcome-file-list>
 
