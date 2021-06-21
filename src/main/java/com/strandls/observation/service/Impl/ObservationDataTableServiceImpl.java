@@ -130,10 +130,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			}
 
 			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
-			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId + observationBulkData.getFilename();	 
+			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId
+					+ observationBulkData.getFilename();
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
-			dataTableDTO.setUserFileId(1L);
+			
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
@@ -157,13 +158,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 					observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
 					observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook,
-					myImageUpload, resourceService, fileUploadApi, headers);
+					myImageUpload, resourceService, fileUploadApi, dataTableService, headers);
 			Thread thread = new Thread(uploadThread);
 			thread.start();
-			Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
-			Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
-			dataTable.setUfileId(uFileId);
-			dataTableService.updateDataTable(dataTable);
 			return dataTable.getId();
 
 		} catch (Exception ex) {
@@ -215,44 +212,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		}
 
 		return null;
-	}
-
-	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, HttpServletRequest request)
-			throws Exception {
-		try {
-			List<String> myUploadFilesPath = new ArrayList<String>();
-			myUploadFilesPath.add(observationBulkData.getFilename());
-			UFile uFileData = null;
-			FilesDTO filesDataTable = new FilesDTO();
-			Map<String, Object> result = new HashMap<String, Object>();
-			filesDataTable.setFolder("datatables");
-			filesDataTable.setModule("DATASETS");
-			filesDataTable.setFiles(myUploadFilesPath);
-			Map<String, Object> fileRes;
-			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION));
-			resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
-
-			fileRes = fileUploadApi.moveFiles(filesDataTable);
-			List<UFileCreateData> createUfileList = new ArrayList<>();
-			fileRes.entrySet().forEach((item) -> {
-				@SuppressWarnings("unchecked")
-				Map<String, String> values = (Map<String, String>) item.getValue();
-				UFileCreateData createUFileData = new UFileCreateData();
-				createUFileData.setWeight(0);
-				createUFileData.setSize(values.get("size"));
-				createUFileData.setPath(values.get("name"));
-				createUfileList.add(createUFileData);
-
-			});
-
-			uFileData = resourceService.createUFile(createUfileList.get(0));
-			result.put("uFileId", uFileData.getId());
-			result.put("destinationPath", createUfileList.get(0).getPath());
-			return result;
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-			throw new Exception("Sheet Filename nout found");
-		}
 	}
 
 	@Override

@@ -36,8 +36,7 @@ public class DataTableHelper {
 		dataTableDto.setBasisOfRecord(observationBulkData.getBasisOfRecord());
 		dataTableDto.setIsVerified(observationBulkData.getIsVerified());
 		dataTableDto.setFieldMapping(String.join(",", observationBulkData.getColumns().keySet()));
-
-	
+		dataTableDto.setUserFileId(1L);
 		return dataTableDto;
 	}
 	
