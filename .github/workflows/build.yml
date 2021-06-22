@@ -4,7 +4,7 @@ on:
     branches:
       - master
       - staging
-      - sonar
+      - branch-sonar
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
