@@ -9,6 +9,13 @@ package com.strandls.observation;
  */
 public class ApiConstants {
 
+	/**
+	 * since all the class members are static we need to add a private constructor 
+	 */
+	private ApiConstants() {
+		super();
+	}
+
 	// versioning
 	public static final String V1 = "/v1";
 	// ---------- paths ---------------

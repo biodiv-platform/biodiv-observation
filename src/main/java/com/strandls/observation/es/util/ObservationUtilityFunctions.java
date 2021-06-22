@@ -49,11 +49,13 @@ public class ObservationUtilityFunctions {
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
-			file.createNewFile();
+			boolean isFileCreated = file.createNewFile();
+			if (isFileCreated)
+				return fileName;
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
-		return fileName;
+		return null;
 	}
 
 	public List<String[]> getCsvHeaders(List<String> customfields, List<String> taxonomic, List<String> spatial,

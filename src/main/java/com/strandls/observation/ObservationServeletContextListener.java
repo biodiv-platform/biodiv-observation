@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletContextEvent;
 
@@ -82,7 +83,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
-//				Rabbit MQ initialization
+//				Rabbit MQ initialisation
 				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
 				Channel channel = null;
 				try {
@@ -141,7 +142,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 
@@ -189,7 +189,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		Channel channel = injector.getInstance(Channel.class);
 		try {
 			channel.getConnection().close();
-		} catch (IOException e) {
+			channel.close();
+		} catch (IOException | TimeoutException e) {
 			logger.error(e.getMessage());
 		}
 
