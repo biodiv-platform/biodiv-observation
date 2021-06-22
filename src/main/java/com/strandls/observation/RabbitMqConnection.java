@@ -19,18 +19,18 @@ import com.strandls.observation.util.PropertyFileUtil;
  */
 public class RabbitMqConnection {
 
-	private final static String QUEUE_ELASTIC = "elastic";
-	private final static String ROUTING_ELASTIC = "esmodule";
-	
-	public final static String EXCHANGE_BIODIV;
+	private final String QUEUE_ELASTIC = "elastic";
+	private final String ROUTING_ELASTIC = "esmodule";
+
+	public static final String EXCHANGE_BIODIV;
 	public static final String MAIL_QUEUE;
 	public static final String MAIL_ROUTING_KEY;
-	
+
 	static {
 		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
 		EXCHANGE_BIODIV = properties.getProperty("rabbitmq_exchange");
 		MAIL_QUEUE = properties.getProperty("rabbitmq_queue");
-		MAIL_ROUTING_KEY = properties.getProperty("rabbitmq_routingKey");		
+		MAIL_ROUTING_KEY = properties.getProperty("rabbitmq_routingKey");
 	}
 
 	public Channel setRabbitMQConnetion() throws IOException, TimeoutException {

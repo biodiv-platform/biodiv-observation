@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -75,7 +76,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 						configuration.addAnnotatedClass(cls);
 					}
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
 
@@ -100,6 +100,9 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(ObjectMapper.class).toInstance(objectMapper);
+
+				SecureRandom random = new SecureRandom();
+				bind(SecureRandom.class).toInstance(random);
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
@@ -187,8 +190,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		try {
 			channel.getConnection().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		super.contextDestroyed(servletContextEvent);

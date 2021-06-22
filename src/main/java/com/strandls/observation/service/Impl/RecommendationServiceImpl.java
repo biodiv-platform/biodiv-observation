@@ -278,7 +278,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					maxRecoVote = entry.getValue();
 				}
 			}
-			return maxRecoVote.getRecoId();
+			if (maxRecoVote != null)
+				return maxRecoVote.getRecoId();
 		}
 		return null;
 
@@ -912,7 +913,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Set<Long> observationIdSet = new HashSet<Long>();
 		List<Long> recoIdList = new ArrayList<Long>();
 		for (Recommendation reco : recoList) {
-			if (reco.getId() != latestRecoId) {
+			if (!reco.getId().equals(latestRecoId)) {
 				recoIdList.add(reco.getId());
 			}
 
@@ -940,7 +941,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 
 		for (Recommendation reco : recoList) {
-			if (reco.getId() != latestRecoId) {
+			if (!reco.getId().equals(latestRecoId)) {
 				recoDao.delete(reco);
 			} else {
 				if (!reco.getIsScientificName()) {

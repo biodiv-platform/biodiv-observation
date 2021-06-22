@@ -80,6 +80,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 
 		return result;
@@ -130,10 +132,9 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			qry = qry + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
 
 		qry = qry + "group by max_voted_reco_id order by count(id) desc limit 10 offset " + offset;
-		
-		
-		String qry1 = "select count(id) from observation "
-				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
+
+		String qry1 = "select count(id) from observation " + "where is_deleted = false and  author_id = " + authorId
+				+ " and max_voted_reco_id is not NULL ";
 		if (sGroup != null)
 			qry1 = qry1 + " and s_group = " + sGroup;
 		if (hasMedia)
@@ -152,11 +153,11 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			for (Object object[] : objectList) {
 				maxVotedRecoFreq.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
 			}
-			
+
 			Query<Object> query2 = session.createNativeQuery(qry1);
 			Object obj = query2.getSingleResult();
 			maxVotedRecoFreq.put(null, Long.parseLong(obj.toString()));
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {

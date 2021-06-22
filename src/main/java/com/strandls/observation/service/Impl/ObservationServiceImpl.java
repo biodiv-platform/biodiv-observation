@@ -487,7 +487,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
 		Observation observation = observationDao.findById(observationId);
-		if (observation.getMaxVotedRecoId() == null || observation.getMaxVotedRecoId() != maxVotedReco) {
+		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
@@ -1199,7 +1199,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
@@ -1513,7 +1513,7 @@ public class ObservationServiceImpl implements ObservationService {
 			filetypeAttribute = null;
 		}
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
-				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
+				authorIds, fileType != null ? fileType.toUpperCase() : null, orderBy, offSet, limit);
 		return records;
 	}
 
@@ -1577,10 +1577,11 @@ public class ObservationServiceImpl implements ObservationService {
 			Set<Long> identifiedCount = identifiedFreq.keySet();
 			identifiedSpeciesCount = identifiedCount.iterator().next();
 
+			ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
+					identifiedSpeciesCount);
+			return result;
 		}
+		return null;
 
-		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
-				identifiedSpeciesCount);
-		return result;
 	}
 }

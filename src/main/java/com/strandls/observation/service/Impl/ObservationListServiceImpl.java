@@ -472,6 +472,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			latch.await();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			 Thread.currentThread().interrupt();
 		}
 
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get("group_name.keyword").getGroupAggregation());
@@ -582,6 +583,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			latch.await();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			 Thread.currentThread().interrupt();
 		}
 
 		int size = lifeListOffset + 10;

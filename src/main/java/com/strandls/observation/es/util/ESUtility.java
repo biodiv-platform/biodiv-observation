@@ -48,7 +48,7 @@ public class ESUtility {
 	private EsServicesApi esService;
 
 	private List<Object> cSTSOT(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Object>();
 
 		String[] y = str.split(",");
@@ -69,7 +69,7 @@ public class ESUtility {
 	}
 
 	private List<Long> getListOfIds(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Long>();
 		String[] y = str.split(",");
 		List<Long> LongIds = new ArrayList<>();
@@ -335,7 +335,7 @@ public class ESUtility {
 			String minDateValue = null;
 			String maxDateValue = null;
 			Date date = new Date();
-			SimpleDateFormat out = new SimpleDateFormat("YYYY-MM-dd");
+			SimpleDateFormat out = new SimpleDateFormat("yyyy-MM-dd");
 			try {
 				if (minDate != null) {
 					minDateValue = minDate;

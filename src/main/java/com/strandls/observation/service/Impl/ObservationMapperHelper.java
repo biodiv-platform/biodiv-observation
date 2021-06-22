@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -72,6 +72,9 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private Headers headers;
+
+	@Inject
+	private SecureRandom random;
 
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
@@ -330,7 +333,7 @@ public class ObservationMapperHelper {
 		Map<String, Long> result = new HashMap<String, Long>();
 		List<Recommendation> filteredList = new ArrayList<Recommendation>();
 		for (Recommendation recommendation : recommendations) {
-			if (recommendation.getTaxonConceptId() == recommendation.getAcceptedNameId())
+			if (recommendation.getTaxonConceptId().equals(recommendation.getAcceptedNameId()))
 				filteredList.add(recommendation);
 		}
 		if (filteredList.isEmpty())
@@ -461,8 +464,6 @@ public class ObservationMapperHelper {
 		Map<String, Double> latlon = new HashMap<String, Double>();
 		double x0 = lon;
 		double y0 = lat;
-
-		Random random = new Random();
 
 		// Convert radius from meters to degrees.
 		double innerRadiusInDegrees = 5000D / 111320f;
