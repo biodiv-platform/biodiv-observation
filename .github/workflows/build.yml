@@ -5,7 +5,7 @@ on:
       - master
       - staging
       - sonar
-      - sonar-new
+      - sonar-fix
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
