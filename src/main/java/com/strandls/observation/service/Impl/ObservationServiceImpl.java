@@ -250,7 +250,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(),true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -395,7 +395,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			try {
 				esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), maxVotedRecoId.toString());
+						ObservationIndex.type.getValue(), maxVotedRecoId.toString(),true);
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}

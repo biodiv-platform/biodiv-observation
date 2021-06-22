@@ -22,6 +22,7 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.es.util.GbifObservationESMapper;
 import com.strandls.observation.util.PropertyFileUtil;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.utility.controller.UtilityServiceApi;
 
 public class GbifObservationService {
@@ -40,6 +41,9 @@ public class GbifObservationService {
 
 	@Inject
 	private LayerServiceApi layerService;
+
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
 
 	public String gbifData() {
 
@@ -88,12 +92,12 @@ public class GbifObservationService {
 			while ((csvReader2.readNext()) != null) {
 				numRows++;
 			}
-			numRows=numRows-1;
+			numRows = numRows - 1;
 			System.out.println("rows=" + numRows);
 
 			ExecutorService executor = Executors.newFixedThreadPool(5);
-			
-			int numThreads=5;
+
+			int numThreads = 5;
 
 			int batchSize = (numRows / numThreads);
 			int s = 1;
@@ -102,23 +106,23 @@ public class GbifObservationService {
 			if (numRows % numThreads == 0) {
 				m = numThreads;
 			} else {
-				m = numThreads+1;
+				m = numThreads + 1;
 			}
-			
-			 StopWatch stopWatch = new StopWatch();
-		      stopWatch.start();
+
+			StopWatch stopWatch = new StopWatch();
+			stopWatch.start();
 
 			for (int i = 1; i <= m; i++) {
 				if (i == m) {
 
-					int t = numRows - s ; // System.out.println(s+","+(s+t));
+					int t = numRows - s; // System.out.println(s+","+(s+t));
 					GbifObservationThread gbifThread1 = new GbifObservationThread(utilityService, esService, recoDao,
-							gbifMapper, layerService, s, s+t);
+							gbifMapper, layerService, taxonomyService, s, s + t, i);
 					executor.execute(gbifThread1);
 
 				} else {
 					GbifObservationThread gbifThread1 = new GbifObservationThread(utilityService, esService, recoDao,
-							gbifMapper, layerService, s, (i * batchSize));
+							gbifMapper, layerService, taxonomyService, s, (i * batchSize), i);
 					executor.execute(gbifThread1);
 
 				}
@@ -151,10 +155,10 @@ public class GbifObservationService {
 			 * executor.execute(gbifThread1); executor.execute(gbifThread2);
 			 */
 
-			 executor.shutdown();
-			 
-			 stopWatch.stop();      
-		      System.out.println("Elapsed Time in minutes: "+ stopWatch.getTime());
+			executor.shutdown();
+
+			stopWatch.stop();
+			System.out.println("Elapsed Time in minutes: " + stopWatch.getTime());
 
 			return ("running");
 
