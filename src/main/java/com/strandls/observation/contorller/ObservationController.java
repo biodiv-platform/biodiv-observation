@@ -1444,7 +1444,7 @@ public class ObservationController {
 		try {
 			Long id = Long.parseLong(dataTableId);
 			String result = observationDataTableService.removeObservationByDataTableId(request, id);
-			if (result != null) {
+			if (result == null) {
 				return Response.status(Status.NOT_FOUND).entity(result).build();
 			} else {
 				return Response.status(Status.OK).entity(result).build();

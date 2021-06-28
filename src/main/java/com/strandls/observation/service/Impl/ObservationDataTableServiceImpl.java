@@ -309,6 +309,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
+			dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			dataTableService.deleteDataTable(dataTableId.toString());
 			observList = observationDao.fetchByDataTableId(list, null, 0);
 			if (observList != null && observList.size() > 0) {
