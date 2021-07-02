@@ -1281,22 +1281,6 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path(ApiConstants.INDEXFIELDUPDATE)
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Update the field value of observation index", notes = "for all observation given datatableId", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "error in updating", response = String.class) })
-	public Response forceUpdateIndexField(@QueryParam("field") String field, @QueryParam("value") String value,
-			@QueryParam("datatableid") String dataTableId) {
-		String index = "eo";
-		String type = "er";
-		String response = observationService.forceUpdateIndexField(index, type, field, value,
-				Long.parseLong(dataTableId));
-
-		return Response.status(Status.OK).entity(response).build();
-	}
-
-	@GET
 	@Path(ApiConstants.USERINFO + ApiConstants.UPLOADED + "/{userId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
