@@ -98,6 +98,9 @@ public class ObservationMapperHelper {
 			topleft = properties.getProperty("topLeft");
 			bottomright = properties.getProperty("bottomRight");
 			in.close();
+			
+			if (topleft.equalsIgnoreCase("NA") || bottomright.equalsIgnoreCase("NA"))
+				return true;
 
 			String point1[] = topleft.split(",");
 			String point2[] = bottomright.split(",");
