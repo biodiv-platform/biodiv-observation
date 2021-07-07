@@ -3,10 +3,13 @@
  */
 package com.strandls.observation.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationResourceData {
 
 	private String path;
@@ -16,6 +19,7 @@ public class ObservationResourceData {
 	private Integer rating;
 	private Long licenseId;
 	private String context;
+	private Long languageId;
 
 	/**
 	 * 
@@ -32,9 +36,10 @@ public class ObservationResourceData {
 	 * @param rating
 	 * @param licenseId
 	 * @param context
+	 * @param languageId
 	 */
 	public ObservationResourceData(String path, String url, String type, String caption, Integer rating, Long licenseId,
-			String context) {
+			String context, Long languageId) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -43,6 +48,7 @@ public class ObservationResourceData {
 		this.rating = rating;
 		this.licenseId = licenseId;
 		this.context = context;
+		this.languageId = languageId;
 	}
 
 	public String getPath() {
@@ -99,6 +105,14 @@ public class ObservationResourceData {
 
 	public void setContext(String context) {
 		this.context = context;
+	}
+
+	public Long getLanguageId() {
+		return languageId;
+	}
+
+	public void setLanguageId(Long languageId) {
+		this.languageId = languageId;
 	}
 
 }

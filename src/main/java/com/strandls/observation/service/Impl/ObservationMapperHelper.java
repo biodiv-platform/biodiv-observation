@@ -102,6 +102,9 @@ public class ObservationMapperHelper {
 			if (topleft.equalsIgnoreCase("NA") || bottomright.equalsIgnoreCase("NA"))
 				return true;
 
+			if (topleft.equalsIgnoreCase("NA") || bottomright.equalsIgnoreCase("NA"))
+				return true;
+
 			String point1[] = topleft.split(",");
 			String point2[] = bottomright.split(",");
 
@@ -180,7 +183,10 @@ public class ObservationMapperHelper {
 											// group
 			observation.setIsLocked(false);// update field , initially false
 			observation.setLicenseId(defaultLicenseId);// default 822
-			observation.setLanguageId(observationData.getObsvLanguageId());
+			if (observationData.getObsvLanguageId() != null)
+				observation.setLanguageId(observationData.getObsvLanguageId());
+			else
+				observation.setLanguageId(defaultLanguageId);
 			observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
 			observation.setReprImageId(null);
@@ -270,7 +276,7 @@ public class ObservationMapperHelper {
 				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
 				String canonicalName = parsedName.getCanonicalName().getSimple();
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
-						recoData.getScientificNameTaxonId(), canonicalName, true);
+						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
 			}
 			result.put("recoId", recommendation.getId());
 			result.put("flag", 0L);
@@ -286,7 +292,7 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false);
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId);
 
 		return resultCommonName.getId();
 
@@ -313,7 +319,8 @@ public class ObservationMapperHelper {
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
-						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true,
+								recoData.getLanguageId()));
 					result.put("recoId", resultList.get(0).getId());
 					result.put("flag", 0L);
 				} else {
@@ -444,7 +451,10 @@ public class ObservationMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(defaultLanguageId);
+				if (resourceData.getLanguageId() != null)
+					resource.setLanguageId(resourceData.getLanguageId());
+				else
+					resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
@@ -503,7 +513,8 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ObservationResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext(),
+					resource.getLanguageId()));
 
 		}
 		return editResource;

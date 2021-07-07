@@ -363,9 +363,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific) {
-		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific, defaultLanguageId,
-				name.toLowerCase(), null, false, null, canonicalName);
+	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific,
+			Long languageId) {
+		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific,
+				languageId != null ? languageId : defaultLanguageId, name.toLowerCase(), null, false, null,
+				canonicalName);
 
 		Recommendation result = recoDao.save(reco);
 		return result;
