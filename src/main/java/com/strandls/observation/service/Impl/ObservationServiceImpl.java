@@ -31,6 +31,8 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
@@ -193,6 +195,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private TaxonomyTreeServicesApi taxonomyTreeService;
+	
+	@Inject
+	private DataTableServiceApi dataTableService;
 
 
 	@Override
@@ -222,6 +227,7 @@ public class ObservationServiceImpl implements ObservationService {
 		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
+		DataTableWkt dataTable = null;
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
@@ -229,10 +235,14 @@ public class ObservationServiceImpl implements ObservationService {
 				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
+				if(observation.getDataTableId() != null) {
+					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
+				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
+			
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -263,10 +273,9 @@ public class ObservationServiceImpl implements ObservationService {
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
-				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
+				return new ShowData(observation, facts, observationResource, userGroups, customField,
 						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy, activityCount);
-				return data;
+						observationNearBy,dataTable, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
