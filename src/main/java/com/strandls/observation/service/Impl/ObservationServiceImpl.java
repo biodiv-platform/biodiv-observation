@@ -22,6 +22,7 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
@@ -195,10 +196,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private TaxonomyTreeServicesApi taxonomyTreeService;
-	
+
 	@Inject
 	private DataTableServiceApi dataTableService;
-
 
 	@Override
 	public ShowData findById(Long id) {
@@ -228,6 +228,7 @@ public class ObservationServiceImpl implements ObservationService {
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
 		DataTableWkt dataTable = null;
+		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
@@ -235,14 +236,14 @@ public class ObservationServiceImpl implements ObservationService {
 				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
-				if(observation.getDataTableId() != null) {
+				if (observation.getDataTableId() != null) {
 					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
-			
+
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -268,14 +269,20 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
+				if (!observation.getChecklistAnnotations().isEmpty()) {
+					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
+							new TypeReference<Map<String, Object>>() {
+							});
+				}
+
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
-				return new ShowData(observation, facts, observationResource, userGroups, customField,
-						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy,dataTable, activityCount);
+				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
+						observationNearBy, dataTable, checkListAnnotation, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
