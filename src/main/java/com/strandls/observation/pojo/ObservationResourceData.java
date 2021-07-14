@@ -115,4 +115,11 @@ public class ObservationResourceData {
 		this.languageId = languageId;
 	}
 
+	@Override
+	public String toString() {
+		return "ObservationResourceData [path=" + path + ", url=" + url + ", type=" + type + ", caption=" + caption
+				+ ", rating=" + rating + ", licenseId=" + licenseId + ", context=" + context + ", languageId="
+				+ languageId + "]";
+	}
+
 }
