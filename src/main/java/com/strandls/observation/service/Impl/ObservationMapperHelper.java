@@ -398,19 +398,12 @@ public class ObservationMapperHelper {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
-			System.out.println("size of resource data : " + resourceDataList.size());
 			for (ObservationResourceData rd : resourceDataList) {
-				System.out.println("resource data payload :" + rd.toString());
 
 				if (rd.getPath() != null && rd.getPath().trim().length() > 0) {
-					System.out.println("inside resource mapping :" + rd.getPath());
 					fileList.add(rd.getPath());
 				}
 
-			}
-
-			for (String s : fileList) {
-				System.out.println("File list sent to files module: " + s);
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
 			if (!fileList.isEmpty()) {
