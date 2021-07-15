@@ -54,6 +54,7 @@ import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.EsLocationListParams;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
@@ -332,9 +333,9 @@ public class ObservationController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
@@ -348,7 +349,7 @@ public class ObservationController {
 			@DefaultValue("") @QueryParam("speciesName") String speciesName,
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("months") String months,
-			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
+			@DefaultValue("") @QueryParam("isFlagged") String isFlagged,
 			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
 			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
@@ -366,7 +367,10 @@ public class ObservationController {
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
-			@QueryParam("publicationgrade") String publicationGrade, @Context UriInfo uriInfo) {
+			@ApiParam(name = "location") EsLocationListParams location,
+			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
+			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
+			@Context UriInfo uriInfo) {
 
 		try {
 
@@ -390,25 +394,8 @@ public class ObservationController {
 				bounds.setRight(right);
 				bounds.setTop(top);
 			}
-			List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
-			if (location != null) {
-				double[] point = Stream.of(location.split(",")).mapToDouble(Double::parseDouble).toArray();
-				for (int i = 0; i < point.length; i = i + 2) {
-					String singlePoint = point[i + 1] + "," + point[i];
-
-					int comma = singlePoint.indexOf(',');
-					if (comma != -1) {
-						MapGeoPoint geoPoint = new MapGeoPoint();
-						geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
-						geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
-						polygon.add(geoPoint);
-					}
-				}
-			}
-
 			MapBoundParams mapBoundsParams = new MapBoundParams();
 			mapBoundsParams.setBounds(bounds);
-			mapBoundsParams.setPolygon(polygon);
 
 			MapSearchParams mapSearchParams = new MapSearchParams();
 			mapSearchParams.setFrom(offset);
@@ -416,6 +403,17 @@ public class ObservationController {
 			mapSearchParams.setSortOn(sortOn);
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
+
+			String loc = location.getLocation();
+			if (loc != null) {
+				if (loc.contains("/")) {
+					String[] locationArray = loc.split("/");
+					List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
+					mapBoundsParams.setMultipolygon(multiPolygonPoint);
+				} else {
+					mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+				}
+			}
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -435,7 +433,7 @@ public class ObservationController {
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					aggregationResult, view);
+					geoShapeFilterField, aggregationResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

@@ -63,7 +63,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField, MapAggregationResponse aggregationResult, String view) {
+			String termsAggregationField, String geoShapeFilterField,MapAggregationResponse aggregationResult, String view) {
 
 		ObservationListData listData = null;
 
@@ -82,7 +82,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else {
 
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-						onlyFilteredAggregation, termsAggregationField, null, querys);
+						onlyFilteredAggregation, termsAggregationField,geoShapeFilterField, querys);
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
 

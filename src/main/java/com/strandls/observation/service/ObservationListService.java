@@ -23,7 +23,7 @@ public interface ObservationListService {
 
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField, MapAggregationResponse aggregationResult, String view);
+			String termsAggregationField,String geoShapeFilterField, MapAggregationResponse aggregationResult, String view);
 
 	public MapAggregationResponse mapAggregate(String index, String type, String sGroup, String taxon, String user,
 			String userGroupList, String webaddress, String speciesName, String mediaFilter, String months,

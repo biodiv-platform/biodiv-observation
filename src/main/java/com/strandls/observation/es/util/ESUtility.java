@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,7 @@ import com.strandls.esmodule.pojo.MapAndBoolQuery;
 import com.strandls.esmodule.pojo.MapAndMatchPhraseQuery;
 import com.strandls.esmodule.pojo.MapAndRangeQuery;
 import com.strandls.esmodule.pojo.MapExistQuery;
+import com.strandls.esmodule.pojo.MapGeoPoint;
 import com.strandls.esmodule.pojo.MapOrBoolQuery;
 import com.strandls.esmodule.pojo.MapOrMatchPhraseQuery;
 import com.strandls.esmodule.pojo.MapOrRangeQuery;
@@ -686,5 +688,29 @@ public class ESUtility {
 		mapSearchQuery.setSearchParams(searchParams);
 		mapSearchQuery.setOrBoolQueries(boolOrLists);
 		return mapSearchQuery;
+	}
+	
+	public List<MapGeoPoint> polygonGenerator(String locationArray) {
+		List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
+		double[] point = Stream.of(locationArray.split(",")).mapToDouble(Double::parseDouble).toArray();
+		for (int i = 0; i < point.length; i = i + 2) {
+			String singlePoint = point[i + 1] + "," + point[i];
+			int comma = singlePoint.indexOf(',');
+			if (comma != -1) {
+				MapGeoPoint geoPoint = new MapGeoPoint();
+				geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
+				geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
+				polygon.add(geoPoint);
+			}
+		}
+		return polygon;
+	}
+
+	public List<List<MapGeoPoint>> multiPolygonGenerator(String[] locationArray) {
+		List<List<MapGeoPoint>> mutlipolygon = new ArrayList<>();
+		for (int j = 0; j < locationArray.length; j++) {
+			mutlipolygon.add(polygonGenerator(locationArray[j]));
+		}
+		return mutlipolygon;
 	}
 }
