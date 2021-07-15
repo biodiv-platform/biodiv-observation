@@ -25,7 +25,7 @@ public enum ObservationIndex {
 	customFieldRangeMaxValue("custom_fields.custom_field.custom_field_values.max_range"), tags("tags.name.raw"),
 	resource("observation_resource.file_name.keyword"), maxVotedReco("max_voted_reco.id"),
 	authorVoted("all_reco_vote.authors_voted.id"),
-	recoId("all_reco_vote.recommendation_id"), publicationgrade("is_publication_grade");
+	recoId("all_reco_vote.recommendation_id"), publicationgrade("is_publication_grade"),dataSetName("dataset_title"),dataTableName("data_table_title");
 
 	private String field;
 

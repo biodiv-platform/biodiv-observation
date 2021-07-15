@@ -147,7 +147,7 @@ public class ESUtility {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String rank, String tahsil, String district, String state, String tags,
-			String publicationGrade,String authorVoted) {
+			String publicationGrade,String authorVoted, String dataSetName, String dataTableName) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -316,6 +316,7 @@ public class ESUtility {
 				}
 
 			}
+			
 
 //			user
 			List<Object> authorId = cSTSOT(user);
@@ -646,6 +647,21 @@ public class ESUtility {
 			if (!publicationGradeChoice.isEmpty()) {
 				boolAndLists
 						.add(assignBoolAndQuery(ObservationIndex.publicationgrade.getValue(), publicationGradeChoice));
+			}
+// 			dataset name 
+			List<Object> dataSetNameList = cSTSOT(dataSetName);
+			if (!dataSetNameList.isEmpty()) {
+				boolAndLists
+						.add(assignBoolAndQuery(ObservationIndex.dataSetName.getValue(), dataSetNameList));
+			}
+// 			datatable name
+			List<Object> dataTableNameList = cSTSOT(dataTableName);
+			if (!dataTableNameList.isEmpty()) {
+				dataTableNameList.forEach((item)->{
+					orMatchPhraseQueriesnew
+					.add(assignOrMatchPhrase(ObservationIndex.dataTableName.getValue(), item.toString()));
+				});
+				
 			}
 			/**
 			 * combine all the queries

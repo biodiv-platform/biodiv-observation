@@ -169,7 +169,7 @@ public class ObservationListCSVThread implements Runnable {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, null,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade,null);
+						tags, publicationGrade, null,null,null);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,

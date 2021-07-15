@@ -350,6 +350,8 @@ public class ObservationController {
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("months") String months,
 			@DefaultValue("") @QueryParam("isFlagged") String isFlagged,
+			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
+			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
 			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
 			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
@@ -418,7 +420,7 @@ public class ObservationController {
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted,dataSetName,dataTableName);
 
 			MapAggregationResponse aggregationResult = null;
 
@@ -427,7 +429,7 @@ public class ObservationController {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
-						tahsil, district, state, tags, publicationGrade, authorVoted);
+						tahsil, district, state, tags, publicationGrade, authorVoted,dataSetName,dataTableName);
 
 			}
 
