@@ -152,7 +152,11 @@ public class ObservationBulkMapperHelper {
 				if (observedAtCell != null) {
 					observedAtCell.setCellType(CellType.STRING);
 					observedAt = observedAtCell.getStringCellValue();
+				} else {
+					observedAt = dataTable.getGeographicalCoveragePlaceName();
 				}
+			} else {
+				observedAt = dataTable.getGeographicalCoveragePlaceName();
 			}
 
 			String locationScale = "APPROXIMATE";
@@ -532,7 +536,7 @@ public class ObservationBulkMapperHelper {
 		}
 	}
 
-	@SuppressWarnings({"deprecation","unchecked"})
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	private List<Resource> mapFileResponseToResource(Map<String, Integer> fieldMapping, Row dataRow,
 			List<License> licenses, Map<String, Object> fileResponse, Long userId) {
 		List<Resource> resources = new ArrayList<>();
