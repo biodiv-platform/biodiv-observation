@@ -215,7 +215,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			customFieldList = filterList.getCustomFields();
 		}
 
-		int totalLatch = 14 + traitList.size() + customFieldList.size();
+		int totalLatch = 15 + traitList.size() + customFieldList.size();
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
