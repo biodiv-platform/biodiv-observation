@@ -30,6 +30,8 @@ public class ConstructESDocument {
 
 	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
+	private String locationInfoLayer  = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
+	
 	public List<ObservationESDocument> getESDocumentStub(String observationId) {
 
 		String qry = "SELECT id observation_id, author_id, created_by, profile_pic, created_on, group_id, group_name, CONCAT(group_id,'|',group_name,'|',group_order) sgroup_filter, "
@@ -71,7 +73,7 @@ public class ConstructESDocument {
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
 				+ "LEFT OUTER JOIN "
-				+ "(SELECT longitude lon , latitude lat, location_information FROM lyr115_location_information) L ON L.lon = O.longitude  "
+				+ "(SELECT longitude lon , latitude lat, location_information FROM "+locationInfoLayer+") L ON L.lon = O.longitude  "
 				+ "AND L.lat = O.latitude " + " " + "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
