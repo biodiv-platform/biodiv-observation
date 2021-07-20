@@ -43,6 +43,7 @@ public class ObservationListPageMapper {
 	private Long noOfAudios;
 	private Long noOfVideos;
 	private String reprImageUrl;
+	private String placeName;
 
 	private UserIbp user;
 	private List<FactValuePair> factValuePair;
@@ -106,6 +107,13 @@ public class ObservationListPageMapper {
 	private void unpackReprImage(String reprImage) {
 		reprImageUrl = reprImage;
 	}
+	
+	@JsonProperty(value = "place_name")
+	private void unpackPlaceName(String place) {
+		placeName = place;
+	}
+	
+	
 
 //	---------USER IBP------------
 
@@ -452,12 +460,13 @@ public class ObservationListPageMapper {
 	 * @param userGroup
 	 * @param customField
 	 * @param tags
+	 * @param placeName
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, Date observedOn,
 			String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios,
 			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
-			List<CustomFieldObservationData> customField, List<Tags> tags) {
+			List<CustomFieldObservationData> customField, List<Tags> tags,String placeName) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -470,6 +479,7 @@ public class ObservationListPageMapper {
 		this.noOfAudios = noOfAudios;
 		this.noOfVideos = noOfVideos;
 		this.reprImageUrl = reprImageUrl;
+		this.placeName = placeName;
 		this.user = user;
 		this.factValuePair = factValuePair;
 		this.flagShow = flagShow;
@@ -621,6 +631,14 @@ public class ObservationListPageMapper {
 
 	public void setTags(List<Tags> tags) {
 		this.tags = tags;
+	}
+
+	public String getPlaceName() {
+		return placeName;
+	}
+
+	public void setPlaceName(String placeName) {
+		this.placeName = placeName;
 	}
 
 }

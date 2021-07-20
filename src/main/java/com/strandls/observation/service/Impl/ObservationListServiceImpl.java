@@ -507,7 +507,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse
 				.setGroupTaxonIDExists(mapAggResponse.get("max_voted_reco.taxonstatus").getGroupAggregation());
 
-		aggregationResponse.setGeoEnity(
+		aggregationResponse.setGeoEntity(
 				mapAggResponse.get("location_information.name.raw").getGroupAggregation());
 //		record traits aggregation
 		for (Traits traits : traitList) {

@@ -19,7 +19,7 @@ public class MapAggregationResponse {
 	private Map<String, Map<String, Long>> groupTraits;
 	private Map<String, Long> groupState;
 	private Map<String, Long> groupRank;
-	private Map<String, Long> geoEnity;
+	private Map<String, Long> geoEntity;
 	private Map<String, Map<String, Long>> groupCustomField;
 
 	public Map<String, Long> getGroupSpeciesName() {
@@ -150,12 +150,13 @@ public class MapAggregationResponse {
 		this.groupCustomField = groupCustomField;
 	}
 
-	public Map<String, Long> getGeoEnity() {
-		return geoEnity;
+	public Map<String, Long> getGeoEntity() {
+		return geoEntity;
 	}
 
-	public void setGeoEnity(Map<String, Long> geoEnity) {
-		this.geoEnity = geoEnity;
+	public void setGeoEntity(Map<String, Long> geoEntity) {
+		this.geoEntity = geoEntity;
 	}
+
 
 }
