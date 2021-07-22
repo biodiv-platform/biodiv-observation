@@ -917,7 +917,7 @@ public class ObservationServiceImpl implements ObservationService {
 			throws ApiException {
 
 		Long observationId = observation.getId();
-		MailData mailData = hasMail ? generateMailData(observationId) : null;
+		MailData mailData = Boolean.TRUE.equals(hasMail) ? generateMailData(observationId) : null;
 
 		observation.setIsDeleted(true);
 		MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
@@ -930,7 +930,7 @@ public class ObservationServiceImpl implements ObservationService {
 			return true;
 		}
 
-		return null;
+		return false;
 	}
 
 	@Override

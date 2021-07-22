@@ -233,7 +233,7 @@ public class ObservationBulkMapperHelper {
 				});
 
 				try {
-					checklistString = om.writeValueAsString(checklistMap).toString();
+					checklistString = om.writeValueAsString(checklistMap);
 				} catch (JsonProcessingException e) {
 					logger.error(e.getMessage());
 				}

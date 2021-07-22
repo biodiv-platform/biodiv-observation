@@ -44,8 +44,8 @@ import com.strandls.user.controller.UserServiceApi;
  *
  */
 public class ObservationUtilityFunctions {
-	
-	@Inject 
+
+	@Inject
 	private TokenGenerator tokenGenerator;
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationUtilityFunctions.class);
@@ -65,7 +65,9 @@ public class ObservationUtilityFunctions {
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
-			file.createNewFile();
+			if (file.createNewFile()) {
+				throw new IOException("Unable to create file");
+			}
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
@@ -228,7 +230,8 @@ public class ObservationUtilityFunctions {
 			Map<String, String> myImageUpload, Long userId) {
 		Observation observation = null;
 		String resourceAuthHeader = requestAuthHeader;
-		Boolean isVerified = observationData.getIsVerified() ? observationData.getIsVerified() : false;
+		Boolean isVerified = Boolean.TRUE.equals(observationData.getIsVerified()) ? observationData.getIsVerified()
+				: false;
 		try {
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();

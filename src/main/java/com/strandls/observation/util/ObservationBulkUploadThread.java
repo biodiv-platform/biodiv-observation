@@ -140,7 +140,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				dataTable.setUfileId(uFileId);
 				dataTableService.updateDataTable(dataTable);	
 			}catch(Exception e) {
-				
+				logger.error(e.getMessage());
 			}
 
 
@@ -182,7 +182,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			throw new Exception("Sheet Filename nout found");
+			throw new NullPointerException("Sheet Filename nout found");
 		}
 	}
 

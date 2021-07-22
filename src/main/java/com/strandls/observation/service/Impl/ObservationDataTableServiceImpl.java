@@ -126,7 +126,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		try {
 
 			if (observationBulkData.getFilename() == null || observationBulkData.getFilename().length() <= 0) {
-				throw new Exception("Sheet Filename nout found");
+				throw new NullPointerException("Sheet Filename nout found");
 			}
 
 			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
@@ -134,33 +134,35 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					+ observationBulkData.getFilename();
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
-			
+
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
 
 			if (dataTable == null) {
-				throw new Exception("Unable to create DataTable, Unresolved Constrain");
+				throw new NullPointerException("Unable to create DataTable, Unresolved Constrain");
 			}
-			XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory));
-			List<TraitsValuePair> traitsList = traitService.getAllTraits();
-			List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
-			List<License> licenseList = licenseControllerApi.getAllLicenses();
+			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 
-			FilesDTO filesDto = new FilesDTO();
-			filesDto.setFolder("observations");
-			filesDto.setModule("observation");
-			Map<String, String> myImageUpload = headers
-					.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
-					.getAllFilePathsByUser(filesDto).entrySet().stream()
-					.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+				List<TraitsValuePair> traitsList = traitService.getAllTraits();
+				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
+				List<License> licenseList = licenseControllerApi.getAllLicenses();
 
-			ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
-					observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
-					observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook,
-					myImageUpload, resourceService, fileUploadApi, dataTableService, headers);
-			Thread thread = new Thread(uploadThread);
-			thread.start();
+				FilesDTO filesDto = new FilesDTO();
+				filesDto.setFolder("observations");
+				filesDto.setModule("observation");
+				Map<String, String> myImageUpload = headers
+						.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
+						.getAllFilePathsByUser(filesDto).entrySet().stream()
+						.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+
+				ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
+						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
+						observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook,
+						myImageUpload, resourceService, fileUploadApi, dataTableService, headers);
+				Thread thread = new Thread(uploadThread);
+				thread.start();
+			}
 			return dataTable.getId();
 
 		} catch (Exception ex) {
@@ -300,7 +302,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
-		return null;
+		return showDataList;
 	}
 
 	@Override
@@ -309,10 +311,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		List<Long> list = new ArrayList<Long>();
 		list.add(dataTableId);
 		try {
-			dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			dataTableService = headers.addDataTableHeaders(dataTableService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
 			dataTableService.deleteDataTable(dataTableId.toString());
 			observList = observationDao.fetchByDataTableId(list, null, 0);
-			if (observList != null && observList.size() > 0) {
+			if (observList != null && !observList.isEmpty()) {
 				ObservationDeleteThread deleteThread = new ObservationDeleteThread(observList, observationImpl,
 						request);
 				Thread thread = new Thread(deleteThread);
