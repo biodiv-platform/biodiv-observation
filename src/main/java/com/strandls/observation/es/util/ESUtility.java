@@ -731,8 +731,8 @@ public class ESUtility {
 
 	public List<List<MapGeoPoint>> multiPolygonGenerator(String[] locationArray) {
 		List<List<MapGeoPoint>> mutlipolygon = new ArrayList<>();
-		for (int j = 0; j < locationArray.length; j++) {
-			mutlipolygon.add(polygonGenerator(locationArray[j]));
+		for(String geoPoint:locationArray) {
+			mutlipolygon.add(polygonGenerator(geoPoint));
 		}
 		return mutlipolygon;
 	}
