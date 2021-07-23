@@ -19,12 +19,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.esmodule.pojo.MapDocument;
@@ -69,6 +71,7 @@ public class GbifObservationThread implements Runnable {
 	Long timehierarchy = 0L;
 	Long timeMapper = 0L;
 	Long timeSerialisation = 0L;
+	Long timeRecoAndtaxonId = 0L;
 	// a++;
 
 	public GbifObservationThread(UtilityServiceApi utilityService, EsServicesApi esService, RecommendationDao recoDao,
@@ -93,7 +96,7 @@ public class GbifObservationThread implements Runnable {
 			String filename = threadNum + ".txt";
 			FileWriter fw = new FileWriter(filename);
 
-			Long timeRecoAndtaxonId = 0L;
+			// Long timeRecoAndtaxonId = 0L;
 			Long timeLocationInfo = 0l;
 
 			String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
@@ -122,8 +125,6 @@ public class GbifObservationThread implements Runnable {
 			 * CSVParserBuilder().withSeparator('\t').build()).build();
 			 */
 
-			ObjectMapper jsonReadMapper = new ObjectMapper();
-
 			/*
 			 * @SuppressWarnings("unchecked") Map<String, Object> jsonFileMap =
 			 * jsonReadMapper.readValue(new File("/home/prakhar/Desktop/metaData.json"),
@@ -137,6 +138,15 @@ public class GbifObservationThread implements Runnable {
 			/*
 			 * for (int j = 0; j < row.length; j++) { headerIndex.put(row[j], j); }
 			 */
+			FileWriter outputfile = new FileWriter("/home/prakhar/scientific_names/new_query_results.csv",true);
+			CSVWriter writer = new CSVWriter(outputfile);
+
+			String[] outputFileHeaders = { "gbifScientificName", "parsedCanonicalName", "matchedScientificName",
+					"matchedCanonicalName", "taxonId", "recoId" };
+
+			writer.writeNext(outputFileHeaders);
+
+			List<String> scientificNames = new ArrayList<>();
 			List<ExternalObservationESDocument> observations = new ArrayList<>();
 			// int ctr = startRow;
 			String[] row;
@@ -178,6 +188,9 @@ public class GbifObservationThread implements Runnable {
 						lastModified = null;
 					}
 
+					String gbifScientificName = row[headerIndex.get("scientificName")];
+					scientificNames.add(gbifScientificName);
+
 					String month = row[headerIndex.get("month")];
 					String monthName = getMonthName(month);
 					Double lat = null;
@@ -197,109 +210,6 @@ public class GbifObservationThread implements Runnable {
 
 					if (placeName.equals("")) {
 						placeName = null;
-					}
-
-					String gbifScientificName = row[headerIndex.get("scientificName")];
-
-					RecoData recoData = new RecoData();
-					recoData.setTaxonScientificName(gbifScientificName);
-
-					// ------------time to complete reco and taxon id------------------
-
-					StopWatch watch = new StopWatch();
-					watch.start();
-
-					Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData);
-					//Map<String, Object> recoAndTaxonId =new HashMap<>();
-					watch.stop();
-
-					Long time1 = watch.getTime();
-					timeRecoAndtaxonId = timeRecoAndtaxonId + time1;
-					// ---------------------------------------------------------------------
-
-					Long recoId = null;
-					Long taxonId = null;
-					if (recoAndTaxonId.get("recoId") != null) {
-						recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
-					}
-
-					String scientificName = gbifScientificName;
-					if (recoAndTaxonId.get("taxonId") != null) {
-						taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
-
-					}
-
-					ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
-					if (taxonId != null) {
-						scientificName = taxonDetails.getName();
-					} /*
-						 * else if (recoId != null) { Recommendation reco = recoDao.findById(recoId);
-						 * scientificName = reco.getName(); }
-						 */
-
-					Long rank = null;
-					Long speciesId = null;
-					String taxonStatus = null;
-
-					Long acceptedNameIds = null;
-					String italicisedForm = null;
-					String position = null;
-					String cannonicalName = null;
-					String name = null;
-					Long groupId = null;
-					String groupName = null;
-					List<Map<String, String>> hierarchy = new ArrayList<>();
-
-					if (taxonId != null) {
-						rank = Long.parseLong(taxonDetails.getRank().toString());
-
-						if (taxonDetails.getAcceptedIds() != null) {
-							acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
-						} else {
-							acceptedNameIds = taxonId;
-						}
-
-						if (taxonDetails.getItalicisedForm() != null) {
-							italicisedForm = taxonDetails.getItalicisedForm().toString();
-						}
-
-						if (taxonDetails.getPosition() != null) {
-							position = taxonDetails.getPosition().toString();
-						}
-
-						if (taxonDetails.getCanonicalForm() != null) {
-							cannonicalName = taxonDetails.getCanonicalForm();
-						}
-
-						if (taxonDetails.getGroupId() != null) {
-							groupId = (long) Math.round(taxonDetails.getGroupId());
-						}
-
-						if (taxonDetails.getGroupName() != null) {
-							groupName = taxonDetails.getGroupName().toString();
-						}
-
-						if (taxonDetails.getPath() != null) {
-							List<String> taxonPath = Arrays.asList(taxonDetails.getPath().toString().split("_"));
-
-							StopWatch watchth = new StopWatch();
-							watchth.start();
-							hierarchy = getHierarchy(taxonPath);
-							watchth.stop();
-							timehierarchy = timehierarchy + watchth.getTime();
-						}
-
-						if (taxonDetails.getName() != null) {
-							name = taxonDetails.getName().toString();
-						}
-
-						if (taxonDetails.getStatus() != null) {
-							taxonStatus = taxonDetails.getStatus().toString();
-						}
-
-						if (taxonDetails.getSpeciesId() != null) {
-							speciesId = Long.parseLong(taxonDetails.getSpeciesId().toString());
-						}
 					}
 
 					// ----------time to fetch location info--------------------------
@@ -349,19 +259,22 @@ public class GbifObservationThread implements Runnable {
 					watchMapper.start();
 
 					ExternalObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName,
-							recoId, taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
-							acceptedNameIds, italicisedForm, position, Long.parseLong(gbifId), lastModified, name,
-							state, district, tahsil, groupId, groupName, externalOriginalReferenceLink,
+							null, null, null, null, null, null, null, null, null, null, null, Long.parseLong(gbifId),
+							lastModified, null, state, district, tahsil, null, null, externalOriginalReferenceLink,
 							externalGbifReferenceLink, null, annotations, dataSourcePrefix);
 					watchMapper.stop();
 					timeMapper = timeMapper + watchMapper.getTime();
 
 					// ------------------------------------------------------------------------------------------------------
-					
-					observations.add(obj);obj.getAll_reco_vote();
+
+					observations.add(obj);
+					obj.getAll_reco_vote();
 					ObjectMapper objectMapper = new ObjectMapper();
 
 					if (observations.size() >= 100) {
+						List<ParsedName> parsedNames = getParsedNames(scientificNames);
+						processRecoAndTaxonDetails(parsedNames, observations, writer);
+
 						/*
 						 * List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
 						 * 
@@ -391,6 +304,8 @@ public class GbifObservationThread implements Runnable {
 						 * batchEsJson, esService); Thread t1 = new Thread(esPushThread); t1.start();
 						 */
 						observations.clear();
+						scientificNames.clear();
+
 					}
 
 				}
@@ -399,6 +314,8 @@ public class GbifObservationThread implements Runnable {
 
 			ObjectMapper objectMapper = new ObjectMapper();
 			if (!observations.isEmpty()) {
+				List<ParsedName> parsedNames = getParsedNames(scientificNames);
+				processRecoAndTaxonDetails(parsedNames, observations, writer);
 				/*
 				 * List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
 				 * 
@@ -444,6 +361,184 @@ public class GbifObservationThread implements Runnable {
 		}
 	}
 
+	private void processRecoAndTaxonDetails(List<ParsedName> parsedNames,
+			List<ExternalObservationESDocument> observations, CSVWriter writer) {
+
+		try {
+
+			for (int i = 0; i < observations.size(); i++) {
+				String gbifScientificName = parsedNames.get(i).getVerbatim();
+				RecoData recoData = new RecoData();
+				recoData.setTaxonScientificName(gbifScientificName);
+
+				StopWatch watchRecoAndTaxon = new StopWatch();
+				watchRecoAndTaxon.start();
+
+				// only for file
+				String parsedCanonicalName = parsedNames.get(i).getCanonicalName().getSimple();
+				Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData,
+						parsedNames.get(i).getCanonicalName().getSimple());
+				// Map<String, Object> recoAndTaxonId = new HashMap<>();
+				watchRecoAndTaxon.stop();
+				timeRecoAndtaxonId = timeRecoAndtaxonId + watchRecoAndTaxon.getTime();
+
+				Long recoId = null;
+				Long taxonId = null;
+				if (recoAndTaxonId.get("recoId") != null) {
+					recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
+				}
+
+				String scientificName = gbifScientificName;
+				if (recoAndTaxonId.get("taxonId") != null) {
+					taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+
+				}
+				String matchedScientificName = null;
+				ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
+				if (taxonId != null) {
+					scientificName = taxonDetails.getName();
+					matchedScientificName = taxonDetails.getName();
+				} /*
+					 * else if (recoId != null) { Recommendation reco = recoDao.findById(recoId);
+					 * scientificName = reco.getName(); }
+					 */
+
+				Long rank = null;
+				Long speciesId = null;
+				String taxonStatus = null;
+
+				Long acceptedNameIds = null;
+				String italicisedForm = null;
+				String position = null;
+				String cannonicalName = null;
+				String name = null;
+				Long groupId = null;
+				String groupName = null;
+				List<Map<String, String>> hierarchy = new ArrayList<>();
+
+				if (taxonId != null) {
+					// rank = Long.parseLong(taxonDetails.getRank().toString());
+					rank = Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
+					if (taxonDetails.getAcceptedIds() != null) {
+						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
+					} else {
+						acceptedNameIds = taxonId;
+					}
+
+					if (taxonDetails.getItalicisedForm() != null) {
+						italicisedForm = taxonDetails.getItalicisedForm().toString();
+					}
+
+					if (taxonDetails.getPosition() != null) {
+						position = taxonDetails.getPosition().toString();
+					}
+
+					if (taxonDetails.getCanonicalForm() != null) {
+						cannonicalName = taxonDetails.getCanonicalForm();
+					}
+
+					if (taxonDetails.getGroupId() != null) {
+						groupId = (long) Math.round(taxonDetails.getGroupId());
+					}
+
+					if (taxonDetails.getGroupName() != null) {
+						groupName = taxonDetails.getGroupName().toString();
+					}
+
+					if (taxonDetails.getPath() != null) {
+						List<String> taxonPath = Arrays.asList(taxonDetails.getPath().toString().split("_"));
+
+						StopWatch watchth = new StopWatch();
+						watchth.start();
+						// hierarchy = getHierarchy(taxonPath);
+						// hierarchy=getHierarchy2(taxonDetails.getHierarchy().toString());
+						hierarchy = taxonDetails.getHierarchy();
+						System.out.println(hierarchy);
+						watchth.stop();
+						timehierarchy = timehierarchy + watchth.getTime();
+					}
+
+					if (taxonDetails.getName() != null) {
+						name = taxonDetails.getName().toString();
+					}
+
+					if (taxonDetails.getStatus() != null) {
+						taxonStatus = taxonDetails.getStatus().toString();
+					}
+
+					if (taxonDetails.getSpeciesId() != null) {
+						speciesId = Long.parseLong(taxonDetails.getSpeciesId().toString());
+					}
+				}
+
+				StopWatch watchMapperOutside = new StopWatch();
+				watchMapperOutside.start();
+				ExternalObservationESDocument tempObj = gbifMapper.mapToESDocument(null, null, null, null, null, recoId,
+						taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
+						acceptedNameIds, italicisedForm, position, null, null, name, null, null, null, groupId,
+						groupName, null, null, null, null, null);
+				watchMapperOutside.stop();
+				timeMapper = timeMapper + watchMapperOutside.getTime();
+
+				observations.get(i).setAll_reco_vote(tempObj.getAll_reco_vote());
+				observations.get(i).setMax_voted_reco(tempObj.getMax_voted_reco());
+				observations.get(i).setGroup_id(tempObj.getGroup_id());
+				observations.get(i).setGroup_name(tempObj.getGroup_name());
+
+				String tid = null;
+				String rid = null;
+
+				if (taxonId != null) {
+					tid = taxonId.toString();
+				}
+				if (recoId != null) {
+					rid = recoId.toString();
+				}
+
+				String[] scientificNameRow = { gbifScientificName, parsedCanonicalName, matchedScientificName,
+						cannonicalName, tid, rid };
+				writer.writeNext(scientificNameRow);
+
+			}
+			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private Integer getRankNumberFromName(String rankName) {
+		if (rankName.equals("kingdom")) {
+			return 0;
+		} else if (rankName.equals("phylum")) {
+			return 1;
+		} else if (rankName.equals("class")) {
+			return 2;
+		} else if (rankName.equals("order")) {
+			return 3;
+		} else if (rankName.equals("superfamily")) {
+			return 4;
+		} else if (rankName.equals("family")) {
+			return 5;
+		} else if (rankName.equals("subfamily")) {
+			return 6;
+		} else if (rankName.equals("genus")) {
+			return 7;
+		} else if (rankName.equals("subgenus")) {
+			return 8;
+		} else if (rankName.equals("species")) {
+			return 9;
+		} else if (rankName.equals("infraspecies")) {
+			return 10;
+		} else if (rankName.equals("root")) {
+			return 100;
+
+		} else {
+			return 999;
+		}
+	}
+
 	private String getMonthName(String month) {
 		int monthNumber = Integer.parseInt(month);
 		String monthName = null;
@@ -451,23 +546,24 @@ public class GbifObservationThread implements Runnable {
 		return monthName;
 	}
 
-	private Map<String, Object> getRecoAndTaxonId(RecoData recoData) throws Exception {
+	private Map<String, Object> getRecoAndTaxonId(RecoData recoData, String parsedCannonicalName) throws Exception {
 		Map<String, Object> result = new HashMap<String, Object>();
 		try {
 			String providedSciName = recoData.getTaxonScientificName();
 			// ------------------------time for name
 			// parsing-----------------------------------------
-			StopWatch watchName = new StopWatch();
-			watchName.start();
-			ParsedName parsedName = utilityService.getNameParsed(providedSciName);
-			watchName.stop();
-			timeNameParser = timeNameParser + watchName.getTime();
+			// StopWatch watchName = new StopWatch();
+			// watchName.start();
+			// ParsedName parsedName = utilityService.getNameParsed(providedSciName);
+			// watchName.stop();
+			// timeNameParser = timeNameParser + watchName.getTime();
 			// ----------------------------------------------------------------------------------------
-			if (parsedName.getCanonicalName() == null)
-				throw new ObservationInputException("Scientific Name Cannot start with Small letter");
+			// if (parsedName.getCanonicalName() == null)
+			// throw new ObservationInputException("Scientific Name Cannot start with Small
+			// letter");
 
-			String canonicalName = parsedName.getCanonicalName().getSimple();
-
+			// String canonicalName = parsedName.getCanonicalName().getSimple();
+			String canonicalName = parsedCannonicalName;
 			// ----------------------time for exact match search-----------------------
 			StopWatch watchExactMatch = new StopWatch();
 			watchExactMatch.start();
@@ -512,58 +608,40 @@ public class GbifObservationThread implements Runnable {
 		return result;
 	}
 
+	/*
+	 * @SuppressWarnings("unchecked") private List<Map<String, String>>
+	 * getHierarchy(List<String> taxonIds) { List<Map<String, String>> hierarchy =
+	 * new ArrayList<>();
+	 * 
+	 * try {
+	 * 
+	 * List<MapDocument> taxonDocs = esService.fetchInBulk(null, null, taxonIds);
+	 * for (MapDocument mapDoc : taxonDocs) { Map<String, Object> a = (Map<String,
+	 * Object>) mapDoc.getDocument(); String taxonId = a.get("id").toString();
+	 * String normaliseName = a.get("name").toString(); String rank =
+	 * a.get("rank").toString();
+	 * 
+	 * Map<String, String> node = new HashMap<>(); node.put("taxon_id", taxonId);
+	 * node.put("normalised_name", normaliseName); node.put("rank", rank);
+	 * hierarchy.add(node); }
+	 * 
+	 * return hierarchy;
+	 * 
+	 * } catch (Exception e) { e.printStackTrace(); } return null; }
+	 */
 	@SuppressWarnings("unchecked")
-	private List<Map<String, String>> getHierarchy(List<String> taxonIds) {
-		// ObjectMapper obj=new ObjectMapper();
-		List<Map<String, String>> hierarchy = new ArrayList<>();
-		// MapDocument taxonDoc;
+	private List<Map<String, String>> getHierarchy2(String h) {
+		ObjectMapper o = new ObjectMapper();
+		List<Map<String, String>> ans;
 		try {
-			List<MapDocument> taxonDocs = esService.bulkFetch("extended_taxon_definition", "_doc", taxonIds);
-			for (MapDocument mapDoc : taxonDocs) {
-				Map<String, Object> a = (Map<String, Object>) mapDoc.getDocument();
-				String taxonId = a.get("id").toString();
-				String normaliseName = a.get("name").toString();
-				String rank = a.get("rank").toString();
-
-				Map<String, String> node = new HashMap<>();
-				node.put("taxon_id", taxonId);
-				node.put("normalised_name", normaliseName);
-				node.put("rank", rank);
-				hierarchy.add(node);
-			}
-
-			return hierarchy;
-
-			/*
-			 * List<Map<String, String>> hierarchy = new ArrayList<>();
-			 * 
-			 * List<BreadCrumb> breadcrumb =
-			 * taxonomyService.getTaxonomyBreadCrumb(taxonIds.toString());
-			 * 
-			 * for (BreadCrumb b : breadcrumb) { Map<String, String> node = new HashMap<>();
-			 * node.put("taxon_id", b.getId().toString()); node.put("normalised_name",
-			 * b.getName()); node.put("rank", b.getRank().toString()); hierarchy.add(node);
-			 * 
-			 * }
-			 * 
-			 * return hierarchy;
-			 */
-
-			/*
-			 * for (String id : taxonIds) { taxonDoc =
-			 * esService.fetch("extended_taxon_definition", "_doc", id);
-			 * 
-			 * @SuppressWarnings("unchecked") Map<String, Object> taxonResponse = new
-			 * ObjectMapper().readValue(taxonDoc.getDocument().toString(), HashMap.class);
-			 * String taxonId = taxonResponse.get("id").toString(); String normalisedName =
-			 * taxonResponse.get("name").toString(); String rank =
-			 * taxonResponse.get("rank").toString(); Map<String, String> node = new
-			 * HashMap<>(); node.put("taxon_id", taxonId); node.put("normalised_name",
-			 * normalisedName); node.put("rank", rank); hierarchy.add(node); } return
-			 * hierarchy;
-			 */
-
-		} catch (Exception e) {
+			ans = Arrays.asList(o.readValue(h, Map.class));
+			System.out.println("ans=" + ans);
+			return ans;
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -599,10 +677,14 @@ public class GbifObservationThread implements Runnable {
 		}
 		return null;
 	}
-	
-	private List<ParsedName>getParsedNames(List<String>scientificNames) {
+
+	private List<ParsedName> getParsedNames(List<String> scientificNames) {
 		try {
-			List<ParsedName> ans=utilityService.getNamesParsed(scientificNames);
+			StopWatch watchName = new StopWatch();
+			watchName.start();
+			List<ParsedName> ans = utilityService.getNamesParsed(scientificNames);
+			watchName.stop();
+			timeNameParser = timeNameParser + watchName.getTime();
 			return ans;
 		} catch (ApiException e) {
 			// TODO Auto-generated catch block

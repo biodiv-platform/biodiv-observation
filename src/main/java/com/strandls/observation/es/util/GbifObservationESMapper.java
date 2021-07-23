@@ -16,12 +16,13 @@ public class GbifObservationESMapper {
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long observationId, Date dateIdentified, String name, String state,
 			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
-			String externalGbifReferenceLink, ObservationLocationInfo layerInfo, String annotations,String dataSourcePrefix) {
+			String externalGbifReferenceLink, ObservationLocationInfo layerInfo, String annotations,
+			String dataSourcePrefix) {
 
 		ExternalObservationESDocument gbifObs = new ExternalObservationESDocument();
 		Clock clock = Clock.systemUTC();
 		Date createdOnDate = Date.from(clock.instant());
-		String uniqueId=dataSourcePrefix+"-"+observationId;
+		String uniqueId = dataSourcePrefix + "-" + observationId;
 
 		gbifObs.setFrom_date(date);
 		gbifObs.setCreated_on(createdOnDate);
@@ -42,7 +43,6 @@ public class GbifObservationESMapper {
 		gbifObs.setAnnotations(annotations);
 //		gbifObs.setUnique_id_prefix("gbif");
 		gbifObs.setId(uniqueId);
-	
 
 		Max_voted_reco maxVotedReco = new Max_voted_reco();
 		mapMaxvotedreco(maxVotedReco, recoId, taxonId, rank, speciesid, taxonStatus, hierarchy, scientificName);
@@ -61,13 +61,12 @@ public class GbifObservationESMapper {
 		allRecoVote.add(reco);
 		gbifObs.setAll_reco_vote(allRecoVote);
 
-		/*
-		 * LocationInformation locationInfo = new LocationInformation();
-		 * locationInfo.setState(state); locationInfo.setDistrict(district);
-		 * locationInfo.setTahsil(tahsil);
-		 * 
-		 * gbifObs.setLocation_information(locationInfo);
-		 */
+		LocationInformation locationInfo = new LocationInformation();
+		locationInfo.setState(state);
+		locationInfo.setDistrict(district);
+		locationInfo.setTahsil(tahsil);
+
+		gbifObs.setLocation_information(locationInfo);
 
 		gbifObs.setGroup_id(groupId);
 		gbifObs.setGroup_name(groupName);
@@ -116,11 +115,14 @@ public class GbifObservationESMapper {
 		List<Hierarchy> list = new ArrayList<>();
 		if (hierarchy != null) {
 			for (Map<String, String> node : hierarchy) {
-				Hierarchy h = new Hierarchy();
-				h.setNormalized_name(node.get("normalised_name"));
-				h.setRank(Long.parseLong(node.get("rank")));
-				h.setTaxon_id(Long.parseLong(node.get("taxon_id").toString()));
-				list.add(h);
+				if (!node.get("taxon_rank").equals("root")) {
+					Hierarchy h = new Hierarchy();
+					h.setNormalized_name(node.get("taxon_name"));
+					h.setRank(Long.parseLong(getRankNumberFromName(node.get("taxon_rank")).toString()));
+					h.setTaxon_id(Long.parseLong(node.get("taxon_id").toString()));
+					list.add(h);
+				}
+
 			}
 		}
 
@@ -159,6 +161,37 @@ public class GbifObservationESMapper {
 			return null;
 		}
 
+	}
+
+	private Integer getRankNumberFromName(String rankName) {
+		if (rankName.equals("kingdom")) {
+			return 0;
+		} else if (rankName.equals("phylum")) {
+			return 1;
+		} else if (rankName.equals("class")) {
+			return 2;
+		} else if (rankName.equals("order")) {
+			return 3;
+		} else if (rankName.equals("superfamily")) {
+			return 4;
+		} else if (rankName.equals("family")) {
+			return 5;
+		} else if (rankName.equals("subfamily")) {
+			return 6;
+		} else if (rankName.equals("genus")) {
+			return 7;
+		} else if (rankName.equals("subgenus")) {
+			return 8;
+		} else if (rankName.equals("species")) {
+			return 9;
+		} else if (rankName.equals("infraspecies")) {
+			return 10;
+		} else if (rankName.equals("root")) {
+			return 100;
+
+		} else {
+			return 999;
+		}
 	}
 
 }

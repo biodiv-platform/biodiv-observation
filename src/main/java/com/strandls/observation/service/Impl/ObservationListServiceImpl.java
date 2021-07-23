@@ -99,7 +99,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			else {
 
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-						onlyFilteredAggregation, termsAggregationField, null, querys);
+						onlyFilteredAggregation, termsAggregationField, querys);
 				List<MapDocument> documents = result.getDocuments();
 				totalCount = result.getTotalDocuments();
 
@@ -890,7 +890,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			for (String s : resourceUrls.split(",")) {
 				MapSearchQuery query = esUtility.getSearchQueryResource(s);
 				MapResponse result = esService.search(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), null, null, null, null, null, query);
+						ObservationIndex.type.getValue(), null, null, null, null, query);
 				List<MapDocument> documents = result.getDocuments();
 				MapDocument document = documents.get(0);
 				try {
@@ -933,7 +933,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		try {
 			List<ObservationListElasticMapping> observationList = new ArrayList<ObservationListElasticMapping>();
 			MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-					onlyFilteredAggregation, termsAggregationField, null, querys);
+					onlyFilteredAggregation, termsAggregationField, querys);
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {

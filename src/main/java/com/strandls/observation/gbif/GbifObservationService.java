@@ -97,7 +97,7 @@ public class GbifObservationService {
 
 			ExecutorService executor = Executors.newFixedThreadPool(5);
 
-			int numThreads = 5;
+			int numThreads = 1;
 
 			int batchSize = (numRows / numThreads);
 			int s = 1;

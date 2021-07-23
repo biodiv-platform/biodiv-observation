@@ -250,7 +250,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(),true);
+							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -322,7 +322,7 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationLocationInfo layerInfo = null;
 		String externalGbifReferencelink = null;
 		String externalOriginalReferenceLink = null;
-		String annotations=null;
+		String annotations = null;
 
 		obsId = Long.valueOf(observationResponse.get("observation_id").toString());
 
@@ -395,7 +395,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			try {
 				esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), maxVotedRecoId.toString(),true);
+						ObservationIndex.type.getValue(), maxVotedRecoId.toString());
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}
@@ -440,8 +440,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 		externalGbifReferencelink = observationResponse.get("external_gbif_reference_link").toString();
 		externalOriginalReferenceLink = observationResponse.get("external_original_reference_link").toString();
-		
-		annotations=observationResponse.get("annotations").toString();
+
+		annotations = observationResponse.get("annotations").toString();
 
 		observation.setId(obsId);
 		observation.setCreatedOn(createdOn);
