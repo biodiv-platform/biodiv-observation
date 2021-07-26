@@ -13,13 +13,16 @@ import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
+import com.strandls.observation.util.JsonDateSerializer;
 
 /**
  * @author Abhishek Rudra
@@ -72,9 +75,9 @@ import com.vladmihalcea.hibernate.type.json.JsonStringType;
 @TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class) })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationESDocument {
-
 	@Id
-	private Long observation_id;
+	private Long observation_id;// add id, not add directly,add through property,transient add,transient
+								// property
 	private Long author_id;
 	private String created_by;
 	private String profile_pic;
@@ -294,6 +297,7 @@ public class ObservationESDocument {
 		this.profile_pic = profile_pic;
 	}
 
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getCreated_on() {
 		return created_on;
 	}
@@ -358,6 +362,7 @@ public class ObservationESDocument {
 		this.notes = notes;
 	}
 
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getFrom_date() {
 		return from_date;
 	}
@@ -643,7 +648,6 @@ public class ObservationESDocument {
 }
 
 //========Location========
-
 class Location {
 	private Double lat;
 	private Double lon;
@@ -1505,6 +1509,7 @@ class All_reco_vote {
 		this.authors_voted = authors_voted;
 	}
 
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getLast_modified() {
 		return last_modified;
 	}

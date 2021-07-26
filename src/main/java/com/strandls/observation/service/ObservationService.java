@@ -16,6 +16,7 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ExternalShowData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -54,7 +55,9 @@ public interface ObservationService {
 	public ShowData findById(Long id);
 
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
-
+	
+	public ExternalShowData externalObsfindById(String id);
+	
 	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) throws Exception;
 
 	public ShowData editObservaitonCore(HttpServletRequest request, CommonProfile profile, Long observationId,

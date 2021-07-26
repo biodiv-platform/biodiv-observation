@@ -48,14 +48,18 @@ import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationESDocument;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
+import com.strandls.observation.gbif.GbifObservationService;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ExternalShowData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
+import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -130,12 +134,43 @@ public class ObservationController {
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private GbifObservationService gbifService;
+
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong Observation";
+	}
+
+	@GET
+	@ApiOperation(value = "external show page data ", notes = "external show page data", response = ExternalShowData.class)
+	@Path("/show/external/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response externalShowData(@PathParam("id") String id) {
+
+		ExternalShowData data=observationService.externalObsfindById(id);
+
+		if (data != null)
+			return Response.status(Status.OK).entity(data).build();
+		else
+			return Response.status(Status.NOT_FOUND).build();
+	}
+
+	@POST
+	@Path(ApiConstants.INGESTGBIFDATA)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Ingest gbif data into elastic search", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 404, message = "Observation not found", response = String.class),
+			@ApiResponse(code = 400, message = "Invalid ID", response = String.class) })
+	public String gbif() {
+		String response = gbifService.gbifData();
+		return response;
 	}
 
 	@GET
@@ -366,7 +401,10 @@ public class ObservationController {
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("tags") String tags,
-			@QueryParam("publicationgrade") String publicationGrade, @Context UriInfo uriInfo) {
+			@QueryParam("publicationgrade") String publicationGrade,
+			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
+			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
 
 		try {
 
@@ -423,6 +461,7 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
 
 			MapAggregationResponse aggregationResult = null;
+			MapAggregationStatsResponse aggregationStatsResult = null;
 
 			if (offset == 0) {
 				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
@@ -431,11 +470,21 @@ public class ObservationController {
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
 						tahsil, district, state, tags, publicationGrade, authorVoted);
 
+				if (view.equalsIgnoreCase("stats")) {
+					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
+							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
+							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
+							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
+							uploadersoffset, identifiersoffset);
+
+				}
+
 			}
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					aggregationResult, view);
+					aggregationResult, aggregationStatsResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

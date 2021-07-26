@@ -3,11 +3,17 @@
  */
 package com.strandls.observation.service.Impl;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,7 +28,10 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.ActivityLoggingData;
@@ -46,6 +55,7 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
@@ -54,6 +64,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.ExternalShowData;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.Observation;
@@ -64,8 +75,10 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
@@ -77,6 +90,7 @@ import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
+import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -130,6 +144,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationDAO observationDao;
+
+	@Inject
+	private RecommendationDao recoDao;
 
 	@Inject
 	private TraitsServiceApi traitService;
@@ -271,6 +288,194 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public ExternalShowData externalObsfindById(String id) {
+
+		ExternalShowData data = new ExternalShowData();
+		Observation observation = new Observation();
+
+		MapDocument observationDoc = null;
+		Map<String, Object> observationResponse = null;
+
+		try {
+			observationDoc = esService.fetch(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(), id);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+
+		try {
+			observationResponse = new ObjectMapper().readValue(observationDoc.getDocument().toString(), HashMap.class);
+		} catch (JsonMappingException e) {
+			logger.error(e.getMessage());
+		} catch (JsonProcessingException e) {
+			logger.error(e.getMessage());
+		}
+
+		Long obsId = null;
+		Date createdOn = null;
+		Date observedOn = null;
+		Long groupId = null;
+		String placeName = null;
+		String fromDate = null;
+		Double latitude = null;
+		Double longitude = null;
+		Long maxVotedRecoId = null;
+		Boolean isChecklist = false;
+		Boolean isLocked = false;
+		Integer noOfImages = null;
+		Integer noOfVideos = null;
+		Integer noOfAudio = null;
+		ObservationInfo esLayerInfo = null;
+		ObservationLocationInfo layerInfo = null;
+		String externalGbifReferencelink = null;
+		String externalOriginalReferenceLink = null;
+		String annotations = null;
+
+		obsId = Long.valueOf(observationResponse.get("observation_id").toString());
+
+		String createdOnDate = observationResponse.get("created_on").toString();
+		try {
+			createdOn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(createdOnDate);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		fromDate = observationResponse.get("from_date").toString();
+		try {
+			observedOn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(fromDate);
+		} catch (ParseException e) {
+			logger.error(e.getMessage());
+		}
+
+		if (observationResponse.get("group_id") != null) {
+			groupId = Long.valueOf(observationResponse.get("group_id").toString());
+		}
+
+		if (observationResponse.get("place_name") != null) {
+			placeName = observationResponse.get("place_name").toString();
+		}
+
+		if (observationResponse.get("location") != null) {
+			Map<String, Object> location = (Map<String, Object>) observationResponse.get("location");
+			latitude = Double.valueOf(location.get("lat").toString());
+			longitude = Double.valueOf(location.get("lon").toString());
+
+		}
+
+		if (observationResponse.get("max_voted_reco") != null) {
+
+			Map<String, Object> maxVotedReco = (Map<String, Object>) observationResponse.get("max_voted_reco");
+			maxVotedRecoId = Long.valueOf(maxVotedReco.get("id").toString());
+			RecoIbp reco = new RecoIbp();
+
+			reco.setScientificName(maxVotedReco.get("scientific_name").toString());
+
+			if (maxVotedReco.get("species_id") != null) {
+				reco.setSpeciesId(Long.valueOf(maxVotedReco.get("species_id").toString()));
+			}
+
+			if (maxVotedReco.get("taxonstatus") != null) {
+				reco.setStatus(maxVotedReco.get("taxonstatus").toString());
+			}
+
+			if (!((List<Map<String, Object>>) maxVotedReco.get("hierarchy")).isEmpty()) {
+				List<Map<String, Object>> hierarchy = (List<Map<String, Object>>) maxVotedReco.get("hierarchy");
+				Map<String, Object> node = hierarchy.get(hierarchy.size() - 1);
+				Long taxonId = null;
+				List<BreadCrumb> breadCrumbs = new ArrayList<>();
+
+				for (Map<String, Object> breadcrumb : hierarchy) {
+					Long breadcrumbId = Long.valueOf(breadcrumb.get("taxon_id").toString());
+					String breadcrumbName = breadcrumb.get("normalized_name").toString();
+					BreadCrumb breadcrumbNode = new BreadCrumb();
+					breadcrumbNode.setId(breadcrumbId);
+					breadcrumbNode.setName(breadcrumbName);
+					breadCrumbs.add(breadcrumbNode);
+				}
+
+				reco.setBreadCrumbs(breadCrumbs);
+				if (node.get("taxon_id") != null) {
+					taxonId = Long.valueOf(node.get("taxon_id").toString());
+				}
+				reco.setTaxonId(taxonId);
+			}
+
+			try {
+				esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
+						ObservationIndex.type.getValue(), maxVotedRecoId.toString());
+			} catch (ApiException e) {
+				logger.error(e.getMessage());
+			}
+			data.setRecoIbp(reco);
+
+			try {
+				layerInfo = layerService.getLayerInfo(latitude.toString(), longitude.toString());
+			} catch (com.strandls.naksha.ApiException e) {
+				logger.error(e.getMessage());
+			}
+			data.setLayerInfo(layerInfo);
+
+		}
+
+		if (observationResponse.get("no_of_images") != null) {
+			noOfImages = Integer.valueOf(observationResponse.get("no_of_images").toString());
+		}
+
+		if (observationResponse.get("no_of_videos") != null) {
+			noOfVideos = Integer.valueOf(observationResponse.get("no_of_videos").toString());
+		}
+
+		if (observationResponse.get("no_of_audio") != null) {
+			noOfAudio = Integer.valueOf(observationResponse.get("no_of_audio").toString());
+		}
+
+		List<ObservationNearBy> observationNearBy = null;
+		try {
+			observationNearBy = esService.getNearByObservation(ObservationIndex.index.getValue(),
+					ObservationIndex.type.getValue(), latitude.toString(), longitude.toString());
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+
+		if (observationResponse.get("is_checklist") != null) {
+			isChecklist = Boolean.valueOf(observationResponse.get("is_checklist").toString());
+		}
+
+		if (observationResponse.get("is_locked") != null) {
+			isLocked = Boolean.valueOf(observationResponse.get("is_locked").toString());
+		}
+
+		externalGbifReferencelink = observationResponse.get("external_gbif_reference_link").toString();
+		externalOriginalReferenceLink = observationResponse.get("external_original_reference_link").toString();
+
+		annotations = observationResponse.get("annotations").toString();
+
+		observation.setId(obsId);
+		observation.setCreatedOn(createdOn);
+		observation.setFromDate(observedOn);
+		observation.setGroupId(groupId);
+		observation.setPlaceName(placeName);
+		observation.setLatitude(latitude);
+		observation.setLongitude(longitude);
+		observation.setMaxVotedRecoId(maxVotedRecoId);
+		observation.setNoOfAudio(noOfAudio);
+		observation.setNoOfImages(noOfImages);
+		observation.setNoOfVideos(noOfVideos);
+		observation.setIsChecklist(isChecklist);
+		observation.setIsLocked(isLocked);
+
+		data.setObservation(observation);
+		data.setEsLayerInfo(esLayerInfo);
+		data.setObservationNearBy(observationNearBy);
+		data.setDataSource("gbif");
+		data.setExternalGbifReferenceLink(externalGbifReferencelink);
+		data.setExternalOriginalReferenceLink(externalOriginalReferenceLink);
+		data.setAnnotations(annotations);
+
+		return data;
+
 	}
 
 	@Override
@@ -804,7 +1009,6 @@ public class ObservationServiceImpl implements ObservationService {
 					userGroupIdList.add(userGroup.getId());
 					if (userGroupFeatureRole.contains(userGroup.getId()))
 						featureableGroup.add(userGroup);
-
 				}
 			}
 

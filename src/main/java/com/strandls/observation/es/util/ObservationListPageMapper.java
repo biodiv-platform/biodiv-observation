@@ -51,6 +51,36 @@ public class ObservationListPageMapper {
 	private List<UserGroupIbp> userGroup;
 	private List<CustomFieldObservationData> customField;
 	private List<Tags> tags;
+	private Boolean isExternal;
+	private String dataSource;
+	private String externalOriginalReferenceLink;
+	private String externalGbifReferenceLink;
+	private String id;
+
+	@JsonProperty(value = "is_external")
+	private void unpackisExternal(Boolean is_external) {
+		isExternal = is_external;
+	}
+
+	@JsonProperty(value = "data_source")
+	private void unpackdataSource(String data_source) {
+		dataSource = data_source;
+	}
+
+	@JsonProperty(value = "external_original_reference_link")
+	private void unpackExternalOriginalReferenceLink(String external_original_reference_link) {
+		externalOriginalReferenceLink = external_original_reference_link;
+	}
+
+	@JsonProperty(value = "external_gbif_reference_link")
+	private void unpackExternalGbifReferenceLink(String external_gbif_reference_link) {
+		externalGbifReferenceLink = external_gbif_reference_link;
+	}
+
+	@JsonProperty(value = "id")
+	private void unpackId(String Id) {
+		id = Id;
+	}
 
 	@JsonProperty("observation_id")
 	private void unpackObservationId(Long observation_id) {
@@ -457,7 +487,8 @@ public class ObservationListPageMapper {
 			String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios,
 			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
-			List<CustomFieldObservationData> customField, List<Tags> tags) {
+			List<CustomFieldObservationData> customField, List<Tags> tags, Boolean isExternal, String dataSource,
+			String externalOriginalReferenceLink, String externalGbifReferenceLink, String id) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -477,6 +508,52 @@ public class ObservationListPageMapper {
 		this.userGroup = userGroup;
 		this.customField = customField;
 		this.tags = tags;
+		this.isExternal = isExternal;
+		this.dataSource = dataSource;
+		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
+		this.externalGbifReferenceLink = externalGbifReferenceLink;
+		this.id = id;
+
+	}
+
+	public Boolean getIsExternal() {
+		return isExternal;
+	}
+
+	public void setIsExternal(Boolean isExternal) {
+		this.isExternal = isExternal;
+	}
+
+	public String getDataSource() {
+		return dataSource;
+	}
+
+	public void setDataSource(String dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public String getExternalOriginalReferenceLink() {
+		return externalOriginalReferenceLink;
+	}
+
+	public void setExternalOriginalReferenceLink(String externalOriginalReferenceLink) {
+		this.externalOriginalReferenceLink = externalOriginalReferenceLink;
+	}
+
+	public String getExternalGbifReferenceLink() {
+		return externalGbifReferenceLink;
+	}
+
+	public void setExternalGbifReferenceLink(String externalGbifReferenceLink) {
+		this.externalGbifReferenceLink = externalGbifReferenceLink;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public Long getObservationId() {

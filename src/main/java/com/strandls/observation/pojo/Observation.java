@@ -15,6 +15,7 @@ import com.bedatadriven.jackson.datatype.jts.serialization.GeometrySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.strandls.observation.util.JsonDateSerializer;
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
@@ -22,7 +23,7 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 @Entity
 @Table(name = "observation", schema = "public")
-@JsonIgnoreProperties(value = { "" },ignoreUnknown = true)
+@JsonIgnoreProperties(value = { "" }, ignoreUnknown = true)
 public class Observation implements Serializable {
 
 	/**
@@ -84,6 +85,7 @@ public class Observation implements Serializable {
 	private Integer noOfIdentifications;
 	private Long dataTableId;
 	private String dateAccuracy;
+	private Boolean isVerified;
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -115,6 +117,7 @@ public class Observation implements Serializable {
 	}
 
 	@Column(name = "created_on", nullable = false, length = 29)
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getCreatedOn() {
 		return this.createdOn;
 	}
@@ -160,6 +163,7 @@ public class Observation implements Serializable {
 	}
 
 	@Column(name = "from_date", length = 29)
+	@JsonSerialize(using = JsonDateSerializer.class)
 	public Date getFromDate() {
 		return this.fromDate;
 	}
@@ -321,9 +325,9 @@ public class Observation implements Serializable {
 		this.toDate = toDate;
 	}
 
-	@Column(name = "topology", columnDefinition="Geometry", nullable = false)
+	@Column(name = "topology", columnDefinition = "Geometry", nullable = false)
 	@JsonSerialize(using = GeometrySerializer.class)
-    @JsonDeserialize(contentUsing = GeometryDeserializer.class)
+	@JsonDeserialize(contentUsing = GeometryDeserializer.class)
 	public Geometry getTopology() {
 		return this.topology;
 	}
@@ -582,6 +586,15 @@ public class Observation implements Serializable {
 
 	public void setDateAccuracy(String dateAccuracy) {
 		this.dateAccuracy = dateAccuracy;
+	}
+
+	@Column(name = "is_verified",columnDefinition = "boolean default false")
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
 	}
 
 }
