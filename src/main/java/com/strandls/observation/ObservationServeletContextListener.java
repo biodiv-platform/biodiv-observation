@@ -45,7 +45,7 @@ import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.es.util.ESUtilModule;
 import com.strandls.observation.es.util.RabbitMQConsumer;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
-import com.strandls.observation.util.ObservationUtilModule;
+import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
@@ -122,12 +122,13 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				bind(TokenGenerator.class).in(Scopes.SINGLETON);
 				bind(RabbitMQProducer.class).toInstance(producer);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
 		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
-				new ESUtilModule(),new ObservationUtilModule());
+				new ESUtilModule());
 
 		try {
 			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();

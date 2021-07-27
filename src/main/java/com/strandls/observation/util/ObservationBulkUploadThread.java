@@ -30,7 +30,6 @@ import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
-import com.strandls.observation.service.Impl.ObservationDataTableServiceImpl;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.UFile;
@@ -67,7 +66,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			UserServiceApi userService, DataTableWkt dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
 			XSSFWorkbook workbook, Map<String, String> myImageUpload, ResourceServicesApi resourceService,
-			UploadApi fileUploadApi,DataTableServiceApi dataTableService, Headers headers) {
+			UploadApi fileUploadApi, DataTableServiceApi dataTableService, Headers headers) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
@@ -92,58 +91,61 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	public void run() {
 
-		XSSFSheet sheet = workbook.getSheetAt(0);
-		Iterator<Row> rows = sheet.iterator();
-		List<Long> observationIds = new ArrayList<Long>();
-		fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
-		resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
-		Row dataRow;
-		// skip header
-		rows.next();
+		try {
+			XSSFSheet sheet = workbook.getSheetAt(0);
+			Iterator<Row> rows = sheet.iterator();
+			List<Long> observationIds = new ArrayList<Long>();
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
+			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
+			Row dataRow;
+			// skip header
+			rows.next();
 
-		while (rows.hasNext()) {
-			dataRow = rows.next();
-			if (isEmptyRow(dataRow)) {
-				break;
+			while (rows.hasNext()) {
+				dataRow = rows.next();
+				if (isEmptyRow(dataRow)) {
+					break;
+				}
+
+				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
+				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
+						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
+						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
+						observationBulkData.getBasisOfData());
+
+				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
+						observationDao, userService, data, myImageUpload, userId);
+				if (obsId != null) {
+					observationIds.add(obsId);
+				}
+
+				if (observationIds.size() >= 100) {
+					String observationList = StringUtils.join(observationIds, ',');
+					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+					Thread thread = new Thread(updateThread);
+					thread.start();
+					observationIds.clear();
+				}
+
 			}
 
-			ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-			ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
-					dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
-					observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
-					observationBulkData.getBasisOfData());
-
-			Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-					observationDao, userService, data, myImageUpload, userId);
-			if (obsId != null) {
-				observationIds.add(obsId);
-			}
-
-			if (observationIds.size() >= 100) {
+			if (!observationIds.isEmpty()) {
 				String observationList = StringUtils.join(observationIds, ',');
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread thread = new Thread(updateThread);
 				thread.start();
-				observationIds.clear();
+				try {
+					Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
+					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
+					dataTable.setUfileId(uFileId);
+					dataTableService.updateDataTable(dataTable);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
 			}
-
-		}
-
-		if (!observationIds.isEmpty()) {
-			String observationList = StringUtils.join(observationIds, ',');
-			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-			Thread thread = new Thread(updateThread);
-			thread.start();
-			try {
-				Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
-				Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
-				dataTable.setUfileId(uFileId);
-				dataTableService.updateDataTable(dataTable);	
-			}catch(Exception e) {
-				logger.error(e.getMessage());
-			}
-
-
+		} catch (Exception e) {
+			logger.error(e.getMessage());		
 		}
 
 	}

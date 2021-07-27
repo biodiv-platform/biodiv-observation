@@ -87,7 +87,7 @@ public class ObservationMapperHelper {
 	private RabbitMQProducer rabbitMQProducer;
 
 	@Inject
-	ObservationDAO observationDAO;
+	private ObservationDAO observationDAO;
 
 	@Inject
 	private TraitsServiceApi traitsServiceApi;

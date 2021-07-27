@@ -12,8 +12,8 @@ import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
 
 /**
- * Used for delete bulk observation by datatable id api, will be modified once es-mod get bulk
- * delete created
+ * Used for delete bulk observation by datatable id api, will be modified once
+ * es-mod get bulk delete created
  * 
  * @author vishnu
  *
@@ -33,13 +33,17 @@ public class ObservationDeleteThread implements Runnable {
 
 	@Override
 	public void run() {
-		observationList.forEach(item -> {
-			try {
-				observationImpl.deleteObservation(request, item, false);
-			} catch (ApiException e) {
-				logger.error(e.getMessage());
-			}
-		});
+		try {
+			observationList.forEach(item -> {
+				try {
+					observationImpl.deleteObservation(request, item, false);
+				} catch (ApiException e) {
+
+				}
+			});
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
 	}
 
 }

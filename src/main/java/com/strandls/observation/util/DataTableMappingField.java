@@ -2,10 +2,10 @@ package com.strandls.observation.util;
 
 public enum DataTableMappingField {
 
-	sGroup("sGroup"), checklistAnnotation("checklistAnnotation"), fromDate("fromDate"), geoPrivacy("geoPrivacy"),
-	toDate("toDate"), observedAt("observedAt"), user("user"), locationScale("locationScale"),latitude("latitude"), longitude("longitude"),
-	dateAccuracy("dateAccuracy"), notes("notes"), fileName("fileName"), commonName("commonName"), comment("comment"),
-	scientificName("scientificName"), tags("tags"), license("license"), userGroups("userGroups");
+	SGROUP("sGroup"), CHECKLISTANNOTATION("checklistAnnotation"), FROMDATE("fromDate"), GEOPRIVACY("geoPrivacy"),
+	TODATE("toDate"), OBSERVEDAT("observedAt"), USER("user"), LOCATIONSCALE("locationScale"),LATITUDE("latitude"), LONGITUDE("longitude"),
+	DATEACCURACY("dateAccuracy"), NOTES("notes"), fileName("fileName"), COMMONNAME("commonName"), COMMENT("comment"),
+	SCIENTIFICNAME("scientificName"), TAGS("tags"), LICENSE("license"), USERGROUPS("userGroups");
 
 	private String field;
 
