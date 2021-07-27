@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
@@ -38,10 +39,12 @@ import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
+import com.strandls.observation.util.TokenGenerator;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -202,7 +205,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonid,
 			RecoCreate recoCreate, Boolean createObservation) {
-
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
 			recoVoteDao.delete(previousVote);
@@ -243,20 +245,23 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
-		if (createObservation) {
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name", null);
-
-			return maxRecoVote;
-		} else {
-			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-//			Bg process for userGroup filter rule
-			observaitonService.bgfilterRule(request, observationId);
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name",
-					observaitonService.generateMailData(observationId));
-			return maxRecoVote;
+		TokenGenerator tokenGenerator = new TokenGenerator();
+		try {
+			String userAuthToken = tokenGenerator.generate(userService.getUser(userId.toString()));
+			if (createObservation) {
+				logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+						recoVote.getId(), "Suggested species name", null);
+			} else {
+				maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
+				logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+						recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
+			}
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
 		}
+		return maxRecoVote;
 
 	}
 
@@ -371,6 +376,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		for (Recommendation recommendation : recoList) {
 
 			try {
+				System.out.println("RECO ID : " + recommendation.getId());
 				ParsedName parsedName = utilityService.getNameParsed(recommendation.getName());
 				if (parsedName == null)
 					errorList.add(recommendation.getId());
@@ -569,7 +575,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked())
 				return null;
-
+			
 			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();

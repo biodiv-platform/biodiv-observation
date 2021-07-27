@@ -2189,6 +2189,8 @@ class LocationInformation {
 	private String tahsil;
 	private String state;
 	private String district;
+	private String province;
+	private String name;
 
 	/**
 	 * 
@@ -2202,10 +2204,12 @@ class LocationInformation {
 	 * @param state
 	 * @param district
 	 */
-	public LocationInformation(String tahsil, String state, String district) {
+	public LocationInformation(String tahsil, String state, String district, String name, String province) {
 		super();
 		this.tahsil = tahsil;
 		this.state = state;
+		this.name = name;
+		this.province = province;
 		this.district = district;
 	}
 
@@ -2231,6 +2235,22 @@ class LocationInformation {
 
 	public void setDistrict(String district) {
 		this.district = district;
+	}
+
+	public String getProvince() {
+		return province;
+	}
+
+	public void setProvince(String province) {
+		this.province = province;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

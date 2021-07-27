@@ -3,6 +3,10 @@
  */
 package com.strandls.observation.es.util;
 
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -26,7 +30,9 @@ public class ConstructESDocument {
 
 	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
-	public ObservationESDocument getESDocumentStub(String observationId) {
+	private String locationInfoLayer  = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
+	
+	public List<ObservationESDocument> getESDocumentStub(String observationId) {
 
 		String qry = "SELECT id observation_id, author_id, created_by, profile_pic, created_on, group_id, group_name, CONCAT(group_id,'|',group_name,'|',group_order) sgroup_filter, "
 				+ "row_to_json((SELECT t FROM (SELECT latitude AS lat, longitude as lon)t))\\:\\:text AS location, "
@@ -45,7 +51,7 @@ public class ConstructESDocument {
 				+ "custom_fields\\:\\:text custom_fields,   "
 				+ "user_group_observations\\:\\:text user_group_observations, (tags)\\:\\:text AS tags, (flags\\:\\:text) flags, (featured\\:\\:text) AS featured,  "
 				+ "(facts)\\:\\:text facts, "
-				+ "CASE WHEN     (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
+				+ "CASE WHEN    (is_verified = true) OR (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
 				+ "        from_date IS NOT NULL AND latitude IS NOT NULL AND "
 				+ "        longitude IS NOT NULL AND  (is_locked = true OR reco_vote_count >= 2)  AND "
 				+ "        flag_count = 0 AND"
@@ -57,8 +63,8 @@ public class ConstructESDocument {
 				+ "visit_count, max_voted_reco_id, is_checklist, to_date,  " + "checklist_annotations,  "
 				+ "is_locked, language_id, location_scale,  "
 				+ "dataset_id, repr_image_id, protocol, no_of_images, no_of_videos, no_of_audio,  "
-				+ "no_of_identifications, data_table_id, date_accuracy FROM observation where is_deleted = false AND id = "
-				+ observationId + ") O " + "LEFT OUTER JOIN  "
+				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted IS NOT TRUE AND id in ( "
+				+ observationId + " )) O " + "LEFT OUTER JOIN  "
 				+ "(SELECT id r_id, file_name AS repr_image_url FROM resource) I ON I.r_id = O.repr_image_id   "
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id d_id, title as dataset_title FROM dataset) D ON O.dataset_id = D.d_id "
@@ -67,7 +73,7 @@ public class ConstructESDocument {
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
 				+ "LEFT OUTER JOIN "
-				+ "(SELECT longitude lon , latitude lat, location_information FROM lyr115_location_information) L ON L.lon = O.longitude  "
+				+ "(SELECT longitude lon , latitude lat, location_information FROM "+locationInfoLayer+") L ON L.lon = O.longitude  "
 				+ "AND L.lat = O.latitude " + " " + "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
@@ -121,8 +127,8 @@ public class ConstructESDocument {
 				+ "			END AS common_name,language_id, is_scientific_name, accepted_name_id,Count "
 				+ "		FROM  "
 				+ "		(SELECT id, observation_id, author_id , confidence, recommendation_id, common_name_reco_id, voted_on, comment, 1\\:\\:integer AS Count "
-				+ "  " + "		FROM recommendation_vote WHERE observation_id = " + observationId + ") extended_rv "
-				+ "		INNER JOIN	 "
+				+ "  " + "		FROM recommendation_vote WHERE observation_id in ( " + observationId
+				+ " )) extended_rv " + "		INNER JOIN	 "
 				+ "		(SELECT id rid, taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
 				+ "		ON rid =  recommendation_id " + "		LEFT OUTER JOIN "
@@ -136,7 +142,7 @@ public class ConstructESDocument {
 				+ "			END AS common_name, language_id, is_scientific_name, accepted_name_id, Count"
 				+ "		FROM  " + "		(SELECT  "
 				+ "		id, observation_id, author_id, confidence, recommendation_id, common_name_reco_id, voted_on, comment,0\\:\\:integer AS Count  "
-				+ "		FROM recommendation_vote WHERE observation_id = " + observationId + " ) extended_rv "
+				+ "		FROM recommendation_vote WHERE observation_id in ( " + observationId + " ) ) extended_rv "
 				+ "		INNER JOIN	 "
 				+ "		(SELECT id rid, null\\:\\:integer AS taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
@@ -158,8 +164,8 @@ public class ConstructESDocument {
 				+ "		( " + "		SELECT  observation_id ,  " + "		jsonb_agg( DISTINCT  "
 				+ "		to_jsonb((row_to_json((SELECT t FROM (SELECT resource_id id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id) t ))  "
 				+ "		)))\\:\\:json observation_resource " + "		FROM  "
-				+ "		(SELECT resource_id or_resource_id, observation_id FROM observation_resource WHERE observation_id = "
-				+ observationId + ") EO " + "		INNER JOIN "
+				+ "		(SELECT resource_id or_resource_id, observation_id FROM observation_resource WHERE observation_id in ("
+				+ observationId + " )) EO " + "		INNER JOIN "
 				+ "		(SELECT id resource_id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id FROM resource ) extended_resource "
 				+ "		ON or_resource_id = resource_id GROUP BY observation_id "
 				+ "		) obr ON obr.observation_id = O.id  " + "LEFT OUTER JOIN "
@@ -250,7 +256,7 @@ public class ConstructESDocument {
 				+ "								ELSE NULL " + " " + "							END "
 				+ "					END " + "			END AS max_range " + " " + "			FROM  " + "			( "
 				+ "				(SELECT observation_id ugo_observation_id, user_group_id ugo_user_group_id  "
-				+ "				FROM user_group_observations WHERE observation_id = " + observationId + ") UGO "
+				+ "				FROM user_group_observations WHERE observation_id in ( " + observationId + " )) UGO "
 				+ "				LEFT OUTER JOIN "
 				+ "				(SELECT u_custom_field_id, cf_author_id, cf_data_type, cf_field_type, cf_icon_url, cf_name,  "
 				+ "				cf_notes, cf_units, u_allowed_participation, u_author_id, u_deafult_value, u_display_order,  "
@@ -272,8 +278,8 @@ public class ConstructESDocument {
 				+ "					custom_field_value_id o_custom_field_value_id, last_modified o_last_modified,  "
 				+ "					observation_id o_observation_id, user_group_id o_user_group_id, value_date o_value_date, "
 				+ "					value_numeric o_value_numeric, value_string o_value_string "
-				+ "					FROM  " + "					observation_custom_field WHERE observation_id = "
-				+ observationId + ")O  " + "					LEFT OUTER JOIN "
+				+ "					FROM  " + "					observation_custom_field WHERE observation_id in ( "
+				+ observationId + " ))O  " + "					LEFT OUTER JOIN "
 				+ "					(SELECT id, author_id cv_author_id, custom_field_id cv_id, icon_url cv_icon_url, notes cv_notes,  "
 				+ "					value AS cv_value " + "					FROM  "
 				+ "					custom_field_values) CV ON CV.id = O.o_custom_field_value_id " + " "
@@ -296,8 +302,8 @@ public class ConstructESDocument {
 				+ "		jsonb_agg( DISTINCT (to_jsonb(row_to_json(( SELECT t FROM (SELECT flag_id id,  "
 				+ "		author_id,notes,author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags "
 				+ "		FROM " + "		(SELECT id flag_id, object_id, author_id, notes, created_on, flag   "
-				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id = "
-				+ observationId + ") F " + "		LEFT OUTER JOIN "
+				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id in ( "
+				+ observationId + " )) F " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id, name author_name, COALESCE(profile_pic,  icon) profile_pic from suser ) U ON U.id = author_id GROUP BY object_id "
 				+ "		) F ON F.observation_id = O.id " + "LEFT OUTER JOIN " + "		( "
 				+ "		SELECT tag_ref as observation_id,  "
@@ -309,8 +315,8 @@ public class ConstructESDocument {
 				+ "		jsonb_agg(DISTINCT(to_jsonb(row_to_json(( SELECT t FROM (SELECT id, author_id, author_name, profile_pic, created_on, notes,  "
 				+ "		user_group_id, language_id, language_name)t )) )))\\:\\:json featured " + "		FROM "
 				+ "		(SELECT id, author_id, created_on, notes, user_group_id, " + "		language_id, object_id  "
-				+ "		FROM featured WHERE object_type = 'species.participation.Observation' AND object_id = "
-				+ observationId + ") F  " + "		LEFT OUTER JOIN "
+				+ "		FROM featured WHERE object_type = 'species.participation.Observation' AND object_id in ( "
+				+ observationId + " )) F  " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id u_id, name author_name, COALESCE(profile_pic,  icon) profile_pic FROM suser) U ON u_id = author_id "
 				+ "		LEFT OUTER JOIN "
 				+ "		(SELECT id l_id, name language_name, three_letter_code FROM language ) L ON l_id = language_id GROUP BY object_id "
@@ -348,7 +354,7 @@ public class ConstructESDocument {
 				+ "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
 				+ "				trait_instance_id, trait_value_id, value fact_value, to_value, from_date, to_date "
 				+ "				FROM fact WHERE object_type = 'species.participation.Observation' and is_deleted = false  "
-				+ "				AND object_id = " + observationId + " " + "				) F   "
+				+ "				AND object_id in ( " + observationId + " " + "				)) F   "
 				+ "				INNER JOIN "
 				+ "				(SELECT id trait_id, description, field_id, name, is_participatory, units, trait_types, data_types  "
 				+ "				FROM  trait where source = 'IBP') T "
@@ -360,12 +366,12 @@ public class ConstructESDocument {
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
-		ObservationESDocument result = null;
+		List<ObservationESDocument> result = null;
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
-			result = query.getSingleResult();
+			result = query.getResultList();
 			System.out.println();
 			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);
 

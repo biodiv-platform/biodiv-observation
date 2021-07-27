@@ -6,6 +6,7 @@ package com.strandls.observation;
 import javax.ws.rs.core.HttpHeaders;
 
 import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -29,6 +30,11 @@ public class Headers {
 	public TraitsServiceApi addTraitsHeaders(TraitsServiceApi traitService, String authHeader) {
 		traitService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return traitService;
+	}
+	
+	public DataTableServiceApi addDataTableHeaders(DataTableServiceApi dataTableService, String authHeader) {
+		dataTableService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return dataTableService;
 	}
 
 	public ResourceServicesApi addResourceHeaders(ResourceServicesApi resourceService, String authHeader) {

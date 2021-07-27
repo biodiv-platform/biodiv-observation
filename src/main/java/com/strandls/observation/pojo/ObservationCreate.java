@@ -256,5 +256,4 @@ public class ObservationCreate {
 	public void setResources(List<ResourceDataObs> resources) {
 		this.resources = resources;
 	}
-
 }

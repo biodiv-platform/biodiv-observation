@@ -143,30 +143,30 @@
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>2.31</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
 		<dependency>
-		    <groupId>com.fasterxml.jackson.core</groupId>
-		    <artifactId>jackson-core</artifactId>
-		    <version>2.11.0</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.11.0</version>
 		</dependency>
-				
-		
+
+
 		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
 		<dependency>
-		    <groupId>io.swagger</groupId>
-		    <artifactId>swagger-annotations</artifactId>
-		    <version>1.6.1</version>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>1.6.1</version>
 		</dependency>
-		
-		
+
+
 		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-jersey2-jaxrs -->
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-jersey2-jaxrs</artifactId>
 			<version>1.6.1</version>
 		</dependency>
-		
+
 
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
@@ -201,19 +201,19 @@
 			<artifactId>hibernate-spatial</artifactId>
 			<version>5.2.12.Final</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-hikaricp -->
 		<dependency>
-		    <groupId>org.hibernate</groupId>
-		    <artifactId>hibernate-hikaricp</artifactId>
-		    <version>5.2.12.Final</version>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-hikaricp</artifactId>
+			<version>5.2.12.Final</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
 		<dependency>
-		    <groupId>com.zaxxer</groupId>
-		    <artifactId>HikariCP</artifactId>
-		    <version>3.4.2</version>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>3.4.2</version>
 		</dependency>
 
 		<dependency>
@@ -221,19 +221,19 @@
 			<artifactId>jackson-datatype-jts</artifactId>
 			<version>2.4</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
 		<dependency>
-		    <groupId>com.rabbitmq</groupId>
-		    <artifactId>amqp-client</artifactId>
-		    <version>5.8.0</version>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+			<version>5.8.0</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.vladmihalcea/hibernate-types-52 -->
 		<dependency>
-		    <groupId>com.vladmihalcea</groupId>
-		    <artifactId>hibernate-types-52</artifactId>
-		    <version>2.9.4</version>
+			<groupId>com.vladmihalcea</groupId>
+			<artifactId>hibernate-types-52</artifactId>
+			<version>2.9.4</version>
 		</dependency>
 
 		<dependency>
@@ -283,38 +283,62 @@
 			<artifactId>authentication-utility</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>com.strandls.biodiv</groupId>
-		    <artifactId>user-client</artifactId>
-		    <version>1.0.0</version>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>user-client</artifactId>
+			<version>1.0.0</version>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>com.strandls.biodiv</groupId>
-		    <artifactId>activity-client</artifactId>
-		    <version>1.0.0</version>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>activity-client</artifactId>
+			<version>1.0.0</version>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>biodiv</groupId>
-		    <artifactId>file-upload-client</artifactId>
-		    <version>1.0.0</version>
+			<groupId>biodiv</groupId>
+			<artifactId>file-upload-client</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-		    <groupId>com.strandls.biodiv</groupId>
-		    <artifactId>mail-utility</artifactId>
-		    <version>1.0.0</version>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>mail-utility</artifactId>
+			<version>1.0.0</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>dataTable-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
 		<dependency>
-		    <groupId>com.opencsv</groupId>
-		    <artifactId>opencsv</artifactId>
-		    <version>3.3</version>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>3.3</version>
 		</dependency>
-		
-		
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+
+
+
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>4.1.2</version>
+		</dependency>
+
+
 	</dependencies>
 	<build>
 		<finalName>observationModule</finalName>

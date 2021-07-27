@@ -136,6 +136,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.onlyFilteredAggregation = onlyFilteredAggregation;
 		this.termsAggregationField = termsAggregationField;
 		this.authorId = authorId;
+		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
 		this.mailService = mailService;
@@ -169,7 +170,7 @@ public class ObservationListCSVThread implements Runnable {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, null,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade,null);
+						tags, publicationGrade, null);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
