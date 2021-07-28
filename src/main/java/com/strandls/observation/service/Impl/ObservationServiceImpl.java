@@ -22,6 +22,7 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
@@ -31,6 +32,8 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
@@ -123,7 +126,7 @@ import net.minidev.json.JSONArray;
  */
 public class ObservationServiceImpl implements ObservationService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
 
 	@Inject
 	private LogActivities logActivity;
@@ -194,6 +197,9 @@ public class ObservationServiceImpl implements ObservationService {
 	@Inject
 	private TaxonomyTreeServicesApi taxonomyTreeService;
 
+	@Inject
+	private DataTableServiceApi dataTableService;
+
 	@Override
 	public ShowData findById(Long id) {
 
@@ -221,6 +227,8 @@ public class ObservationServiceImpl implements ObservationService {
 		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
+		DataTableWkt dataTable = null;
+		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
@@ -228,10 +236,14 @@ public class ObservationServiceImpl implements ObservationService {
 				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
+				if (observation.getDataTableId() != null) {
+					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
+				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
+
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -257,15 +269,20 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
+				if (!observation.getChecklistAnnotations().isEmpty()) {
+					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
+							new TypeReference<Map<String, Object>>() {
+							});
+				}
+
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
-				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
-						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy, activityCount);
-				return data;
+				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
+						observationNearBy, dataTable, checkListAnnotation, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
@@ -337,7 +354,8 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
-
+			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString()
+					+ " ***** \n\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
@@ -804,7 +822,6 @@ public class ObservationServiceImpl implements ObservationService {
 					userGroupIdList.add(userGroup.getId());
 					if (userGroupFeatureRole.contains(userGroup.getId()))
 						featureableGroup.add(userGroup);
-
 				}
 			}
 
@@ -884,27 +901,36 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
-			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
-
-				MailData mailData = generateMailData(observationId);
-
-				observation.setIsDeleted(true);
-				MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), observationId.toString());
-				ResultEnum result = esResponse.getResult();
-				if (result.getValue().equals("DELETED")) {
-					observationDao.update(observation);
-					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId,
-							observationId, "observation", observationId, "Observation Deleted", mailData);
-					return "Observation Deleted Succesfully";
-				}
-
+			if (observation.getId() != null
+					&& (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN"))) {
+				deleteObservation(request, observation, true);
+				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
 		return null;
+	}
+
+	public Boolean deleteObservation(HttpServletRequest request, Observation observation, Boolean hasMail)
+			throws ApiException {
+
+		Long observationId = observation.getId();
+		MailData mailData = Boolean.TRUE.equals(hasMail) ? generateMailData(observationId) : null;
+
+		observation.setIsDeleted(true);
+		MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
+				ObservationIndex.type.getValue(), observationId.toString());
+		ResultEnum result = esResponse.getResult();
+		if (result.getValue().equals("DELETED")) {
+			observationDao.update(observation);
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
+					"observation", observationId, "Observation Deleted", mailData);
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -1213,7 +1239,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
@@ -1613,4 +1639,5 @@ public class ObservationServiceImpl implements ObservationService {
 		return false;
 
 	}
+
 }

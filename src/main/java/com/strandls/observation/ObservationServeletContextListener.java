@@ -45,8 +45,10 @@ import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.es.util.ESUtilModule;
 import com.strandls.observation.es.util.RabbitMQConsumer;
 import com.strandls.observation.service.Impl.ObservationServiceModule;
+import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -61,7 +63,7 @@ import com.strandls.utility.controller.UtilityServiceApi;
  */
 public class ObservationServeletContextListener extends GuiceServletContextListener {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationServeletContextListener.class);
 
 	@Override
 	protected Injector getInjector() {
@@ -77,7 +79,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 						configuration.addAnnotatedClass(cls);
 					}
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
 
@@ -118,8 +119,11 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
+				bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
 				bind(Headers.class).in(Scopes.SINGLETON);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				bind(TokenGenerator.class).in(Scopes.SINGLETON);
+				bind(RabbitMQProducer.class).toInstance(producer);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
@@ -191,8 +195,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		try {
 			channel.getConnection().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		super.contextDestroyed(servletContextEvent);
