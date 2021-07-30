@@ -264,11 +264,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate, createdOnMinDate,
 					status, taxonId, recoName, omiter, tahsil, district, state, tags, publicationGrade, authorVoted);
 
-			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQueryFilter,
+			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQueryFilter,
 					mapAggResponse, latch, null);
 		} else {
 
-			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery,
+			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQuery,
 					mapAggResponse, latch, null);
 		}
 
