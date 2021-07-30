@@ -269,7 +269,7 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
-				if (!observation.getChecklistAnnotations().isEmpty()) {
+				if (observation.getChecklistAnnotations() != null && !observation.getChecklistAnnotations().isEmpty()) {
 					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
 							new TypeReference<Map<String, Object>>() {
 							});
