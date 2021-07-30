@@ -267,7 +267,7 @@ public class ObservationBulkMapperHelper {
 			observation.setGeoPrivacy(geoPrivacy);
 			observation.setTopology(topology);
 			observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
-			observation.setIsLocked(false);// update field , initially false
+			observation.setIsLocked(isVerified);// same value as isVerified
 			observation.setLicenseId(822L);// default 822
 			observation.setLanguageId(205L);
 			observation.setLocationScale(locationScale); // 5 options
