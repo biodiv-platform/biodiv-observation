@@ -47,8 +47,6 @@ import com.strandls.observation.util.ObservationDeleteThread;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
-import com.strandls.resource.pojo.UFile;
-import com.strandls.resource.pojo.UFileCreateData;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;

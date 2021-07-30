@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.util.PropertyFileUtil;
 
-import javax.inject.Inject;
-
 /**
  * @author Abhishek Rudra
  *
@@ -44,7 +42,7 @@ public class ConstructESDocument {
 				+ "dataset_id, dataset_title, repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
 				+ "CASE  " + "	WHEN no_of_images = 0 AND no_of_videos = 0 AND no_of_audio = 0 THEN 1 " + "	ELSE 0 "
 				+ "END AS no_media, " + "no_of_identifications, data_table_id, date_accuracy, "
-				+ "row_to_json((SELECT t FROM (SELECT max_voted_reco_id id,common_names, hierarchy, scientific_name, (taxon_detail->'rank')\\:\\:text AS rank, "
+				+ "row_to_json((SELECT t FROM (SELECT max_voted_reco_id id,common_names, hierarchy, scientific_name, (taxon_detail->'rank') AS rank, "
 				+ "  (taxon_detail->'status') AS taxonstatus "
 				+ " WHERE common_names is not null OR scientific_name is not null)t))\\:\\:text AS max_voted_reco,  "
 				+ "all_reco_vote\\:\\:text AS all_reco_vote, observation_resource\\:\\:text AS observation_resource, "

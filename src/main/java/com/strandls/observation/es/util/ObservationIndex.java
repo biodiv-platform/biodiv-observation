@@ -17,7 +17,7 @@ public enum ObservationIndex {
 	path("max_voted_reco.hierarchy.taxon_id"), traitsAggregation("facts.trait_value.trait_aggregation.raw"),
 	status("max_voted_reco.taxonstatus"), no_of_identifications("no_of_identifications"),
 	tahsil("location_information.tahsil.raw"), state("location_information.state.raw"),
-	district("location_information.district.raw"), rank("max_voted_reco.ranktext"),
+	district("location_information.district.raw"), rank("max_voted_reco.rank"),
 	customFieldId("custom_fields.custom_field.custom_field_id"),
 	customFieldAggregation("custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw"),
 	customFieldIdValue("custom_fields.custom_field.custom_field_values.cfid_value"),
