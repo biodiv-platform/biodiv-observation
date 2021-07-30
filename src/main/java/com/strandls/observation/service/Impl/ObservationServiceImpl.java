@@ -1447,7 +1447,7 @@ public class ObservationServiceImpl implements ObservationService {
 			observationData.setAuthorId(observation.getAuthorId());
 			observationData.setCommonName(reco.getCommonName());
 			observationData.setIconURl(iconurl);
-			observationData.setLocation(observation.getReverseGeocodedName());
+			observationData.setLocation(observation.getPlaceName());
 			observationData.setObservationId(observation.getId());
 			observationData.setObservedOn(observation.getFromDate());
 			observationData.setScientificName(reco.getScientificName());
