@@ -472,7 +472,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get("group_name.keyword").getGroupAggregation());
 		aggregationResponse
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
-		aggregationResponse.setGroupRank(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation());
+		aggregationResponse.setGroupRank(getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
 		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
 		aggregationResponse.setGroupUserGroupName(
 				mapAggResponse.get("user_group_observations.name.keyword").getGroupAggregation());
@@ -742,6 +742,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 		}
 		return sum;
+	}
+
+	private Map<String, Long> getRankAggregation(Map<String, Long> aggregation) {
+		Map<String, Long> rankAggregation = new HashMap<String, Long>();
+
+		for (Entry<String, Long> entry : aggregation.entrySet())
+			rankAggregation.put(toTitleCase(entry.getKey()), entry.getValue());
+		return rankAggregation;
 	}
 
 	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {
