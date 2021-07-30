@@ -179,10 +179,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	private void getAggregateLatch(String index, String type, String filter, String geoAggregationField,
 			MapSearchQuery searchQuery, Map<String, AggregationResponse> mapResponse, CountDownLatch latch,
-			String namedAgg) {
+			String namedAgg,String geoShapeFilterField) {
 
 		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, geoAggregationField, searchQuery,
-				mapResponse, namedAgg, latch, esService);
+				mapResponse, namedAgg, latch, esService,geoShapeFilterField);
 		worker.start();
 
 	}
@@ -239,11 +239,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "group_name.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		} else {
 			getAggregateLatch(index, type, "group_name.keyword", geoAggregationField, mapSearchQuery, mapAggResponse,
-					latch, null);
+					latch, null,null);
 
 		}
 		if (status != null && !status.isEmpty()) {
@@ -254,12 +254,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco.taxonstatus.keyword", geoAggregationField,
-					mapSearchQueryFilter, mapAggResponse, latch, null);
+					mapSearchQueryFilter, mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco.taxonstatus.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 		if (rank != null && !rank.isEmpty()) {
@@ -270,11 +270,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 		if (state != null && !state.isEmpty()) {
@@ -285,12 +285,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 		if (userGroupList != null && !userGroupList.isEmpty()) {
@@ -301,12 +301,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "user_group_observations.name.keyword", geoAggregationField,
-					mapSearchQueryFilter, mapAggResponse, latch, null);
+					mapSearchQueryFilter, mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "user_group_observations.name.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		}
 		if (isFlagged != null && !isFlagged.isEmpty()) {
@@ -317,12 +317,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "flag_count", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "flag_count", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 		}
 		if (validate != null && !validate.isEmpty()) {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
@@ -332,11 +332,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "is_locked", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 		} else {
 
 			getAggregateLatch(index, type, "is_locked", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 
 		}
 		if (months != null && !months.isEmpty()) {
@@ -347,12 +347,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "observed_in_month.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 		if (mediaFilter != null && !mediaFilter.isEmpty()) {
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
@@ -362,24 +362,24 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "no_of_audio", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 			getAggregateLatch(index, type, "no_of_videos", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 			getAggregateLatch(index, type, "no_of_images", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 			getAggregateLatch(index, type, "no_media", geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch,
-					null);
+					null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "no_of_audio", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 			getAggregateLatch(index, type, "no_of_videos", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 			getAggregateLatch(index, type, "no_of_images", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 			getAggregateLatch(index, type, "no_media", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 
 		}
 		if (speciesName != null && !speciesName.isEmpty()) {
@@ -390,12 +390,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null);
+					latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null);
+					null,null);
 
 		}
 		if (taxonId != null && !taxonId.isEmpty()) {
@@ -406,12 +406,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco.taxonstatus", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 //	geoEntity aggregation	
@@ -423,12 +423,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, omiter);
 
 			getAggregateLatch(index, type, "location_information.name.raw", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 
 		} else {
 
 			getAggregateLatch(index, type, "location_information.name.raw", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 //		new trait aggregation
@@ -448,14 +448,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity);
 
 					getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-							mapSearchQueryFilter, mapAggResponse, latch, trait.getName());
+							mapSearchQueryFilter, mapAggResponse, latch, trait.getName(),null);
 
 					traitParams.put(keyword, tempTraitParams);
 				}
 			}
 			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
 				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-						mapSearchQuery, mapAggResponse, latch, trait.getName());
+						mapSearchQuery, mapAggResponse, latch, trait.getName(),null);
 			}
 		}
 
@@ -480,14 +480,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 				getAggregateLatch(index, type,
 						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-						geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch, namedAggs);
+						geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch, namedAggs,null);
 
 				customParams.put(keyword, tempCFParams);
 			}
 			if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
 				getAggregateLatch(index, type,
 						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-						geoAggregationField, mapSearchQuery, mapAggResponse, latch, namedAggs);
+						geoAggregationField, mapSearchQuery, mapAggResponse, latch, namedAggs,null);
 
 			}
 		}
@@ -563,7 +563,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
-			Integer uploadersoffset, Integer identifiersoffset,String dataSetName,String  dataTableName,String geoEntity) {
+			Integer uploadersoffset, Integer identifiersoffset,String dataSetName,String  dataTableName,String geoEntity,String geoShapeFilterField) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -583,7 +583,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
 		getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField, mapSearchQuery,
-				mapAggStatsResponse, latch, null);
+				mapAggStatsResponse, latch, null,geoShapeFilterField);
 
 		// for top Uploaders
 
@@ -594,15 +594,15 @@ public class ObservationListServiceImpl implements ObservationListService {
 					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted,dataSetName, dataTableName,geoEntity);
 
 			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse,
-					latch, null);
+					latch, null,geoShapeFilterField);
 			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQueryFilter,
-					mapAggStatsResponse, latch, null);
+					mapAggStatsResponse, latch, null,geoShapeFilterField);
 
 		} else {
 			getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
-					null);
+					null,geoShapeFilterField);
 			getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
-					mapAggStatsResponse, latch, null);
+					mapAggStatsResponse, latch, null,geoShapeFilterField);
 
 		}
 

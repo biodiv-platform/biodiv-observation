@@ -376,14 +376,13 @@ public class ObservationController {
 			@QueryParam("termsAggregationField") String termsAggregationField,
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
-			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity, @QueryParam("tags") String tags,
-			@ApiParam(name = "location") EsLocationListParams location,
+			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity,
+			@QueryParam("tags") String tags, @ApiParam(name = "location") EsLocationListParams location,
 			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
 			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
 			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
-			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset,
-			@Context UriInfo uriInfo) {
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
 
 		try {
 
@@ -431,7 +430,8 @@ public class ObservationController {
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted,dataSetName,dataTableName,geoEntity);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+					dataTableName, geoEntity);
 
 			MapAggregationResponse aggregationResult = null;
 			MapAggregationStatsResponse aggregationStatsResult = null;
@@ -441,7 +441,8 @@ public class ObservationController {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
-						tahsil, district, state, tags, publicationGrade, authorVoted,dataSetName,dataTableName,geoEntity);
+						tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName, dataTableName,
+						geoEntity);
 
 				if (view.equalsIgnoreCase("stats")) {
 					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
@@ -449,7 +450,8 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset, identifiersoffset,dataSetName, dataTableName,geoEntity);
+							uploadersoffset, identifiersoffset, dataSetName, dataTableName, geoEntity,
+							geoShapeFilterField);
 
 				}
 
@@ -457,7 +459,7 @@ public class ObservationController {
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					geoShapeFilterField, aggregationStatsResult,aggregationResult, view);
+					geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

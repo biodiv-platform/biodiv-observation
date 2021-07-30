@@ -41,7 +41,7 @@ public interface ObservationListService {
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
-			Integer uploadersoffset, Integer identifiersoffset,String dataSetName,String dataTableName,String geoEntity);
+			Integer uploadersoffset, Integer identifiersoffset,String dataSetName,String dataTableName,String geoEntity,String geoShapeFilterField);
 
 	public FilterPanelData getAllFilter();
 
