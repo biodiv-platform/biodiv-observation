@@ -76,8 +76,10 @@ public class LatchThreadWorker extends Thread {
 				mapResponse.put(filter, response);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			latch.countDown();
 		}
-		latch.countDown();
+
 	}
 
 }
