@@ -502,7 +502,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get("group_name.keyword").getGroupAggregation());
 		aggregationResponse
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
-		aggregationResponse.setGroupRank(getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
+		aggregationResponse.setGroupRank(getRankAggregation(mapAggResponse.get("max_voted_reco.ranktext.keyword").getGroupAggregation()));
 		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
 		aggregationResponse.setGroupUserGroupName(
 				mapAggResponse.get("user_group_observations.name.keyword").getGroupAggregation());
