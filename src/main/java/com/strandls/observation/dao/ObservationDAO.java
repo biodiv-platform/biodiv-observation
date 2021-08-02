@@ -3,7 +3,7 @@
  */
 package com.strandls.observation.dao;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +16,7 @@ import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
+import org.hibernate.type.LongType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ import com.strandls.observation.util.AbstractDAO;
  */
 public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationDAO.class);
 
 	@Inject
 	protected ObservationDAO(SessionFactory sessionFactory) {
@@ -48,6 +49,22 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			session.close();
 		}
 		return entity;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Long findTotalObservation() {
+		Session session = sessionFactory.openSession();
+		String qry = "select count(id) from observation where is_deleted = false";
+		Long total = null;
+		try {
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			total = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return total;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -80,8 +97,27 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Long> fetchObservationIdsList(Long startPoint) {
+		Session session = sessionFactory.openSession();
+		String qry = "select id from observation where is_deleted = false offset :startPoint limit 30000";
+		List<Long> result = null;
+		try {
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			query.setParameter("startPoint", startPoint);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
 		return result;
 	}
 
@@ -120,49 +156,43 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Map<Long, Long> getObservationUploadCount(Long authorId, Long sGroup, Boolean hasMedia, Long offset) {
+	public List<Observation> fetchByDataTableId(List<Long> dataTableId, Integer limit, Integer offset) {
+
+		String qry = "from Observation where isDeleted = false and dataTableId IN :ids";
 		Session session = sessionFactory.openSession();
-		String qry = "select max_voted_reco_id, count(id) from observation "
-				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
-		if (sGroup != null)
-			qry = qry + " and group_id = " + sGroup;
-		if (hasMedia)
-			qry = qry + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
-
-		qry = qry + "group by max_voted_reco_id order by count(id) desc limit 10 offset " + offset;
-		
-		
-		String qry1 = "select count(id) from observation "
-				+ "where is_deleted = false and  author_id = " + authorId + " and max_voted_reco_id is not NULL ";
-		if (sGroup != null)
-			qry1 = qry1 + " and s_group = " + sGroup;
-		if (hasMedia)
-			qry1 = qry1 + " and (no_of_audio > 0 or no_of_videos > 0 or no_of_images > 0 ) ";
-
-		Map<Long, Long> maxVotedRecoFreq = new LinkedHashMap<Long, Long>();
-
-		List<Object[]> objectList = null;
-
+		List<Observation> result = null;
 		try {
-
-			Query<Object[]> query = session.createNativeQuery(qry);
-
-			objectList = query.getResultList();
-
-			for (Object object[] : objectList) {
-				maxVotedRecoFreq.put(Long.parseLong(object[0].toString()), Long.parseLong(object[1].toString()));
+			Query<Observation> query = session.createQuery(qry);
+			query.setParameter("ids", dataTableId);
+			query.setFirstResult(offset);
+			if (limit != null) {
+				query.setMaxResults(limit);
 			}
-			
-			Query<Object> query2 = session.createNativeQuery(qry1);
-			Object obj = query2.getSingleResult();
-			maxVotedRecoFreq.put(null, Long.parseLong(obj.toString()));
-			
+			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}
-		return maxVotedRecoFreq;
+
+		return result;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<Observation> getObservationCountForDatatable(Long datatableId) {
+		Session session = sessionFactory.openSession();
+		List<Observation> observationList = new ArrayList<Observation>();
+		String hql = "from Observation o where o.dataTableId = :datatable";
+		try {
+			Query query = session.createQuery(hql);
+			query.setParameter("datatable", datatableId);
+			observationList = query.list();
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		} finally {
+			session.close();
+		}
+		return observationList;
 	}
 
 }

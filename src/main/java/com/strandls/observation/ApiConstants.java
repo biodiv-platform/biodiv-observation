@@ -17,6 +17,7 @@ public class ApiConstants {
 	public static final String OBSERVATION = "/observation";
 	public static final String SHOW = "/show";
 	public static final String PING = "/ping";
+	public static final String BULK = "/bulk";
 	public static final String CREATE = "/create";
 	public static final String SPECIESGROUP = "/speciesgroup";
 	public static final String AGREE = "/agree";
@@ -65,6 +66,7 @@ public class ApiConstants {
 	public static final String IDENTIFIED = "/identified";
 	public static final String PULL = "/pull";
 	public static final String INGESTGBIFDATA="/ingestGbifData";
+	public static final String DATATABLEOBSERVATION = "/dataTableObservation";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
@@ -82,4 +84,5 @@ public class ApiConstants {
 	public static final String LISTCSV = "/listcsv";
 	public static final String LISTDOWNLOAD = "/listdownload";
 
+	public static final String UPLOAD = "/upload";
 }

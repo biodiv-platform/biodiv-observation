@@ -47,6 +47,7 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationESDocument;
 import com.strandls.observation.es.util.ObservationListCSVThread;
@@ -63,6 +64,7 @@ import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -70,7 +72,9 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
+import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -135,7 +139,11 @@ public class ObservationController {
 	private MailService mailService;
 
 	@Inject
+
 	private GbifObservationService gbifService;
+	
+	@Inject
+	private ObservationDataTableService observationDataTableService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -1382,12 +1390,109 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
+	@Path(ApiConstants.BULK + ApiConstants.OBSERVATION)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
+	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+		try {
+			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);
+			if (result != null) {
+				return Response.status(Status.OK).entity(result).build();
+			} else {
+				return Response.status(Status.BAD_REQUEST).entity(result).build();
+			}
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = ShowObervationDataTable.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId, @DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit,
+					offset);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + ApiConstants.LIST + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDataTableShow.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
+			@DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			List<ObservationDataTableShow> result = observationDataTableService.fetchAllObservationByDataTableId(id,
+					limit, offset);
+
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@DELETE
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
 
+	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response deleteObservaionByDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			String result = observationDataTableService.removeObservationByDataTableId(request, id);
+			if (result == null) {
+				return Response.status(Status.NOT_FOUND).entity(result).build();
+			} else {
+				return Response.status(Status.OK).entity(result).build();
+			}
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@POST
+	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
 	@ApiOperation(value = "validate the observation pulled to speciesPage", notes = "returns Boolean Values", response = Boolean.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to validate the Observations", response = String.class) })
@@ -1403,5 +1508,4 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
 }

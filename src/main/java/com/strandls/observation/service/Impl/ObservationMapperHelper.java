@@ -27,10 +27,11 @@ import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
-import com.strandls.observation.pojo.ObservationResourceData;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
@@ -40,6 +41,8 @@ import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -80,6 +83,15 @@ public class ObservationMapperHelper {
 	private Long defaultLicenseId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
 
+	@Inject
+	private RabbitMQProducer rabbitMQProducer;
+
+	@Inject
+	private ObservationDAO observationDAO;
+
+	@Inject
+	private TraitsServiceApi traitsServiceApi;
+	
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
 			String topleft = "";
@@ -225,6 +237,7 @@ public class ObservationMapperHelper {
 	public RecoCreate createRecoMapping(RecoData recoData) throws Exception {
 
 		Long commonNameId = null;
+		Long taxonId = null;
 		String commonName = recoData.getTaxonCommonName();
 		Long scientificNameId = null;
 		String scientificName = recoData.getTaxonScientificName();
@@ -240,8 +253,12 @@ public class ObservationMapperHelper {
 			commonNameId = commonNameMapper(commonName, recoData.getLanguageId());
 		}
 
-		if (scientificResult != null)
+		if (scientificResult != null) {
 			scientificNameId = scientificResult.get("recoId");
+			taxonId = scientificResult.get("taxonId");
+		}
+			
+			
 
 		RecoCreate recoCreate = new RecoCreate();
 		recoCreate.setConfidence(recoData.getConfidence());
@@ -250,6 +267,7 @@ public class ObservationMapperHelper {
 		recoCreate.setCommonNameId(commonNameId);
 		recoCreate.setScientificName(scientificName);
 		recoCreate.setScientificNameId(scientificNameId);
+		recoCreate.setTaxonId(taxonId);
 		if (scientificResult != null && scientificResult.isEmpty() == false && scientificResult.get("flag") == 1L)
 			recoCreate.setFlag(true);
 		else
@@ -270,6 +288,9 @@ public class ObservationMapperHelper {
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
 						recoData.getScientificNameTaxonId(), canonicalName, true);
 			}
+			Long taxonId = recommendation.getAcceptedNameId() != null ?recommendation.getAcceptedNameId()
+					:recommendation.getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", recommendation.getId());
 			result.put("flag", 0L);
 		} catch (Exception e) {
@@ -312,6 +333,9 @@ public class ObservationMapperHelper {
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
 						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
+							: resultList.get(0).getTaxonConceptId();
+					result.put("taxonId",taxonId);
 					result.put("recoId", resultList.get(0).getId());
 					result.put("flag", 0L);
 				} else {
@@ -340,6 +364,10 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return taxonIdExists(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
+					? filteredList.get(0).getAcceptedNameId():
+				filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -358,6 +386,10 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return fullNameSearch(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
+					? filteredList.get(0).getAcceptedNameId():
+				filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId",taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -370,14 +402,21 @@ public class ObservationMapperHelper {
 	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
 
 		Map<String, Long> result = new HashMap<String, Long>();
+		long taxonId = recommendations.get(0).getAcceptedNameId() != null 
+				?recommendations.get(0).getAcceptedNameId():
+					recommendations.get(0).getTaxonConceptId();
 		for (Recommendation recommendation : recommendations) {
 			if (recommendation.getName().equals(providedSciName)) {
+				 taxonId = recommendation.getAcceptedNameId() != null 
+						?recommendation.getAcceptedNameId():
+							recommendation.getTaxonConceptId();
 				result.put("recoId", recommendation.getId());
 				result.put("flag", 0L);
 				return result;
 			}
 
 		}
+		result.put("taxonId",taxonId);
 		result.put("recoId", recommendations.get(0).getId());
 		result.put("flag", 1L);
 		return result;
@@ -507,6 +546,67 @@ public class ObservationMapperHelper {
 
 		}
 		return editResource;
+
+	}
+
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
+	public void updateGeoPrivacy(List<Observation> observationList) {
+
+		try {
+
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
+			in.close();
+
+			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
+
+			for (Observation observation : observationList) {
+				System.out.println("--------START---------");
+				System.out.println("Observation Id : " + observation.getId());
+				System.out.println("---------END----------");
+
+				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						if (geoPrivateTaxonId.contains(taxonId)) {
+							System.out.println("---------BEGIN----------");
+							System.out.println("Observation Id : " + observation.getId());
+							observation.setGeoPrivacy(true);
+							observationDAO.update(observation);
+							rabbitMQProducer.setMessage("esmodule", observation.getId().toString(), "Observation Core");
+							System.out.println("----------END------------");
+						}
+
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 	}
 

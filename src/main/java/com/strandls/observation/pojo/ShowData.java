@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
@@ -48,6 +49,8 @@ public class ShowData implements Serializable {
 	private Map<String, String> authorScore;
 	private List<AllRecoSugguestions> allRecoVotes;
 	private List<ObservationNearBy> observationNearBy;
+	private DataTableWkt dataTable;
+	private Map<String, Object> checkListAnnotation ;
 	private Integer activityCount;
 
 	/**
@@ -79,7 +82,7 @@ public class ShowData implements Serializable {
 			List<UserGroupIbp> userGroups, List<CustomFieldObservationData> customField,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, List<FlagShow> flag,
 			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, Map<String, String> authorScore,
-			List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy, Integer activityCount) {
+			List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy,DataTableWkt dataTable, Map<String, Object> checkListAnnotation,Integer activityCount) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -96,8 +99,11 @@ public class ShowData implements Serializable {
 		this.authorScore = authorScore;
 		this.allRecoVotes = allRecoVotes;
 		this.observationNearBy = observationNearBy;
+		this.dataTable = dataTable;
+		this.checkListAnnotation = checkListAnnotation;
 		this.activityCount = activityCount;
 	}
+
 
 	public Observation getObservation() {
 		return observation;
@@ -225,6 +231,22 @@ public class ShowData implements Serializable {
 
 	public void setActivityCount(Integer activityCount) {
 		this.activityCount = activityCount;
+	}
+
+	public DataTableWkt getDataTable() {
+		return dataTable;
+	}
+
+	public void setDataTable(DataTableWkt dataTable) {
+		this.dataTable = dataTable;
+	}
+
+	public Map<String, Object> getCheckListAnnotation() {
+		return checkListAnnotation;
+	}
+
+	public void setCheckListAnnotation(Map<String, Object> checkListAnnotation) {
+		this.checkListAnnotation = checkListAnnotation;
 	}
 
 }

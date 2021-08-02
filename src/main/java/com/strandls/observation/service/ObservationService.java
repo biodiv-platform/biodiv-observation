@@ -157,5 +157,4 @@ public interface ObservationService {
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
-
 }
