@@ -403,7 +403,7 @@ public class GbifObservationThread implements Runnable {
 					 * scientificName = reco.getName(); }
 					 */
 
-				Long rank = null;
+				String rank = null;
 				Long speciesId = null;
 				String taxonStatus = null;
 
@@ -418,7 +418,8 @@ public class GbifObservationThread implements Runnable {
 
 				if (taxonId != null) {
 					// rank = Long.parseLong(taxonDetails.getRank().toString());
-					rank = Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
+				//	rank = Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
+					rank=taxonDetails.getRank();
 					if (taxonDetails.getAcceptedIds() != null) {
 						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
 					} else {
@@ -446,7 +447,7 @@ public class GbifObservationThread implements Runnable {
 					}
 
 					if (taxonDetails.getPath() != null) {
-						List<String> taxonPath = Arrays.asList(taxonDetails.getPath().toString().split("_"));
+					//	List<String> taxonPath = Arrays.asList(taxonDetails.getPath().toString().split("_"));
 
 						StopWatch watchth = new StopWatch();
 						watchth.start();

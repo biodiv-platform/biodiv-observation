@@ -12,7 +12,7 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 public class GbifObservationESMapper {
 
 	public ExternalObservationESDocument mapToESDocument(Date date, String month, Double lat, Double lon,
-			String placeName, Long recoId, Long taxonId, Long rank, Long speciesid, String taxonStatus,
+			String placeName, Long recoId, Long taxonId, String rank, Long speciesid, String taxonStatus,
 			List<Map<String, String>> hierarchy, String scientificName, String cannonicalName, Long acceptedNameIds,
 			String italisicedForm, String position, Long observationId, Date dateIdentified, String name, String state,
 			String district, String tahsil, Long groupId, String groupName, String externalOriginalReferenceLink,
@@ -76,18 +76,18 @@ public class GbifObservationESMapper {
 	}
 
 	private void mapAllRecoVote(All_reco_vote allRecoVote, Long recommendationId, String scientificName,
-			String cannonicalName, Long acceptedNameId, Long taxonId, String italicisedForm, Long rank, String status,
+			String cannonicalName, Long acceptedNameId, Long taxonId, String italicisedForm, String rank, String status,
 			String position, String speciesId, Date dateIdentified, String name) {
 		allRecoVote.setRecommendation_id(recommendationId);
 		Scientific_name recoScientificName = new Scientific_name();
 		Taxon_detail taxonDetails = new Taxon_detail();
 
 		taxonDetails.setId(taxonId);
-		taxonDetails.setItalicised_form(italicisedForm);
+		//taxonDetails.setItalicised_form(italicisedForm);
 		taxonDetails.setPosition(position);
 		taxonDetails.setRank(rank);
 
-		taxonDetails.setSpecies_id(speciesId);
+		//taxonDetails.setSpecies_id(speciesId);
 
 		taxonDetails.setStatus(status);
 		taxonDetails.setCanonical_form(cannonicalName);
@@ -103,12 +103,12 @@ public class GbifObservationESMapper {
 
 	}
 
-	private void mapMaxvotedreco(Max_voted_reco maxVotedeReco, Long recoId, Long taxonId, Long rank, Long speciesId,
+	private void mapMaxvotedreco(Max_voted_reco maxVotedeReco, Long recoId, Long taxonId, String rank, Long speciesId,
 			String taxonStatus, List<Map<String, String>> hierarchy, String scientificName) {
 
 		maxVotedeReco.setId(recoId);
 		maxVotedeReco.setRank(rank);
-		maxVotedeReco.setSpecies_id(speciesId);
+		//maxVotedeReco.setSpecies_id(speciesId);
 		maxVotedeReco.setTaxonstatus(taxonStatus);
 		maxVotedeReco.setScientific_name(scientificName);
 
@@ -118,7 +118,8 @@ public class GbifObservationESMapper {
 				if (!node.get("taxon_rank").equals("root")) {
 					Hierarchy h = new Hierarchy();
 					h.setNormalized_name(node.get("taxon_name"));
-					h.setRank(Long.parseLong(getRankNumberFromName(node.get("taxon_rank")).toString()));
+					//h.setRank(Long.parseLong(getRankNumberFromName(node.get("taxon_rank")).toString()));
+					h.setRank(node.get("taxon_rank"));
 					h.setTaxon_id(Long.parseLong(node.get("taxon_id").toString()));
 					list.add(h);
 				}
@@ -127,9 +128,9 @@ public class GbifObservationESMapper {
 		}
 
 		maxVotedeReco.setHierarchy(list);
-		if (rank != null) {
-			maxVotedeReco.setRanktext(getRankText(rank));
-		}
+		/*
+		 * if (rank != null) { maxVotedeReco.setRanktext(getRankText(rank)); }
+		 */
 
 	}
 
