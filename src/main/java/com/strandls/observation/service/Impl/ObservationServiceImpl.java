@@ -253,8 +253,8 @@ public class ObservationServiceImpl implements ObservationService {
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
-					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString(), true);
+					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
+							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -276,7 +276,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
-						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
@@ -920,8 +920,8 @@ public class ObservationServiceImpl implements ObservationService {
 		MailData mailData = Boolean.TRUE.equals(hasMail) ? generateMailData(observationId) : null;
 
 		observation.setIsDeleted(true);
-		MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
-				ObservationIndex.type.getValue(), observationId.toString());
+		MapQueryResponse esResponse = esService.delete(ObservationIndex.INDEX.getValue(),
+				ObservationIndex.TYPE.getValue(), observationId.toString());
 		ResultEnum result = esResponse.getResult();
 		if (result.getValue().equals("DELETED")) {
 			observationDao.update(observation);
@@ -1578,7 +1578,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			Long size = offset + 10;
 			AuthorUploadedObservationInfo authorUploadedObservationInfo = esService.getUploadUserInfo(
-					ObservationIndex.index.getValue(), ObservationIndex.type.getValue(), userId.toString(),
+					ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(), userId.toString(),
 					size.toString(), (sGroupId != null) ? sGroupId.toString() : null, hasMedia);
 
 			List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();

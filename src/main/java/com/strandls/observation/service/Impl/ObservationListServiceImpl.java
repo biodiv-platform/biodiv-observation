@@ -223,7 +223,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		FilterPanelData filterList = null;
 		try {
-			filterList = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
+			filterList = esService.getFilterLists(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -922,7 +922,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 	public FilterPanelData getAllFilter() {
 		FilterPanelData result = null;
 		try {
-			result = esService.getFilterLists(ObservationIndex.index.getValue(), ObservationIndex.type.getValue());
+			result = esService.getFilterLists(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue());
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -937,8 +937,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<ObservationHomePage> obvHomePage = new ArrayList<ObservationHomePage>();
 			for (String s : resourceUrls.split(",")) {
 				MapSearchQuery query = esUtility.getSearchQueryResource(s);
-				MapResponse result = esService.search(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), null, null, null, null, null, query);
+				MapResponse result = esService.search(ObservationIndex.INDEX.getValue(),
+						ObservationIndex.TYPE.getValue(), null, null, null, null, null, query);
 				List<MapDocument> documents = result.getDocuments();
 				MapDocument document = documents.get(0);
 				try {
@@ -961,7 +961,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 	public ObservationListMinimalData getObservationMinimal(String observationId) {
 		try {
 			ObservationListMinimalData result = null;
-			MapDocument response = esService.fetch(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+			MapDocument response = esService.fetch(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 					observationId);
 			if (response.getDocument() != null) {
 				result = objectMapper.readValue(String.valueOf(response.getDocument()),
