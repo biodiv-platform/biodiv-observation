@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.util.PropertyFileUtil;
 
-import javax.inject.Inject;
-
 /**
  * @author Abhishek Rudra
  *

@@ -278,12 +278,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					status, taxonId, recoName, omiter, tahsil, district, state, tags, publicationGrade, authorVoted,
 					dataSetName, dataTableName, geoEntity);
 
-			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null, null);
+			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null);
 		} else {
 
-			getAggregateLatch(index, type, "max_voted_reco.ranktext.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null, null);
+			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQuery,
+					mapAggResponse, latch, null);
 		}
 
 		if (state != null && !state.isEmpty()) {
@@ -510,10 +510,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		aggregationResponse.setGroupSpeciesName(getAggregationValue(mapAggResponse.get("group_name.keyword")));
 		aggregationResponse
-				.setGroupStatus(getAggregationValue(mapAggResponse.get("max_voted_reco.taxonstatus.keyword")));
-		aggregationResponse.setGroupRank(
-				getRankAggregation(getAggregationValue(mapAggResponse.get("max_voted_reco.ranktext.keyword"))));
-		aggregationResponse.setGroupState(getAggregationValue(mapAggResponse.get("location_information.state.raw")));
+				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
+		aggregationResponse.setGroupRank(getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
+		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
 		aggregationResponse.setGroupUserGroupName(
 				getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
 		aggregationResponse.setGroupFlag(getAggregationValue(mapAggResponse.get("flag_count")));
