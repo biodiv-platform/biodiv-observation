@@ -279,11 +279,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null);
+					mapAggResponse, latch, null,null);
 		}
 
 		if (state != null && !state.isEmpty()) {
