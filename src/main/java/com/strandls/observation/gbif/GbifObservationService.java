@@ -3,6 +3,9 @@ package com.strandls.observation.gbif;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -51,26 +54,32 @@ public class GbifObservationService {
 		String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
 
 		try {
-		
+
+			Path path2 = Paths.get(path);
+			Long lines = Files.lines(path2).count();
+			System.out.println("lines = " + lines);
 
 			FileReader fileReader2 = new FileReader(path);
 			CSVReader csvReader2 = new CSVReader(fileReader2, '\t');
-			int numRows = 0;
-			while ((csvReader2.readNext()) != null) {
-				numRows++;
-			}
-			numRows = numRows - 1;
-			System.out.println("rows=" + numRows);
+			//int numRows = 0;
+			/*
+			 * while ((csvReader2.readNext()) != null) {
+			 * 
+			 * numRows++; }
+			 */
+			// numRows = numRows - 1;
+			lines = lines - 1;
+			System.out.println("rows=" + lines);
 
 			ExecutorService executor = Executors.newFixedThreadPool(10);
 
 			int numThreads = 5;
 
-			int batchSize = (numRows / numThreads);
+			int batchSize = (Integer.parseInt(lines.toString()) / numThreads);
 			int s = 1;
 
 			int m;
-			if (numRows % numThreads == 0) {
+			if (lines % numThreads == 0) {
 				m = numThreads;
 			} else {
 				m = numThreads + 1;
@@ -82,7 +91,7 @@ public class GbifObservationService {
 			for (int i = 1; i <= m; i++) {
 				if (i == m) {
 
-					int t = numRows - s; // System.out.println(s+","+(s+t));
+					int t = Integer.parseInt(lines.toString()) - s; // System.out.println(s+","+(s+t));
 					GbifObservationThread gbifThread1 = new GbifObservationThread(utilityService, esService, recoDao,
 							gbifMapper, layerService, taxonomyService, s, s + t, i);
 					executor.execute(gbifThread1);
@@ -97,13 +106,13 @@ public class GbifObservationService {
 				s = (i) * batchSize;
 			}
 
-		
-
 			executor.shutdown();
-			executor.awaitTermination(1,TimeUnit.HOURS);
+			executor.awaitTermination(1, TimeUnit.HOURS);
 			stopWatch.stop();
-			
-			System.out.println("Elapsed Time in mili-seconds: " + stopWatch.getTime());
+
+			long time = stopWatch.getTime();
+			time = time / (1000);
+			System.out.println("Elapsed Time in seconds: " + time);
 
 			return ("running");
 

@@ -110,6 +110,8 @@ public class GbifObservationThread implements Runnable {
 			String r[] = csvReader1.readNext();
 			String[] columns = r.clone();
 
+			System.out.println(columns);
+
 			List<String> markedColumns = new ArrayList<>();
 			Map<String, Integer> headerIndex = new LinkedHashMap<>();
 			for (int j = 0; j < r.length; j++) {
@@ -118,27 +120,12 @@ public class GbifObservationThread implements Runnable {
 			FileReader filereader2 = new FileReader(path);
 			CSVReader csvReader = new CSVReader(filereader2, '\t', '"', startRow);
 
-			/*
-			 * CSVReader csvReader = new CSVReaderBuilder(filereader)
-			 * 
-			 * .withSkipLines(startRow).withCSVParser(new
-			 * CSVParserBuilder().withSeparator('\t').build()).build();
-			 */
-
-			/*
-			 * @SuppressWarnings("unchecked") Map<String, Object> jsonFileMap =
-			 * jsonReadMapper.readValue(new File("/home/prakhar/Desktop/metaData.json"),
-			 * HashMap.class); System.out.println(jsonFileMap);
-			 */
+			
 
 			String batchEsJson = "";
 
-			// String[] row = csvReader.readNext();
-
-			/*
-			 * for (int j = 0; j < row.length; j++) { headerIndex.put(row[j], j); }
-			 */
-			FileWriter outputfile = new FileWriter("/home/prakhar/scientific_names/new_query_results.csv",true);
+			
+			FileWriter outputfile = new FileWriter("/home/prakhar/scientific_names/new_query_results.csv", true);
 			CSVWriter writer = new CSVWriter(outputfile);
 
 			String[] outputFileHeaders = { "gbifScientificName", "parsedCanonicalName", "matchedScientificName",
@@ -157,16 +144,12 @@ public class GbifObservationThread implements Runnable {
 				row = csvReader.readNext();
 				watchRead.stop();
 				timeRead = timeRead + watchRead.getTime();
+			
 				/*
-				 * if (ctr > endRow) { break; } ctr++;
+				 * if (row == null) { System.out.println("row empty i=" + i); }
+				 * 
+				 * System.out.println(row[0]);
 				 */
-				// System.out.println(headerIndex);
-				if (row == null) {
-					System.out.println("row empty i=" + i);
-				}
-				if (row[headerIndex.get("publishingOrgKey")] == null) {
-					System.out.println("id=" + row[headerIndex.get("gbifID")]);
-				}
 				String publishingOrgKey = row[headerIndex.get("publishingOrgKey")];
 				String latitude = row[headerIndex.get("decimalLatitude")];
 				String longitude = row[headerIndex.get("decimalLongitude")];
@@ -176,10 +159,22 @@ public class GbifObservationThread implements Runnable {
 						&& !isBadRecord(latitude, longitude)) {
 					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
 					String gbifId = row[headerIndex.get("gbifID")];
-					String datetime = row[headerIndex.get("eventDate")];
-					LocalDateTime dateTime = LocalDateTime.parse(datetime);
-					Date date = Timestamp.valueOf(dateTime);
+
+					String datetime = null;
+					LocalDateTime dateTime1 = null;
+					Date date = null;
+
+					datetime = row[headerIndex.get("eventDate")];
+					//System.out.println("datetime is =" + datetime);
+
+					if (datetime != null && !datetime.isEmpty()) {
+						dateTime1 = LocalDateTime.parse(datetime);
+						date = Timestamp.valueOf(dateTime1);
+
+					}
+
 					Date lastModified = null;
+
 					String lastModifiedDateString = row[headerIndex.get("dateIdentified")];
 					if (!lastModifiedDateString.isEmpty()) {
 						LocalDateTime dateTime2 = LocalDateTime.parse(lastModifiedDateString);
@@ -191,16 +186,14 @@ public class GbifObservationThread implements Runnable {
 					String gbifScientificName = row[headerIndex.get("scientificName")];
 					scientificNames.add(gbifScientificName);
 
-					String month = row[headerIndex.get("month")];
-					String monthName = getMonthName(month);
-					Double lat = null;
-					/*
-					 * CSVReader csvReader = new CSVReaderBuilder(filereader)
-					 * 
-					 * .withSkipLines(startRow).withCSVParser(new
-					 * CSVParserBuilder().withSeparator('\t').build()).build();
-					 */
+					String month = null;
+					String monthName = null;
 
+					month = row[headerIndex.get("month")];
+					//System.out.println("month=" + month + ",gbifId=" + gbifId);
+					monthName = getMonthName(month);
+
+					Double lat = null;
 					Double lon = null;
 
 					lat = Double.parseDouble(row[headerIndex.get("decimalLatitude")]);
@@ -250,7 +243,7 @@ public class GbifObservationThread implements Runnable {
 					markedColumns.add("scientificName");
 
 					String annotations = getAnnotations(headerIndex, markedColumns, columns, row);
-					System.out.println(annotations);
+					//System.out.println(annotations);
 
 					// ---------------------time for mapper class
 					// -------------------------------------------------------------
@@ -275,13 +268,7 @@ public class GbifObservationThread implements Runnable {
 						List<ParsedName> parsedNames = getParsedNames(scientificNames);
 						processRecoAndTaxonDetails(parsedNames, observations, writer);
 
-						/*
-						 * List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
-						 * 
-						 * @SuppressWarnings("unchecked") Map<String, Object> doc =
-						 * objectMapper.convertValue(s, Map.class); doc.put("id", "gbif-" +
-						 * s.getObservation_id()); return doc; }).collect(Collectors.toList());
-						 */
+						
 
 						// -------------time for serialisation---------------------------------------
 						StopWatch watchSerial = new StopWatch();
@@ -299,10 +286,6 @@ public class GbifObservationThread implements Runnable {
 						timeEsPush = timeEsPush + watchInside.getTime();
 						// ------------------------------------------------------------------------
 
-						/*
-						 * ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc",
-						 * batchEsJson, esService); Thread t1 = new Thread(esPushThread); t1.start();
-						 */
 						observations.clear();
 						scientificNames.clear();
 
@@ -316,13 +299,7 @@ public class GbifObservationThread implements Runnable {
 			if (!observations.isEmpty()) {
 				List<ParsedName> parsedNames = getParsedNames(scientificNames);
 				processRecoAndTaxonDetails(parsedNames, observations, writer);
-				/*
-				 * List<Map<String, Object>> batchEsDoc = observations.stream().map(s -> {
-				 * 
-				 * @SuppressWarnings("unchecked") Map<String, Object> doc =
-				 * objectMapper.convertValue(s, Map.class); doc.put("id", "gbif-" +
-				 * s.getObservation_id()); return doc; }).collect(Collectors.toList());
-				 */
+				
 				StopWatch watchSertialOutside = new StopWatch();
 				watchSertialOutside.start();
 				batchEsJson = objectMapper.writeValueAsString(observations);
@@ -338,10 +315,7 @@ public class GbifObservationThread implements Runnable {
 
 				timeEsPush = timeEsPush + watchOutside.getTime();
 
-				/*
-				 * ESPushThread esPushThread = new ESPushThread("extended_observation", "_doc",
-				 * batchEsJson, esService); Thread t2 = new Thread(esPushThread); t2.start();
-				 */
+				
 			}
 
 			fw.write("time to read csv=" + timeRead + "\n");
@@ -418,8 +392,9 @@ public class GbifObservationThread implements Runnable {
 
 				if (taxonId != null) {
 					// rank = Long.parseLong(taxonDetails.getRank().toString());
-				//	rank = Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
-					rank=taxonDetails.getRank();
+					// rank =
+					// Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
+					rank = taxonDetails.getRank();
 					if (taxonDetails.getAcceptedIds() != null) {
 						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
 					} else {
@@ -447,14 +422,15 @@ public class GbifObservationThread implements Runnable {
 					}
 
 					if (taxonDetails.getPath() != null) {
-					//	List<String> taxonPath = Arrays.asList(taxonDetails.getPath().toString().split("_"));
+						// List<String> taxonPath =
+						// Arrays.asList(taxonDetails.getPath().toString().split("_"));
 
 						StopWatch watchth = new StopWatch();
 						watchth.start();
 						// hierarchy = getHierarchy(taxonPath);
 						// hierarchy=getHierarchy2(taxonDetails.getHierarchy().toString());
 						hierarchy = taxonDetails.getHierarchy();
-						System.out.println(hierarchy);
+						//System.out.println(hierarchy);
 						watchth.stop();
 						timehierarchy = timehierarchy + watchth.getTime();
 					}
@@ -501,7 +477,6 @@ public class GbifObservationThread implements Runnable {
 				writer.writeNext(scientificNameRow);
 
 			}
-			
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -541,6 +516,7 @@ public class GbifObservationThread implements Runnable {
 	}
 
 	private String getMonthName(String month) {
+	//	System.out.println("month = " + month);
 		int monthNumber = Integer.parseInt(month);
 		String monthName = null;
 		monthName = new DateFormatSymbols().getMonths()[monthNumber - 1];
@@ -609,27 +585,7 @@ public class GbifObservationThread implements Runnable {
 		return result;
 	}
 
-	/*
-	 * @SuppressWarnings("unchecked") private List<Map<String, String>>
-	 * getHierarchy(List<String> taxonIds) { List<Map<String, String>> hierarchy =
-	 * new ArrayList<>();
-	 * 
-	 * try {
-	 * 
-	 * List<MapDocument> taxonDocs = esService.fetchInBulk(null, null, taxonIds);
-	 * for (MapDocument mapDoc : taxonDocs) { Map<String, Object> a = (Map<String,
-	 * Object>) mapDoc.getDocument(); String taxonId = a.get("id").toString();
-	 * String normaliseName = a.get("name").toString(); String rank =
-	 * a.get("rank").toString();
-	 * 
-	 * Map<String, String> node = new HashMap<>(); node.put("taxon_id", taxonId);
-	 * node.put("normalised_name", normaliseName); node.put("rank", rank);
-	 * hierarchy.add(node); }
-	 * 
-	 * return hierarchy;
-	 * 
-	 * } catch (Exception e) { e.printStackTrace(); } return null; }
-	 */
+	
 	@SuppressWarnings("unchecked")
 	private List<Map<String, String>> getHierarchy2(String h) {
 		ObjectMapper o = new ObjectMapper();
