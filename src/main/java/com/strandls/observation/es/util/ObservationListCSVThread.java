@@ -19,6 +19,8 @@ import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.service.MailService;
 import com.strandls.observation.service.ObservationListService;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.DownloadLogData;
 
 public class ObservationListCSVThread implements Runnable {
 
@@ -75,6 +77,7 @@ public class ObservationListCSVThread implements Runnable {
 	private String notes;
 	private String url;
 	private MailService mailService;
+	private UserServiceApi userServiceApi;
 
 	public ObservationListCSVThread() {
 		super();
@@ -90,7 +93,7 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url, MailService mailService) {
+			String authorId, String notes, String url, MailService mailService,UserServiceApi userServiceApi) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -140,6 +143,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.notes = notes;
 		this.url = url;
 		this.mailService = mailService;
+		this.userServiceApi = userServiceApi;
 	}
 
 	@Override
@@ -157,11 +161,18 @@ public class ObservationListCSVThread implements Runnable {
 		Integer epochSize = 0;
 		String fileGenerationStatus = "Pending";
 		String fileType = "CSV";
+		
 		DownloadLog entity = obUtil.createDownloadLogEntity(null, Long.parseLong(authorId), url, notes, 0L,
 				fileGenerationStatus, fileType);
-		downloadLogDao.save(entity);
+		DownloadLogData data = new DownloadLogData();
+		data.setFilePath(entity.getFilePath());
+		data.setFileType(fileType);
+		data.setFilterUrl(entity.getFilterUrl());
+		data.setStatus(entity.getStatus());
+		data.setSourcetype("Observations");
 		try {
 			fileGenerationStatus = "SUCCESS";
+			userServiceApi.logDocumentDownload(data);
 			do {
 				mapSearchParams.setFrom(offset);
 				mapSearchParams.setLimit(max);
