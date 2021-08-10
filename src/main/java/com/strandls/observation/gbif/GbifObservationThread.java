@@ -3,6 +3,7 @@ package com.strandls.observation.gbif;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -120,18 +121,20 @@ public class GbifObservationThread implements Runnable {
 			FileReader filereader2 = new FileReader(path);
 			CSVReader csvReader = new CSVReader(filereader2, '\t', '"', startRow);
 
-			
-
 			String batchEsJson = "";
 
-			
-			FileWriter outputfile = new FileWriter("/home/prakhar/scientific_names/new_query_results.csv", true);
-			CSVWriter writer = new CSVWriter(outputfile);
+			/*
+			 * FileWriter outputfile = new
+			 * FileWriter("/home/prakhar/scientific_names/new_query_results.csv", true);
+			 * CSVWriter writer = new CSVWriter(outputfile);
+			 */
 
-			String[] outputFileHeaders = { "gbifScientificName", "parsedCanonicalName", "matchedScientificName",
-					"matchedCanonicalName", "taxonId", "recoId" };
-
-			writer.writeNext(outputFileHeaders);
+			/*
+			 * String[] outputFileHeaders = { "gbifScientificName", "parsedCanonicalName",
+			 * "matchedScientificName", "matchedCanonicalName", "taxonId", "recoId" };
+			 * 
+			 * writer.writeNext(outputFileHeaders);
+			 */
 
 			List<String> scientificNames = new ArrayList<>();
 			List<ExternalObservationESDocument> observations = new ArrayList<>();
@@ -144,7 +147,7 @@ public class GbifObservationThread implements Runnable {
 				row = csvReader.readNext();
 				watchRead.stop();
 				timeRead = timeRead + watchRead.getTime();
-			
+
 				/*
 				 * if (row == null) { System.out.println("row empty i=" + i); }
 				 * 
@@ -156,7 +159,8 @@ public class GbifObservationThread implements Runnable {
 				String tempId = row[headerIndex.get("gbifID")];
 
 				if (publishingOrgKey != null && !publishingOrgKey.equals(excludingPublishingOrgKey)
-						&& !isBadRecord(latitude, longitude)) {
+						&& !isBadRecord(latitude, longitude, row[headerIndex.get("month")],
+								row[headerIndex.get("scientificName")])) {
 					String externalOriginalReferenceLink = row[headerIndex.get("occurrenceID")];
 					String gbifId = row[headerIndex.get("gbifID")];
 
@@ -165,7 +169,7 @@ public class GbifObservationThread implements Runnable {
 					Date date = null;
 
 					datetime = row[headerIndex.get("eventDate")];
-					//System.out.println("datetime is =" + datetime);
+					// System.out.println("datetime is =" + datetime);
 
 					if (datetime != null && !datetime.isEmpty()) {
 						dateTime1 = LocalDateTime.parse(datetime);
@@ -190,7 +194,7 @@ public class GbifObservationThread implements Runnable {
 					String monthName = null;
 
 					month = row[headerIndex.get("month")];
-					//System.out.println("month=" + month + ",gbifId=" + gbifId);
+					// System.out.println("month=" + month + ",gbifId=" + gbifId);
 					monthName = getMonthName(month);
 
 					Double lat = null;
@@ -243,7 +247,7 @@ public class GbifObservationThread implements Runnable {
 					markedColumns.add("scientificName");
 
 					String annotations = getAnnotations(headerIndex, markedColumns, columns, row);
-					//System.out.println(annotations);
+					// System.out.println(annotations);
 
 					// ---------------------time for mapper class
 					// -------------------------------------------------------------
@@ -266,9 +270,7 @@ public class GbifObservationThread implements Runnable {
 
 					if (observations.size() >= 100) {
 						List<ParsedName> parsedNames = getParsedNames(scientificNames);
-						processRecoAndTaxonDetails(parsedNames, observations, writer);
-
-						
+						processRecoAndTaxonDetails(parsedNames, observations);
 
 						// -------------time for serialisation---------------------------------------
 						StopWatch watchSerial = new StopWatch();
@@ -298,8 +300,8 @@ public class GbifObservationThread implements Runnable {
 			ObjectMapper objectMapper = new ObjectMapper();
 			if (!observations.isEmpty()) {
 				List<ParsedName> parsedNames = getParsedNames(scientificNames);
-				processRecoAndTaxonDetails(parsedNames, observations, writer);
-				
+				processRecoAndTaxonDetails(parsedNames, observations);
+
 				StopWatch watchSertialOutside = new StopWatch();
 				watchSertialOutside.start();
 				batchEsJson = objectMapper.writeValueAsString(observations);
@@ -315,7 +317,6 @@ public class GbifObservationThread implements Runnable {
 
 				timeEsPush = timeEsPush + watchOutside.getTime();
 
-				
 			}
 
 			fw.write("time to read csv=" + timeRead + "\n");
@@ -336,46 +337,54 @@ public class GbifObservationThread implements Runnable {
 	}
 
 	private void processRecoAndTaxonDetails(List<ParsedName> parsedNames,
-			List<ExternalObservationESDocument> observations, CSVWriter writer) {
+			List<ExternalObservationESDocument> observations) {
 
 		try {
 
 			for (int i = 0; i < observations.size(); i++) {
+				Long recoId = null;
+				Long taxonId = null;
+				String matchedScientificName = null;
+				String scientificName = null;
+				ExtendedTaxonDefinition taxonDetails = null;
+
 				String gbifScientificName = parsedNames.get(i).getVerbatim();
 				RecoData recoData = new RecoData();
 				recoData.setTaxonScientificName(gbifScientificName);
 
 				StopWatch watchRecoAndTaxon = new StopWatch();
 				watchRecoAndTaxon.start();
-
-				// only for file
-				String parsedCanonicalName = parsedNames.get(i).getCanonicalName().getSimple();
-				Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData,
-						parsedNames.get(i).getCanonicalName().getSimple());
-				// Map<String, Object> recoAndTaxonId = new HashMap<>();
-				watchRecoAndTaxon.stop();
-				timeRecoAndtaxonId = timeRecoAndtaxonId + watchRecoAndTaxon.getTime();
-
-				Long recoId = null;
-				Long taxonId = null;
-				if (recoAndTaxonId.get("recoId") != null) {
-					recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
+				if (parsedNames.get(i).getCanonicalName() == null) {
+					String t = parsedNames.get(i).getVerbatim();
+					System.out.println("scientific name error=" + t);
 				}
 
-				String scientificName = gbifScientificName;
-				if (recoAndTaxonId.get("taxonId") != null) {
-					taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+				if (parsedNames.get(i).getCanonicalName() != null
+						&& !getRecoAndTaxonId(recoData, parsedNames.get(i).getCanonicalName().getSimple()).isEmpty()) {
+
+					Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData,
+							parsedNames.get(i).getCanonicalName().getSimple());
+					// Map<String, Object> recoAndTaxonId = new HashMap<>();
+					watchRecoAndTaxon.stop();
+					timeRecoAndtaxonId = timeRecoAndtaxonId + watchRecoAndTaxon.getTime();
+
+					if (recoAndTaxonId.get("recoId") != null) {
+						recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
+					}
+
+					scientificName = gbifScientificName;
+					if (recoAndTaxonId.get("taxonId") != null) {
+						taxonId = Long.parseLong(recoAndTaxonId.get("taxonId").toString());
+
+					}
+
+					taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
+					if (taxonId != null) {
+						scientificName = taxonDetails.getName();
+						matchedScientificName = taxonDetails.getName();
+					}
 
 				}
-				String matchedScientificName = null;
-				ExtendedTaxonDefinition taxonDetails = (ExtendedTaxonDefinition) recoAndTaxonId.get("etd");
-				if (taxonId != null) {
-					scientificName = taxonDetails.getName();
-					matchedScientificName = taxonDetails.getName();
-				} /*
-					 * else if (recoId != null) { Recommendation reco = recoDao.findById(recoId);
-					 * scientificName = reco.getName(); }
-					 */
 
 				String rank = null;
 				Long speciesId = null;
@@ -430,7 +439,7 @@ public class GbifObservationThread implements Runnable {
 						// hierarchy = getHierarchy(taxonPath);
 						// hierarchy=getHierarchy2(taxonDetails.getHierarchy().toString());
 						hierarchy = taxonDetails.getHierarchy();
-						//System.out.println(hierarchy);
+						// System.out.println(hierarchy);
 						watchth.stop();
 						timehierarchy = timehierarchy + watchth.getTime();
 					}
@@ -472,14 +481,23 @@ public class GbifObservationThread implements Runnable {
 					rid = recoId.toString();
 				}
 
-				String[] scientificNameRow = { gbifScientificName, parsedCanonicalName, matchedScientificName,
-						cannonicalName, tid, rid };
-				writer.writeNext(scientificNameRow);
+				/*
+				 * String[] scientificNameRow = { gbifScientificName, parsedCanonicalName,
+				 * matchedScientificName, cannonicalName, tid, rid };
+				 * writer.writeNext(scientificNameRow);
+				 */
 
 			}
 
 		} catch (Exception e) {
+			/*
+			 * FileWriter fw; try { fw = new FileWriter("exceptions.txt",true);
+			 * fw.write(e.getMessage().toString()); fw.write("\n"); } catch (IOException e1)
+			 * { // TODO Auto-generated catch block e1.printStackTrace(); }
+			 */
+
 			e.printStackTrace();
+			// logger.error(e.getMessage());
 		}
 
 	}
@@ -516,7 +534,8 @@ public class GbifObservationThread implements Runnable {
 	}
 
 	private String getMonthName(String month) {
-	//	System.out.println("month = " + month);
+		// System.out.println("month = " + month);
+
 		int monthNumber = Integer.parseInt(month);
 		String monthName = null;
 		monthName = new DateFormatSymbols().getMonths()[monthNumber - 1];
@@ -566,7 +585,7 @@ public class GbifObservationThread implements Runnable {
 				if (recommendation != null) {
 					result.put("recoId", recommendation.getId());
 				}
-
+				result.put("etd", esResult);
 			} else {
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (!resultList.isEmpty()) {
@@ -577,15 +596,15 @@ public class GbifObservationThread implements Runnable {
 			watchDb.stop();
 			timeRecoDb = timeRecoDb + watchDb.getTime();
 
-			result.put("etd", esResult);
+			// result.put("etd", esResult);
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
-			throw e;
+
 		}
 		return result;
 	}
 
-	
 	@SuppressWarnings("unchecked")
 	private List<Map<String, String>> getHierarchy2(String h) {
 		ObjectMapper o = new ObjectMapper();
@@ -604,9 +623,12 @@ public class GbifObservationThread implements Runnable {
 		return null;
 	}
 
-	private Boolean isBadRecord(String lat, String lon) {
+	private Boolean isBadRecord(String lat, String lon, String month, String scientificname) {
 
-		if (lat.isEmpty() || lon.isEmpty()) {
+		char firstChar = scientificname.charAt(0);
+
+		if (lat.isEmpty() || lon.isEmpty() || month.isEmpty() || scientificname == null || scientificname.isEmpty()
+				|| Character.isLowerCase(firstChar)) {
 			return true;
 		} else {
 			return false;

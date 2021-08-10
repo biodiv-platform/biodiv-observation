@@ -3,6 +3,7 @@ package com.strandls.observation.gbif;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,14 +55,14 @@ public class GbifObservationService {
 		String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
 
 		try {
-
+			//FileWriter fww = new FileWriter("ingesiton-time.txt");
 			Path path2 = Paths.get(path);
 			Long lines = Files.lines(path2).count();
 			System.out.println("lines = " + lines);
 
 			FileReader fileReader2 = new FileReader(path);
 			CSVReader csvReader2 = new CSVReader(fileReader2, '\t');
-			//int numRows = 0;
+			// int numRows = 0;
 			/*
 			 * while ((csvReader2.readNext()) != null) {
 			 * 
@@ -113,7 +114,7 @@ public class GbifObservationService {
 			long time = stopWatch.getTime();
 			time = time / (1000);
 			System.out.println("Elapsed Time in seconds: " + time);
-
+			//fww.write(String.valueOf(time));
 			return ("running");
 
 		} catch (Exception e) {
