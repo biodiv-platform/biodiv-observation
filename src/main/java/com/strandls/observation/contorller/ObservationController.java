@@ -26,6 +26,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -46,6 +47,7 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUtility;
@@ -139,8 +141,12 @@ public class ObservationController {
 
 	@Inject
 	private ObservationDataTableService observationDataTableService;
-	@Inject 
+
+	@Inject
 	private UserServiceApi userService;
+
+	@Inject
+	private Headers headers;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -1197,7 +1203,7 @@ public class ObservationController {
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
-			@Context UriInfo uriInfo) {
+			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
 		try {
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
@@ -1238,6 +1244,7 @@ public class ObservationController {
 			mapSearchParams.setSortOn(sortOn);
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
+			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
 			ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
 					downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
@@ -1245,7 +1252,8 @@ public class ObservationController {
 					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
 					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
 					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService,userService);
+					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService,
+					userService);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();
