@@ -461,7 +461,6 @@ public class ObservationListPageMapper {
 	 * @param userGroup
 	 * @param customField
 	 * @param tags
-	 * @param placeName
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, Date observedOn,
 			String placeName, String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages,
