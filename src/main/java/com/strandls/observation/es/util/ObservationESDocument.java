@@ -105,6 +105,7 @@ public class ObservationESDocument {
 	private String location_scale;
 	private Long dataset_id;
 	private String dataset_title;
+	private String data_table_title;
 	private Long repr_image_id;
 	private String repr_image_url;
 	private String protocol;
@@ -211,7 +212,7 @@ public class ObservationESDocument {
 			String date_accuracy, Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
 			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
 			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
-			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade) {
+			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade,String data_table_title) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -260,6 +261,7 @@ public class ObservationESDocument {
 		this.featured = featured;
 		this.facts = facts;
 		this.is_publication_grade = is_publication_grade;
+		this.data_table_title = data_table_title;
 	}
 
 	public Long getObservation_id() {
@@ -636,6 +638,14 @@ public class ObservationESDocument {
 
 	public void setIs_publication_grade(Boolean is_publication_grade) {
 		this.is_publication_grade = is_publication_grade;
+	}
+
+	public String getData_table_title() {
+		return data_table_title;
+	}
+
+	public void setData_table_title(String data_table_title) {
+		this.data_table_title = data_table_title;
 	}
 
 	// sequence

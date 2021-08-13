@@ -46,8 +46,8 @@ public class ESUpdate {
 			String resultString = om.writeValueAsString(result.get(0));
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);
-			MapQueryResponse response = esService.create(ObservationIndex.index.getValue(),
-					ObservationIndex.type.getValue(), observationId, doc);
+			MapQueryResponse response = esService.create(ObservationIndex.INDEX.getValue(),
+					ObservationIndex.TYPE.getValue(), observationId, doc);
 			System.out.println(response.getResult());
 
 		} catch (Exception e) {
@@ -72,7 +72,7 @@ public class ESUpdate {
 					return doc;
 				}).collect(Collectors.toList());
 				String json = om.writeValueAsString(bulkEsDoc);
-				esService.bulkUpload(ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						json.toString());
 				System.out.println("--------------completed-------------observationId");
 
@@ -95,8 +95,8 @@ public class ESUpdate {
 			String resultString = om.writeValueAsString(result.get(0));
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);
-			MapQueryResponse response = esService.create(ObservationIndex.index.getValue(),
-					ObservationIndex.type.getValue(), observationId, doc);
+			MapQueryResponse response = esService.create(ObservationIndex.INDEX.getValue(),
+					ObservationIndex.TYPE.getValue(), observationId, doc);
 			System.out.println();
 			System.out.println();
 			System.out.println("-----------updated----------");

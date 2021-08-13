@@ -6,12 +6,12 @@ import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
-import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
@@ -87,8 +87,11 @@ public class ObservationBulkMapperHelper {
 	@Inject
 	private Headers headers;
 
-	@Inject
-	ESUpdate esUpdate;
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
+
+	private Long defaultLicenseId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
 
 	@SuppressWarnings("deprecation")
 	public Observation creationObservationMapping(Long userId, String requestAuthHeader,
@@ -267,9 +270,9 @@ public class ObservationBulkMapperHelper {
 			observation.setGeoPrivacy(geoPrivacy);
 			observation.setTopology(topology);
 			observation.setFeatureCount(0);// update field initially 0, used only after its attached and featured to a
-			observation.setIsLocked(false);// update field , initially false
-			observation.setLicenseId(822L);// default 822
-			observation.setLanguageId(205L);
+			observation.setIsLocked(isVerified);// same value as isVerified
+			observation.setLicenseId(defaultLicenseId);// default 822
+			observation.setLanguageId(defaultLanguageId);
 			observation.setLocationScale(locationScale); // 5 options
 
 			observation.setReprImageId(null);

@@ -33,6 +33,7 @@ public class LatchThreadWorker extends Thread {
 //	for traits and custom field
 	private String namedAgg;
 	private CountDownLatch latch;
+	private String geoShapeFilterField;
 
 	@Inject
 	private EsServicesApi esService;
@@ -50,11 +51,12 @@ public class LatchThreadWorker extends Thread {
 	 */
 	public LatchThreadWorker(String index, String type, String filter, String geoAggregationField,
 			MapSearchQuery searchQuery, Map<String, AggregationResponse> mapResponse, String namedAgg,
-			CountDownLatch latch, EsServicesApi esService) {
+			CountDownLatch latch, EsServicesApi esService, String geoShapeFilterField) {
 		super();
 		this.index = index;
 		this.type = type;
 		this.filter = filter;
+		this.geoShapeFilterField = geoShapeFilterField;
 		this.geoAggregationField = geoAggregationField;
 		this.searchQuery = searchQuery;
 		this.mapResponse = mapResponse;
@@ -67,16 +69,17 @@ public class LatchThreadWorker extends Thread {
 	public void run() {
 		try {
 			AggregationResponse response = esService.getAggregation(index, type, filter, geoAggregationField,
-					searchQuery);
+					geoShapeFilterField, searchQuery);
 			if (namedAgg != null && !namedAgg.isEmpty())
 				mapResponse.put(namedAgg, response);
 			else
 				mapResponse.put(filter, response);
-
-			latch.countDown();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			latch.countDown();
 		}
+
 	}
 
 }

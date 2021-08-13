@@ -28,8 +28,8 @@ public class ConstructESDocument {
 
 	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
-	private String locationInfoLayer  = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
-	
+	private String locationInfoLayer = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
+
 	public List<ObservationESDocument> getESDocumentStub(String observationId) {
 
 		String qry = "SELECT id observation_id, author_id, created_by, profile_pic, created_on, group_id, group_name, CONCAT(group_id,'|',group_name,'|',group_order) sgroup_filter, "
@@ -39,9 +39,12 @@ public class ConstructESDocument {
 				+ "place_name, reverse_geocoded_name, flag_count, geo_privacy, last_revised,  "
 				+ "visit_count, is_checklist, to_date,  " + "checklist_annotations, "
 				+ "is_locked, language_id, location_scale,  "
-				+ "dataset_id, dataset_title, repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
+				+ "dataset_id, dataset_title,data_table_id,data_table_title, repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
 				+ "CASE  " + "	WHEN no_of_images = 0 AND no_of_videos = 0 AND no_of_audio = 0 THEN 1 " + "	ELSE 0 "
-				+ "END AS no_media, " + "no_of_identifications, data_table_id, date_accuracy, "
+				+ "END AS no_media, " + "CASE  " + " WHEN is_locked = true  OR  is_verified = true THEN true "
+				+ " ELSE false " + "END AS is_locked, "
+
+				+ "no_of_identifications, data_table_id, date_accuracy, "
 				+ "row_to_json((SELECT t FROM (SELECT max_voted_reco_id id,common_names, hierarchy, scientific_name, (taxon_detail->'rank') AS rank, "
 				+ "  (taxon_detail->'status') AS taxonstatus "
 				+ " WHERE common_names is not null OR scientific_name is not null)t))\\:\\:text AS max_voted_reco,  "
@@ -64,15 +67,17 @@ public class ConstructESDocument {
 				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted IS NOT TRUE AND id in ( "
 				+ observationId + " )) O " + "LEFT OUTER JOIN  "
 				+ "(SELECT id r_id, file_name AS repr_image_url FROM resource) I ON I.r_id = O.repr_image_id   "
-				+ "LEFT OUTER JOIN "
-				+ "(SELECT id d_id, title as dataset_title FROM dataset) D ON O.dataset_id = D.d_id "
+				+ "LEFT OUTER JOIN"
+				+ "(SELECT id dt_id,dataset_id data_set_id, title as data_table_title FROM data_table) DT ON O.data_table_id = DT.dt_id "
+				+ "LEFT OUTER JOIN"
+				+ "(SELECT id d_id, title as dataset_title FROM dataset1) D ON DT.data_set_id = D.d_id "
 				+ "LEFT OUTER JOIN  "
 				+ "(SELECT id s_id, name created_by, COALESCE(profile_pic,  icon) profile_pic FROM suser ) U ON U.s_id = O.author_id "
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
-				+ "LEFT OUTER JOIN "
-				+ "(SELECT longitude lon , latitude lat, location_information FROM "+locationInfoLayer+") L ON L.lon = O.longitude  "
-				+ "AND L.lat = O.latitude " + " " + "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
+				+ "LEFT OUTER JOIN " + "(SELECT longitude lon , latitude lat, location_information FROM "
+				+ locationInfoLayer + ") L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
+				+ "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
 				+ "END AS common_names, " + "(reco_vote->> 'scientific_name')\\:\\:text as scientific_name, " + "CASE "
