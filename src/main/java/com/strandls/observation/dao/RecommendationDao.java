@@ -137,5 +137,35 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		return result;
 
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Recommendation> findAllNamesWithoutTaxonId(){
+		String qry = "from Recommendation where isScientificName = true and taxonConceptId is null and id is not null";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> resultList = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			resultList = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return resultList;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 }

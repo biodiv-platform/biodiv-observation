@@ -59,10 +59,15 @@ public class GbifObservationThread implements Runnable {
 	private final GbifObservationESMapper gbifMapper;
 	private final LayerServiceApi layerService;
 	private final TaxonomyServicesApi taxonomyService;
+	private final BulkNameParser bulkNameParser;
+	private final String filenameToPick;
 	// private final Map<String, Integer> headerIndex;
 	private final int startRow;
 	private final int endRow;
 	private final int threadNum;
+	private final Map<Long, Recommendation> allScientificNames;
+	private final Map<String, Recommendation> cache;
+	private final Map<String, Recommendation> findByCannocalNames;
 
 	Long timeNameParser = 0L;
 	Long timeEsPush = 0L;
@@ -77,7 +82,9 @@ public class GbifObservationThread implements Runnable {
 
 	public GbifObservationThread(UtilityServiceApi utilityService, EsServicesApi esService, RecommendationDao recoDao,
 			GbifObservationESMapper gbifMapper, LayerServiceApi layerService, TaxonomyServicesApi taxonomyservice,
-			int startRow, int endRow, int threadNum) {
+			int startRow, int endRow, int threadNum, BulkNameParser bulkNameParser,
+			Map<Long, Recommendation> allScientificNames, Map<String, Recommendation> cache,
+			Map<String, Recommendation> findByCannocalNames, String filenameToPick) {
 		super();
 		this.utilityService = utilityService;
 		this.esService = esService;
@@ -85,22 +92,29 @@ public class GbifObservationThread implements Runnable {
 		this.gbifMapper = gbifMapper;
 		this.layerService = layerService;
 		this.taxonomyService = taxonomyservice;
+		this.bulkNameParser = bulkNameParser;
+		this.filenameToPick = filenameToPick;
 		this.startRow = startRow;
 		this.endRow = endRow;
 		this.threadNum = threadNum;
+		this.allScientificNames = allScientificNames;
+		this.cache = cache;
+		this.findByCannocalNames = findByCannocalNames;
 	}
 
 	@Override
 	public void run() {
 
 		try {
-			String filename = threadNum + ".txt";
-			FileWriter fw = new FileWriter(filename);
+			
 
 			// Long timeRecoAndtaxonId = 0L;
 			Long timeLocationInfo = 0l;
 
-			String path = PropertyFileUtil.fetchProperty("config.properties", "datasetPath");
+			// String path = PropertyFileUtil.fetchProperty("config.properties",
+			// "datasetPath");
+			String path = filenameToPick;
+
 			String dataSourcePrefix = PropertyFileUtil.fetchProperty("config.properties", "gbifUniqueIdPrefix");
 
 			String excludingPublishingOrgKey = PropertyFileUtil.fetchProperty("config.properties",
@@ -142,11 +156,11 @@ public class GbifObservationThread implements Runnable {
 			String[] row;
 			for (int i = startRow; i <= endRow; i++) {
 
-				StopWatch watchRead = new StopWatch();
-				watchRead.start();
+				//StopWatch watchRead = new StopWatch();
+			//	watchRead.start();
 				row = csvReader.readNext();
-				watchRead.stop();
-				timeRead = timeRead + watchRead.getTime();
+				//watchRead.stop();
+				//timeRead = timeRead + watchRead.getTime();
 
 				/*
 				 * if (row == null) { System.out.println("row empty i=" + i); }
@@ -211,9 +225,9 @@ public class GbifObservationThread implements Runnable {
 
 					// ----------time to fetch location info--------------------------
 
-					StopWatch watchLocation = new StopWatch();
+					//StopWatch watchLocation = new StopWatch();
 
-					watchLocation.start();
+					//watchLocation.start();
 
 					LocationInfo locationInfo = new LocationInfo();
 					// ObservationLocationInfo layerInfo = new ObservationLocationInfo();
@@ -223,9 +237,9 @@ public class GbifObservationThread implements Runnable {
 
 					locationInfo = layerService.fetchLocationInfo(String.valueOf(lat), String.valueOf(lon));
 
-					watchLocation.stop();
-					Long time2 = watchLocation.getTime();
-					timeLocationInfo = timeLocationInfo + time2;
+					//watchLocation.stop();
+					//Long time2 = watchLocation.getTime();
+					//timeLocationInfo = timeLocationInfo + time2;
 
 					// ------------------------------------------------------------------------------
 
@@ -251,16 +265,16 @@ public class GbifObservationThread implements Runnable {
 
 					// ---------------------time for mapper class
 					// -------------------------------------------------------------
-					StopWatch watchMapper = new StopWatch();
+					//StopWatch watchMapper = new StopWatch();
 
-					watchMapper.start();
+					//watchMapper.start();
 
 					ExternalObservationESDocument obj = gbifMapper.mapToESDocument(date, monthName, lat, lon, placeName,
 							null, null, null, null, null, null, null, null, null, null, null, Long.parseLong(gbifId),
 							lastModified, null, state, district, tahsil, null, null, externalOriginalReferenceLink,
 							externalGbifReferenceLink, null, annotations, dataSourcePrefix);
-					watchMapper.stop();
-					timeMapper = timeMapper + watchMapper.getTime();
+					//watchMapper.stop();
+					//timeMapper = timeMapper + watchMapper.getTime();
 
 					// ------------------------------------------------------------------------------------------------------
 
@@ -268,24 +282,24 @@ public class GbifObservationThread implements Runnable {
 					obj.getAll_reco_vote();
 					ObjectMapper objectMapper = new ObjectMapper();
 
-					if (observations.size() >= 100) {
+					if (observations.size() >= 200) {
 						List<ParsedName> parsedNames = getParsedNames(scientificNames);
 						processRecoAndTaxonDetails(parsedNames, observations);
 
 						// -------------time for serialisation---------------------------------------
-						StopWatch watchSerial = new StopWatch();
-						watchSerial.start();
+						//StopWatch watchSerial = new StopWatch();
+						//watchSerial.start();
 						batchEsJson = objectMapper.writeValueAsString(observations);
-						watchSerial.stop();
-						timeSerialisation = timeSerialisation + watchSerial.getTime();
+						//watchSerial.stop();
+						//timeSerialisation = timeSerialisation + watchSerial.getTime();
 						// --------------------time for pushing into es-----------------------------
-						StopWatch watchInside = new StopWatch();
-						watchInside.start();
+						//StopWatch watchInside = new StopWatch();
+						//watchInside.start();
 						esService.bulkUpload("extended_observation", "_doc", batchEsJson);
 
-						watchInside.stop();
+						//watchInside.stop();
 
-						timeEsPush = timeEsPush + watchInside.getTime();
+						//timeEsPush = timeEsPush + watchInside.getTime();
 						// ------------------------------------------------------------------------
 
 						observations.clear();
@@ -302,35 +316,27 @@ public class GbifObservationThread implements Runnable {
 				List<ParsedName> parsedNames = getParsedNames(scientificNames);
 				processRecoAndTaxonDetails(parsedNames, observations);
 
-				StopWatch watchSertialOutside = new StopWatch();
-				watchSertialOutside.start();
+				//StopWatch watchSertialOutside = new StopWatch();
+				//watchSertialOutside.start();
 				batchEsJson = objectMapper.writeValueAsString(observations);
-				watchSertialOutside.stop();
-				timeSerialisation = timeSerialisation + watchSertialOutside.getTime();
+				//watchSertialOutside.stop();
+				//timeSerialisation = timeSerialisation + watchSertialOutside.getTime();
 
-				StopWatch watchOutside = new StopWatch();
-				watchOutside.start();
+				//StopWatch watchOutside = new StopWatch();
+				//watchOutside.start();
 
 				esService.bulkUpload("extended_observation", "_doc", batchEsJson);
 
-				watchOutside.stop();
+				//watchOutside.stop();
 
-				timeEsPush = timeEsPush + watchOutside.getTime();
+				//timeEsPush = timeEsPush + watchOutside.getTime();
 
 			}
 
-			fw.write("time to read csv=" + timeRead + "\n");
-			fw.write("time for reco and taxonId=" + timeRecoAndtaxonId + "\n");
-			fw.write("time for name pasrsing=" + timeNameParser + "\n");
-			fw.write("time for reco db calls=" + timeRecoDb + "\n");
-			fw.write("time for finding exact match in es=" + timeExactMatch + "\n");
-			fw.write("time for fetching location info=" + timeLocationInfo + "\n");
-			fw.write("time es push=" + timeEsPush + "\n");
-			fw.write("time for hierarchy=" + timehierarchy + "\n");
-			fw.write("time for mapping=" + timeMapper + "\n");
-			fw.write("time for serialisation=" + timeSerialisation + "\n");
-
-			fw.close();
+			csvReader.close();
+			csvReader1.close();
+			filereader1.close();
+			filereader2.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -352,8 +358,8 @@ public class GbifObservationThread implements Runnable {
 				RecoData recoData = new RecoData();
 				recoData.setTaxonScientificName(gbifScientificName);
 
-				StopWatch watchRecoAndTaxon = new StopWatch();
-				watchRecoAndTaxon.start();
+				//StopWatch watchRecoAndTaxon = new StopWatch();
+				//watchRecoAndTaxon.start();
 				if (parsedNames.get(i).getCanonicalName() == null) {
 					String t = parsedNames.get(i).getVerbatim();
 					System.out.println("scientific name error=" + t);
@@ -364,9 +370,9 @@ public class GbifObservationThread implements Runnable {
 
 					Map<String, Object> recoAndTaxonId = getRecoAndTaxonId(recoData,
 							parsedNames.get(i).getCanonicalName().getSimple());
-					// Map<String, Object> recoAndTaxonId = new HashMap<>();
-					watchRecoAndTaxon.stop();
-					timeRecoAndtaxonId = timeRecoAndtaxonId + watchRecoAndTaxon.getTime();
+
+					//watchRecoAndTaxon.stop();
+					//timeRecoAndtaxonId = timeRecoAndtaxonId + watchRecoAndTaxon.getTime();
 
 					if (recoAndTaxonId.get("recoId") != null) {
 						recoId = Long.parseLong(recoAndTaxonId.get("recoId").toString());
@@ -400,9 +406,7 @@ public class GbifObservationThread implements Runnable {
 				List<Map<String, String>> hierarchy = new ArrayList<>();
 
 				if (taxonId != null) {
-					// rank = Long.parseLong(taxonDetails.getRank().toString());
-					// rank =
-					// Long.parseLong(getRankNumberFromName(taxonDetails.getRank()).toString());
+
 					rank = taxonDetails.getRank();
 					if (taxonDetails.getAcceptedIds() != null) {
 						acceptedNameIds = Long.parseLong(taxonDetails.getAcceptedIds().get(0).toString());
@@ -431,17 +435,14 @@ public class GbifObservationThread implements Runnable {
 					}
 
 					if (taxonDetails.getPath() != null) {
-						// List<String> taxonPath =
-						// Arrays.asList(taxonDetails.getPath().toString().split("_"));
 
-						StopWatch watchth = new StopWatch();
-						watchth.start();
-						// hierarchy = getHierarchy(taxonPath);
-						// hierarchy=getHierarchy2(taxonDetails.getHierarchy().toString());
+						//StopWatch watchth = new StopWatch();
+						//watchth.start();
+
 						hierarchy = taxonDetails.getHierarchy();
-						// System.out.println(hierarchy);
-						watchth.stop();
-						timehierarchy = timehierarchy + watchth.getTime();
+
+						//watchth.stop();
+						//timehierarchy = timehierarchy + watchth.getTime();
 					}
 
 					if (taxonDetails.getName() != null) {
@@ -457,14 +458,14 @@ public class GbifObservationThread implements Runnable {
 					}
 				}
 
-				StopWatch watchMapperOutside = new StopWatch();
-				watchMapperOutside.start();
+				//StopWatch watchMapperOutside = new StopWatch();
+				//watchMapperOutside.start();
 				ExternalObservationESDocument tempObj = gbifMapper.mapToESDocument(null, null, null, null, null, recoId,
 						taxonId, rank, speciesId, taxonStatus, hierarchy, scientificName, cannonicalName,
 						acceptedNameIds, italicisedForm, position, null, null, name, null, null, null, groupId,
 						groupName, null, null, null, null, null);
-				watchMapperOutside.stop();
-				timeMapper = timeMapper + watchMapperOutside.getTime();
+				//watchMapperOutside.stop();
+				//timeMapper = timeMapper + watchMapperOutside.getTime();
 
 				observations.get(i).setAll_reco_vote(tempObj.getAll_reco_vote());
 				observations.get(i).setMax_voted_reco(tempObj.getMax_voted_reco());
@@ -481,56 +482,14 @@ public class GbifObservationThread implements Runnable {
 					rid = recoId.toString();
 				}
 
-				/*
-				 * String[] scientificNameRow = { gbifScientificName, parsedCanonicalName,
-				 * matchedScientificName, cannonicalName, tid, rid };
-				 * writer.writeNext(scientificNameRow);
-				 */
-
 			}
 
 		} catch (Exception e) {
-			/*
-			 * FileWriter fw; try { fw = new FileWriter("exceptions.txt",true);
-			 * fw.write(e.getMessage().toString()); fw.write("\n"); } catch (IOException e1)
-			 * { // TODO Auto-generated catch block e1.printStackTrace(); }
-			 */
 
-			e.printStackTrace();
-			// logger.error(e.getMessage());
+			// e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
-	}
-
-	private Integer getRankNumberFromName(String rankName) {
-		if (rankName.equals("kingdom")) {
-			return 0;
-		} else if (rankName.equals("phylum")) {
-			return 1;
-		} else if (rankName.equals("class")) {
-			return 2;
-		} else if (rankName.equals("order")) {
-			return 3;
-		} else if (rankName.equals("superfamily")) {
-			return 4;
-		} else if (rankName.equals("family")) {
-			return 5;
-		} else if (rankName.equals("subfamily")) {
-			return 6;
-		} else if (rankName.equals("genus")) {
-			return 7;
-		} else if (rankName.equals("subgenus")) {
-			return 8;
-		} else if (rankName.equals("species")) {
-			return 9;
-		} else if (rankName.equals("infraspecies")) {
-			return 10;
-		} else if (rankName.equals("root")) {
-			return 100;
-
-		} else {
-			return 999;
-		}
 	}
 
 	private String getMonthName(String month) {
@@ -561,25 +520,22 @@ public class GbifObservationThread implements Runnable {
 			// String canonicalName = parsedName.getCanonicalName().getSimple();
 			String canonicalName = parsedCannonicalName;
 			// ----------------------time for exact match search-----------------------
-			StopWatch watchExactMatch = new StopWatch();
-			watchExactMatch.start();
+			//StopWatch watchExactMatch = new StopWatch();
+			//watchExactMatch.start();
 			ExtendedTaxonDefinition esResult = esService.matchPhrase("etd", "er", "name", providedSciName,
 					"canonical_form", canonicalName);
 
-			watchExactMatch.stop();
+			//watchExactMatch.stop();
 
-			timeExactMatch = timeExactMatch + watchExactMatch.getTime();
-
-			// -----------------------------------------------------------------------------------------
-			// System.out.println(esResult);
+			//timeExactMatch = timeExactMatch + watchExactMatch.getTime();
 
 			StopWatch watchDb = new StopWatch();
 			watchDb.start();
 
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
-				Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
 
+				Recommendation recommendation = allScientificNames.get(recoData.getScientificNameTaxonId());
 				result.put("taxonId", Long.valueOf(esResult.getId()));
 
 				if (recommendation != null) {
@@ -587,41 +543,25 @@ public class GbifObservationThread implements Runnable {
 				}
 				result.put("etd", esResult);
 			} else {
-				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
-				if (!resultList.isEmpty()) {
-					result.put("recoId", resultList.get(0).getId());
+
+				if (findByCannocalNames.get(canonicalName) != null) {
+					Recommendation r = findByCannocalNames.get(canonicalName);
+					result.put("recoId", r.getId());
 				}
+
 			}
 
 			watchDb.stop();
 			timeRecoDb = timeRecoDb + watchDb.getTime();
 
-			// result.put("etd", esResult);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			logger.error(e.getMessage());
 
 		}
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<Map<String, String>> getHierarchy2(String h) {
-		ObjectMapper o = new ObjectMapper();
-		List<Map<String, String>> ans;
-		try {
-			ans = Arrays.asList(o.readValue(h, Map.class));
-			System.out.println("ans=" + ans);
-			return ans;
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
 
 	private Boolean isBadRecord(String lat, String lon, String month, String scientificname) {
 
@@ -659,13 +599,14 @@ public class GbifObservationThread implements Runnable {
 
 	private List<ParsedName> getParsedNames(List<String> scientificNames) {
 		try {
-			StopWatch watchName = new StopWatch();
-			watchName.start();
-			List<ParsedName> ans = utilityService.getNamesParsed(scientificNames);
-			watchName.stop();
-			timeNameParser = timeNameParser + watchName.getTime();
+			//StopWatch watchName = new StopWatch();
+			//watchName.start();
+			// List<ParsedName> ans = utilityService.getNamesParsed(scientificNames);
+			List<ParsedName> ans = bulkNameParser.findParsedNames(scientificNames);
+		//	watchName.stop();
+		//	timeNameParser = timeNameParser + watchName.getTime();
 			return ans;
-		} catch (ApiException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
