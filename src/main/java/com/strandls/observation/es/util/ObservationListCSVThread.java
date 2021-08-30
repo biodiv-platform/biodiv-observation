@@ -202,6 +202,7 @@ public class ObservationListCSVThread implements Runnable {
 			data.setFileType(fileType);
 			data.setFilterUrl(entity.getFilterUrl());
 			data.setStatus(fileGenerationStatus);
+			data.setNotes(notes);
 			data.setSourcetype("Observations");
 			try {
 				userServiceApi.logDocumentDownload(data);
