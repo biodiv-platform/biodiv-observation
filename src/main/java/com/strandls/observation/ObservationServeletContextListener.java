@@ -149,7 +149,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 			return injector;
 
 		} catch (Exception e) {
-			System.out.println("error hua " + e.getMessage());
+			logger.error(e.getMessage());
 		}
 		return null;
 
