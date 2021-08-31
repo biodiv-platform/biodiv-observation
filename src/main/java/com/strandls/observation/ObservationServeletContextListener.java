@@ -72,78 +72,86 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 	@Override
 	protected Injector getInjector() {
 
-		Injector injector = Guice.createInjector(new ServletModule() {
-			@Override
-			protected void configureServlets() {
-
-				Configuration configuration = new Configuration();
-
-				try {
-					for (Class<?> cls : getEntityClassesFromPackage("com")) {
-						configuration.addAnnotatedClass(cls);
-					}
-				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					logger.error(e.getMessage());
-				}
-
-				configuration = configuration.configure();
-				SessionFactory sessionFactory = configuration.buildSessionFactory();
-
-//				Rabbit MQ initialisation
-				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
-				Channel channel = null;
-				try {
-					channel = rabbitConnetion.setRabbitMQConnetion();
-				} catch (Exception e) {
-					logger.error(e.getMessage());
-				}
-
-				bind(Channel.class).toInstance(channel);
-				RabbitMQProducer producer = new RabbitMQProducer(channel);
-				Map<String, String> props = new HashMap<String, String>();
-				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
-				props.put("jersey.config.server.provider.packages", "com");
-				props.put("jersey.config.server.wadl.disableWadl", "true");
-
-				ObjectMapper objectMapper = new ObjectMapper();
-				bind(ObjectMapper.class).toInstance(objectMapper);
-
-				SecureRandom random = new SecureRandom();
-				bind(SecureRandom.class).toInstance(random);
-
-				bind(SessionFactory.class).toInstance(sessionFactory);
-				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
-				bind(RabbitMQProducer.class).toInstance(producer);
-				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
-				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
-				bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
-				bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);
-				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
-				bind(CustomFieldServiceApi.class).in(Scopes.SINGLETON);
-				bind(LayerServiceApi.class).in(Scopes.SINGLETON);
-				bind(EsServicesApi.class).in(Scopes.SINGLETON);
-				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
-				bind(UserServiceApi.class).in(Scopes.SINGLETON);
-				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
-				bind(UploadApi.class).in(Scopes.SINGLETON);
-				bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
-				bind(Headers.class).in(Scopes.SINGLETON);
-				bind(ServletContainer.class).in(Scopes.SINGLETON);
-				bind(TokenGenerator.class).in(Scopes.SINGLETON);
-				bind(RabbitMQProducer.class).toInstance(producer);
-				serve("/api/*").with(ServletContainer.class, props);
-
-			}
-		}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
-				new ESUtilModule());
-
 		try {
-			injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
+			Injector injector = Guice.createInjector(new ServletModule() {
+				@Override
+				protected void configureServlets() {
 
-		return injector;
+					Configuration configuration = new Configuration();
+
+					try {
+						for (Class<?> cls : getEntityClassesFromPackage("com")) {
+							configuration.addAnnotatedClass(cls);
+						}
+					} catch (ClassNotFoundException | IOException | URISyntaxException e) {
+						logger.error(e.getMessage());
+					}
+
+					configuration = configuration.configure();
+					SessionFactory sessionFactory = configuration.buildSessionFactory();
+
+//					Rabbit MQ initialisation
+					RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
+					Channel channel = null;
+					try {
+						channel = rabbitConnetion.setRabbitMQConnetion();
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+					}
+
+					System.out.println("before binding");
+					bind(Channel.class).toInstance(channel);
+					System.out.println("after channel binding");
+					RabbitMQProducer producer = new RabbitMQProducer(channel);
+					Map<String, String> props = new HashMap<String, String>();
+					props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+					props.put("jersey.config.server.provider.packages", "com");
+					props.put("jersey.config.server.wadl.disableWadl", "true");
+
+					ObjectMapper objectMapper = new ObjectMapper();
+					bind(ObjectMapper.class).toInstance(objectMapper);
+
+					SecureRandom random = new SecureRandom();
+					bind(SecureRandom.class).toInstance(random);
+
+					bind(SessionFactory.class).toInstance(sessionFactory);
+					bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
+					bind(RabbitMQProducer.class).toInstance(producer);
+					bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
+					bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
+					bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
+					bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);
+					bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+					bind(CustomFieldServiceApi.class).in(Scopes.SINGLETON);
+					bind(LayerServiceApi.class).in(Scopes.SINGLETON);
+					bind(EsServicesApi.class).in(Scopes.SINGLETON);
+					bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
+					bind(UserServiceApi.class).in(Scopes.SINGLETON);
+					bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+					bind(UploadApi.class).in(Scopes.SINGLETON);
+					bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
+					bind(Headers.class).in(Scopes.SINGLETON);
+					bind(ServletContainer.class).in(Scopes.SINGLETON);
+					bind(TokenGenerator.class).in(Scopes.SINGLETON);
+					bind(RabbitMQProducer.class).toInstance(producer);
+					serve("/api/*").with(ServletContainer.class, props);
+
+				}
+			}, new ObservationControllerModule(), new ObservationDAOModule(), new ObservationServiceModule(),
+					new ESUtilModule());
+
+			try {
+				injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+
+			return injector;
+
+		} catch (Exception e) {
+			System.out.println("error hua " + e.getMessage());
+		}
+		return null;
 
 	}
 
