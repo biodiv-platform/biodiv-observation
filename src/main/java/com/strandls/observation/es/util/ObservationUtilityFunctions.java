@@ -65,13 +65,13 @@ public class ObservationUtilityFunctions {
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
-			if (file.createNewFile()) {
-				throw new IOException("Unable to create file");
-			}
+			boolean isFileCreated = file.createNewFile();
+			if (isFileCreated)
+				return fileName;
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
-		return fileName;
+		return null;
 	}
 
 	public List<String[]> getCsvHeaders(List<String> customfields, List<String> taxonomic, List<String> spatial,
@@ -405,12 +405,15 @@ public class ObservationUtilityFunctions {
 							commonNameValue += commonNames.getCommon_name() + ":" + commonNames.getLanguage_name()
 									+ "_";
 					}
-					if (keyValue == null)
-						map.replace(taxonomicValues[1],
-								recoId + "#" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
-					else
-						map.replace(taxonomicValues[1], keyValue + recoId + "#"
-								+ commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+					if (commonNameValue != null) {
+						if (keyValue == null)
+							map.replace(taxonomicValues[1],
+									recoId + "#" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+						else
+							map.replace(taxonomicValues[1], keyValue + recoId + "#"
+									+ commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+					}
+
 				}
 			}
 		}

@@ -332,6 +332,7 @@ public class ConstructESDocument {
 				+ "		jsonb_agg(DISTINCT etrait_instance) trait_instance " + "		FROM  " + "		( "
 				+ "			SELECT observation_fact_id, trait_id, description, field_id,  name, is_participatory, units,  "
 				+ "			trait_types,data_types,row_to_json(( SELECT t FROM (SELECT fact_id fact_id, contributor_id, fact_value from_value,  "
+
 				+ "			to_value, from_date, to_date, tv_id trait_value_id, tv_icon icon,  " + "			value, "
 
 				+ "CASE " + "				WHEN value IS NOT NULL THEN  "
@@ -351,16 +352,14 @@ public class ConstructESDocument {
 				+ "							CONCAT(trait_id,'|',name,'|',trait_types,'|',fact_value,'|',COALESCE(tv_icon,'0')) "
 				+ "					END " + "				ELSE "
 				+ "					CONCAT(trait_id,'|',name,'|',trait_types,'|',from_date,'-',to_date,'|',COALESCE(tv_icon,'0')) "
-				+ "			END AS trait_filter "
-
-				+ ")t))\\:\\:jsonb etrait_instance " + "			FROM 	 " + "			( "
-				+ "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
+				+ "			END AS trait_filter" + ")t))\\:\\:jsonb etrait_instance " + "			FROM 	 "
+				+ "			( " + "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
 				+ "				trait_instance_id, trait_value_id, value fact_value, to_value, from_date, to_date "
 				+ "				FROM fact WHERE object_type = 'species.participation.Observation' and is_deleted = false  "
 				+ "				AND object_id in ( " + observationId + " " + "				)) F   "
 				+ "				INNER JOIN "
 				+ "				(SELECT id trait_id, description, field_id, name, is_participatory, units, trait_types, data_types  "
-				+ "				FROM  trait where source = 'IBP') T "
+				+ "				FROM  trait where show_in_observation = true) T "
 				+ "				ON  trait_instance_id = trait_id " + "				LEFT OUTER JOIN "
 				+ "				(SELECT id tv_id, icon tv_icon, trait_instance_id, value  FROM trait_value) TV "
 				+ "				ON tv_id = trait_value_id " + "			) F  " + "		)F	 "

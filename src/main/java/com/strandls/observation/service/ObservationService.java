@@ -147,8 +147,6 @@ public interface ObservationService {
 
 	public void bgfilterRule(HttpServletRequest request, Long observationId);
 
-	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId);
-
 	public ObservationUserPageInfo observationUploadInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);
 
 	public ObservationUserPageInfo observationIdentifiedInfo(Long userId, Long sGroupId, Boolean hasMedia, Long offset);

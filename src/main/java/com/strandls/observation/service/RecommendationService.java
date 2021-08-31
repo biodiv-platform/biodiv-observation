@@ -34,7 +34,8 @@ public interface RecommendationService {
 
 	public Long fetchTaxonId(Long maxRecoVoteId);
 
-	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific);
+	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific,
+			Long languageId);
 
 	public List<Long> updateCanonicalName();
 
@@ -56,4 +57,6 @@ public interface RecommendationService {
 
 	public Map<Long, List<UniqueSpeciesInfo>> getIdentifiedObservationInfo(Long userId, Long sGroupId, Boolean hasMedia,
 			Long offset);
+
+	public void recoCleanUp();
 }

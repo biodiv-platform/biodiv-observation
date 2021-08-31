@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -19,10 +22,12 @@ import com.strandls.observation.util.PropertyFileUtil;
  */
 public class RabbitMqConnection {
 
+	private final Logger logger = LoggerFactory.getLogger(RabbitMqConnection.class);
 	private final static String OBSERVATION_QUEUE = "observationQueue";
 	private final static String ROUTING_OBSERVATION = "observation";
 
 	public final static String EXCHANGE_BIODIV;
+
 	public static final String MAIL_QUEUE;
 	public static final String MAIL_ROUTING_KEY;
 
@@ -41,7 +46,7 @@ public class RabbitMqConnection {
 		try {
 			properties.load(in);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		String rabbitmqHost = properties.getProperty("rabbitmq_host");

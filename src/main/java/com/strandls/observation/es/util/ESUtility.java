@@ -50,7 +50,7 @@ public class ESUtility {
 	private EsServicesApi esService;
 
 	private List<Object> cSTSOT(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Object>();
 
 		String[] y = str.split(",");
@@ -71,7 +71,7 @@ public class ESUtility {
 	}
 
 	private List<Long> getListOfIds(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Long>();
 		String[] y = str.split(",");
 		List<Long> LongIds = new ArrayList<>();
@@ -147,7 +147,7 @@ public class ESUtility {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String rank, String tahsil, String district, String state, String tags,
-			String publicationGrade,String authorVoted, String dataSetName, String dataTableName,String geoEntity) {
+			String publicationGrade, String authorVoted, String dataSetName, String dataTableName, String geoEntity) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -270,11 +270,10 @@ public class ESUtility {
 			if (!speciesNames.isEmpty()) {
 				if (speciesNames.size() < 2) {
 					String first = (String) speciesNames.toArray()[0];
-					if (first.equalsIgnoreCase("UNIDENTIFED")) {
-						rangeAndLists
-								.add(assignAndRange(ObservationIndex.NOOFIDENTIFICATION.getValue(), 0, 0, null));
+					if (first.equalsIgnoreCase("UNIDENTIFIED")) {
+						rangeAndLists.add(assignAndRange(ObservationIndex.NOOFIDENTIFICATION.getValue(), 0, 0, null));
 					}
-					if (first.equalsIgnoreCase("IDENTIFED")) {
+					if (first.equalsIgnoreCase("IDENTIFIED")) {
 						rangeAndLists.add(assignAndRange(ObservationIndex.NOOFIDENTIFICATION.getValue(), 1,
 								Long.MAX_VALUE, null));
 					}
@@ -316,7 +315,6 @@ public class ESUtility {
 				}
 
 			}
-			
 
 //			user
 			List<Object> authorId = cSTSOT(user);
@@ -338,7 +336,7 @@ public class ESUtility {
 			String minDateValue = null;
 			String maxDateValue = null;
 			Date date = new Date();
-			SimpleDateFormat out = new SimpleDateFormat("YYYY-MM-dd");
+			SimpleDateFormat out = new SimpleDateFormat("yyyy-MM-dd");
 			try {
 				if (minDate != null) {
 					minDateValue = minDate;
@@ -634,13 +632,12 @@ public class ESUtility {
 			if (!recoIds.isEmpty()) {
 				boolAndLists.add(assignBoolAndQuery(ObservationIndex.RECOID.getValue(), recoIds));
 			}
-			
+
 //			author voted
 			List<Object> authorVoteds = cSTSOT(authorVoted);
 			if (!authorVoteds.isEmpty()) {
 				boolAndLists.add(assignBoolAndQuery(ObservationIndex.AUTHORVOTED.getValue(), authorVoteds));
 			}
-
 
 // 			publication grade
 			List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
@@ -651,24 +648,22 @@ public class ESUtility {
 // 			dataset name 
 			List<Object> dataSetNameList = cSTSOT(dataSetName);
 			if (!dataSetNameList.isEmpty()) {
-				boolAndLists
-						.add(assignBoolAndQuery(ObservationIndex.DATASETNAME.getValue(), dataSetNameList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.DATASETNAME.getValue(), dataSetNameList));
 			}
 // 			datatable name
 			List<Object> dataTableNameList = cSTSOT(dataTableName);
 			if (!dataTableNameList.isEmpty()) {
-				dataTableNameList.forEach((item)->{
+				dataTableNameList.forEach((item) -> {
 					orMatchPhraseQueriesnew
-					.add(assignOrMatchPhrase(ObservationIndex.DATATABLENAME.getValue(), item.toString()));
+							.add(assignOrMatchPhrase(ObservationIndex.DATATABLENAME.getValue(), item.toString()));
 				});
-				
+
 			}
-			
+
 //			dataset name 
 			List<Object> geoEntityList = cSTSOT(geoEntity);
 			if (!geoEntityList.isEmpty()) {
-				boolAndLists
-						.add(assignBoolAndQuery(ObservationIndex.GEOENTITY.getValue(), geoEntityList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.GEOENTITY.getValue(), geoEntityList));
 			}
 			/**
 			 * combine all the queries
@@ -712,7 +707,7 @@ public class ESUtility {
 		mapSearchQuery.setOrBoolQueries(boolOrLists);
 		return mapSearchQuery;
 	}
-	
+
 	public List<MapGeoPoint> polygonGenerator(String locationArray) {
 		List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
 		double[] point = Stream.of(locationArray.split(",")).mapToDouble(Double::parseDouble).toArray();
@@ -731,7 +726,7 @@ public class ESUtility {
 
 	public List<List<MapGeoPoint>> multiPolygonGenerator(String[] locationArray) {
 		List<List<MapGeoPoint>> mutlipolygon = new ArrayList<>();
-		for(String geoPoint:locationArray) {
+		for (String geoPoint : locationArray) {
 			mutlipolygon.add(polygonGenerator(geoPoint));
 		}
 		return mutlipolygon;

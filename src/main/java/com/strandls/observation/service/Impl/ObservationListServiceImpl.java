@@ -186,7 +186,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		worker.start();
 
 	}
-	
+
 	private Map<String, Long> getAggregationValue(AggregationResponse mapAggResponse) {
 		Map<String, Long> result = new HashMap<String, Long>();
 		if (mapAggResponse == null) {
@@ -279,11 +279,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 					dataSetName, dataTableName, geoEntity);
 
 			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQueryFilter,
-					mapAggResponse, latch, null,null);
+					mapAggResponse, latch, null, null);
 		} else {
 
 			getAggregateLatch(index, type, "max_voted_reco.rank.keyword", geoAggregationField, mapSearchQuery,
-					mapAggResponse, latch, null,null);
+					mapAggResponse, latch, null, null);
 		}
 
 		if (state != null && !state.isEmpty()) {
@@ -398,13 +398,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 					status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
 					dataSetName, dataTableName, geoEntity);
 
-			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQueryFilter, mapAggResponse,
-					latch, null, null);
+			getAggregateLatch(index, type, "no_of_identifications", geoAggregationField, mapSearchQueryFilter,
+					mapAggResponse, latch, null, null);
 
 		} else {
 
-			getAggregateLatch(index, type, "max_voted_reco", geoAggregationField, mapSearchQuery, mapAggResponse, latch,
-					null, null);
+			getAggregateLatch(index, type, "no_of_identifications", geoAggregationField, mapSearchQuery, mapAggResponse,
+					latch, null, null);
 
 		}
 		if (taxonId != null && !taxonId.isEmpty()) {
@@ -506,15 +506,17 @@ public class ObservationListServiceImpl implements ObservationListService {
 			latch.await();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			Thread.currentThread().interrupt();
 		}
 
 		aggregationResponse.setGroupSpeciesName(getAggregationValue(mapAggResponse.get("group_name.keyword")));
 		aggregationResponse
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
-		aggregationResponse.setGroupRank(getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
+		aggregationResponse.setGroupRank(
+				getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
 		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
-		aggregationResponse.setGroupUserGroupName(
-				getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
+		aggregationResponse
+				.setGroupUserGroupName(getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
 		aggregationResponse.setGroupFlag(getAggregationValue(mapAggResponse.get("flag_count")));
 		aggregationResponse.setGroupValidate(getAggregationValue(mapAggResponse.get("is_locked")));
 		aggregationResponse.setGroupMonth(getAggregationValue(mapAggResponse.get("observed_in_month.keyword")));
@@ -522,8 +524,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationResponse.setGroupVideo(getTotal(getAggregationValue(mapAggResponse.get("no_of_videos"))));
 		aggregationResponse.setGroupImages(getTotal(getAggregationValue(mapAggResponse.get("no_of_images"))));
 		aggregationResponse.setGroupNoMedia(getTotal(getAggregationValue(mapAggResponse.get("no_media"))));
-		aggregationResponse
-				.setGroupIdentificationNameExists(getAggregationValue(mapAggResponse.get("max_voted_reco")));
+
+		aggregationResponse.setGroupIdentificationNameExists(
+				getIdentificationSum(mapAggResponse.get("no_of_identifications").getGroupAggregation()));
 		aggregationResponse
 				.setGroupTaxonIDExists(getAggregationValue(mapAggResponse.get("max_voted_reco.taxonstatus")));
 
@@ -621,6 +624,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			latch.await();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			Thread.currentThread().interrupt();
 		}
 
 		int size = lifeListOffset + 10;
@@ -644,7 +648,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationStatsResponse.setGroupUniqueSpecies(t);
 
 		Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
-				
+
 		List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
 		aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
 
@@ -794,6 +798,22 @@ public class ObservationListServiceImpl implements ObservationListService {
 		for (Entry<String, Long> entry : aggregation.entrySet())
 			rankAggregation.put(toTitleCase(entry.getKey()), entry.getValue());
 		return rankAggregation;
+	}
+
+	private Map<String, Long> getIdentificationSum(Map<String, Long> identification) {
+		Long identified = 0L;
+		Long unIdentified = 0L;
+		for (Entry<String, Long> entry : identification.entrySet()) {
+			if (entry.getKey().equals("0")) {
+				unIdentified = entry.getValue();
+			} else {
+				identified += entry.getValue();
+			}
+		}
+		Map<String, Long> result = new HashMap<String, Long>();
+		result.put("available", identified);
+		result.put("missing", unIdentified);
+		return result;
 	}
 
 	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {

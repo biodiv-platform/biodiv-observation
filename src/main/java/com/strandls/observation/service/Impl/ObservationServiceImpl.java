@@ -514,7 +514,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
 		Observation observation = observationDao.findById(observationId);
-		if (observation.getMaxVotedRecoId() == null || observation.getMaxVotedRecoId() != maxVotedReco) {
+		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
@@ -1447,7 +1447,8 @@ public class ObservationServiceImpl implements ObservationService {
 			observationData.setAuthorId(observation.getAuthorId());
 			observationData.setCommonName(reco.getCommonName());
 			observationData.setIconURl(iconurl);
-			observationData.setLocation(observation.getPlaceName());
+			observationData.setLocation(observation.getPlaceName() != null ? observation.getPlaceName()
+					: observation.getReverseGeocodedName());
 			observationData.setObservationId(observation.getId());
 			observationData.setObservedOn(observation.getFromDate());
 			observationData.setScientificName(reco.getScientificName());
@@ -1551,25 +1552,8 @@ public class ObservationServiceImpl implements ObservationService {
 			filetypeAttribute = null;
 		}
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
-				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
+				authorIds, fileType != null ? fileType.toUpperCase() : null, orderBy, offSet, limit);
 		return records;
-	}
-
-	@Override
-	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId) {
-		List<String> columnNames = new ArrayList<>();
-		Map<String, Object> filterOn = new HashMap<String, Object>();
-		columnNames.add("id");
-		filterOn.put("dataTableId", dataTableId);
-		List<Object[]> keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
-		String ids = keys.toString();
-		try {
-			return esService.forceUpdateIndexField(index, type, field, value,
-					ids.toString().substring(1, ids.length()));
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
-		}
-		return null;
 	}
 
 	@Override
@@ -1615,11 +1599,12 @@ public class ObservationServiceImpl implements ObservationService {
 			Set<Long> identifiedCount = identifiedFreq.keySet();
 			identifiedSpeciesCount = identifiedCount.iterator().next();
 
+			ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
+					identifiedSpeciesCount);
+			return result;
 		}
+		return null;
 
-		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
-				identifiedSpeciesCount);
-		return result;
 	}
 
 	@Override

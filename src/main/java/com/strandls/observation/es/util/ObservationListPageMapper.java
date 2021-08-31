@@ -112,9 +112,6 @@ public class ObservationListPageMapper {
 	private void unpackReprImage(String reprImage) {
 		reprImageUrl = reprImage;
 	}
-	
-	
-	
 
 //	---------USER IBP------------
 

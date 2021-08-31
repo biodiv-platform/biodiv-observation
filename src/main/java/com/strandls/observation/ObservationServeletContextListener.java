@@ -10,7 +10,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,6 +21,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import javax.servlet.ServletContextEvent;
 
@@ -36,6 +40,7 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
@@ -48,7 +53,6 @@ import com.strandls.observation.service.Impl.ObservationServiceModule;
 import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
-import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -85,7 +89,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
-//				Rabbit MQ initialization
+//				Rabbit MQ initialisation
 				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
 				Channel channel = null;
 				try {
@@ -103,6 +107,9 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(ObjectMapper.class).toInstance(objectMapper);
+
+				SecureRandom random = new SecureRandom();
+				bind(SecureRandom.class).toInstance(random);
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
@@ -146,7 +153,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 
@@ -171,14 +177,17 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		URI uri = new URI(packageURL.toString());
 		File folder = new File(uri.getPath());
 
-		Files.find(Paths.get(folder.getAbsolutePath()), 999, (p, bfa) -> bfa.isRegularFile()).forEach(file -> {
-			String name = file.toFile().getAbsolutePath().replaceAll(folder.getAbsolutePath() + File.separatorChar, "")
-					.replace(File.separatorChar, '.');
-			if (name.indexOf('.') != -1) {
-				name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
-				names.add(name);
-			}
-		});
+		try (Stream<Path> files = Files.find(Paths.get(folder.getAbsolutePath()), 999,
+				(p, bfa) -> bfa.isRegularFile())) {
+			files.forEach(file -> {
+				String name = file.toFile().getAbsolutePath()
+						.replaceAll(folder.getAbsolutePath() + File.separatorChar, "").replace(File.separatorChar, '.');
+				if (name.indexOf('.') != -1) {
+					name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
+					names.add(name);
+				}
+			});
+		}
 
 		return names;
 	}
@@ -194,7 +203,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		Channel channel = injector.getInstance(Channel.class);
 		try {
 			channel.getConnection().close();
-		} catch (IOException e) {
+			channel.close();
+		} catch (IOException | TimeoutException e) {
 			logger.error(e.getMessage());
 		}
 

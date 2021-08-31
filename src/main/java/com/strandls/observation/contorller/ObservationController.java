@@ -214,7 +214,9 @@ public class ObservationController {
 			if (observationHelper.checkIndiaBounds(observationData) == false) {
 				throw new ObservationInputException("Observation Not within India Bounds");
 			}
-
+			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
+				throw new ObservationInputException("Without resource observation");
+			}
 			ShowData result = observationService.createObservation(request, observationData);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
@@ -1173,7 +1175,7 @@ public class ObservationController {
 
 	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-        @ValidateUser
+	@ValidateUser
 	public Response observationListCsv(@PathParam("index") String index, @PathParam("type") String type,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
 			@DefaultValue("") @QueryParam("user") String user,
@@ -1296,22 +1298,6 @@ public class ObservationController {
 		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, Integer.parseInt(offSet),
 				Integer.parseInt(limit));
 		return Response.status(Status.OK).entity(records).build();
-	}
-
-	@GET
-	@Path(ApiConstants.INDEXFIELDUPDATE)
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Update the field value of observation index", notes = "for all observation given datatableId", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "error in updating", response = String.class) })
-	public Response forceUpdateIndexField(@QueryParam("field") String field, @QueryParam("value") String value,
-			@QueryParam("datatableid") String dataTableId) {
-		String index = "eo";
-		String type = "er";
-		String response = observationService.forceUpdateIndexField(index, type, field, value,
-				Long.parseLong(dataTableId));
-
-		return Response.status(Status.OK).entity(response).build();
 	}
 
 	@GET

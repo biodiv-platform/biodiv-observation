@@ -157,7 +157,6 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 
 	@SuppressWarnings("unchecked")
 	public List<Observation> fetchByDataTableId(List<Long> dataTableId, Integer limit, Integer offset) {
-
 		String qry = "from Observation where isDeleted = false and dataTableId IN :ids";
 		Session session = sessionFactory.openSession();
 		List<Observation> result = null;

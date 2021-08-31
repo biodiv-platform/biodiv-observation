@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -77,6 +77,9 @@ public class ObservationMapperHelper {
 	@Inject
 	private Headers headers;
 
+	@Inject
+	private SecureRandom random;
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
@@ -91,7 +94,7 @@ public class ObservationMapperHelper {
 
 	@Inject
 	private TraitsServiceApi traitsServiceApi;
-	
+
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
 			String topleft = "";
@@ -190,7 +193,10 @@ public class ObservationMapperHelper {
 											// group
 			observation.setIsLocked(false);// update field , initially false
 			observation.setLicenseId(defaultLicenseId);// default 822
-			observation.setLanguageId(observationData.getObsvLanguageId());
+			if (observationData.getObsvLanguageId() != null)
+				observation.setLanguageId(observationData.getObsvLanguageId());
+			else
+				observation.setLanguageId(defaultLanguageId);
 			observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
 			observation.setReprImageId(null);
@@ -257,8 +263,6 @@ public class ObservationMapperHelper {
 			scientificNameId = scientificResult.get("recoId");
 			taxonId = scientificResult.get("taxonId");
 		}
-			
-			
 
 		RecoCreate recoCreate = new RecoCreate();
 		recoCreate.setConfidence(recoData.getConfidence());
@@ -286,11 +290,11 @@ public class ObservationMapperHelper {
 				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
 				String canonicalName = parsedName.getCanonicalName().getSimple();
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
-						recoData.getScientificNameTaxonId(), canonicalName, true);
+						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
 			}
-			Long taxonId = recommendation.getAcceptedNameId() != null ?recommendation.getAcceptedNameId()
-					:recommendation.getTaxonConceptId();
-			result.put("taxonId",taxonId);
+			Long taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
+					: recommendation.getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", recommendation.getId());
 			result.put("flag", 0L);
 		} catch (Exception e) {
@@ -305,7 +309,7 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false);
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId);
 
 		return resultCommonName.getId();
 
@@ -332,10 +336,11 @@ public class ObservationMapperHelper {
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
-						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true,
+								recoData.getLanguageId()));
 					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
 							: resultList.get(0).getTaxonConceptId();
-					result.put("taxonId",taxonId);
+					result.put("taxonId", taxonId);
 					result.put("recoId", resultList.get(0).getId());
 					result.put("flag", 0L);
 				} else {
@@ -358,16 +363,15 @@ public class ObservationMapperHelper {
 		Map<String, Long> result = new HashMap<String, Long>();
 		List<Recommendation> filteredList = new ArrayList<Recommendation>();
 		for (Recommendation recommendation : recommendations) {
-			if (recommendation.getTaxonConceptId() == recommendation.getAcceptedNameId())
+			if (recommendation.getTaxonConceptId().equals(recommendation.getAcceptedNameId()))
 				filteredList.add(recommendation);
 		}
 		if (filteredList.isEmpty())
 			return taxonIdExists(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
-			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
-					? filteredList.get(0).getAcceptedNameId():
-				filteredList.get(0).getTaxonConceptId();
-			result.put("taxonId",taxonId);
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null ? filteredList.get(0).getAcceptedNameId()
+					: filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -386,10 +390,9 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return fullNameSearch(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
-			long taxonId = filteredList.get(0).getAcceptedNameId() != null 
-					? filteredList.get(0).getAcceptedNameId():
-				filteredList.get(0).getTaxonConceptId();
-			result.put("taxonId",taxonId);
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null ? filteredList.get(0).getAcceptedNameId()
+					: filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -402,21 +405,19 @@ public class ObservationMapperHelper {
 	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
 
 		Map<String, Long> result = new HashMap<String, Long>();
-		long taxonId = recommendations.get(0).getAcceptedNameId() != null 
-				?recommendations.get(0).getAcceptedNameId():
-					recommendations.get(0).getTaxonConceptId();
+		long taxonId = recommendations.get(0).getAcceptedNameId() != null ? recommendations.get(0).getAcceptedNameId()
+				: recommendations.get(0).getTaxonConceptId();
 		for (Recommendation recommendation : recommendations) {
 			if (recommendation.getName().equals(providedSciName)) {
-				 taxonId = recommendation.getAcceptedNameId() != null 
-						?recommendation.getAcceptedNameId():
-							recommendation.getTaxonConceptId();
+				taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
+						: recommendation.getTaxonConceptId();
 				result.put("recoId", recommendation.getId());
 				result.put("flag", 0L);
 				return result;
 			}
 
 		}
-		result.put("taxonId",taxonId);
+		result.put("taxonId", taxonId);
 		result.put("recoId", recommendations.get(0).getId());
 		result.put("flag", 1L);
 		return result;
@@ -429,8 +430,10 @@ public class ObservationMapperHelper {
 		try {
 			List<String> fileList = new ArrayList<String>();
 			for (ResourceDataObs rd : resourceDataList) {
-				if (rd.getPath() != null && rd.getPath().trim().length() > 0)
+				if (rd.getPath() != null && rd.getPath().trim().length() > 0) {
 					fileList.add(rd.getPath());
+				}
+
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
 			if (!fileList.isEmpty()) {
@@ -481,7 +484,10 @@ public class ObservationMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(defaultLanguageId);
+				if (resourceData.getLanguageId() != null)
+					resource.setLanguageId(resourceData.getLanguageId());
+				else
+					resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
@@ -504,8 +510,6 @@ public class ObservationMapperHelper {
 		Map<String, Double> latlon = new HashMap<String, Double>();
 		double x0 = lon;
 		double y0 = lat;
-
-		Random random = new Random();
 
 		// Convert radius from meters to degrees.
 		double innerRadiusInDegrees = 5000D / 111320f;
@@ -542,7 +546,8 @@ public class ObservationMapperHelper {
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext(),
+					resource.getLanguageId()));
 
 		}
 		return editResource;
