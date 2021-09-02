@@ -21,7 +21,7 @@ public enum ObservationIndex {
 	CUSTOMFIELDAGGREGATION("custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw"),
 	CUSTOMFIELDIDVALUE("custom_fields.custom_field.custom_field_values.cfid_value"),
 	CUSTOMFIELDRANGEMINVALUE("custom_fields.custom_field.custom_field_values.min_range"),
-	CUSTOMFIELDRANGEMAXVALUE("custom_fields.custom_field.custom_field_values.max_range"), TAGS("tags.name.raw"),
+	CUSTOMFIELDRANGEMAXVALUE("custom_fields.custom_field.custom_field_values.max_range"), TAGS("tags.name"),
 	RESOURCE("observation_resource.file_name.keyword"), MAXVTEDRECO("max_voted_reco.id"),
 	AUTHORVOTED("all_reco_vote.authors_voted.id"), GEOENTITY("location_information.name.raw"),
 	RECOID("all_reco_vote.recommendation_id"), PUBLICATIONGRADE("is_publication_grade"), DATASETNAME("dataset_title"),
