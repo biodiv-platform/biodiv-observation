@@ -293,12 +293,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 					status, taxonId, recoName, rank, tahsil, district, omiter, tags, publicationGrade, authorVoted,
 					dataSetName, dataTableName, geoEntity);
 
-			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQueryFilter,
+			getAggregateLatch(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQueryFilter,
 					mapAggResponse, latch, null, null);
 
 		} else {
 
-			getAggregateLatch(index, type, "location_information.state.raw", geoAggregationField, mapSearchQuery,
+			getAggregateLatch(index, type, "location_information.state.keyword", geoAggregationField, mapSearchQuery,
 					mapAggResponse, latch, null, null);
 		}
 
@@ -514,7 +514,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
 		aggregationResponse.setGroupRank(
 				getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
-		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.raw").getGroupAggregation());
+		aggregationResponse.setGroupState(mapAggResponse.get("location_information.state.keyword").getGroupAggregation());
 		aggregationResponse
 				.setGroupUserGroupName(getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
 		aggregationResponse.setGroupFlag(getAggregationValue(mapAggResponse.get("flag_count")));
