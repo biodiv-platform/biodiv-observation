@@ -202,7 +202,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			dataTableRes.setLayerInfo(locationInfo);
 			dataTableRes.setUserGroups(userGroups);
 			dataTableRes.setDatatable(dataTable);
-			if (score.getRecord() != null) {
+			if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 				authorScore = score.getRecord().get(0).get("details");
 				dataTableRes.setAuthorScore(authorScore);
 			}
