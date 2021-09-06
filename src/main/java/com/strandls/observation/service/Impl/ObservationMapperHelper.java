@@ -6,6 +6,7 @@ package com.strandls.observation.service.Impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -27,18 +27,22 @@ import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.es.util.RabbitMQProducer;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
-import com.strandls.observation.pojo.ObservationResourceData;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.pojo.ResourceDataObs;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -73,11 +77,23 @@ public class ObservationMapperHelper {
 	@Inject
 	private Headers headers;
 
+	@Inject
+	private SecureRandom random;
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	private Long defaultLicenseId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLicenseId"));
+
+	@Inject
+	private RabbitMQProducer rabbitMQProducer;
+
+	@Inject
+	private ObservationDAO observationDAO;
+
+	@Inject
+	private TraitsServiceApi traitsServiceApi;
 
 	public Boolean checkIndiaBounds(ObservationCreate observationData) {
 		try {
@@ -95,6 +111,9 @@ public class ObservationMapperHelper {
 			topleft = properties.getProperty("topLeft");
 			bottomright = properties.getProperty("bottomRight");
 			in.close();
+
+			if (topleft.equalsIgnoreCase("NA") || bottomright.equalsIgnoreCase("NA"))
+				return true;
 
 			String point1[] = topleft.split(",");
 			String point2[] = bottomright.split(",");
@@ -174,7 +193,10 @@ public class ObservationMapperHelper {
 											// group
 			observation.setIsLocked(false);// update field , initially false
 			observation.setLicenseId(defaultLicenseId);// default 822
-			observation.setLanguageId(observationData.getObsvLanguageId());
+			if (observationData.getObsvLanguageId() != null)
+				observation.setLanguageId(observationData.getObsvLanguageId());
+			else
+				observation.setLanguageId(defaultLanguageId);
 			observation.setLocationScale(observationData.getLocationScale()); // 5 options
 
 			observation.setReprImageId(null);
@@ -221,6 +243,7 @@ public class ObservationMapperHelper {
 	public RecoCreate createRecoMapping(RecoData recoData) throws Exception {
 
 		Long commonNameId = null;
+		Long taxonId = null;
 		String commonName = recoData.getTaxonCommonName();
 		Long scientificNameId = null;
 		String scientificName = recoData.getTaxonScientificName();
@@ -236,8 +259,10 @@ public class ObservationMapperHelper {
 			commonNameId = commonNameMapper(commonName, recoData.getLanguageId());
 		}
 
-		if (scientificResult != null)
+		if (scientificResult != null) {
 			scientificNameId = scientificResult.get("recoId");
+			taxonId = scientificResult.get("taxonId");
+		}
 
 		RecoCreate recoCreate = new RecoCreate();
 		recoCreate.setConfidence(recoData.getConfidence());
@@ -246,6 +271,7 @@ public class ObservationMapperHelper {
 		recoCreate.setCommonNameId(commonNameId);
 		recoCreate.setScientificName(scientificName);
 		recoCreate.setScientificNameId(scientificNameId);
+		recoCreate.setTaxonId(taxonId);
 		if (scientificResult != null && scientificResult.isEmpty() == false && scientificResult.get("flag") == 1L)
 			recoCreate.setFlag(true);
 		else
@@ -264,8 +290,11 @@ public class ObservationMapperHelper {
 				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
 				String canonicalName = parsedName.getCanonicalName().getSimple();
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
-						recoData.getScientificNameTaxonId(), canonicalName, true);
+						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
 			}
+			Long taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
+					: recommendation.getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", recommendation.getId());
 			result.put("flag", 0L);
 		} catch (Exception e) {
@@ -280,7 +309,7 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false);
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId);
 
 		return resultCommonName.getId();
 
@@ -307,7 +336,11 @@ public class ObservationMapperHelper {
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
-						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true));
+						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true,
+								recoData.getLanguageId()));
+					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
+							: resultList.get(0).getTaxonConceptId();
+					result.put("taxonId", taxonId);
 					result.put("recoId", resultList.get(0).getId());
 					result.put("flag", 0L);
 				} else {
@@ -330,12 +363,15 @@ public class ObservationMapperHelper {
 		Map<String, Long> result = new HashMap<String, Long>();
 		List<Recommendation> filteredList = new ArrayList<Recommendation>();
 		for (Recommendation recommendation : recommendations) {
-			if (recommendation.getTaxonConceptId() == recommendation.getAcceptedNameId())
+			if (recommendation.getTaxonConceptId().equals(recommendation.getAcceptedNameId()))
 				filteredList.add(recommendation);
 		}
 		if (filteredList.isEmpty())
 			return taxonIdExists(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null ? filteredList.get(0).getAcceptedNameId()
+					: filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -354,6 +390,9 @@ public class ObservationMapperHelper {
 		if (filteredList.isEmpty())
 			return fullNameSearch(recommendations, providedSciName);
 		else if (filteredList.size() == 1) {
+			long taxonId = filteredList.get(0).getAcceptedNameId() != null ? filteredList.get(0).getAcceptedNameId()
+					: filteredList.get(0).getTaxonConceptId();
+			result.put("taxonId", taxonId);
 			result.put("recoId", filteredList.get(0).getId());
 			result.put("flag", 0L);
 			return result;
@@ -366,14 +405,19 @@ public class ObservationMapperHelper {
 	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
 
 		Map<String, Long> result = new HashMap<String, Long>();
+		long taxonId = recommendations.get(0).getAcceptedNameId() != null ? recommendations.get(0).getAcceptedNameId()
+				: recommendations.get(0).getTaxonConceptId();
 		for (Recommendation recommendation : recommendations) {
 			if (recommendation.getName().equals(providedSciName)) {
+				taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
+						: recommendation.getTaxonConceptId();
 				result.put("recoId", recommendation.getId());
 				result.put("flag", 0L);
 				return result;
 			}
 
 		}
+		result.put("taxonId", taxonId);
 		result.put("recoId", recommendations.get(0).getId());
 		result.put("flag", 1L);
 		return result;
@@ -381,13 +425,15 @@ public class ObservationMapperHelper {
 
 	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
-			List<ObservationResourceData> resourceDataList) {
+			List<ResourceDataObs> resourceDataList) {
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
-			for (ObservationResourceData rd : resourceDataList) {
-				if (rd.getPath() != null && rd.getPath().trim().length() > 0)
+			for (ResourceDataObs rd : resourceDataList) {
+				if (rd.getPath() != null && rd.getPath().trim().length() > 0) {
 					fileList.add(rd.getPath());
+				}
+
 			}
 			Map<String, Object> fileMap = new HashMap<String, Object>();
 			if (!fileList.isEmpty()) {
@@ -397,11 +443,11 @@ public class ObservationMapperHelper {
 				FilesDTO filesDTO = new FilesDTO();
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
-				filesDTO.setModule("OBSERVATION");
+				filesDTO.setModule("observation");
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
-			for (ObservationResourceData resourceData : resourceDataList) {
+			for (ResourceDataObs resourceData : resourceDataList) {
 				Resource resource = new Resource();
 				resource.setVersion(0L);
 				if (resourceData.getCaption() != null)
@@ -438,7 +484,10 @@ public class ObservationMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(defaultLanguageId);
+				if (resourceData.getLanguageId() != null)
+					resource.setLanguageId(resourceData.getLanguageId());
+				else
+					resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
@@ -461,8 +510,6 @@ public class ObservationMapperHelper {
 		Map<String, Double> latlon = new HashMap<String, Double>();
 		double x0 = lon;
 		double y0 = lat;
-
-		Random random = new Random();
 
 		// Convert radius from meters to degrees.
 		double innerRadiusInDegrees = 5000D / 111320f;
@@ -494,15 +541,77 @@ public class ObservationMapperHelper {
 		return latlon;
 	}
 
-	public List<ObservationResourceData> createEditResourceMapping(List<ResourceData> resources) {
-		List<ObservationResourceData> editResource = new ArrayList<ObservationResourceData>();
+	public List<ResourceDataObs> createEditResourceMapping(List<ResourceData> resources) {
+		List<ResourceDataObs> editResource = new ArrayList<ResourceDataObs>();
 		for (ResourceData resourceUser : resources) {
 			Resource resource = resourceUser.getResource();
-			editResource.add(new ObservationResourceData(resource.getFileName(), resource.getUrl(), resource.getType(),
-					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext()));
+			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
+					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext(),
+					resource.getLanguageId()));
 
 		}
 		return editResource;
+
+	}
+
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
+	public void updateGeoPrivacy(List<Observation> observationList) {
+
+		try {
+
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
+			in.close();
+
+			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
+
+			for (Observation observation : observationList) {
+				System.out.println("--------START---------");
+				System.out.println("Observation Id : " + observation.getId());
+				System.out.println("---------END----------");
+
+				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
+					Long taxonId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+					if (taxonId != null) {
+
+						if (geoPrivateTaxonId.contains(taxonId)) {
+							System.out.println("---------BEGIN----------");
+							System.out.println("Observation Id : " + observation.getId());
+							observation.setGeoPrivacy(true);
+							observationDAO.update(observation);
+							rabbitMQProducer.setMessage("esmodule", observation.getId().toString(), "Observation Core");
+							System.out.println("----------END------------");
+						}
+
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 	}
 

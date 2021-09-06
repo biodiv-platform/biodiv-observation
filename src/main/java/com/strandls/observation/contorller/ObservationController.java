@@ -26,6 +26,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -46,7 +47,9 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
+import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
+import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
@@ -54,12 +57,14 @@ import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.EsLocationListParams;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -67,7 +72,9 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
+import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
+import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
@@ -81,6 +88,7 @@ import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
+import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
@@ -130,6 +138,15 @@ public class ObservationController {
 
 	@Inject
 	private MailService mailService;
+
+	@Inject
+	private ObservationDataTableService observationDataTableService;
+
+	@Inject
+	private UserServiceApi userService;
+
+	@Inject
+	private Headers headers;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -335,9 +352,9 @@ public class ObservationController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
@@ -351,7 +368,9 @@ public class ObservationController {
 			@DefaultValue("") @QueryParam("speciesName") String speciesName,
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("months") String months,
-			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
+			@DefaultValue("") @QueryParam("isFlagged") String isFlagged,
+			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
+			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
 			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
 			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
@@ -368,8 +387,10 @@ public class ObservationController {
 			@QueryParam("termsAggregationField") String termsAggregationField,
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
-			@QueryParam("state") String state, @QueryParam("tags") String tags,
-			@QueryParam("publicationgrade") String publicationGrade,
+			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity,
+			@QueryParam("tags") String tags, @ApiParam(name = "location") EsLocationListParams location,
+			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
+			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
 			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
 			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
@@ -396,25 +417,8 @@ public class ObservationController {
 				bounds.setRight(right);
 				bounds.setTop(top);
 			}
-			List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
-			if (location != null) {
-				double[] point = Stream.of(location.split(",")).mapToDouble(Double::parseDouble).toArray();
-				for (int i = 0; i < point.length; i = i + 2) {
-					String singlePoint = point[i + 1] + "," + point[i];
-
-					int comma = singlePoint.indexOf(',');
-					if (comma != -1) {
-						MapGeoPoint geoPoint = new MapGeoPoint();
-						geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
-						geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
-						polygon.add(geoPoint);
-					}
-				}
-			}
-
 			MapBoundParams mapBoundsParams = new MapBoundParams();
 			mapBoundsParams.setBounds(bounds);
-			mapBoundsParams.setPolygon(polygon);
 
 			MapSearchParams mapSearchParams = new MapSearchParams();
 			mapSearchParams.setFrom(offset);
@@ -423,10 +427,22 @@ public class ObservationController {
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
 
+			String loc = location.getLocation();
+			if (loc != null) {
+				if (loc.contains("/")) {
+					String[] locationArray = loc.split("/");
+					List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
+					mapBoundsParams.setMultipolygon(multiPolygonPoint);
+				} else {
+					mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+				}
+			}
+
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
-					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted);
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+					dataTableName, geoEntity);
 
 			MapAggregationResponse aggregationResult = null;
 			MapAggregationStatsResponse aggregationStatsResult = null;
@@ -436,7 +452,8 @@ public class ObservationController {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
-						tahsil, district, state, tags, publicationGrade, authorVoted);
+						tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName, dataTableName,
+						geoEntity);
 
 				if (view.equalsIgnoreCase("stats")) {
 					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
@@ -444,7 +461,8 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset, identifiersoffset);
+							uploadersoffset, identifiersoffset, dataSetName, dataTableName, geoEntity,
+							geoShapeFilterField);
 
 				}
 
@@ -452,7 +470,7 @@ public class ObservationController {
 
 			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					aggregationResult, aggregationStatsResult, view);
+					geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -1157,7 +1175,7 @@ public class ObservationController {
 
 	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@ValidateUser
 	public Response observationListCsv(@PathParam("index") String index, @PathParam("type") String type,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
 			@DefaultValue("") @QueryParam("user") String user,
@@ -1187,7 +1205,7 @@ public class ObservationController {
 			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
-			@Context UriInfo uriInfo) {
+			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
 		try {
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
@@ -1228,6 +1246,7 @@ public class ObservationController {
 			mapSearchParams.setSortOn(sortOn);
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
+			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
 			ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
 					downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
@@ -1235,7 +1254,8 @@ public class ObservationController {
 					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
 					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
 					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService);
+					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService,
+					userService);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();
@@ -1278,22 +1298,6 @@ public class ObservationController {
 		List<DownloadLog> records = observationService.fetchDownloadLog(authorIds, fileType, Integer.parseInt(offSet),
 				Integer.parseInt(limit));
 		return Response.status(Status.OK).entity(records).build();
-	}
-
-	@GET
-	@Path(ApiConstants.INDEXFIELDUPDATE)
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Update the field value of observation index", notes = "for all observation given datatableId", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "error in updating", response = String.class) })
-	public Response forceUpdateIndexField(@QueryParam("field") String field, @QueryParam("value") String value,
-			@QueryParam("datatableid") String dataTableId) {
-		String index = "eo";
-		String type = "er";
-		String response = observationService.forceUpdateIndexField(index, type, field, value,
-				Long.parseLong(dataTableId));
-
-		return Response.status(Status.OK).entity(response).build();
 	}
 
 	@GET
@@ -1349,4 +1353,123 @@ public class ObservationController {
 
 	}
 
+	@POST
+	@Path(ApiConstants.BULK + ApiConstants.OBSERVATION)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
+	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+		try {
+			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);
+			if (result != null) {
+				return Response.status(Status.OK).entity(result).build();
+			} else {
+				return Response.status(Status.BAD_REQUEST).entity(result).build();
+			}
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = ShowObervationDataTable.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId, @DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit,
+					offset);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
+	@Path(ApiConstants.DATATABLEOBSERVATION + ApiConstants.LIST + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDataTableShow.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
+			@DefaultValue("0") @QueryParam("offset") String Offset,
+			@DefaultValue("10") @QueryParam("limit") String Limit) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			Integer limit = Integer.parseInt(Limit);
+			Integer offset = Integer.parseInt(Offset);
+			List<ObservationDataTableShow> result = observationDataTableService.fetchAllObservationByDataTableId(id,
+					limit, offset);
+
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@DELETE
+	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response deleteObservaionByDatatableId(@Context HttpServletRequest request,
+			@PathParam("dataTableId") String dataTableId) {
+
+		try {
+			Long id = Long.parseLong(dataTableId);
+			String result = observationDataTableService.removeObservationByDataTableId(request, id);
+			if (result == null) {
+				return Response.status(Status.NOT_FOUND).entity(result).build();
+			} else {
+				return Response.status(Status.OK).entity(result).build();
+			}
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@POST
+	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
+	@ApiOperation(value = "validate the observation pulled to speciesPage", notes = "returns Boolean Values", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to validate the Observations", response = String.class) })
+
+	public Response speciesPullObservationValidation(@Context HttpServletRequest request,
+			@PathParam("taxonId") String taxonId, @ApiParam(name = "observationList") List<Long> observationIds) {
+		try {
+			Long taxId = Long.parseLong(taxonId);
+			Boolean result = observationService.speciesObservationValidate(request, taxId, observationIds);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 }

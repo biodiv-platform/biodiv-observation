@@ -40,9 +40,12 @@ import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
+import com.strandls.observation.util.TokenGenerator;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
@@ -78,6 +81,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 	private TaxonomyServicesApi taxonomyService;
 
 	@Inject
+	private TaxonomyTreeServicesApi taxonomyTreeService;
+
+	@Inject
 	private UtilityServiceApi utilityService;
 
 	@Inject
@@ -105,12 +111,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Recommendation reco = recoDao.findById(recoVote.getRecommendationId());
 
 		try {
-			if (reco.getTaxonConceptId() != null) {
-
-				TaxonomyDefinition taxonomyDefinition = taxonomyService
-						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-				speciesId = taxonomyDefinition.getSpeciesId();
-			}
 			scientificName = scientificName + reco.getName();
 			if (recoVote.getCommonNameRecoId() != null && recoVote.getGivenCommonName() != null) {
 				Recommendation recoCommon = recoDao.findById(recoVote.getCommonNameRecoId());
@@ -140,7 +140,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-				speciesId = taxonomyDefinition.getSpeciesId();
 				taxonId = reco.getTaxonConceptId();
 				scientificName = taxonomyDefinition.getNormalizedForm();
 
@@ -176,9 +175,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-				speciesId = taxonomyDefinition.getSpeciesId();
 				taxonId = reco.getTaxonConceptId();
-				breadCrumb = taxonomyService.getTaxonomyBreadCrumb(reco.getTaxonConceptId().toString());
+				breadCrumb = taxonomyTreeService.getTaxonomyBreadCrumb(reco.getTaxonConceptId().toString());
 				scientificName = taxonomyDefinition.getNormalizedForm();
 				status = taxonomyDefinition.getStatus();
 
@@ -208,7 +206,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 	@Override
 	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonid,
 			RecoCreate recoCreate, Boolean createObservation) {
-
 		RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observationId, userId, null, null);
 		if (previousVote != null) {
 			recoVoteDao.delete(previousVote);
@@ -233,7 +230,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 		try {
 			if (taxonid != null) {
 				TaxonomyDefinition taxonomyDef = taxonomyService.getTaxonomyConceptName(taxonid.toString());
-				rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
 				rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 			}
@@ -250,20 +246,23 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Observation observation = observationDao.findById(observationId);
 		observation.setLastRevised(new Date());
 		observationDao.update(observation);
-		if (createObservation) {
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name", null);
-
-			return maxRecoVote;
-		} else {
-			maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
-//			Bg process for userGroup filter rule
-			observaitonService.bgfilterRule(request, observationId);
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-					observationId, "observation", recoVote.getId(), "Suggested species name",
-					observaitonService.generateMailData(observationId));
-			return maxRecoVote;
+		TokenGenerator tokenGenerator = new TokenGenerator();
+		try {
+			String userAuthToken = tokenGenerator.generate(userService.getUser(userId.toString()));
+			if (createObservation) {
+				logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+						recoVote.getId(), "Suggested species name", null);
+			} else {
+				maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
+//				Bg process for userGroup filter rule
+				observaitonService.bgfilterRule(request, observationId);
+				logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
+						recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
+			}
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
 		}
+		return maxRecoVote;
 
 	}
 
@@ -278,7 +277,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 					maxRecoVote = entry.getValue();
 				}
 			}
-			return maxRecoVote.getRecoId();
+			if (maxRecoVote != null)
+				return maxRecoVote.getRecoId();
 		}
 		return null;
 
@@ -362,9 +362,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	@Override
-	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific) {
-		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific, defaultLanguageId,
-				name.toLowerCase(), null, false, null, canonicalName);
+	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific,
+			Long languageId) {
+		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific,
+				languageId != null ? languageId : defaultLanguageId, name.toLowerCase(), null, false, null,
+				canonicalName);
 
 		Recommendation result = recoDao.save(reco);
 		return result;
@@ -425,7 +427,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (recoSet.getTaxonId() != null) {
 					TaxonomyDefinition taxonomyDef = taxonomyService
 							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-					rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
 					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 				}
@@ -536,13 +537,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 						if (recoSet.getTaxonId() != null) {
 							TaxonomyDefinition taxonomyDef = taxonomyService
 									.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-							rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
 							rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 						}
-						if (recoSet.getCommonName().trim().length() > 0)
+						if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
 							rvActivity.setCommonName(recoSet.getCommonName());
-						if (recoSet.getScientificName().trim().length() > 0)
+						if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
 							rvActivity.setGivenName(recoSet.getScientificName());
 
 						description = objectMapper.writeValueAsString(rvActivity);
@@ -576,6 +576,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		try {
 
+			Observation observation = observationDao.findById(observationId);
+			if (observation.getIsLocked())
+				return null;
+			
 			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
@@ -634,7 +638,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 						recoVote = finalFilteredList.get(0);
 				}
 				Long maxVotedReco = recoVote.getRecommendationId();
-				Observation observation = observationDao.findById(observationId);
 				observation.setIsLocked(true);
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observation.setLastRevised(new Date());
@@ -649,13 +652,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (recoSet.getTaxonId() != null) {
 					TaxonomyDefinition taxonomyDef = taxonomyService
 							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-					rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
 					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 				}
-				if (recoSet.getCommonName().trim().length() > 0)
+				if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
 					rvActivity.setCommonName(recoSet.getCommonName());
-				if (recoSet.getScientificName().trim().length() > 0)
+				if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
 					rvActivity.setGivenName(recoSet.getScientificName());
 
 				description = objectMapper.writeValueAsString(rvActivity);
@@ -665,6 +667,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
 						observationId, "observation", recoVote.getId(), "obv locked",
 						observaitonService.generateMailData(observationId));
+
+				observaitonService.produceToRabbitMQ(observationId.toString(), "obv locked");
 
 				return result;
 			}
@@ -705,7 +709,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 					if (recoSet.getTaxonId() != null) {
 						TaxonomyDefinition taxonomyDef = taxonomyService
 								.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-						rvActivity.setSpeciesId(taxonomyDef.getSpeciesId());
 						rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
 
 					}
@@ -749,7 +752,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 					taxon = reco.getTaxonConceptId();
 					TaxonomyDefinition taxonomyDefinition = taxonomyService
 							.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-					speciesId = taxonomyDefinition.getSpeciesId();
 					scientificName = taxonomyDefinition.getNormalizedForm();
 
 				} else {
@@ -842,11 +844,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 					Recommendation reco = recoDao.findById(entrySet.getKey());
 					if (reco != null) {
 						Long speciesId = null;
-						if (reco.getTaxonConceptId() != null) {
-							TaxonomyDefinition taxonomyDefinition = taxonomyService
-									.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-							speciesId = taxonomyDefinition.getSpeciesId();
-						}
 						uniqueSpeciesList.add(new UniqueSpeciesInfo(reco.getName(), entrySet.getKey(), speciesId,
 								reco.getTaxonConceptId(), entrySet.getValue()));
 					}
@@ -912,7 +909,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Set<Long> observationIdSet = new HashSet<Long>();
 		List<Long> recoIdList = new ArrayList<Long>();
 		for (Recommendation reco : recoList) {
-			if (reco.getId() != latestRecoId) {
+			if (!reco.getId().equals(latestRecoId)) {
 				recoIdList.add(reco.getId());
 			}
 
@@ -940,7 +937,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 
 		for (Recommendation reco : recoList) {
-			if (reco.getId() != latestRecoId) {
+			if (!reco.getId().equals(latestRecoId)) {
 				recoDao.delete(reco);
 			} else {
 				if (!reco.getIsScientificName()) {

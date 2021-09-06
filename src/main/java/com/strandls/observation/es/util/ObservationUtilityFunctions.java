@@ -17,20 +17,36 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.DownloadLog;
+import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationBulkData;
+import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
+import com.strandls.observation.util.TokenGenerator;
+import com.strandls.user.controller.UserServiceApi;
 
 /**
  * @author ashish
  *
  */
 public class ObservationUtilityFunctions {
+
+	@Inject
+	private TokenGenerator tokenGenerator;
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationUtilityFunctions.class);
 
@@ -45,15 +61,17 @@ public class ObservationUtilityFunctions {
 	public String getCsvFileNameDownloadPath() {
 
 		Date date = new Date();
-		String fileName = "obv_"+date.getTime()+".csv";
+		String fileName = "obv_" + date.getTime() + ".csv";
 		String filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
 		try {
-			file.createNewFile();
+			boolean isFileCreated = file.createNewFile();
+			if (isFileCreated)
+				return fileName;
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
-		return fileName;
+		return null;
 	}
 
 	public List<String[]> getCsvHeaders(List<String> customfields, List<String> taxonomic, List<String> spatial,
@@ -106,7 +124,7 @@ public class ObservationUtilityFunctions {
 			row.add(record.getLocationScale());
 			row.add(parseDate(record.getFromDate()));
 			row.add(parseDate(record.getToDate()));
-			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRanktext() : null);
+			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
 			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
 			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
 			row.addAll(record.getMaxVotedReco() != null
@@ -187,9 +205,9 @@ public class ObservationUtilityFunctions {
 		observationGrade.setIsLocationDefined(
 				(observation.getLatitude() != null || observation.getLongitude() != null) ? true : false);
 
-		observationGrade.setHasfamilyRankOrLower(
-				observation.getMaxVotedReco() != null ? (observation.getMaxVotedReco().getRank() >= 5 ? true : false)
-						: false);
+//		observationGrade.setHasfamilyRankOrLower(
+//				observation.getMaxVotedReco() != null ? (observation.getMaxVotedReco().getRank() >= 5 ? true : false)
+//						: false);
 		observationGrade.setHasTaxonName(observation.getMaxVotedReco() != null
 				? (observation.getMaxVotedReco().getScientific_name() != null ? true : false)
 				: false);
@@ -204,6 +222,68 @@ public class ObservationUtilityFunctions {
 				: true);
 
 		return observationGrade;
+	}
+
+	@SuppressWarnings("deprecation")
+	public Long createObservationAndMappings(String requestAuthHeader, ObservationBulkMapperHelper mapper,
+			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
+			Map<String, String> myImageUpload, Long userId) {
+		Observation observation = null;
+		String resourceAuthHeader = requestAuthHeader;
+		Boolean isVerified = Boolean.TRUE.equals(observationData.getIsVerified()) ? observationData.getIsVerified()
+				: false;
+		try {
+			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
+			Row dataRow = observationData.getDataRow();
+
+			if (fieldMapping.get("isVerified") != null) {
+				Cell verifiedCell = dataRow.getCell(fieldMapping.get("isVerified"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (verifiedCell != null) {
+					isVerified = Boolean.parseBoolean(verifiedCell.getStringCellValue());
+				}
+			}
+
+			if (fieldMapping.get("user") != null) {
+				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (userCell != null && userCell.getCellType() == CellType.NUMERIC) {
+					userCell.setCellType(CellType.NUMERIC);
+					Long userIdCell = (long) userCell.getNumericCellValue();
+					try {
+						if (userService.getUser(userIdCell.toString()) != null)
+							requestAuthHeader = tokenGenerator.generate(userService.getUser(userIdCell.toString()));
+						userId = userIdCell;
+					} catch (Exception e) {
+						logger.error(e.getMessage());
+
+					}
+				}
+			}
+
+			observation = mapper.creationObservationMapping(userId, requestAuthHeader, fieldMapping, dataRow,
+					observationData.getDataTable(), observationData.getSpeciesGroupList(),
+					observationData.getChecklistAnnotaion(), isVerified, observationData.getBasisOfRecord());
+			if (observation != null) {
+				mapper.createObservationResource(resourceAuthHeader, dataRow, fieldMapping,
+						observationData.getLicenses(), userId, observation, myImageUpload);
+				mapper.createRecoMapping(observationData.getRequest(), requestAuthHeader, fieldMapping, dataRow,
+						observation, userId);
+				mapper.createFactsMapping(requestAuthHeader, fieldMapping, dataRow, observationData.getPairs(),
+						observation.getId());
+				mapper.createTags(requestAuthHeader, fieldMapping, dataRow, observation.getId());
+				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
+						observationData.getUserGroupsList(), observation.getId());
+				mapper.updateGeoPrivacy(observation);
+				mapper.updateUserGroupFilter(requestAuthHeader, observation);
+				return observation.getId();
+			}
+
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+
+		return observation != null && observation.getId() != null ? observation.getId() : null;
+
 	}
 
 	private String fetchMaxVotedCommonName(Max_voted_reco reco) {
@@ -222,16 +302,16 @@ public class ObservationUtilityFunctions {
 
 	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy) {
 		List<String> hierarchyValues = new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null));
-		for (Hierarchy h : hierarchy) {
-			int rank = h.getRank().intValue();
-			if (rank == 7) {
-				rank -= 1;
-			} else if (rank == 9) {
-				rank -= 2;
-			}
-			if (rank >= 0 && rank <= 7)
-				hierarchyValues.set(rank, h.getNormalized_name());
-		}
+//		for (Hierarchy h : hierarchy) {
+//			int rank = h.getRank().intValue();
+//			if (rank == 7) {
+//				rank -= 1;
+//			} else if (rank == 9) {
+//				rank -= 2;
+//			}
+//			if (rank >= 0 && rank <= 7)
+//				hierarchyValues.set(rank, h.getNormalized_name());
+//		}
 		return hierarchyValues;
 	}
 
@@ -273,7 +353,7 @@ public class ObservationUtilityFunctions {
 					String key = field.getCf_name();
 					String keyValue = map.get(key);
 					String fieldValue = getCustomFieldValue(field.getCustom_field_values(),
-							field.getField_type().toLowerCase());
+							field.getField_type().toLowerCase().trim());
 					if (keyValue == null)
 						map.replace(key, fieldValue);
 					else
@@ -284,8 +364,8 @@ public class ObservationUtilityFunctions {
 		return map.values();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private String getCustomFieldValue(Custom_field_values values, String fieldType) {
-
 		if (fieldType.equalsIgnoreCase("field text"))
 			return values.getField_text_data();
 		if (fieldType.equalsIgnoreCase("range"))
@@ -293,7 +373,9 @@ public class ObservationUtilityFunctions {
 		if (fieldType.equalsIgnoreCase("single categorical"))
 			return values.getSingle_categorical_data();
 		if (fieldType.equalsIgnoreCase("multiple categorical"))
-			return String.join(";", values.getMultiple_categorical_data());
+			return String.join(";",
+					values.getMultiple_categorical_data() != null ? values.getMultiple_categorical_data()
+							: new ArrayList());
 		return null;
 
 	}
@@ -323,18 +405,21 @@ public class ObservationUtilityFunctions {
 							commonNameValue += commonNames.getCommon_name() + ":" + commonNames.getLanguage_name()
 									+ "_";
 					}
-					if (keyValue == null)
-						map.replace(taxonomicValues[1],
-								recoId + "#" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
-					else
-						map.replace(taxonomicValues[1], keyValue + recoId + "#"
-								+ commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+					if (commonNameValue != null) {
+						if (keyValue == null)
+							map.replace(taxonomicValues[1],
+									recoId + "#" + commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+						else
+							map.replace(taxonomicValues[1], keyValue + recoId + "#"
+									+ commonNameValue.substring(0, commonNameValue.length() - 1) + " | ");
+					}
+
 				}
 			}
 		}
 		if (maxVotedReco != null) {
-			map.replace(taxonomicValues[2],
-					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
+//			map.replace(taxonomicValues[2],
+//					(maxVotedReco.getSpecies_id() != null ? maxVotedReco.getSpecies_id().toString() : null));
 			List<Hierarchy> hierarchy = maxVotedReco.getHierarchy();
 			if (hierarchy != null) {
 				String value = "";
@@ -343,7 +428,7 @@ public class ObservationUtilityFunctions {
 							+ level.getTaxon_id() + " | ";
 				}
 				if (value.length() > 3) {
-					map.replace(taxonomicValues[3], value.substring(0, value.length()-3));
+					map.replace(taxonomicValues[3], value.substring(0, value.length() - 3));
 				}
 			}
 		}
@@ -395,7 +480,7 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchTemporalForCsv(List<String> temporal, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(temporal);
-		String[] temporalFields = {"observedInMonth", "lastRevised","toDate"};
+		String[] temporalFields = { "observedInMonth", "lastRevised", "toDate" };
 		map.replace(temporalFields[0], document.getObservedInMonth());
 		map.replace(temporalFields[1], document.getLastRevised());
 		map.replace(temporalFields[2], document.getToDate());
@@ -404,9 +489,8 @@ public class ObservationUtilityFunctions {
 
 	private Collection<String> fetchMiscForCsv(List<String> misc, ObservationListElasticMapping document) {
 		LinkedHashMap<String, String> map = createLinkedHashMap(misc);
-		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", 
-				"flagCount", "organismRemarks","annotations", "tags", 
-				"userGroup","noOfImages","speciesGroup" };
+		String[] miscFields = { "datasetName", "containsMedia", "uploadProtocol", "flagCount", "organismRemarks",
+				"annotations", "tags", "userGroup", "noOfImages", "speciesGroup" };
 		map.replace(miscFields[0], document.getDatasetTitle());
 		map.replace(miscFields[1], document.getContainsMedia().toString());
 		map.replace(miscFields[2], document.getUploadProtocol());
@@ -424,7 +508,7 @@ public class ObservationUtilityFunctions {
 	private String fetchTags(List<Tags> tags) {
 		String value = "";
 		for (Tags tag : tags) {
-			value += tag.getName()+" | ";
+			value += tag.getName() + " | ";
 		}
 		if (value.length() > 3)
 			return value.substring(0, value.length() - 3);
@@ -448,24 +532,22 @@ public class ObservationUtilityFunctions {
 		}
 		return map;
 	}
-	
+
 	private String parseDate(String date) {
-        DateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy"); 
-        DateFormat secondaryFormat = new SimpleDateFormat("yyyy-MM-dd");
-        if(!(date == null)) {
-	        if(date.contains("-") || date.contains("T")) {
-	        	try {
-	        		return originalFormat.format(new Date(secondaryFormat.parse(date).getTime())).toString();
+		DateFormat originalFormat = new SimpleDateFormat("dd/MM/yyyy");
+		DateFormat secondaryFormat = new SimpleDateFormat("yyyy-MM-dd");
+		if (!(date == null)) {
+			if (date.contains("-") || date.contains("T")) {
+				try {
+					return originalFormat.format(new Date(secondaryFormat.parse(date).getTime())).toString();
 				} catch (ParseException e) {
-					logger.error("Date Parsing Error - "+e.getMessage());
+					logger.error("Date Parsing Error - " + e.getMessage());
 				}
-	        }
-	        else
-	        {
-	        	return originalFormat.format(new Date(Long.parseLong(date))).toString();
-	        }
-        }
-        return "";
+			} else {
+				return originalFormat.format(new Date(Long.parseLong(date))).toString();
+			}
+		}
+		return "";
 
 	}
 }

@@ -36,8 +36,8 @@ public class ObservationListPageMapper {
 	private Date createdOn;
 	private Date lastRevised;
 	private Date observedOn;
+	private String placeName;
 	private String reverseGeocodedName;
-	private String palceName;
 	private Long speciesGroupId;
 	private String speciesGroup;
 	private Long noOfImages;
@@ -74,12 +74,8 @@ public class ObservationListPageMapper {
 	}
 
 	@JsonProperty(value = "place_name")
-	public String getPalceName() {
-		return palceName;
-	}
-
-	public void setPalceName(String palceName) {
-		this.palceName = palceName;
+	private void unPackPlaceName(String place_name) {
+		placeName = place_name;
 	}
 
 	@JsonProperty(value = "reverse_geocoded_name")
@@ -317,9 +313,9 @@ public class ObservationListPageMapper {
 					scientificName = allreco.getScientific_name().getName();
 					if (allreco.getScientific_name().getTaxon_detail() != null) {
 						taxonId = allreco.getScientific_name().getTaxon_detail().getId();
-						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
-							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
-						}
+//						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
+//							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
+//						}
 					}
 				}
 				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
@@ -447,6 +443,7 @@ public class ObservationListPageMapper {
 	 * @param createdOn
 	 * @param lastRevised
 	 * @param observedOn
+	 * @param placeName
 	 * @param reverseGeocodedName
 	 * @param speciesGroupId
 	 * @param speciesGroup
@@ -463,8 +460,8 @@ public class ObservationListPageMapper {
 	 * @param tags
 	 */
 	public ObservationListPageMapper(Long observationId, Date createdOn, Date lastRevised, Date observedOn,
-			String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages, Long noOfAudios,
-			Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
+			String placeName, String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages,
+			Long noOfAudios, Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
 			List<CustomFieldObservationData> customField, List<Tags> tags) {
 		super();
@@ -472,6 +469,7 @@ public class ObservationListPageMapper {
 		this.createdOn = createdOn;
 		this.lastRevised = lastRevised;
 		this.observedOn = observedOn;
+		this.placeName = placeName;
 		this.reverseGeocodedName = reverseGeocodedName;
 		this.speciesGroupId = speciesGroupId;
 		this.speciesGroup = speciesGroup;
@@ -518,6 +516,14 @@ public class ObservationListPageMapper {
 
 	public void setObservedOn(Date observedOn) {
 		this.observedOn = observedOn;
+	}
+
+	public String getPlaceName() {
+		return placeName;
+	}
+
+	public void setPlaceName(String placeName) {
+		this.placeName = placeName;
 	}
 
 	public String getReverseGeocodedName() {

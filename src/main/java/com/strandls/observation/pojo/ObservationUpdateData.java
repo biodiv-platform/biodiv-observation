@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class ObservationUpdateData {
 
-	private List<ObservationResourceData> resources;
+	private List<ResourceDataObs> resources;
 	private String notes;
 //	------Date Data----------
 	private String dateAccuracy;
@@ -45,7 +45,7 @@ public class ObservationUpdateData {
 	 * @param longitude
 	 * @param hidePreciseLocation
 	 */
-	public ObservationUpdateData(List<ObservationResourceData> resources, String notes, String dateAccuracy, Date observedOn,
+	public ObservationUpdateData(List<ResourceDataObs> resources, String notes, String dateAccuracy, Date observedOn,
 			String observedAt, String reverseGeocoded, String locationScale, Double latitude, Double longitude,
 			Boolean hidePreciseLocation) {
 		super();
@@ -61,11 +61,11 @@ public class ObservationUpdateData {
 		this.hidePreciseLocation = hidePreciseLocation;
 	}
 
-	public List<ObservationResourceData> getResources() {
+	public List<ResourceDataObs> getResources() {
 		return resources;
 	}
 
-	public void setResources(List<ObservationResourceData> resources) {
+	public void setResources(List<ResourceDataObs> resources) {
 		this.resources = resources;
 	}
 

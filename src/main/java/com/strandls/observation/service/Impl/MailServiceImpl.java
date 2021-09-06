@@ -25,7 +25,7 @@ import com.strandls.user.pojo.User;
 
 public class MailServiceImpl implements MailService {
 
-	private static final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 
 	@Inject
 	private Channel channel;

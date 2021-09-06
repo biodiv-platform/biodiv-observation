@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,7 @@ import com.strandls.esmodule.pojo.MapAndBoolQuery;
 import com.strandls.esmodule.pojo.MapAndMatchPhraseQuery;
 import com.strandls.esmodule.pojo.MapAndRangeQuery;
 import com.strandls.esmodule.pojo.MapExistQuery;
+import com.strandls.esmodule.pojo.MapGeoPoint;
 import com.strandls.esmodule.pojo.MapOrBoolQuery;
 import com.strandls.esmodule.pojo.MapOrMatchPhraseQuery;
 import com.strandls.esmodule.pojo.MapOrRangeQuery;
@@ -48,7 +50,7 @@ public class ESUtility {
 	private EsServicesApi esService;
 
 	private List<Object> cSTSOT(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Object>();
 
 		String[] y = str.split(",");
@@ -69,7 +71,7 @@ public class ESUtility {
 	}
 
 	private List<Long> getListOfIds(String str) {
-		if (str == null || str == "" || str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Long>();
 		String[] y = str.split(",");
 		List<Long> LongIds = new ArrayList<>();
@@ -145,7 +147,7 @@ public class ESUtility {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String rank, String tahsil, String district, String state, String tags,
-			String publicationGrade,String authorVoted) {
+			String publicationGrade, String authorVoted, String dataSetName, String dataTableName, String geoEntity) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -156,33 +158,33 @@ public class ESUtility {
 		List<MapOrMatchPhraseQuery> orMatchPhraseQueriesnew = new ArrayList<MapOrMatchPhraseQuery>();
 
 		try {
-			FilterPanelData esFilter = esService.getFilterLists(ObservationIndex.index.getValue(),
-					ObservationIndex.type.getValue());
+			FilterPanelData esFilter = esService.getFilterLists(ObservationIndex.INDEX.getValue(),
+					ObservationIndex.TYPE.getValue());
 
 //			species group
 			List<Object> groupId = cSTSOT(sGroup);
 			if (!groupId.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.sGroup.getValue(), groupId));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.SGROUP.getValue(), groupId));
 			}
 
 //			taxon browser
 			List<Object> taxonIds = cSTSOT(taxon);
 			if (!taxonIds.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.path.getValue(), taxonIds));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.PATH.getValue(), taxonIds));
 			}
 
 //			name :- reco name
 			if (recoName != null) {
 				orMatchPhraseQueriesnew
-						.add(assignOrMatchPhrase(ObservationIndex.scientificName.getValue(), recoName.toLowerCase()));
+						.add(assignOrMatchPhrase(ObservationIndex.SCIENTIFICNAME.getValue(), recoName.toLowerCase()));
 				orMatchPhraseQueriesnew
-						.add(assignOrMatchPhrase(ObservationIndex.commonName.getValue(), recoName.toLowerCase()));
+						.add(assignOrMatchPhrase(ObservationIndex.COMMONNAME.getValue(), recoName.toLowerCase()));
 			}
 
 //			name :- status
 			List<Object> taxonStatus = cSTSOT(status);
 			if (!taxonStatus.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.status.getValue(), taxonStatus));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.STATUS.getValue(), taxonStatus));
 			}
 
 //			name :- taxon Id
@@ -192,10 +194,10 @@ public class ESUtility {
 					String first = (String) taxonIdsArray.toArray()[0];
 
 					if (first.equalsIgnoreCase("0")) {
-						andMapExistQueries.add(assignExistsQuery(ObservationIndex.status.getValue(), false, null));
+						andMapExistQueries.add(assignExistsQuery(ObservationIndex.STATUS.getValue(), false, null));
 					}
 					if (first.equalsIgnoreCase("1")) {
-						andMapExistQueries.add(assignExistsQuery(ObservationIndex.status.getValue(), true, null));
+						andMapExistQueries.add(assignExistsQuery(ObservationIndex.STATUS.getValue(), true, null));
 					}
 				}
 
@@ -209,7 +211,7 @@ public class ESUtility {
 					String result = o.toString().toLowerCase();
 					lowerCaseList.add(result);
 				}
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.rank.getValue(), lowerCaseList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.RANK.getValue(), lowerCaseList));
 			}
 
 //			tahsil
@@ -220,7 +222,7 @@ public class ESUtility {
 					String result = o.toString().toLowerCase();
 					lowerCaseList.add(result);
 				}
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.tahsil.getValue(), lowerCaseList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.TAHSIL.getValue(), lowerCaseList));
 			}
 
 //			district
@@ -231,7 +233,7 @@ public class ESUtility {
 					String result = o.toString().toLowerCase();
 					lowerCaseList.add(result);
 				}
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.district.getValue(), lowerCaseList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.DISTRICT.getValue(), lowerCaseList));
 			}
 
 //			state
@@ -242,7 +244,7 @@ public class ESUtility {
 					String result = o.toString().toLowerCase();
 					lowerCaseList.add(result);
 				}
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.state.getValue(), lowerCaseList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.STATE.getValue(), lowerCaseList));
 
 			}
 
@@ -254,13 +256,13 @@ public class ESUtility {
 					String result = o.toString().toLowerCase();
 					lowerCaseList.add(result);
 				}
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.tags.getValue(), lowerCaseList));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.TAGS.getValue(), lowerCaseList));
 			}
 
 //			user Group
 			List<Object> userGroupId = cSTSOT(userGroupList);
 			if (!userGroupId.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.userGroupId.getValue(), userGroupId));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.USERGROUPID.getValue(), userGroupId));
 			}
 
 //			Data Quality :- Identification
@@ -269,11 +271,10 @@ public class ESUtility {
 				if (speciesNames.size() < 2) {
 					String first = (String) speciesNames.toArray()[0];
 					if (first.equalsIgnoreCase("UNIDENTIFIED")) {
-						rangeAndLists
-								.add(assignAndRange(ObservationIndex.no_of_identifications.getValue(), 0, 0, null));
+						rangeAndLists.add(assignAndRange(ObservationIndex.NOOFIDENTIFICATION.getValue(), 0, 0, null));
 					}
 					if (first.equalsIgnoreCase("IDENTIFIED")) {
-						rangeAndLists.add(assignAndRange(ObservationIndex.no_of_identifications.getValue(), 1,
+						rangeAndLists.add(assignAndRange(ObservationIndex.NOOFIDENTIFICATION.getValue(), 1,
 								Long.MAX_VALUE, null));
 					}
 				}
@@ -288,10 +289,10 @@ public class ESUtility {
 					String first = (String) flagged.toArray()[0];
 					if (first.equalsIgnoreCase("1")) {
 						rangeAndLists.add(
-								assignAndRange(ObservationIndex.flagCount.getValue(), first, Long.MAX_VALUE, null));
+								assignAndRange(ObservationIndex.FLAGCOUNT.getValue(), first, Long.MAX_VALUE, null));
 					}
 					if (first.equalsIgnoreCase("0")) {
-						rangeAndLists.add(assignAndRange(ObservationIndex.flagCount.getValue(), first, first, null));
+						rangeAndLists.add(assignAndRange(ObservationIndex.FLAGCOUNT.getValue(), first, first, null));
 					}
 
 				}
@@ -305,11 +306,11 @@ public class ESUtility {
 					String first = (String) validates.toArray()[0];
 					if (first.equalsIgnoreCase("invalidate")) {
 						data.add("false");
-						boolAndLists.add(assignBoolAndQuery(ObservationIndex.isLocked.getValue(), data));
+						boolAndLists.add(assignBoolAndQuery(ObservationIndex.ISLOCKED.getValue(), data));
 					}
 					if (first.equalsIgnoreCase("validate")) {
 						data.add("true");
-						boolAndLists.add(assignBoolAndQuery(ObservationIndex.isLocked.getValue(), data));
+						boolAndLists.add(assignBoolAndQuery(ObservationIndex.ISLOCKED.getValue(), data));
 					}
 				}
 
@@ -318,7 +319,7 @@ public class ESUtility {
 //			user
 			List<Object> authorId = cSTSOT(user);
 			if (!authorId.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.authorid.getValue(), authorId));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.AUTHORID.getValue(), authorId));
 			}
 
 //			media type
@@ -335,7 +336,7 @@ public class ESUtility {
 			String minDateValue = null;
 			String maxDateValue = null;
 			Date date = new Date();
-			SimpleDateFormat out = new SimpleDateFormat("YYYY-MM-dd");
+			SimpleDateFormat out = new SimpleDateFormat("yyyy-MM-dd");
 			try {
 				if (minDate != null) {
 					minDateValue = minDate;
@@ -349,15 +350,15 @@ public class ESUtility {
 
 			if (minDateValue != null && maxDateValue != null) {
 				rangeAndLists
-						.add(assignAndRange(ObservationIndex.fromDate.getValue(), minDateValue, maxDateValue, null));
+						.add(assignAndRange(ObservationIndex.FROMDATE.getValue(), minDateValue, maxDateValue, null));
 			}
 			if (minDateValue != null && maxDateValue == null) {
 				rangeAndLists.add(
-						assignAndRange(ObservationIndex.fromDate.getValue(), minDateValue, out.format(date), null));
+						assignAndRange(ObservationIndex.FROMDATE.getValue(), minDateValue, out.format(date), null));
 			}
 			if (minDateValue == null && maxDateValue != null) {
 				rangeAndLists.add(
-						assignAndRange(ObservationIndex.fromDate.getValue(), out.format(date), maxDateValue, null));
+						assignAndRange(ObservationIndex.FROMDATE.getValue(), out.format(date), maxDateValue, null));
 			}
 
 //			Created on
@@ -375,22 +376,22 @@ public class ESUtility {
 			}
 			if (createdOnMinDateValue != null && createdOnMaxDateValue != null) {
 
-				rangeAndLists.add(assignAndRange(ObservationIndex.createdOn.getValue(), createdOnMinDateValue,
+				rangeAndLists.add(assignAndRange(ObservationIndex.CREATEDON.getValue(), createdOnMinDateValue,
 						createdOnMaxDateValue, null));
 			}
 			if (createdOnMinDateValue != null && createdOnMaxDateValue == null) {
-				rangeAndLists.add(assignAndRange(ObservationIndex.createdOn.getValue(), createdOnMinDateValue,
+				rangeAndLists.add(assignAndRange(ObservationIndex.CREATEDON.getValue(), createdOnMinDateValue,
 						out.format(date), null));
 			}
 			if (createdOnMinDateValue == null && createdOnMaxDateValue != null) {
-				rangeAndLists.add(assignAndRange(ObservationIndex.createdOn.getValue(), out.format(date),
+				rangeAndLists.add(assignAndRange(ObservationIndex.CREATEDON.getValue(), out.format(date),
 						createdOnMaxDateValue, null));
 			}
 
 //			seasonal
 			List<Object> month = cSTSOT(months);
 			if (!month.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.ObservedOnMonth.getValue(), month));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.OBSERVATIONMONTH.getValue(), month));
 
 			}
 
@@ -415,7 +416,7 @@ public class ESUtility {
 										String valueList = trait.getName() + "|" + o.toString();
 										traitValueList.add(valueList);
 									}
-									boolAndLists.add(assignBoolAndQuery(ObservationIndex.traitsAggregation.getValue(),
+									boolAndLists.add(assignBoolAndQuery(ObservationIndex.TRAITSAGGREGATION.getValue(),
 											traitValueList));
 									break;
 								}
@@ -551,7 +552,7 @@ public class ESUtility {
 										List<Object> valueList = new ArrayList<Object>();
 										valueList.add(cfValue);
 										boolAndLists.add(assignBoolAndQuery(
-												ObservationIndex.customFieldAggregation.getValue(), valueList));
+												ObservationIndex.CUSTOMFIELDAGGREGATION.getValue(), valueList));
 									}
 								}
 
@@ -570,7 +571,7 @@ public class ESUtility {
 										}
 									}
 									boolAndLists.add(assignBoolAndQuery(
-											ObservationIndex.customFieldAggregation.getValue(), valueList));
+											ObservationIndex.CUSTOMFIELDAGGREGATION.getValue(), valueList));
 								}
 							}
 						}
@@ -580,7 +581,7 @@ public class ESUtility {
 							String value = entry.getValue().get(0);
 							String phrase = cfId + "|.*" + value.toLowerCase() + ".*";
 							andMatchPhraseQueries
-									.add(assignAndMatchPhrase(ObservationIndex.customFieldIdValue.getValue(), phrase));
+									.add(assignAndMatchPhrase(ObservationIndex.CUSTOMFIELDIDVALUE.getValue(), phrase));
 
 						}
 						if (fieldType.equalsIgnoreCase("range")) {
@@ -588,10 +589,10 @@ public class ESUtility {
 							String value = entry.getValue().get(0);
 							String values[] = value.split("-");
 							List<Object> cfidObject = cSTSOT(cfId);
-							boolAndLists.add(assignBoolAndQuery(ObservationIndex.customFieldId.getValue(), cfidObject));
-							rangeAndLists.add(assignAndRange(ObservationIndex.customFieldRangeMinValue.getValue(),
+							boolAndLists.add(assignBoolAndQuery(ObservationIndex.CUSTOMFIELDID.getValue(), cfidObject));
+							rangeAndLists.add(assignAndRange(ObservationIndex.CUSTOMFIELDRANGEMINVALUE.getValue(),
 									values[0], Long.MAX_VALUE, null));
-							rangeAndLists.add(assignAndRange(ObservationIndex.customFieldRangeMaxValue.getValue(),
+							rangeAndLists.add(assignAndRange(ObservationIndex.CUSTOMFIELDRANGEMAXVALUE.getValue(),
 									Long.MIN_VALUE, values[1], null));
 						}
 
@@ -610,7 +611,7 @@ public class ESUtility {
 			String isCheckList = "false";
 			List<Object> ischecklist = cSTSOT(isCheckList);
 			if (!ischecklist.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.isChecklist.getValue(), ischecklist));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.ISCHECKLIST.getValue(), ischecklist));
 			}
 
 //			Unknown Checks		
@@ -623,27 +624,46 @@ public class ESUtility {
 //			max voted reco
 			List<Object> maxvotedrecoids = cSTSOT(maxvotedrecoid);
 			if (!maxvotedrecoids.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.maxVotedReco.getValue(), maxvotedrecoids));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.MAXVTEDRECO.getValue(), maxvotedrecoids));
 			}
 
 //			reco id
 			List<Object> recoIds = cSTSOT(recoId);
 			if (!recoIds.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.recoId.getValue(), recoIds));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.RECOID.getValue(), recoIds));
 			}
-			
+
 //			author voted
 			List<Object> authorVoteds = cSTSOT(authorVoted);
 			if (!authorVoteds.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.authorVoted.getValue(), authorVoteds));
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.AUTHORVOTED.getValue(), authorVoteds));
 			}
-
 
 // 			publication grade
 			List<Object> publicationGradeChoice = cSTSOT(publicationGrade);
 			if (!publicationGradeChoice.isEmpty()) {
 				boolAndLists
-						.add(assignBoolAndQuery(ObservationIndex.publicationgrade.getValue(), publicationGradeChoice));
+						.add(assignBoolAndQuery(ObservationIndex.PUBLICATIONGRADE.getValue(), publicationGradeChoice));
+			}
+// 			dataset name 
+			List<Object> dataSetNameList = cSTSOT(dataSetName);
+			if (!dataSetNameList.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.DATASETNAME.getValue(), dataSetNameList));
+			}
+// 			datatable name
+			List<Object> dataTableNameList = cSTSOT(dataTableName);
+			if (!dataTableNameList.isEmpty()) {
+				dataTableNameList.forEach((item) -> {
+					orMatchPhraseQueriesnew
+							.add(assignOrMatchPhrase(ObservationIndex.DATATABLENAME.getValue(), item.toString()));
+				});
+
+			}
+
+//			dataset name 
+			List<Object> geoEntityList = cSTSOT(geoEntity);
+			if (!geoEntityList.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.GEOENTITY.getValue(), geoEntityList));
 			}
 			/**
 			 * combine all the queries
@@ -672,19 +692,43 @@ public class ESUtility {
 	public MapSearchQuery getSearchQueryResource(String resourcesUrl) {
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
 		List<Object> values = cSTSOT(resourcesUrl);
-		boolOrLists.add(assOrBoolQuery(ObservationIndex.resource.getValue(), values));
+		boolOrLists.add(assOrBoolQuery(ObservationIndex.RESOURCE.getValue(), values));
 		MapSearchQuery mapSearchQuery = new MapSearchQuery();
 
 		MapSearchParams searchParams = new MapSearchParams();
 		MapSearchParams mapSearchParams = new MapSearchParams();
 		mapSearchParams.setFrom(0);
 		mapSearchParams.setLimit(50);
-		mapSearchParams.setSortOn(ObservationIndex.createdOn.getValue());
+		mapSearchParams.setSortOn(ObservationIndex.CREATEDON.getValue());
 		mapSearchParams.setSortType(SortTypeEnum.DESC);
 		mapSearchParams.setMapBoundParams(null);
 
 		mapSearchQuery.setSearchParams(searchParams);
 		mapSearchQuery.setOrBoolQueries(boolOrLists);
 		return mapSearchQuery;
+	}
+
+	public List<MapGeoPoint> polygonGenerator(String locationArray) {
+		List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
+		double[] point = Stream.of(locationArray.split(",")).mapToDouble(Double::parseDouble).toArray();
+		for (int i = 0; i < point.length; i = i + 2) {
+			String singlePoint = point[i + 1] + "," + point[i];
+			int comma = singlePoint.indexOf(',');
+			if (comma != -1) {
+				MapGeoPoint geoPoint = new MapGeoPoint();
+				geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
+				geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
+				polygon.add(geoPoint);
+			}
+		}
+		return polygon;
+	}
+
+	public List<List<MapGeoPoint>> multiPolygonGenerator(String[] locationArray) {
+		List<List<MapGeoPoint>> mutlipolygon = new ArrayList<>();
+		for (String geoPoint : locationArray) {
+			mutlipolygon.add(polygonGenerator(geoPoint));
+		}
+		return mutlipolygon;
 	}
 }

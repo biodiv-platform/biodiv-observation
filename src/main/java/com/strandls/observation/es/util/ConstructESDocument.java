@@ -3,6 +3,10 @@
  */
 package com.strandls.observation.es.util;
 
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -10,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.util.PropertyFileUtil;
-
-import javax.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -26,7 +28,9 @@ public class ConstructESDocument {
 
 	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
-	public ObservationESDocument getESDocumentStub(String observationId) {
+	private String locationInfoLayer = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
+
+	public List<ObservationESDocument> getESDocumentStub(String observationId) {
 
 		String qry = "SELECT id observation_id, author_id, created_by, profile_pic, created_on, group_id, group_name, CONCAT(group_id,'|',group_name,'|',group_order) sgroup_filter, "
 				+ "row_to_json((SELECT t FROM (SELECT latitude AS lat, longitude as lon)t))\\:\\:text AS location, "
@@ -35,35 +39,24 @@ public class ConstructESDocument {
 				+ "place_name, reverse_geocoded_name, flag_count, geo_privacy, last_revised,  "
 				+ "visit_count, is_checklist, to_date,  " + "checklist_annotations, "
 				+ "is_locked, language_id, location_scale,  "
-				+ "dataset_id, dataset_title, repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
+				+ "dataset_id, dataset_title,data_table_id,data_table_title, repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
 				+ "CASE  " + "	WHEN no_of_images = 0 AND no_of_videos = 0 AND no_of_audio = 0 THEN 1 " + "	ELSE 0 "
-				+ "END AS no_media, " + "no_of_identifications, data_table_id, date_accuracy, "
-				+ "row_to_json((SELECT t FROM (SELECT max_voted_reco_id id,common_names, hierarchy, scientific_name, (taxon_detail->'rank')\\:\\:text\\:\\:integer AS rank, "
-				+ "case  " + "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 0 then 'Kingdom' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 1 then 'Phylum' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 2 then 'Class' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 3 then 'Order' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 4 then 'Superfamily' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 5 then 'Family' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 6 then 'Subfamily' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 7 then 'Genus' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 8 then 'Subgenus' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 9 then 'Species' "
-				+ "	when (taxon_detail->'rank')\\:\\:text\\:\\:integer = 10 then 'Infraspecies' " + "	else null "
-				+ "end as  ranktext,  (taxon_detail->'status') AS taxonstatus, " + "CASE "
-				+ "WHEN (taxon_detail->'species_id')\\:\\:text IS NULL OR trim((taxon_detail->'species_id')\\:\\:text) = '' "
-				+ "OR (taxon_detail->'species_id')\\:\\:text = 'null' THEN NULL "
-				+ "ELSE (taxon_detail->'species_id')\\:\\:text\\:\\:integer " + "END AS species_id "
+				+ "END AS no_media, " + "CASE  " + " WHEN is_locked = true  OR  is_verified = true THEN true "
+				+ " ELSE false " + "END AS is_locked, "
+
+				+ "no_of_identifications, data_table_id, date_accuracy, "
+				+ "row_to_json((SELECT t FROM (SELECT max_voted_reco_id id,common_names, hierarchy, scientific_name, (taxon_detail->'rank') AS rank, "
+				+ "  (taxon_detail->'status') AS taxonstatus "
 				+ " WHERE common_names is not null OR scientific_name is not null)t))\\:\\:text AS max_voted_reco,  "
 				+ "all_reco_vote\\:\\:text AS all_reco_vote, observation_resource\\:\\:text AS observation_resource, "
 				+ "custom_fields\\:\\:text custom_fields,   "
 				+ "user_group_observations\\:\\:text user_group_observations, (tags)\\:\\:text AS tags, (flags\\:\\:text) flags, (featured\\:\\:text) AS featured,  "
 				+ "(facts)\\:\\:text facts, "
-				+ "CASE WHEN    (is_verified = true) OR ((no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
+				+ "CASE WHEN    (is_verified = true) OR (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
 				+ "        from_date IS NOT NULL AND latitude IS NOT NULL AND "
 				+ "        longitude IS NOT NULL AND  (is_locked = true OR reco_vote_count >= 2)  AND "
-				+ "        (taxon_detail->'rank')\\:\\:text\\:\\:integer >=5  AND     flag_count = 0 AND"
-				+ "        (dataset_id != 1 OR dataset_id IS NULL))   THEN true   ELSE false "
+				+ "        flag_count = 0 AND"
+				+ "        (dataset_id != 1 OR dataset_id IS NULL)   THEN true   ELSE false "
 				+ "END AS is_publication_grade FROM "
 				+ "(SELECT id, author_id, created_on, group_id, latitude, longitude,  "
 				+ "TRIM(regexp_replace(replace(strip_tags(notes),'&nbsp;',' '),'\\s+', ' ', 'g')) notes,  "
@@ -71,18 +64,20 @@ public class ConstructESDocument {
 				+ "visit_count, max_voted_reco_id, is_checklist, to_date,  " + "checklist_annotations,  "
 				+ "is_locked, language_id, location_scale,  "
 				+ "dataset_id, repr_image_id, protocol, no_of_images, no_of_videos, no_of_audio,  "
-				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted = false AND id = "
-				+ observationId + ") O " + "LEFT OUTER JOIN  "
+				+ "no_of_identifications, data_table_id, date_accuracy, is_verified FROM observation where is_deleted IS NOT TRUE AND id in ( "
+				+ observationId + " )) O " + "LEFT OUTER JOIN  "
 				+ "(SELECT id r_id, file_name AS repr_image_url FROM resource) I ON I.r_id = O.repr_image_id   "
-				+ "LEFT OUTER JOIN "
-				+ "(SELECT id d_id, title as dataset_title FROM dataset) D ON O.dataset_id = D.d_id "
+				+ "LEFT OUTER JOIN"
+				+ "(SELECT id dt_id,dataset_id data_set_id, title as data_table_title FROM data_table) DT ON O.data_table_id = DT.dt_id "
+				+ "LEFT OUTER JOIN"
+				+ "(SELECT id d_id, title as dataset_title FROM dataset1) D ON DT.data_set_id = D.d_id "
 				+ "LEFT OUTER JOIN  "
 				+ "(SELECT id s_id, name created_by, COALESCE(profile_pic,  icon) profile_pic FROM suser ) U ON U.s_id = O.author_id "
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
-				+ "LEFT OUTER JOIN "
-				+ "(SELECT longitude lon , latitude lat, location_information FROM lyr115_location_information) L ON L.lon = O.longitude  "
-				+ "AND L.lat = O.latitude " + " " + "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
+				+ "LEFT OUTER JOIN " + "(SELECT longitude lon , latitude lat, location_information FROM "
+				+ locationInfoLayer + ") L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
+				+ "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
 				+ "END AS common_names, " + "(reco_vote->> 'scientific_name')\\:\\:text as scientific_name, " + "CASE "
@@ -110,7 +105,7 @@ public class ConstructESDocument {
 				+ "		jsonb_agg(DISTINCT authors_voted)authors_voted, " + "		MAX(last_modified) last_modified, "
 				+ "		jsonb_agg(DISTINCT taxon_detail) filter (where taxon_detail is not null)taxon_detail, "
 				+ "		jsonb_agg(hierarchy) filter (WHERE hierarchy IS NOT NULL)\\:\\:jsonb->0 hierarchy, "
-				+ "		MAX(path) path, "
+				+ "		MAX(ltree2text(path)) path, "
 				+ "		MAX(accepted_name_id)accepted_name_id,	sum(Count) Count        	 " + "	FROM  "
 				+ "	(SELECT " + "	observation_id, recommendation_id, common_name_reco_id, Count,  "
 				+ "	row_to_json((SELECT t FROM (SELECT common_name, language_id, language_name WHERE common_name is not null) t))\\:\\:jsonb  "
@@ -124,9 +119,9 @@ public class ConstructESDocument {
 				+ "	language_id, language_name, accepted_name_id, hierarchy, path, " + "	CASE  "
 				+ "		WHEN t_id is not null THEN "
 				+ "		to_jsonb(row_to_json((SELECT t FROM (SELECT taxon_concept_id id,  name, canonical_form,  "
-				+ "		normalized_form AS scientific_name, italicised_form, rank, status, "
-				+ "		position, species_id)t))) " + "		ELSE NULL " + "	END AS taxon_detail " + "		 "
-				+ "	FROM  " + "		(  " + "		SELECT  "
+				+ "		normalized_form AS scientific_name, rank, status, " + "		position )t))) "
+				+ "		ELSE NULL " + "	END AS taxon_detail " + "		 " + "	FROM  " + "		(  "
+				+ "		SELECT  "
 				+ "		observation_id, id reco_vote_id, author_id voted_by_author_id, voted_by , confidence, recommendation_id, "
 				+ "		common_name_reco_id, voted_on, comment, taxon_concept_id, last_modified, profile_pic, recommendation_name, "
 				+ "		CASE  "
@@ -135,8 +130,8 @@ public class ConstructESDocument {
 				+ "			END AS common_name,language_id, is_scientific_name, accepted_name_id,Count "
 				+ "		FROM  "
 				+ "		(SELECT id, observation_id, author_id , confidence, recommendation_id, common_name_reco_id, voted_on, comment, 1\\:\\:integer AS Count "
-				+ "  " + "		FROM recommendation_vote WHERE observation_id = " + observationId + ") extended_rv "
-				+ "		INNER JOIN	 "
+				+ "  " + "		FROM recommendation_vote WHERE observation_id in ( " + observationId
+				+ " )) extended_rv " + "		INNER JOIN	 "
 				+ "		(SELECT id rid, taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
 				+ "		ON rid =  recommendation_id " + "		LEFT OUTER JOIN "
@@ -150,16 +145,16 @@ public class ConstructESDocument {
 				+ "			END AS common_name, language_id, is_scientific_name, accepted_name_id, Count"
 				+ "		FROM  " + "		(SELECT  "
 				+ "		id, observation_id, author_id, confidence, recommendation_id, common_name_reco_id, voted_on, comment,0\\:\\:integer AS Count  "
-				+ "		FROM recommendation_vote WHERE observation_id = " + observationId + " ) extended_rv "
+				+ "		FROM recommendation_vote WHERE observation_id in ( " + observationId + " ) ) extended_rv "
 				+ "		INNER JOIN	 "
 				+ "		(SELECT id rid, null\\:\\:integer AS taxon_concept_id, name AS recommendation_name, is_scientific_name, language_id,  "
 				+ "		accepted_name_id, last_modified FROM recommendation) extended_reco "
 				+ "		ON rid =  common_name_reco_id " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id a_id, name voted_by, COALESCE(profile_pic,  icon) profile_pic FROM suser ) A ON a_id = author_id  "
 				+ "		) group_observation_reco " + "	LEFT OUTER JOIN  " + "		(SELECT  "
-				+ "		t_id, path,hierarchy, name, canonical_form, normalized_form, italicised_form, rank, status, "
-				+ "		position, species_id    " + "		FROM "
-				+ "		( SELECT id t_id, canonical_form, normalized_form, italicised_form, name, rank, status, position, species_id  "
+				+ "		t_id, path,hierarchy, name, canonical_form, normalized_form, rank, status, "
+				+ "		position    " + "		FROM "
+				+ "		( SELECT id t_id, canonical_form, normalized_form, name, rank, status, position "
 				+ "		FROM  " + "		taxonomy_definition where is_deleted = false ) T " + "		LEFT OUTER JOIN "
 				+ "		( SELECT id tr_id, taxon_definition_id, path from taxonomy_registry where classification_id = "
 				+ classificationId + " ) TR " + "		ON T.t_id = TR.taxon_definition_id "
@@ -172,8 +167,8 @@ public class ConstructESDocument {
 				+ "		( " + "		SELECT  observation_id ,  " + "		jsonb_agg( DISTINCT  "
 				+ "		to_jsonb((row_to_json((SELECT t FROM (SELECT resource_id id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id) t ))  "
 				+ "		)))\\:\\:json observation_resource " + "		FROM  "
-				+ "		(SELECT resource_id or_resource_id, observation_id FROM observation_resource WHERE observation_id = "
-				+ observationId + ") EO " + "		INNER JOIN "
+				+ "		(SELECT resource_id or_resource_id, observation_id FROM observation_resource WHERE observation_id in ("
+				+ observationId + " )) EO " + "		INNER JOIN "
 				+ "		(SELECT id resource_id, description , file_name , type ,url, rating , upload_time , uploader_id, license_id FROM resource ) extended_resource "
 				+ "		ON or_resource_id = resource_id GROUP BY observation_id "
 				+ "		) obr ON obr.observation_id = O.id  " + "LEFT OUTER JOIN "
@@ -264,7 +259,7 @@ public class ConstructESDocument {
 				+ "								ELSE NULL " + " " + "							END "
 				+ "					END " + "			END AS max_range " + " " + "			FROM  " + "			( "
 				+ "				(SELECT observation_id ugo_observation_id, user_group_id ugo_user_group_id  "
-				+ "				FROM user_group_observations WHERE observation_id = " + observationId + ") UGO "
+				+ "				FROM user_group_observations WHERE observation_id in ( " + observationId + " )) UGO "
 				+ "				LEFT OUTER JOIN "
 				+ "				(SELECT u_custom_field_id, cf_author_id, cf_data_type, cf_field_type, cf_icon_url, cf_name,  "
 				+ "				cf_notes, cf_units, u_allowed_participation, u_author_id, u_deafult_value, u_display_order,  "
@@ -286,8 +281,8 @@ public class ConstructESDocument {
 				+ "					custom_field_value_id o_custom_field_value_id, last_modified o_last_modified,  "
 				+ "					observation_id o_observation_id, user_group_id o_user_group_id, value_date o_value_date, "
 				+ "					value_numeric o_value_numeric, value_string o_value_string "
-				+ "					FROM  " + "					observation_custom_field WHERE observation_id = "
-				+ observationId + ")O  " + "					LEFT OUTER JOIN "
+				+ "					FROM  " + "					observation_custom_field WHERE observation_id in ( "
+				+ observationId + " ))O  " + "					LEFT OUTER JOIN "
 				+ "					(SELECT id, author_id cv_author_id, custom_field_id cv_id, icon_url cv_icon_url, notes cv_notes,  "
 				+ "					value AS cv_value " + "					FROM  "
 				+ "					custom_field_values) CV ON CV.id = O.o_custom_field_value_id " + " "
@@ -310,8 +305,8 @@ public class ConstructESDocument {
 				+ "		jsonb_agg( DISTINCT (to_jsonb(row_to_json(( SELECT t FROM (SELECT flag_id id,  "
 				+ "		author_id,notes,author_name, profile_pic, created_on, flag )t)))))\\:\\:json flags "
 				+ "		FROM " + "		(SELECT id flag_id, object_id, author_id, notes, created_on, flag   "
-				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id = "
-				+ observationId + ") F " + "		LEFT OUTER JOIN "
+				+ "		FROM flag WHERE object_type = 'species.participation.Observation' AND object_id in ( "
+				+ observationId + " )) F " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id, name author_name, COALESCE(profile_pic,  icon) profile_pic from suser ) U ON U.id = author_id GROUP BY object_id "
 				+ "		) F ON F.observation_id = O.id " + "LEFT OUTER JOIN " + "		( "
 				+ "		SELECT tag_ref as observation_id,  "
@@ -323,22 +318,22 @@ public class ConstructESDocument {
 				+ "		jsonb_agg(DISTINCT(to_jsonb(row_to_json(( SELECT t FROM (SELECT id, author_id, author_name, profile_pic, created_on, notes,  "
 				+ "		user_group_id, language_id, language_name)t )) )))\\:\\:json featured " + "		FROM "
 				+ "		(SELECT id, author_id, created_on, notes, user_group_id, " + "		language_id, object_id  "
-				+ "		FROM featured WHERE object_type = 'species.participation.Observation' AND object_id = "
-				+ observationId + ") F  " + "		LEFT OUTER JOIN "
+				+ "		FROM featured WHERE object_type = 'species.participation.Observation' AND object_id in ( "
+				+ observationId + " )) F  " + "		LEFT OUTER JOIN "
 				+ "		(SELECT id u_id, name author_name, COALESCE(profile_pic,  icon) profile_pic FROM suser) U ON u_id = author_id "
 				+ "		LEFT OUTER JOIN "
 				+ "		(SELECT id l_id, name language_name, three_letter_code FROM language ) L ON l_id = language_id GROUP BY object_id "
 				+ "		) FE ON FE.observation_id = O.id " + "LEFT OUTER JOIN " + "		( "
 				+ "		SELECT observation_fact_id observation_id,  "
-				+ "		jsonb_agg(DISTINCT row_to_json(( SELECT t FROM (SELECT trait_id, description, field_id, trait_icon, name, is_participatory, units,  "
+				+ "		jsonb_agg(DISTINCT row_to_json(( SELECT t FROM (SELECT trait_id, description, field_id, name, is_participatory, units,  "
 				+ "		trait_types, data_types, trait_instance AS trait_value)t ))\\:\\:jsonb) facts  "
 				+ "		FROM  "
-				+ "		(SELECT  observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types, "
+				+ "		(SELECT  observation_fact_id, trait_id, description, field_id, name, is_participatory, units, trait_types,data_types, "
 				+ "		jsonb_agg(DISTINCT etrait_instance) trait_instance " + "		FROM  " + "		( "
-				+ "			SELECT observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units,  "
+				+ "			SELECT observation_fact_id, trait_id, description, field_id,  name, is_participatory, units,  "
 				+ "			trait_types,data_types,row_to_json(( SELECT t FROM (SELECT fact_id fact_id, contributor_id, fact_value from_value,  "
-				+ "			to_value, from_date, to_date, tv_id trait_value_id, tv_description description, tv_icon icon,  "
-				+ "			value,"
+
+				+ "			to_value, from_date, to_date, tv_id trait_value_id, tv_icon icon,  " + "			value, "
 
 				+ "CASE " + "				WHEN value IS NOT NULL THEN  "
 				+ "			 		CONCAT(name,'|',value)  " + "			 	WHEN fact_value IS NOT NULL THEN  "
@@ -357,31 +352,28 @@ public class ConstructESDocument {
 				+ "							CONCAT(trait_id,'|',name,'|',trait_types,'|',fact_value,'|',COALESCE(tv_icon,'0')) "
 				+ "					END " + "				ELSE "
 				+ "					CONCAT(trait_id,'|',name,'|',trait_types,'|',from_date,'-',to_date,'|',COALESCE(tv_icon,'0')) "
-				+ "			END AS trait_filter"
-
-				+ ")t))\\:\\:jsonb etrait_instance " + "			FROM 	 " + "			( "
-				+ "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
+				+ "			END AS trait_filter" + ")t))\\:\\:jsonb etrait_instance " + "			FROM 	 "
+				+ "			( " + "				(SELECT id fact_id, object_id observation_fact_id, contributor_id,  "
 				+ "				trait_instance_id, trait_value_id, value fact_value, to_value, from_date, to_date "
 				+ "				FROM fact WHERE object_type = 'species.participation.Observation' and is_deleted = false  "
-				+ "				AND object_id = " + observationId + " " + "				) F   "
+				+ "				AND object_id in ( " + observationId + " " + "				)) F   "
 				+ "				INNER JOIN "
-				+ "				(SELECT id trait_id, description, field_id, icon trait_icon, name, is_participatory, units, trait_types, data_types  "
+				+ "				(SELECT id trait_id, description, field_id, name, is_participatory, units, trait_types, data_types  "
 				+ "				FROM  trait where show_in_observation = true) T "
 				+ "				ON  trait_instance_id = trait_id " + "				LEFT OUTER JOIN "
-				+ "				(SELECT id tv_id, description tv_description, icon tv_icon, trait_instance_id, value  FROM trait_value) TV "
+				+ "				(SELECT id tv_id, icon tv_icon, trait_instance_id, value  FROM trait_value) TV "
 				+ "				ON tv_id = trait_value_id " + "			) F  " + "		)F	 "
-				+ "		GROUP BY observation_fact_id, trait_id, description, field_id, trait_icon, name, is_participatory, units, trait_types,data_types ) F GROUP BY  "
+				+ "		GROUP BY observation_fact_id, trait_id, description, field_id, name, is_participatory, units, trait_types,data_types ) F GROUP BY  "
 				+ "		observation_fact_id)FA ON FA.observation_id = O.id;";
 
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
-		ObservationESDocument result = null;
+		List<ObservationESDocument> result = null;
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
-			System.out.println(qry);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
-			result = query.getSingleResult();
+			result = query.getResultList();
 			System.out.println();
 			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);
 

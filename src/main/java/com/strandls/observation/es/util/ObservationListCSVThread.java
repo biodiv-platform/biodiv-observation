@@ -19,11 +19,15 @@ import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.service.MailService;
 import com.strandls.observation.service.ObservationListService;
+import com.strandls.user.ApiException;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.DownloadLogData;
 
 public class ObservationListCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
-	private final String basePath = "/app/data/biodiv/data-archive/listpagecsv";
+	private final String modulePath = "/data-archive/listpagecsv";
+	private final String basePath = "/app/data/biodiv";
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -75,6 +79,7 @@ public class ObservationListCSVThread implements Runnable {
 	private String notes;
 	private String url;
 	private MailService mailService;
+	private UserServiceApi userServiceApi;
 
 	public ObservationListCSVThread() {
 		super();
@@ -90,7 +95,7 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url, MailService mailService) {
+			String authorId, String notes, String url, MailService mailService, UserServiceApi userServiceApi) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -136,9 +141,11 @@ public class ObservationListCSVThread implements Runnable {
 		this.onlyFilteredAggregation = onlyFilteredAggregation;
 		this.termsAggregationField = termsAggregationField;
 		this.authorId = authorId;
+		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
 		this.mailService = mailService;
+		this.userServiceApi = userServiceApi;
 	}
 
 	@Override
@@ -148,7 +155,7 @@ public class ObservationListCSVThread implements Runnable {
 		logger.info("Observation List Download Request Received : RequestId = " + authorId + dtf.format(now));
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 		String fileName = obUtil.getCsvFileNameDownloadPath();
-		String filePath = basePath + File.separator + fileName;
+		String filePath = basePath + modulePath + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
 		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc));
 		Integer max = 10000;
@@ -158,7 +165,6 @@ public class ObservationListCSVThread implements Runnable {
 		String fileType = "CSV";
 		DownloadLog entity = obUtil.createDownloadLogEntity(null, Long.parseLong(authorId), url, notes, 0L,
 				fileGenerationStatus, fileType);
-		downloadLogDao.save(entity);
 		try {
 			fileGenerationStatus = "SUCCESS";
 			do {
@@ -169,7 +175,7 @@ public class ObservationListCSVThread implements Runnable {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, null,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade,null);
+						tags, publicationGrade, null,null,null,null);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
@@ -191,7 +197,18 @@ public class ObservationListCSVThread implements Runnable {
 		} finally {
 			obUtil.closeWriter();
 			entity.setStatus(fileGenerationStatus);
-			downloadLogDao.update(entity);
+			DownloadLogData data = new DownloadLogData();
+			data.setFilePath(modulePath + File.separator + fileName);
+			data.setFileType(fileType);
+			data.setFilterUrl(entity.getFilterUrl());
+			data.setStatus(fileGenerationStatus);
+			data.setNotes(notes);
+			data.setSourcetype("Observations");
+			try {
+				userServiceApi.logDocumentDownload(data);
+			} catch (ApiException e) {
+				logger.error(e.getMessage());
+			}
 		}
 		if (fileGenerationStatus.equalsIgnoreCase("failed")) {
 			try {

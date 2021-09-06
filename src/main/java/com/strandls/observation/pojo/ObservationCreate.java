@@ -45,7 +45,6 @@ public class ObservationCreate {
 	private Map<String, List<Long>> factValuePairs;
 //	traitId:[valueId list] pattern
 	private Map<String, List<String>> factValueStringPairs;
-//	
 
 //	-----Notes and tags-------
 	private String notes;
@@ -55,7 +54,7 @@ public class ObservationCreate {
 	private List<Long> userGroupId;
 
 //	-----Resource Data--------
-	private List<ObservationResourceData> resources;
+	private List<ResourceDataObs> resources;
 //	-----GETTERS AND SETTERS----
 
 	public Long getsGroup() {
@@ -250,12 +249,11 @@ public class ObservationCreate {
 		this.userGroupId = userGroupId;
 	}
 
-	public List<ObservationResourceData> getResources() {
+	public List<ResourceDataObs> getResources() {
 		return resources;
 	}
 
-	public void setResources(List<ObservationResourceData> resources) {
+	public void setResources(List<ResourceDataObs> resources) {
 		this.resources = resources;
 	}
-
 }

@@ -7,7 +7,7 @@ public class MapAggregationStatsResponse {
 
 	private Map<String, Long> groupUniqueSpecies;
 	private List<TopUploadersInfo>groupTopUploaders;
-	private List<TopIdentifiersInfo>groupTopIdentifiers;
+	private List<TopUploadersInfo>groupTopIdentifiers;
 	private Map<String,Long>totalCounts;
 	
 
@@ -19,11 +19,11 @@ public class MapAggregationStatsResponse {
 		this.totalCounts = totalCounts;
 	}
 
-	public List<TopIdentifiersInfo> getGroupTopIdentifiers() {
+	public List<TopUploadersInfo> getGroupTopIdentifiers() {
 		return groupTopIdentifiers;
 	}
 
-	public void setGroupTopIdentifiers(List<TopIdentifiersInfo> groupTopIdentifiers) {
+	public void setGroupTopIdentifiers(List<TopUploadersInfo> groupTopIdentifiers) {
 		this.groupTopIdentifiers = groupTopIdentifiers;
 	}
 

@@ -22,6 +22,7 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
@@ -31,6 +32,8 @@ import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
 import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
@@ -65,6 +68,7 @@ import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
@@ -73,7 +77,9 @@ import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
@@ -120,7 +126,7 @@ import net.minidev.json.JSONArray;
  */
 public class ObservationServiceImpl implements ObservationService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
 
 	@Inject
 	private LogActivities logActivity;
@@ -185,6 +191,15 @@ public class ObservationServiceImpl implements ObservationService {
 	@Inject
 	private ObservationDownloadLogDAO downloadLogDao;
 
+	@Inject
+	private SpeciesServicesApi speciesGroupService;
+
+	@Inject
+	private TaxonomyTreeServicesApi taxonomyTreeService;
+
+	@Inject
+	private DataTableServiceApi dataTableService;
+
 	@Override
 	public ShowData findById(Long id) {
 
@@ -212,17 +227,23 @@ public class ObservationServiceImpl implements ObservationService {
 		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
+		DataTableWkt dataTable = null;
+		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				in.close();
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
-				if (!score.getRecord().isEmpty()) {
+				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
+				}
+				if (observation.getDataTableId() != null) {
+					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
 				}
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
+
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
 				if (observation.getFlagCount() > 0)
@@ -232,8 +253,8 @@ public class ObservationServiceImpl implements ObservationService {
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
-					esLayerInfo = esService.getObservationInfo(ObservationIndex.index.getValue(),
-							ObservationIndex.type.getValue(), observation.getMaxVotedRecoId().toString());
+					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
+							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
 					allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -248,15 +269,20 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setLongitude(latlon.get("lon"));
 				}
 
+				if (observation.getChecklistAnnotations() != null && !observation.getChecklistAnnotations().isEmpty()) {
+					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
+							new TypeReference<Map<String, Object>>() {
+							});
+				}
+
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
-						ObservationIndex.index.getValue(), ObservationIndex.type.getValue(),
+						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
-				ShowData data = new ShowData(observation, facts, observationResource, userGroups, customField,
-						layerInfo, esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy, activityCount);
-				return data;
+				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
+						observationNearBy, dataTable, checkListAnnotation, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
@@ -328,7 +354,8 @@ public class ObservationServiceImpl implements ObservationService {
 	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
 
 		try {
-
+			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString()
+					+ " ***** \n\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
@@ -338,7 +365,7 @@ public class ObservationServiceImpl implements ObservationService {
 			if (observationData.getResources() != null && !observationData.getResources().isEmpty()) {
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationData.getResources());
-				if (resources == null) {
+				if (resources == null || resources.isEmpty()) {
 					observationDao.delete(observation);
 					return null;
 				}
@@ -487,7 +514,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
 		Observation observation = observationDao.findById(observationId);
-		if (observation.getMaxVotedRecoId() == null || observation.getMaxVotedRecoId() != maxVotedReco) {
+		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
 			observation.setMaxVotedRecoId(maxVotedReco);
 			observation.setLastRevised(new Date());
 			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
@@ -584,7 +611,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<SpeciesGroup> result = null;
 		try {
-			result = taxonomyService.getAllSpeciesGroup();
+			result = speciesGroupService.getAllSpeciesGroup();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -685,8 +712,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(entry.getValue().toString());
+					List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(entry.getValue().toString());
 					List<Long> validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 					if (validateAllowed.contains(entry.getValue()))
 						result.add(new MaxVotedRecoPermission(entry.getKey(), true));
@@ -717,12 +744,12 @@ public class ObservationServiceImpl implements ObservationService {
 
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<SpeciesPermission> speciesPermssion = taxonomyService.getSpeciesPermission();
+				List<SpeciesPermission> speciesPermssion = speciesGroupService.getSpeciesPermission();
 
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermssion);
 				}
 			}
@@ -747,7 +774,7 @@ public class ObservationServiceImpl implements ObservationService {
 			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			Follow follow = userService.getFollowByObject("observation", observationId);
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<SpeciesPermission> speciesPermissions = taxonomyService.getSpeciesPermission();
+			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -770,7 +797,7 @@ public class ObservationServiceImpl implements ObservationService {
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
-					List<TaxonTree> taxonTree = taxonomyService.getTaxonTree(taxonList);
+					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
 				}
@@ -874,27 +901,36 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			Observation observation = observationDao.findById(observationId);
-			if (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN")) {
-
-				MailData mailData = generateMailData(observationId);
-
-				observation.setIsDeleted(true);
-				MapQueryResponse esResponse = esService.delete(ObservationIndex.index.getValue(),
-						ObservationIndex.type.getValue(), observationId.toString());
-				ResultEnum result = esResponse.getResult();
-				if (result.getValue().equals("DELETED")) {
-					observationDao.update(observation);
-					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId,
-							observationId, "observation", observationId, "Observation Deleted", mailData);
-					return "Observation Deleted Succesfully";
-				}
-
+			if (observation.getId() != null
+					&& (observation.getAuthorId().equals(userId) || userRole.contains("ROLE_ADMIN"))) {
+				deleteObservation(request, observation, true);
+				return "Observation Deleted Succesfully";
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
 		return null;
+	}
+
+	public Boolean deleteObservation(HttpServletRequest request, Observation observation, Boolean hasMail)
+			throws ApiException {
+
+		Long observationId = observation.getId();
+		MailData mailData = Boolean.TRUE.equals(hasMail) ? generateMailData(observationId) : null;
+
+		observation.setIsDeleted(true);
+		MapQueryResponse esResponse = esService.delete(ObservationIndex.INDEX.getValue(),
+				ObservationIndex.TYPE.getValue(), observationId.toString());
+		ResultEnum result = esResponse.getResult();
+		if (result.getValue().equals("DELETED")) {
+			observationDao.update(observation);
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
+					"observation", observationId, "Observation Deleted", mailData);
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -1003,39 +1039,43 @@ public class ObservationServiceImpl implements ObservationService {
 
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationUpdate.getResources());
-				resourceService = headers.addResourceHeaders(resourceService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
-						resources);
 
-//				calculate reprImageof observation
+				if (resources != null && !resources.isEmpty()) {
+					resourceService = headers.addResourceHeaders(resourceService,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
+							resources);
 
-				Integer noOfImages = 0;
-				Integer noOfAudio = 0;
-				Integer noOfVideo = 0;
+//					calculate reprImageof observation
 
-				Long reprImage = null;
-				int rating = 0;
-				for (Resource res : resources) {
-					if (res.getType().equals("AUDIO"))
-						noOfAudio++;
-					else if (res.getType().equals("IMAGE")) {
-						noOfImages++;
-						if (reprImage == null)
-							reprImage = res.getId();
-						if (res.getRating() != null && res.getRating() > rating) {
-							reprImage = res.getId();
-							rating = res.getRating();
-						}
-					} else if (res.getType().equals("VIDEO"))
-						noOfVideo++;
+					Integer noOfImages = 0;
+					Integer noOfAudio = 0;
+					Integer noOfVideo = 0;
+
+					Long reprImage = null;
+					int rating = 0;
+					for (Resource res : resources) {
+						if (res.getType().equals("AUDIO"))
+							noOfAudio++;
+						else if (res.getType().equals("IMAGE")) {
+							noOfImages++;
+							if (reprImage == null)
+								reprImage = res.getId();
+							if (res.getRating() != null && res.getRating() > rating) {
+								reprImage = res.getId();
+								rating = res.getRating();
+							}
+						} else if (res.getType().equals("VIDEO"))
+							noOfVideo++;
+
+					}
+					observation.setNoOfAudio(noOfAudio);
+					observation.setNoOfImages(noOfImages);
+					observation.setNoOfVideos(noOfVideo);
+					observation.setReprImageId(reprImage);
+					observationDao.update(observation);
 
 				}
-				observation.setNoOfAudio(noOfAudio);
-				observation.setNoOfImages(noOfImages);
-				observation.setNoOfVideos(noOfVideo);
-				observation.setReprImageId(reprImage);
-				observationDao.update(observation);
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
@@ -1199,7 +1239,7 @@ public class ObservationServiceImpl implements ObservationService {
 			try {
 				properties.load(in);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
@@ -1274,7 +1314,7 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public void produceToRabbitMQ(String observationId, String updateType) {
 		try {
-			producer.setMessage("esmodule", observationId, updateType);
+			producer.setMessage("observation", observationId, updateType);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1376,7 +1416,6 @@ public class ObservationServiceImpl implements ObservationService {
 					userGroupData.add(ugMailData);
 				}
 			}
-
 			mailData = new MailData();
 			mailData.setObservationData(observationData);
 			mailData.setUserGroupData(userGroupData);
@@ -1513,25 +1552,8 @@ public class ObservationServiceImpl implements ObservationService {
 			filetypeAttribute = null;
 		}
 		List<DownloadLog> records = downloadLogDao.fetchFilteredRecordsWithCriteria(authorAttribute, filetypeAttribute,
-				authorIds, fileType.toUpperCase(), orderBy, offSet, limit);
+				authorIds, fileType != null ? fileType.toUpperCase() : null, orderBy, offSet, limit);
 		return records;
-	}
-
-	@Override
-	public String forceUpdateIndexField(String index, String type, String field, String value, Long dataTableId) {
-		List<String> columnNames = new ArrayList<>();
-		Map<String, Object> filterOn = new HashMap<String, Object>();
-		columnNames.add("id");
-		filterOn.put("dataTableId", dataTableId);
-		List<Object[]> keys = observationDao.getValuesOfColumnsBasedOnFilter(columnNames, filterOn);
-		String ids = keys.toString();
-		try {
-			return esService.forceUpdateIndexField(index, type, field, value,
-					ids.toString().substring(1, ids.length()));
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
-		}
-		return null;
 	}
 
 	@Override
@@ -1540,7 +1562,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			Long size = offset + 10;
 			AuthorUploadedObservationInfo authorUploadedObservationInfo = esService.getUploadUserInfo(
-					ObservationIndex.index.getValue(), ObservationIndex.type.getValue(), userId.toString(),
+					ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(), userId.toString(),
 					size.toString(), (sGroupId != null) ? sGroupId.toString() : null, hasMedia);
 
 			List<UniqueSpeciesInfo> observationUploaded = new ArrayList<UniqueSpeciesInfo>();
@@ -1577,10 +1599,30 @@ public class ObservationServiceImpl implements ObservationService {
 			Set<Long> identifiedCount = identifiedFreq.keySet();
 			identifiedSpeciesCount = identifiedCount.iterator().next();
 
+			ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
+					identifiedSpeciesCount);
+			return result;
 		}
+		return null;
 
-		ObservationUserPageInfo result = new ObservationUserPageInfo(identifiedFreq.get(identifiedSpeciesCount),
-				identifiedSpeciesCount);
-		return result;
 	}
+
+	@Override
+	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationIdList) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			for (Long observationId : observationIdList) {
+				RecoSet recoSet = new RecoSet(taxonId, null, null);
+				recoService.validateReco(request, profile, observationId, userId, recoSet);
+			}
+			return true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
+	}
+
 }

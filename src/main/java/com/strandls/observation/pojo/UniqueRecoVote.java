@@ -111,7 +111,7 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 	}
 
 	private int checkForTaxon(UniqueRecoVote o) {
-		if (this.getIsTaxon() == o.getIsTaxon()) {
+		if (this.getIsTaxon().equals(o.getIsTaxon())) {
 			if (this.getIsTaxon() == true) {
 				return checkForAcceptedName(o);
 			}
@@ -125,14 +125,14 @@ public class UniqueRecoVote implements Comparable<UniqueRecoVote> {
 	 * @return
 	 */
 	private int checkForAcceptedName(UniqueRecoVote o) {
-		if (this.getIsAccepted() == o.getIsAccepted())
+		if (this.getIsAccepted().equals(o.getIsAccepted()))
 			return checkForScientificName(o);
 		else
 			return this.getIsAccepted() ? 1 : -1;
 	}
 
 	private int checkForScientificName(UniqueRecoVote o) {
-		if (this.getIsScientificName() == o.getIsScientificName())
+		if (this.getIsScientificName().equals(o.getIsScientificName()))
 			return checkForVote(o);
 		else
 			return this.isScientificName ? 1 : -1;

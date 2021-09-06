@@ -15,7 +15,7 @@ import com.rabbitmq.client.DeliverCallback;
  */
 public class RabbitMQConsumer {
 
-	private final static String QUEUE_ELASTIC = "elastic";
+	private final static String OBSERVATION_QUEUE = "observationQueue";
 
 	@Inject
 	private ESUpdate esUpdate;
@@ -37,7 +37,7 @@ public class RabbitMQConsumer {
 			thread.start();
 
 		};
-		channel.basicConsume(QUEUE_ELASTIC, true, deliverCallback, consumerTag -> {
+		channel.basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
 
