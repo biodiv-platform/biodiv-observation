@@ -177,7 +177,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 				taxonId = reco.getTaxonConceptId();
 				breadCrumb = taxonomyTreeService.getTaxonomyBreadCrumb(reco.getTaxonConceptId().toString());
-				scientificName = taxonomyDefinition.getNormalizedForm();
+				scientificName = (taxonomyDefinition.getItalicisedForm() != null
+						&& !taxonomyDefinition.getItalicisedForm().isEmpty()) ? taxonomyDefinition.getItalicisedForm()
+								: taxonomyDefinition.getNormalizedForm();
 				status = taxonomyDefinition.getStatus();
 
 			} else {
@@ -579,7 +581,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked())
 				return null;
-			
+
 			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
