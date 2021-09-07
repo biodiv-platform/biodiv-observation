@@ -645,11 +645,16 @@ public class ESUtility {
 				boolAndLists
 						.add(assignBoolAndQuery(ObservationIndex.PUBLICATIONGRADE.getValue(), publicationGradeChoice));
 			}
-// 			dataset name 
+
 			List<Object> dataSetNameList = cSTSOT(dataSetName);
 			if (!dataSetNameList.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(ObservationIndex.DATASETNAME.getValue(), dataSetNameList));
+				dataSetNameList.forEach((item) -> {
+					orMatchPhraseQueriesnew
+							.add(assignOrMatchPhrase(ObservationIndex.DATASETNAME.getValue(), item.toString()));
+				});
+
 			}
+
 // 			datatable name
 			List<Object> dataTableNameList = cSTSOT(dataTableName);
 			if (!dataTableNameList.isEmpty()) {
