@@ -313,6 +313,9 @@ public class ObservationListPageMapper {
 					scientificName = allreco.getScientific_name().getName();
 					if (allreco.getScientific_name().getTaxon_detail() != null) {
 						taxonId = allreco.getScientific_name().getTaxon_detail().getId();
+						scientificName = allreco.getScientific_name().getTaxon_detail().getItalicised_form() != null
+								? allreco.getScientific_name().getTaxon_detail().getItalicised_form()
+								: allreco.getScientific_name().getTaxon_detail().getScientific_name();
 //						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
 //							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
 //						}

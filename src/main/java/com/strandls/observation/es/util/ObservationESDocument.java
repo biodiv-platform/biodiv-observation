@@ -1308,6 +1308,7 @@ class Taxon_detail {
 	private String name;
 	private String canonical_form;
 	private String scientific_name;
+	private String italicised_form;
 	private String rank;
 	private String status;
 	private String position;
@@ -1324,17 +1325,19 @@ class Taxon_detail {
 	 * @param name
 	 * @param canonical_form
 	 * @param scientific_name
+	 * @param italicised_form
 	 * @param rank
 	 * @param status
 	 * @param position
 	 */
-	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String rank, String status,
-			String position) {
+	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String italicised_form,
+			String rank, String status, String position) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.canonical_form = canonical_form;
 		this.scientific_name = scientific_name;
+		this.italicised_form = italicised_form;
 		this.rank = rank;
 		this.status = status;
 		this.position = position;
@@ -1370,6 +1373,14 @@ class Taxon_detail {
 
 	public void setScientific_name(String scientific_name) {
 		this.scientific_name = scientific_name;
+	}
+
+	public String getItalicised_form() {
+		return italicised_form;
+	}
+
+	public void setItalicised_form(String italicised_form) {
+		this.italicised_form = italicised_form;
 	}
 
 	public String getRank() {

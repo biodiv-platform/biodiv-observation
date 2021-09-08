@@ -141,7 +141,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 				taxonId = reco.getTaxonConceptId();
-				scientificName = taxonomyDefinition.getNormalizedForm();
+				scientificName = (taxonomyDefinition.getItalicisedForm() != null
+						&& !taxonomyDefinition.getItalicisedForm().isEmpty()) ? taxonomyDefinition.getItalicisedForm()
+								: taxonomyDefinition.getNormalizedForm();
 
 			} else {
 				scientificName = reco.getName();
@@ -232,7 +234,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 		try {
 			if (taxonid != null) {
 				TaxonomyDefinition taxonomyDef = taxonomyService.getTaxonomyConceptName(taxonid.toString());
-				rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+				rvActivity.setScientificName(
+						(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+								? taxonomyDef.getItalicisedForm()
+								: taxonomyDef.getNormalizedForm());
 
 			}
 			if (recoCreate.getCommonName() != null && recoCreate.getCommonName().trim().length() > 0)
@@ -429,7 +434,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (recoSet.getTaxonId() != null) {
 					TaxonomyDefinition taxonomyDef = taxonomyService
 							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+					rvActivity.setScientificName(
+							(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+									? taxonomyDef.getItalicisedForm()
+									: taxonomyDef.getNormalizedForm());
 
 				}
 				if (recoSet.getCommonName().trim().length() > 0)
@@ -539,7 +547,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 						if (recoSet.getTaxonId() != null) {
 							TaxonomyDefinition taxonomyDef = taxonomyService
 									.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-							rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+							rvActivity.setScientificName((taxonomyDef.getItalicisedForm() != null
+									&& !taxonomyDef.getItalicisedForm().isEmpty()) ? taxonomyDef.getItalicisedForm()
+											: taxonomyDef.getNormalizedForm());
 
 						}
 						if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
@@ -654,7 +664,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (recoSet.getTaxonId() != null) {
 					TaxonomyDefinition taxonomyDef = taxonomyService
 							.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-					rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+					rvActivity.setScientificName(
+							(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+									? taxonomyDef.getItalicisedForm()
+									: taxonomyDef.getNormalizedForm());
 
 				}
 				if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
@@ -711,7 +724,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 					if (recoSet.getTaxonId() != null) {
 						TaxonomyDefinition taxonomyDef = taxonomyService
 								.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-						rvActivity.setScientificName(taxonomyDef.getNormalizedForm());
+						rvActivity.setScientificName(
+								(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+										? taxonomyDef.getItalicisedForm()
+										: taxonomyDef.getNormalizedForm());
 
 					}
 					if (recoSet.getCommonName().trim().length() > 0)
@@ -754,7 +770,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 					taxon = reco.getTaxonConceptId();
 					TaxonomyDefinition taxonomyDefinition = taxonomyService
 							.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
-					scientificName = taxonomyDefinition.getNormalizedForm();
+					scientificName = (taxonomyDefinition.getItalicisedForm() != null
+							&& !taxonomyDefinition.getItalicisedForm().isEmpty())
+									? taxonomyDefinition.getItalicisedForm()
+									: taxonomyDefinition.getNormalizedForm();
 
 				} else {
 					scientificName = reco.getName();
