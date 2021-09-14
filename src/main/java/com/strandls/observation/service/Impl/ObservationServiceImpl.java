@@ -1021,7 +1021,7 @@ public class ObservationServiceImpl implements ObservationService {
 			Long userId = Long.parseLong(profile.getId());
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
-				
+
 				if (observation.getDataTableId() == null && observationUpdate.getResources() == null
 						&& observationUpdate.getResources().isEmpty()) {
 					throw new ObservationInputException("Observation Resources not found");
@@ -1040,9 +1040,9 @@ public class ObservationServiceImpl implements ObservationService {
 				observation.setToDate(observationUpdate.getObservedOn());
 				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
 				observation.setLastRevised(new Date());
+				observation.setChecklistAnnotations(observationUpdate.getChecklistAnnotations());
+				observation.setBasisOfRecord(observationUpdate.getBasisOfRecord());
 //				resource data
-
-				
 
 				List<Resource> resources = observationUpdate.getResources() != null
 						? observationHelper.createResourceMapping(request, userId, observationUpdate.getResources())
@@ -1137,6 +1137,8 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setLatitude(observation.getLatitude());
 				editData.setLongitude(observation.getLongitude());
 				editData.setHidePreciseLocation(observation.getGeoPrivacy());
+				editData.setChecklistAnnotations(observation.getChecklistAnnotations());
+				editData.setBasisOfRecord(observation.getBasisOfRecord());
 
 //				resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",

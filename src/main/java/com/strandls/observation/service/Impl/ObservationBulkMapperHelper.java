@@ -12,6 +12,7 @@ import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.util.ObservationInputException;
 import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -197,9 +198,14 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 
-			if (Boolean.FALSE.equals(observationMapperHelper.checkObservationBounds(latitude, longitude))) {
-				latitude = dataTable.getGeographicalCoverageLatitude();
+			if (longitude == null && latitude == null) {
 				longitude = dataTable.getGeographicalCoverageLongitude();
+				latitude = dataTable.getGeographicalCoverageLatitude();
+			}
+
+			if (Boolean.FALSE.equals(observationMapperHelper.checkObservationBounds(latitude, longitude))) {
+				throw new ObservationInputException("Observation latitude/longitude not within bounds");
+
 			}
 			String dateAccuracy = "ACCURATE";
 			if (fieldMapping.get("dateAccuracy") != null) {
@@ -311,6 +317,7 @@ public class ObservationBulkMapperHelper {
 						"observation", null, "Observation created", null);
 			}
 			return observation;
+			
 		} catch (
 
 		Exception ex) {
