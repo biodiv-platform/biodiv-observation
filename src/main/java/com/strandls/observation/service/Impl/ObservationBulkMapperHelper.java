@@ -6,6 +6,7 @@ import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
@@ -80,6 +81,9 @@ public class ObservationBulkMapperHelper {
 
 	@Inject
 	private ObjectMapper om;
+
+	@Inject
+	private RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	ObservationDAO observationDAO;
@@ -173,33 +177,30 @@ public class ObservationBulkMapperHelper {
 			}
 
 			Double latitude = null;
+			Double longitude = null;
+
 			if (fieldMapping.get("latitude") != null) {
 				Cell latitudeCell = dataRow.getCell(fieldMapping.get("latitude"),
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (latitudeCell != null) {
 					latitudeCell.setCellType(CellType.STRING);
 					latitude = Double.parseDouble(latitudeCell.getStringCellValue());
-				} else { // get value from dataTable metadata if not mentioned in excel
-					latitude = dataTable.getGeographicalCoverageLatitude();
 				}
-			} else { // get value from dataTable metadata if not mentioned in excel
-				latitude = dataTable.getGeographicalCoverageLatitude();
 			}
 
-			Double longitude = null;
 			if (fieldMapping.get("longitude") != null) {
 				Cell longitudeCell = dataRow.getCell(fieldMapping.get("longitude"),
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (longitudeCell != null) {
 					longitudeCell.setCellType(CellType.STRING);
 					longitude = Double.parseDouble(longitudeCell.getStringCellValue());
-				} else { // get value from dataTable metadata if not mentioned in excel
-					longitude = dataTable.getGeographicalCoverageLongitude();
 				}
-			} else { // get value from dataTable metadata if not mentioned in excel
-				longitude = dataTable.getGeographicalCoverageLongitude();
 			}
 
+			if (Boolean.FALSE.equals(observationMapperHelper.checkObservationBounds(latitude, longitude))) {
+				latitude = dataTable.getGeographicalCoverageLatitude();
+				longitude = dataTable.getGeographicalCoverageLongitude();
+			}
 			String dateAccuracy = "ACCURATE";
 			if (fieldMapping.get("dateAccuracy") != null) {
 				Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"),
@@ -282,7 +283,7 @@ public class ObservationBulkMapperHelper {
 			observation.setNoOfAudio(0);
 			observation.setNoOfVideos(0);
 
-			observation.setNoOfIdentifications(1);
+			observation.setNoOfIdentifications(0);
 			observation.setDataTableId(dataTable.getId());//
 			observation.setDateAccuracy(dateAccuracy);
 			observation.setFlagCount(0);
@@ -398,6 +399,7 @@ public class ObservationBulkMapperHelper {
 				Long maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
 						recoCreate.getTaxonId(), recoCreate, true);
 				observation.setMaxVotedRecoId(maxVotedReco);
+				observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
 				observationDAO.update(observation);
 			}
 		} catch (Exception ex) {

@@ -101,6 +101,11 @@ import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.io.WKTReader;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -211,8 +216,9 @@ public class ObservationController {
 						&& observationData.getRecoData().getTaxonCommonName() == null)
 					throw new ObservationInputException("No Recommendation found");
 			}
-			if (observationHelper.checkIndiaBounds(observationData) == false) {
-				throw new ObservationInputException("Observation Not within India Bounds");
+			if (observationHelper.checkObservationBounds(observationData.getLatitude(),
+					observationData.getLongitude()) == false) {
+				throw new ObservationInputException("Observation Not within geographical Bounds");
 			}
 			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
 				throw new ObservationInputException("Without resource observation");
@@ -1364,6 +1370,20 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
+
+			if (!observationBulkData.getWktString().isEmpty()) {
+				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
+				WKTReader wktRdr = new WKTReader(geofactory);
+				Geometry geoBoundary = wktRdr.read(observationBulkData.getWktString());
+				Point intPoint = geoBoundary.getInteriorPoint();
+				observationBulkData.setLatitude(intPoint.getX());
+				observationBulkData.setLongitude(intPoint.getY());
+			}
+
+			if (observationHelper.checkObservationBounds(observationBulkData.getLatitude(),
+					observationBulkData.getLongitude()) == false) {
+				throw new ObservationInputException("Observation Not within Geographic Bounds");
+			}
 			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);
 			if (result != null) {
 				return Response.status(Status.OK).entity(result).build();
