@@ -274,7 +274,7 @@ public class ObservationController {
 			@ApiParam(name = "observationUpdateData") ObservationUpdateData observationUpdate) {
 		try {
 
-			if (observationUpdate.getObservedOn() == null)
+			if (observationUpdate.getDataTableId() == null && observationUpdate.getObservedOn() == null)
 				throw new ObservationInputException("Observation Date Cannot be BLANK");
 			if (observationUpdate.getLatitude() == null || observationUpdate.getLongitude() == null)
 				throw new ObservationInputException("Observation LATITUDE/LONGITUDE MISSING");
