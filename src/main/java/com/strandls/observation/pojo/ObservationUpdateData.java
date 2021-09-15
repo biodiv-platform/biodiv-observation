@@ -27,6 +27,7 @@ public class ObservationUpdateData {
 	private Boolean hidePreciseLocation;
 	private String basisOfRecord;
 	private String checklistAnnotations;
+	private Long dataTableId;
 
 	/**
 	 * 
@@ -49,10 +50,11 @@ public class ObservationUpdateData {
 	 * @param basisOfRecord
 	 * @param checklistAnnotations
 	 * @param hidePreciseLocation
+	 * @param dataTableId
 	 */
 	public ObservationUpdateData(List<ResourceDataObs> resources, String notes, String dateAccuracy, Date observedOn,
 			String observedAt, String reverseGeocoded, String locationScale, Double latitude, Double longitude,
-			String basisOfRecord, String checklistAnnotations, Boolean hidePreciseLocation) {
+			String basisOfRecord, String checklistAnnotations, Boolean hidePreciseLocation, Long dataTableId) {
 		super();
 		this.resources = resources;
 		this.notes = notes;
@@ -66,6 +68,7 @@ public class ObservationUpdateData {
 		this.checklistAnnotations = checklistAnnotations;
 		this.basisOfRecord = basisOfRecord;
 		this.hidePreciseLocation = hidePreciseLocation;
+		this.dataTableId = dataTableId;
 	}
 
 	public List<ResourceDataObs> getResources() {
@@ -162,6 +165,14 @@ public class ObservationUpdateData {
 
 	public void setChecklistAnnotations(String checklistAnnotations) {
 		this.checklistAnnotations = checklistAnnotations;
+	}
+
+	public Long getDataTableId() {
+		return dataTableId;
+	}
+
+	public void setDataTableId(Long dataTableId) {
+		this.dataTableId = dataTableId;
 	}
 
 }

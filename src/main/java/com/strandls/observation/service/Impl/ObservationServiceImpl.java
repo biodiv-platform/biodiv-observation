@@ -1139,6 +1139,7 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setHidePreciseLocation(observation.getGeoPrivacy());
 				editData.setChecklistAnnotations(observation.getChecklistAnnotations());
 				editData.setBasisOfRecord(observation.getBasisOfRecord());
+				editData.setDataTableId(observation.getDataTableId());
 
 //				resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
