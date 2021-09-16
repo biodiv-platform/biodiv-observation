@@ -214,7 +214,11 @@ public class ObservationBulkMapperHelper {
 				if (dateAccuracyCell != null) {
 					dateAccuracyCell.setCellType(CellType.STRING);
 					dateAccuracy = dateAccuracyCell.getStringCellValue();
+				} else {
+					dateAccuracy = dataTable.getTemporalCoverageDateAccuracy();
 				}
+			} else {
+				dateAccuracy = dataTable.getTemporalCoverageDateAccuracy();
 			}
 
 			String notes = null;
@@ -317,7 +321,7 @@ public class ObservationBulkMapperHelper {
 						"observation", null, "Observation created", null);
 			}
 			return observation;
-			
+
 		} catch (
 
 		Exception ex) {
