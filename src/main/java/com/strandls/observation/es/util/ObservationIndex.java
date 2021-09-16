@@ -15,7 +15,7 @@ public enum ObservationIndex {
 	FROMDATE("from_date"), CREATEDON("created_on"), OBSERVATIONMONTH("observed_in_month"), ISCHECKLIST("is_checklist"),
 	PATH("max_voted_reco.hierarchy.taxon_id"), TRAITSAGGREGATION("facts.trait_value.trait_aggregation.raw"),
 	STATUS("max_voted_reco.taxonstatus"), NOOFIDENTIFICATION("no_of_identifications"),
-	TAHSIL("location_information.tahsil.raw"), STATE("location_information.state.raw"),
+	TAHSIL("location_information.tahsil.keyword"), STATE("location_information.state.keyword"),
 	DISTRICT("location_information.district.raw"), RANK("max_voted_reco.rank"),
 	CUSTOMFIELDID("custom_fields.custom_field.custom_field_id"),
 	CUSTOMFIELDAGGREGATION("custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw"),
