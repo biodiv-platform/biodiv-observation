@@ -1081,9 +1081,10 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setNoOfImages(noOfImages);
 					observation.setNoOfVideos(noOfVideo);
 					observation.setReprImageId(reprImage);
-					observationDao.update(observation);
-
+					
 				}
+				observationDao.update(observation);
+
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
