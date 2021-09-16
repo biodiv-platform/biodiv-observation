@@ -1376,8 +1376,8 @@ public class ObservationController {
 				WKTReader wktRdr = new WKTReader(geofactory);
 				Geometry geoBoundary = wktRdr.read(observationBulkData.getWktString());
 				Point intPoint = geoBoundary.getInteriorPoint();
-				observationBulkData.setLatitude(intPoint.getX());
-				observationBulkData.setLongitude(intPoint.getY());
+				observationBulkData.setLongitude(intPoint.getX());
+				observationBulkData.setLatitude(intPoint.getY());
 			}
 
 			if (observationHelper.checkObservationBounds(observationBulkData.getLatitude(),
