@@ -111,7 +111,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
 						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
-						observationBulkData.getBasisOfData());
+						observationBulkData.getContributors().toString(), observationBulkData.getBasisOfData());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 						observationDao, userService, data, myImageUpload, userId);
@@ -145,7 +145,7 @@ public class ObservationBulkUploadThread implements Runnable {
 
 			}
 		} catch (Exception e) {
-			logger.error(e.getMessage());		
+			logger.error(e.getMessage());
 		}
 
 	}

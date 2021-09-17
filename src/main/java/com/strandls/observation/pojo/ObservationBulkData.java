@@ -18,18 +18,18 @@ public class ObservationBulkData {
 	private final Row dataRow;
 	private final HttpServletRequest request;
 	private final DataTableWkt dataTable;
+	private final String contributors;
 	private final List<SpeciesGroup> speciesGroupList;
 	private final List<TraitsValuePair> pairs;
 	private final List<UserGroupIbp> userGroupsList;
 	private final List<License> licenses;
 	private final Boolean isVerified;
 	private final String basisOfRecord;
-	
 
 	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
 			DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
 			List<UserGroupIbp> userGroupsList, List<License> licenses, Boolean isVerified,
-			Map<String, Integer> checklistAnnotaion, String basisOfRecord) {
+			Map<String, Integer> checklistAnnotaion, String contributors, String basisOfRecord) {
 		this.fieldMapping = fieldMapping;
 		this.checklistAnnotaion = checklistAnnotaion;
 		this.dataRow = dataRow;
@@ -40,6 +40,7 @@ public class ObservationBulkData {
 		this.pairs = pairs;
 		this.userGroupsList = userGroupsList;
 		this.licenses = licenses;
+		this.contributors = contributors;
 		this.basisOfRecord = basisOfRecord;
 	}
 
@@ -85,5 +86,9 @@ public class ObservationBulkData {
 
 	public String getBasisOfRecord() {
 		return basisOfRecord;
+	}
+
+	public String getContributors() {
+		return contributors;
 	}
 }
