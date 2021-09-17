@@ -44,6 +44,7 @@ import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
+import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -107,6 +108,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	private RecommendationServiceImpl recoService;
 	@Inject
 	private ObjectMapper om;
+	@Inject
+	private TokenGenerator tokenGenerator;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -134,7 +137,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
 
 			dataTableService = headers.addDataTableHeaders(dataTableService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
+					tokenGenerator.generate(userService.getUser(observationBulkData.getContributors().toString())));
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
 
 			if (dataTable == null) {
@@ -155,9 +158,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
 
 				ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
-						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable, userId,
-						observationImpl.getAllSpeciesGroup(), traitsList, userGroupIbpList, licenseList, workbook,
-						myImageUpload, resourceService, fileUploadApi, dataTableService, headers);
+						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
+						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
+						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
+						dataTableService, headers);
 				Thread thread = new Thread(uploadThread);
 				thread.start();
 			}

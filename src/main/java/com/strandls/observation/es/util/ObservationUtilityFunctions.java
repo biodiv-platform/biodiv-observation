@@ -233,7 +233,7 @@ public class ObservationUtilityFunctions {
 		Boolean isVerified = Boolean.TRUE.equals(observationData.getIsVerified()) ? observationData.getIsVerified()
 				: false;
 		try {
-			requestAuthHeader = tokenGenerator.generate(userService.getUser(observationData.getContributors()));
+			requestAuthHeader = tokenGenerator.generate(userService.getUser(userId.toString()));
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
 

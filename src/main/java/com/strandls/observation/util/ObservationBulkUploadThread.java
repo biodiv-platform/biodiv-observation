@@ -111,7 +111,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
 						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
-						observationBulkData.getContributors().toString(), observationBulkData.getBasisOfData());
+						observationBulkData.getBasisOfData());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 						observationDao, userService, data, myImageUpload, userId);
