@@ -178,10 +178,10 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<Observation> getObservationCountForDatatable(Long datatableId) {
+	public Long getObservationCountForDatatable(String datatableId) {
 		Session session = sessionFactory.openSession();
 		List<Observation> observationList = new ArrayList<Observation>();
-		String hql = "from Observation o where o.dataTableId = :datatable";
+		String hql = "from Observation o where o.dataTableId = :datatable and o.isDeleted = false";
 		try {
 			Query query = session.createQuery(hql);
 			query.setParameter("datatable", datatableId);
@@ -191,7 +191,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		} finally {
 			session.close();
 		}
-		return observationList;
+		return (long) observationList.size();
 	}
 
 }

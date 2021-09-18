@@ -38,6 +38,7 @@ import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationDataTableShow;
+import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
@@ -161,7 +162,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
 						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
 						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
-						dataTableService,tokenGenerator, headers);
+						dataTableService, tokenGenerator, headers);
 				Thread thread = new Thread(uploadThread);
 				thread.start();
 			}
@@ -180,10 +181,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		Map<String, String> authorScore = null;
 		DataTableWkt dataTable = null;
 		UserIbp user = null;
+		Long count = null;
 		List<UserGroupIbp> userGroups = null;
 		Long userId = null;
 		ObservationLocationInfo locationInfo = null;
-		List<ObservationDataTableShow> observationList = null;
+		ObservationDatatableList observationList = null;
 		ShowObervationDataTable dataTableRes = new ShowObervationDataTable();
 		dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
@@ -197,15 +199,17 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			user = userService.getUserIbp(userId.toString());
 			userGroups = userGroupService.getObservationUserGroup(dataTableId.toString());
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
+			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
 			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
 			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
 					dataTable.getGeographicalCoverageLongitude().toString());
 			dataTableRes.setAuthorInfo(user);
 			dataTableRes.setLayerInfo(null);
-			dataTableRes.setObservationList(observationList);
+			dataTableRes.setObservationList(observationList.getObservationList());
 			dataTableRes.setLayerInfo(locationInfo);
 			dataTableRes.setUserGroups(userGroups);
 			dataTableRes.setDatatable(dataTable);
+			dataTableRes.setCount(count);
 			if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 				authorScore = score.getRecord().get(0).get("details");
 				dataTableRes.setAuthorScore(authorScore);
@@ -219,18 +223,19 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	}
 
 	@Override
-	public List<ObservationDataTableShow> fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
-			Integer offset) {
+	public ObservationDatatableList fetchAllObservationByDataTableId(Long dataTableId, Integer limit, Integer offset) {
 		List<Observation> observationList;
 		DataTableWkt dataTable;
 		List<Long> list = new ArrayList<Long>();
+		Long total = null;
 		List<ObservationDataTableShow> showDataList = new ArrayList<ObservationDataTableShow>();
 		list.add(dataTableId);
 		try {
 			observationList = observationDao.fetchByDataTableId(list, limit, offset);
+			total = observationDao.getObservationCountForDatatable(dataTableId.toString());
 			dataTable = dataTableService.showDataTable(dataTableId.toString());
 			if (observationList.isEmpty()) {
-				return showDataList;
+				return new ObservationDatatableList();
 			}
 
 			observationList.forEach((ob) -> {
@@ -300,11 +305,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				showDataList.add(data);
 
 			});
-			return showDataList;
+
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
-		return showDataList;
+		return new ObservationDatatableList(showDataList, total);
 	}
 
 	@Override

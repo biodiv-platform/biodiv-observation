@@ -64,7 +64,7 @@ import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
-import com.strandls.observation.pojo.ObservationDataTableShow;
+import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -1425,7 +1425,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDataTableShow.class, responseContainer = "List")
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDatatableList.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
@@ -1436,7 +1436,7 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			List<ObservationDataTableShow> result = observationDataTableService.fetchAllObservationByDataTableId(id,
+			ObservationDatatableList result = observationDataTableService.fetchAllObservationByDataTableId(id,
 					limit, offset);
 
 			return Response.status(Status.OK).entity(result).build();
