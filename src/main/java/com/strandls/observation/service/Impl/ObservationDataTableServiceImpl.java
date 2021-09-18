@@ -161,7 +161,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
 						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
 						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
-						dataTableService, headers);
+						dataTableService,tokenGenerator, headers);
 				Thread thread = new Thread(uploadThread);
 				thread.start();
 			}

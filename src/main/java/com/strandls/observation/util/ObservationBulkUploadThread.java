@@ -60,13 +60,14 @@ public class ObservationBulkUploadThread implements Runnable {
 	private final List<License> licenseList;
 	private final XSSFWorkbook workbook;
 	private final Map<String, String> myImageUpload;
+	private final TokenGenerator tokenGenerator;
 
 	public ObservationBulkUploadThread(ObservationBulkDTO observationBulkData, HttpServletRequest request,
 			ObservationDAO observationDao, ObservationBulkMapperHelper observationBulkMapperHelper, ESUpdate esUpdate,
 			UserServiceApi userService, DataTableWkt dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
 			XSSFWorkbook workbook, Map<String, String> myImageUpload, ResourceServicesApi resourceService,
-			UploadApi fileUploadApi, DataTableServiceApi dataTableService, Headers headers) {
+			UploadApi fileUploadApi, DataTableServiceApi dataTableService,TokenGenerator tokenGenerator, Headers headers) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
@@ -86,6 +87,7 @@ public class ObservationBulkUploadThread implements Runnable {
 		this.licenseList = licenseList;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 		this.workbook = workbook;
+		this.tokenGenerator = tokenGenerator;
 		this.myImageUpload = myImageUpload;
 	}
 
@@ -114,7 +116,7 @@ public class ObservationBulkUploadThread implements Runnable {
 						observationBulkData.getBasisOfData());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-						observationDao, userService, data, myImageUpload, userId);
+						observationDao, userService, data, myImageUpload,tokenGenerator, userId);
 				if (obsId != null) {
 					observationIds.add(obsId);
 				}
