@@ -322,8 +322,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						request);
 				Thread thread = new Thread(deleteThread);
 				thread.start();
-				return "Successfully Remove Observation for the Id" + dataTableId.toString();
 			}
+			return "Successfully Remove Observation for the Id" + dataTableId.toString();
 		} catch (Exception error) {
 			logger.error(error.getMessage());
 		}
