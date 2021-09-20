@@ -113,7 +113,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
 						dataTable, speciesGroupList, traitsList, userGroupIbpList, licenseList,
 						observationBulkData.getIsVerified(), observationBulkData.getChecklistAnnotation(),
-						observationBulkData.getBasisOfData());
+						observationBulkData.getBasisOfRecord());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 						observationDao, userService, data, myImageUpload,tokenGenerator, userId);
@@ -137,7 +137,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				Thread thread = new Thread(updateThread);
 				thread.start();
 				try {
-					Map<String, Object> sheetResult = moveSheet(observationBulkData, request);
+					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
 					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
 					dataTable.setUfileId(uFileId);
 					dataTableService.updateDataTable(dataTable);
@@ -152,7 +152,7 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	}
 
-	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, HttpServletRequest request)
+	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, String  requestAuthHeader)
 			throws Exception {
 		try {
 			List<String> myUploadFilesPath = new ArrayList<String>();
@@ -164,8 +164,8 @@ public class ObservationBulkUploadThread implements Runnable {
 			filesDataTable.setModule("DATASETS");
 			filesDataTable.setFiles(myUploadFilesPath);
 			Map<String, Object> fileRes;
-			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION));
-			resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi,requestAuthHeader);
+			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 
 			fileRes = fileUploadApi.moveFiles(filesDataTable);
 			List<UFileCreateData> createUfileList = new ArrayList<>();
