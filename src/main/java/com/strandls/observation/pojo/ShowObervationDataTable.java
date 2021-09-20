@@ -7,6 +7,7 @@ import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+
 /**
  * 
  * @author vishnu
@@ -24,7 +25,8 @@ public class ShowObervationDataTable {
 	private UserIbp authorInfo;
 	private Map<String, String> authorScore;
 	private List<ObservationDataTableShow> observationList;
-	
+	private Long count;
+
 	/**
 	 * 
 	 * @param id
@@ -34,14 +36,15 @@ public class ShowObervationDataTable {
 	 * @param authorInfo
 	 * @param authorScore
 	 */
-	public ShowObervationDataTable(DataTableWkt datatable, List<UserGroupIbp> userGroups, ObservationLocationInfo layerInfo,
-			UserIbp authorInfo, Map<String, String> authorScore) {
+	public ShowObervationDataTable(DataTableWkt datatable, List<UserGroupIbp> userGroups,
+			ObservationLocationInfo layerInfo, UserIbp authorInfo, Map<String, String> authorScore, Long count) {
 		super();
 		this.datatable = datatable;
 		this.userGroups = userGroups;
 		this.layerInfo = layerInfo;
 		this.authorInfo = authorInfo;
 		this.authorScore = authorScore;
+		this.count = count;
 	}
 
 	public ShowObervationDataTable() {
@@ -95,6 +98,13 @@ public class ShowObervationDataTable {
 	public void setObservationList(List<ObservationDataTableShow> observationList) {
 		this.observationList = observationList;
 	}
-	
+
+	public Long getCount() {
+		return count;
+	}
+
+	public void setCount(Long count) {
+		this.count = count;
+	}
 
 }

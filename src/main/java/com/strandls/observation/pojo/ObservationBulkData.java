@@ -24,7 +24,6 @@ public class ObservationBulkData {
 	private final List<License> licenses;
 	private final Boolean isVerified;
 	private final String basisOfRecord;
-	
 
 	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
 			DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,

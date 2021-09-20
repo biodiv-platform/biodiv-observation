@@ -95,7 +95,12 @@ public class ObservationMapperHelper {
 	@Inject
 	private TraitsServiceApi traitsServiceApi;
 
-	public Boolean checkIndiaBounds(ObservationCreate observationData) {
+	public Boolean checkObservationBounds(Double lat, Double lon) {
+
+		if (lat == null || lon == null) {
+			return false;
+		}
+
 		try {
 			String topleft = "";
 			String bottomright = "";
@@ -131,8 +136,8 @@ public class ObservationMapperHelper {
 
 			DecimalFormat df = new DecimalFormat("#.####");
 			df.setRoundingMode(RoundingMode.HALF_EVEN);
-			double latitude = Double.parseDouble(df.format(observationData.getLatitude()));
-			double longitude = Double.parseDouble(df.format(observationData.getLongitude()));
+			double latitude = Double.parseDouble(df.format(lat));
+			double longitude = Double.parseDouble(df.format(lon));
 			Coordinate c = new Coordinate(longitude, latitude);
 			Geometry topology = geofactory.createPoint(c);
 			Boolean withinIndia = indiaBounds.intersects(topology);
