@@ -253,8 +253,10 @@ public class ObservationListPageMapper {
 				commonName = commonName.substring(0, commonName.length() - 2);
 			}
 
-			RecoIbp recoIbp = new RecoIbp(commonName, maxVoted.getScientific_name(), null, null, null, null,
-					maxVoted.getTaxonstatus(), null);
+			RecoIbp recoIbp = new RecoIbp(commonName,
+					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
+							: maxVoted.getScientific_name(),
+					null, null, null, null, maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {
 				for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
@@ -313,6 +315,9 @@ public class ObservationListPageMapper {
 					scientificName = allreco.getScientific_name().getName();
 					if (allreco.getScientific_name().getTaxon_detail() != null) {
 						taxonId = allreco.getScientific_name().getTaxon_detail().getId();
+						scientificName = allreco.getScientific_name().getTaxon_detail().getItalicised_form() != null
+								? allreco.getScientific_name().getTaxon_detail().getItalicised_form()
+								: allreco.getScientific_name().getTaxon_detail().getScientific_name();
 //						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
 //							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
 //						}
