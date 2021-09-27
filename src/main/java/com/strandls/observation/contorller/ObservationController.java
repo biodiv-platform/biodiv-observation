@@ -64,7 +64,7 @@ import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
-import com.strandls.observation.pojo.ObservationDataTableShow;
+import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -101,6 +101,11 @@ import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.io.WKTReader;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -211,8 +216,9 @@ public class ObservationController {
 						&& observationData.getRecoData().getTaxonCommonName() == null)
 					throw new ObservationInputException("No Recommendation found");
 			}
-			if (observationHelper.checkIndiaBounds(observationData) == false) {
-				throw new ObservationInputException("Observation Not within India Bounds");
+			if (observationHelper.checkObservationBounds(observationData.getLatitude(),
+					observationData.getLongitude()) == false) {
+				throw new ObservationInputException("Observation Not within geographical Bounds");
 			}
 			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
 				throw new ObservationInputException("Without resource observation");
@@ -268,7 +274,7 @@ public class ObservationController {
 			@ApiParam(name = "observationUpdateData") ObservationUpdateData observationUpdate) {
 		try {
 
-			if (observationUpdate.getObservedOn() == null)
+			if (observationUpdate.getDataTableId() == null && observationUpdate.getObservedOn() == null)
 				throw new ObservationInputException("Observation Date Cannot be BLANK");
 			if (observationUpdate.getLatitude() == null || observationUpdate.getLongitude() == null)
 				throw new ObservationInputException("Observation LATITUDE/LONGITUDE MISSING");
@@ -1364,6 +1370,20 @@ public class ObservationController {
 			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
 	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		try {
+
+			if (!observationBulkData.getWktString().isEmpty()) {
+				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
+				WKTReader wktRdr = new WKTReader(geofactory);
+				Geometry geoBoundary = wktRdr.read(observationBulkData.getWktString());
+				Point intPoint = geoBoundary.getInteriorPoint();
+				observationBulkData.setLongitude(intPoint.getX());
+				observationBulkData.setLatitude(intPoint.getY());
+			}
+
+			if (observationHelper.checkObservationBounds(observationBulkData.getLatitude(),
+					observationBulkData.getLongitude()) == false) {
+				throw new ObservationInputException("Observation Not within Geographic Bounds");
+			}
 			Long result = observationDataTableService.observationBulkUpload(request, observationBulkData);
 			if (result != null) {
 				return Response.status(Status.OK).entity(result).build();
@@ -1405,7 +1425,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDataTableShow.class, responseContainer = "List")
+	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDatatableList.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
@@ -1416,7 +1436,7 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			List<ObservationDataTableShow> result = observationDataTableService.fetchAllObservationByDataTableId(id,
+			ObservationDatatableList result = observationDataTableService.fetchAllObservationByDataTableId(id,
 					limit, offset);
 
 			return Response.status(Status.OK).entity(result).build();

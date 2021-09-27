@@ -3,7 +3,6 @@
  */
 package com.strandls.observation.dao;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -177,21 +176,23 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return result;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<Observation> getObservationCountForDatatable(Long datatableId) {
+	@SuppressWarnings({ "unchecked" })
+	public Long getObservationCountForDatatable(String datatableId) {
+
 		Session session = sessionFactory.openSession();
-		List<Observation> observationList = new ArrayList<Observation>();
-		String hql = "from Observation o where o.dataTableId = :datatable";
+		String qry = "select count(*) from observation where is_deleted = false and data_table_id = :datatableId";
+		Long total = null;
 		try {
-			Query query = session.createQuery(hql);
-			query.setParameter("datatable", datatableId);
-			observationList = query.list();
-		} catch (Exception ex) {
-			logger.error(ex.getMessage());
+			Query<Long> query = session.createNativeQuery(qry).addScalar("count", LongType.INSTANCE);
+			;
+			query.setParameter("datatableId", Integer.parseInt(datatableId));
+			total = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}
-		return observationList;
+		return total;
 	}
 
 }

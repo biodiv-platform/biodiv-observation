@@ -1021,6 +1021,11 @@ public class ObservationServiceImpl implements ObservationService {
 			Long userId = Long.parseLong(profile.getId());
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
+
+				if (observation.getDataTableId() == null && observationUpdate.getResources() == null
+						&& observationUpdate.getResources().isEmpty()) {
+					throw new ObservationInputException("Observation Resources not found");
+				}
 //				location data
 				observation.setPlaceName(observationUpdate.getObservedAt());
 				observation.setReverseGeocodedName(observationUpdate.getReverseGeocoded());
@@ -1035,10 +1040,13 @@ public class ObservationServiceImpl implements ObservationService {
 				observation.setToDate(observationUpdate.getObservedOn());
 				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
 				observation.setLastRevised(new Date());
+				observation.setChecklistAnnotations(observationUpdate.getChecklistAnnotations());
+				observation.setBasisOfRecord(observationUpdate.getBasisOfRecord());
 //				resource data
 
-				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
-						observationUpdate.getResources());
+				List<Resource> resources = observationUpdate.getResources() != null
+						? observationHelper.createResourceMapping(request, userId, observationUpdate.getResources())
+						: null;
 
 				if (resources != null && !resources.isEmpty()) {
 					resourceService = headers.addResourceHeaders(resourceService,
@@ -1073,9 +1081,10 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setNoOfImages(noOfImages);
 					observation.setNoOfVideos(noOfVideo);
 					observation.setReprImageId(reprImage);
-					observationDao.update(observation);
-
+					
 				}
+				observationDao.update(observation);
+
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
@@ -1129,11 +1138,17 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setLatitude(observation.getLatitude());
 				editData.setLongitude(observation.getLongitude());
 				editData.setHidePreciseLocation(observation.getGeoPrivacy());
+				editData.setChecklistAnnotations(observation.getChecklistAnnotations());
+				editData.setBasisOfRecord(observation.getBasisOfRecord());
+				editData.setDataTableId(observation.getDataTableId());
 
 //				resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
 						observationId.toString());
-				editData.setResources(observationHelper.createEditResourceMapping(resourceData));
+				if (resourceData != null && !resourceData.isEmpty()) {
+					editData.setResources(observationHelper.createEditResourceMapping(resourceData));
+				}
+
 			} else {
 				throw new ObservationInputException("USER NOT ALLOWED TO EDIT THE PAGE");
 			}

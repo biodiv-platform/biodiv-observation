@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.pojo.ObservationDataTableShow;
+import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 
 public interface ObservationDataTableService {
@@ -17,7 +18,7 @@ public interface ObservationDataTableService {
 	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
 			Integer offset);
 
-	public List<ObservationDataTableShow> fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
+	public ObservationDatatableList fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
 			Integer offset);
 
 	public String removeObservationByDataTableId(HttpServletRequest request, Long dataTableId);
