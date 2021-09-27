@@ -212,7 +212,7 @@ public class ObservationESDocument {
 			String date_accuracy, Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
 			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
 			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
-			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade,String data_table_title) {
+			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade, String data_table_title) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -1308,6 +1308,7 @@ class Taxon_detail {
 	private String name;
 	private String canonical_form;
 	private String scientific_name;
+	private String italicised_form;
 	private String rank;
 	private String status;
 	private String position;
@@ -1324,17 +1325,19 @@ class Taxon_detail {
 	 * @param name
 	 * @param canonical_form
 	 * @param scientific_name
+	 * @param italicised_form
 	 * @param rank
 	 * @param status
 	 * @param position
 	 */
-	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String rank, String status,
-			String position) {
+	public Taxon_detail(Long id, String name, String canonical_form, String scientific_name, String italicised_form,
+			String rank, String status, String position) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.canonical_form = canonical_form;
 		this.scientific_name = scientific_name;
+		this.italicised_form = italicised_form;
 		this.rank = rank;
 		this.status = status;
 		this.position = position;
@@ -1370,6 +1373,14 @@ class Taxon_detail {
 
 	public void setScientific_name(String scientific_name) {
 		this.scientific_name = scientific_name;
+	}
+
+	public String getItalicised_form() {
+		return italicised_form;
+	}
+
+	public void setItalicised_form(String italicised_form) {
+		this.italicised_form = italicised_form;
 	}
 
 	public String getRank() {
@@ -1535,6 +1546,7 @@ class Max_voted_reco {
 	private String scientific_name;
 	private String rank;
 	private String taxonstatus;
+	private String italicised_form;
 
 	/**
 	 * 
@@ -1550,9 +1562,10 @@ class Max_voted_reco {
 	 * @param scientific_name
 	 * @param rank
 	 * @param taxonstatus
+	 * @param italicised_form
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			String rank, String taxonstatus) {
+			String rank, String taxonstatus, String italicised_form) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
@@ -1560,6 +1573,7 @@ class Max_voted_reco {
 		this.scientific_name = scientific_name;
 		this.rank = rank;
 		this.taxonstatus = taxonstatus;
+		this.italicised_form = italicised_form;
 	}
 
 	public Long getId() {
@@ -1608,6 +1622,14 @@ class Max_voted_reco {
 
 	public void setTaxonstatus(String taxonstatus) {
 		this.taxonstatus = taxonstatus;
+	}
+
+	public String getItalicised_form() {
+		return italicised_form;
+	}
+
+	public void setItalicised_form(String italicised_form) {
+		this.italicised_form = italicised_form;
 	}
 
 }
