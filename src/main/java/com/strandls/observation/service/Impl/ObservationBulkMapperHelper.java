@@ -576,7 +576,7 @@ public class ObservationBulkMapperHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
-				resource.setLanguageId(205L);
+				resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
