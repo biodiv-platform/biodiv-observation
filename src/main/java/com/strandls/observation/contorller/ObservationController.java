@@ -1043,6 +1043,31 @@ public class ObservationController {
 	public Response createObservationUGContext(@Context HttpServletRequest request,
 			@ApiParam(name = "observationUGContext") ObservationCreateUGContext observationUGContext) {
 		try {
+			if (observationUGContext.getObservationData().getObservedOn() == null)
+				throw new ObservationInputException("Observation Date Cannot be BLANK");
+			if (observationUGContext.getObservationData().getLatitude() == null
+					|| observationUGContext.getObservationData().getLongitude() == null)
+				throw new ObservationInputException("Observation LATITUDE/LONGITUDE MISSING");
+			if (observationUGContext.getObservationData().getObservedAt() == null)
+				throw new ObservationInputException("Observation LOCATION cannot be BLANK");
+			if (observationUGContext.getObservationData().getsGroup() == null)
+				throw new ObservationInputException("Species Group cannot be BLANK");
+			if (observationUGContext.getObservationData().getHidePreciseLocation() == null)
+				throw new ObservationInputException("GeoPrivacy cannot be BLANK");
+			if (observationUGContext.getObservationData().getHelpIdentify() == false) {
+				if (observationUGContext.getObservationData().getRecoData().getTaxonScientificName() == null
+						&& observationUGContext.getObservationData().getRecoData().getTaxonCommonName() == null)
+					throw new ObservationInputException("No Recommendation found");
+			}
+			if (observationHelper.checkObservationBounds(observationUGContext.getObservationData().getLatitude(),
+					observationUGContext.getObservationData().getLongitude()) == false) {
+				throw new ObservationInputException("Observation Not within geographical Bounds");
+			}
+			if (observationUGContext.getObservationData().getResources() == null
+					|| observationUGContext.getObservationData().getResources().isEmpty()) {
+				throw new ObservationInputException("Without resource observation");
+			}
+
 			ShowData result = observationService.creteObservationUGContext(request, observationUGContext);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
@@ -1436,8 +1461,8 @@ public class ObservationController {
 			Long id = Long.parseLong(dataTableId);
 			Integer limit = Integer.parseInt(Limit);
 			Integer offset = Integer.parseInt(Offset);
-			ObservationDatatableList result = observationDataTableService.fetchAllObservationByDataTableId(id,
-					limit, offset);
+			ObservationDatatableList result = observationDataTableService.fetchAllObservationByDataTableId(id, limit,
+					offset);
 
 			return Response.status(Status.OK).entity(result).build();
 
