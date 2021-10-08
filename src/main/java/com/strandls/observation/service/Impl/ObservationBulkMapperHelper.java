@@ -103,7 +103,7 @@ public class ObservationBulkMapperHelper {
 			Map<String, Integer> fieldMapping, Row dataRow, DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList,
 			Map<String, Integer> checklistAnnotation, Boolean isVerified, String basisOfRecord) {
 		try {
-			Boolean geoPrivacy = Boolean.TRUE;
+			Boolean geoPrivacy = Boolean.FALSE;
 			Observation observation = new Observation();
 			if (fieldMapping.get("geoPrivacy") != null) {
 				Cell geoPrivacyCell = dataRow.getCell(fieldMapping.get("geoPrivacy"),
