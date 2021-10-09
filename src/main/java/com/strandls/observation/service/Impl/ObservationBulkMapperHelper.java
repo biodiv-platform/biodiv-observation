@@ -625,9 +625,9 @@ public class ObservationBulkMapperHelper {
 			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
 				return;
 			
-			Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 
-			if (cell != null) {
+			if (fieldMapping.get("userGroups") != null) {
+				Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				cell.setCellType(CellType.STRING);
 				cellGroups =   cell.getStringCellValue().split(",");
 			}else {
@@ -637,7 +637,7 @@ public class ObservationBulkMapperHelper {
 			List<Long> userGroupIds = new ArrayList<>();
 			for (String cellGroup : cellGroups) {
 				for (UserGroupIbp group : userGroupsList) {
-					if (group.getName().equalsIgnoreCase(cellGroup.trim())) {
+					if (cellGroup.contains(group.getId().toString())) {
 						userGroupIds.add(group.getId());
 						break;
 					}
