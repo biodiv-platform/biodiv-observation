@@ -619,16 +619,21 @@ public class ObservationBulkMapperHelper {
 
 	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
-			List<UserGroupIbp> userGroupsList, Long observationId) {
+			List<UserGroupIbp> userGroupsList, String userGroup, Long observationId) {
+		String[] cellGroups ;
 		try {
-			if (fieldMapping.get("userGroups") == null)
+			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
 				return;
+			
 			Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (cell == null)
-				return;
 
-			cell.setCellType(CellType.STRING);
-			String[] cellGroups = cell.getStringCellValue().split(",");
+			if (cell != null) {
+				cell.setCellType(CellType.STRING);
+				cellGroups =   cell.getStringCellValue().split(",");
+			}else {
+				cellGroups = userGroup.split(",");
+			}
+		
 			List<Long> userGroupIds = new ArrayList<>();
 			for (String cellGroup : cellGroups) {
 				for (UserGroupIbp group : userGroupsList) {

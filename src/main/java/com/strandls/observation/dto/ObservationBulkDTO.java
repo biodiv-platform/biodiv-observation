@@ -21,6 +21,8 @@ public class ObservationBulkDTO {
 
     // taxonomic coverage
     private String sGroup;
+    
+    private String userGroup;
 
     // temporal coverage
     private String dateAccuracy;
@@ -238,5 +240,11 @@ public class ObservationBulkDTO {
 	}
 	public void setBasisOfRecord(String basisOfRecord) {
 		this.basisOfRecord = basisOfRecord;
+	}
+	public String getUserGroup() {
+		return userGroup;
+	}
+	public void setUserGroup(String userGroup) {
+		this.userGroup = userGroup;
 	}
 }

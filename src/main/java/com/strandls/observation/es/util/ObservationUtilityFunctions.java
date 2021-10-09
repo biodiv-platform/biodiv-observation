@@ -222,7 +222,7 @@ public class ObservationUtilityFunctions {
 	@SuppressWarnings("deprecation")
 	public Long createObservationAndMappings(String requestAuthHeader, ObservationBulkMapperHelper mapper,
 			ObservationDAO observationDAO, UserServiceApi userService, ObservationBulkData observationData,
-			Map<String, String> myImageUpload, TokenGenerator tokenGenerator, Long userId) {
+			Map<String, String> myImageUpload, TokenGenerator tokenGenerator,String userGroup, Long userId) {
 		Observation observation = null;
 		String resourceAuthHeader = requestAuthHeader;
 		Boolean isVerified = Boolean.TRUE.equals(observationData.getIsVerified()) ? observationData.getIsVerified()
@@ -268,7 +268,7 @@ public class ObservationUtilityFunctions {
 						observation.getId());
 				mapper.createTags(requestAuthHeader, fieldMapping, dataRow, observation.getId());
 				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
-						observationData.getUserGroupsList(), observation.getId());
+						observationData.getUserGroupsList(), userGroup,observation.getId());
 				mapper.updateGeoPrivacy(observation);
 				mapper.updateUserGroupFilter(requestAuthHeader, observation);
 				return observation.getId();
