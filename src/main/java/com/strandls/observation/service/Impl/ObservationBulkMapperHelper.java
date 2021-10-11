@@ -404,7 +404,6 @@ public class ObservationBulkMapperHelper {
 	public void createRecoMapping(HttpServletRequest request, String requestAuthHeader,
 			Map<String, Integer> fieldMapping, Row dataRow, Observation observation, Long userId) {
 		try {
-			request.setAttribute("userAuthToken", requestAuthHeader);
 			RecoCreate recoCreate = prepareRecoMapping(dataRow, fieldMapping);
 			if (recoCreate != null) {
 				Long maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
