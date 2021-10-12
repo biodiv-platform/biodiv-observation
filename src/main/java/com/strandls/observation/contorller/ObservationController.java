@@ -218,7 +218,7 @@ public class ObservationController {
 			}
 			if (observationHelper.checkObservationBounds(observationData.getLatitude(),
 					observationData.getLongitude()) == false) {
-				throw new ObservationInputException("Observation Not within geographical Bounds");
+				throw new ObservationInputException("Observation not within geographical bounds");
 			}
 			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
 				throw new ObservationInputException("Without resource observation");
@@ -1061,7 +1061,7 @@ public class ObservationController {
 			}
 			if (observationHelper.checkObservationBounds(observationUGContext.getObservationData().getLatitude(),
 					observationUGContext.getObservationData().getLongitude()) == false) {
-				throw new ObservationInputException("Observation Not within geographical Bounds");
+				throw new ObservationInputException("Observation not within geographical bounds");
 			}
 			if (observationUGContext.getObservationData().getResources() == null
 					|| observationUGContext.getObservationData().getResources().isEmpty()) {
