@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ObservationBulkMapperHelper {
 
@@ -633,18 +634,17 @@ public class ObservationBulkMapperHelper {
 				cellGroups = userGroup.split(",");
 			}
 		
-			List<Long> userGroupIds = new ArrayList<>();
-			for (String cellGroup : cellGroups) {
-				for (UserGroupIbp group : userGroupsList) {
-					if (cellGroup.contains(group.getId().toString())) {
-						userGroupIds.add(group.getId());
-						break;
-					}
-				}
-			}
+			List<Long> accpectedList= userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
+			.collect(Collectors.toList());
+
+			List<Long> userGroupIds = Arrays.asList(cellGroups).stream()
+					.map(s -> Long.parseLong(s.trim()))
+					.filter(s -> accpectedList.contains(s))
+					.collect(Collectors.toList());
 
 			if (userGroupIds.isEmpty())
 				return;
+			
 			UserGroupMappingCreateData userGroupMappingCreateData = new UserGroupMappingCreateData();
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);

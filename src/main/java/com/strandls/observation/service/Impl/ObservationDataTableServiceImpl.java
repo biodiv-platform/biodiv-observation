@@ -146,18 +146,25 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			if (dataTable == null) {
 				throw new NullPointerException("Unable to create DataTable, Unresolved Constrain");
 			}
-			if (!observationBulkData.getUserGroup().isEmpty()) {
-				List<Long> ugList = Arrays.asList(observationBulkData.getUserGroup().split(",")).stream()
-						.map(s -> Long.parseLong(s.trim())).collect(Collectors.toList());
-				UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
-				ugMapping.setUserGroupIds(ugList);
-				userGroupService.createDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
-			}
 
 			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
 				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
+
+				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
+						.collect(Collectors.toList());
+
+				List<Long> userGroupIds = observationBulkData.getUserGroup().isEmpty()?new ArrayList<Long>(): Arrays.asList(observationBulkData.getUserGroup().split(",")).stream().map(s -> Long.parseLong(s.trim()))
+						.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
+				
+				if (!userGroupIds.isEmpty()) {	
+					userGroupService = headers.addUserGroupHeader(userGroupService,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
+					ugMapping.setUserGroupIds(userGroupIds);
+					userGroupService.createDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
+				}
 
 				FilesDTO filesDto = new FilesDTO();
 				filesDto.setFolder("observations");
