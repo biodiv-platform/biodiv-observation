@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ObservationBulkMapperHelper {
 
@@ -618,28 +619,32 @@ public class ObservationBulkMapperHelper {
 
 	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
-			List<UserGroupIbp> userGroupsList, Long observationId) {
+			List<UserGroupIbp> userGroupsList, String userGroup, Long observationId) {
+		String[] cellGroups ;
 		try {
-			if (fieldMapping.get("userGroups") == null)
+			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
 				return;
-			Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-			if (cell == null)
-				return;
+			
 
-			cell.setCellType(CellType.STRING);
-			String[] cellGroups = cell.getStringCellValue().split(",");
-			List<Long> userGroupIds = new ArrayList<>();
-			for (String cellGroup : cellGroups) {
-				for (UserGroupIbp group : userGroupsList) {
-					if (group.getName().equalsIgnoreCase(cellGroup.trim())) {
-						userGroupIds.add(group.getId());
-						break;
-					}
-				}
+			if (fieldMapping.get("userGroups") != null) {
+				Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				cell.setCellType(CellType.STRING);
+				cellGroups =   cell.getStringCellValue().split(",");
+			}else {
+				cellGroups = userGroup.split(",");
 			}
+		
+			List<Long> accpectedList= userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
+			.collect(Collectors.toList());
+
+			List<Long> userGroupIds = Arrays.asList(cellGroups).stream()
+					.map(s -> Long.parseLong(s.trim()))
+					.filter(s -> accpectedList.contains(s))
+					.collect(Collectors.toList());
 
 			if (userGroupIds.isEmpty())
 				return;
+			
 			UserGroupMappingCreateData userGroupMappingCreateData = new UserGroupMappingCreateData();
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupCreateDatatable;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
 
@@ -144,11 +146,25 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			if (dataTable == null) {
 				throw new NullPointerException("Unable to create DataTable, Unresolved Constrain");
 			}
-			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 
+			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
 				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
+
+				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
+						.collect(Collectors.toList());
+
+				List<Long> userGroupIds = observationBulkData.getUserGroup().isEmpty()?new ArrayList<Long>(): Arrays.asList(observationBulkData.getUserGroup().split(",")).stream().map(s -> Long.parseLong(s.trim()))
+						.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
+				
+				if (!userGroupIds.isEmpty()) {	
+					userGroupService = headers.addUserGroupHeader(userGroupService,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
+					ugMapping.setUserGroupIds(userGroupIds);
+					userGroupService.createDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
+				}
 
 				FilesDTO filesDto = new FilesDTO();
 				filesDto.setFolder("observations");
@@ -162,7 +178,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
 						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
 						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
-						dataTableService, tokenGenerator, headers);
+						dataTableService, tokenGenerator, observationBulkData.getUserGroup(), headers);
 				Thread thread = new Thread(uploadThread);
 				thread.start();
 			}
