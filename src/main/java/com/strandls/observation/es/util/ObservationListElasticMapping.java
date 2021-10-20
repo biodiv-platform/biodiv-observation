@@ -38,6 +38,7 @@ public class ObservationListElasticMapping {
 	private String observedInMonth;
 	private Boolean geoPrivacy;
 	private String datasetTitle;
+	private String dataTableTitle;
 	private LocationInformation locationInformation;
 	private Integer recoVoteCount;
 	private UserIbp user;
@@ -57,6 +58,8 @@ public class ObservationListElasticMapping {
 	private Integer flagCount;
 	private String organismRemarks;
 	private String annotations;
+	private String  basisOfRecord;
+	private String basisOfData;
 
 	@JsonProperty("observation_id")
 	private void unpackObservationId(Long observation_id) {
@@ -178,6 +181,20 @@ public class ObservationListElasticMapping {
 		datasetTitle = title;
 	}
 	
+	@JsonProperty(value = "data_table_title")
+	private void unpackDataTableTitle(String datatableTitle) {
+		dataTableTitle = datatableTitle;
+	}
+	
+	@JsonProperty(value = "basis_of_record")
+	private void unpackBasisOfRecord(String basisRecord) {
+		basisOfRecord = basisRecord;
+	}
+	@JsonProperty(value = "basis_of_data")
+	private void unpackBasisOfData(String basisData) {
+		basisOfData = basisData;
+	}
+	
 	@JsonProperty(value = "protocol")
 	private void unpackProtocol(String protocol) {
 		uploadProtocol = protocol;
@@ -274,11 +291,11 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 			String createdOn, String lastRevised, String reverseGeocodedName, Long speciesGroupId, String speciesGroup,
 			Long noOfImages, Long noOfAudios, Long noOfVideos, String reprImageUrl, Boolean isLocked,
 			String locationScale, Double latitude, Double longitude, String dateAccuracy, String fromDate,
-			String toDate, String observedInMonth, Boolean geoPrivacy, String datasetTitle,
+			String toDate, String observedInMonth, Boolean geoPrivacy, String datasetTitle, String dataTableTitle,
 			LocationInformation locationInformation, Integer recoVoteCount, UserIbp user, List<Facts> facts, List<Flags> flags,
 			Max_voted_reco maxVotedReco, List<All_reco_vote> allRecoVotes, List<User_group_observations> userGroup,
 			List<Custom_fields> customFields, List<com.strandls.observation.es.util.Tags> tags, Boolean containsMedia,
-			String uploadProtocol, Integer flagCount, String organismRemarks, String annotations) {
+			String uploadProtocol, Integer flagCount, String organismRemarks, String annotations,String basisOfRecord,String basisOfData) {
 		super();
 		this.observationId = observationId;
 		this.placeName = placeName;
@@ -302,6 +319,7 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		this.observedInMonth = observedInMonth;
 		this.geoPrivacy = geoPrivacy;
 		this.datasetTitle = datasetTitle;
+		this.dataTableTitle = dataTableTitle;
 		this.locationInformation = locationInformation;
 		this.recoVoteCount = recoVoteCount;
 		this.user = user;
@@ -317,6 +335,8 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		this.flagCount = flagCount;
 		this.organismRemarks = organismRemarks;
 		this.annotations = annotations;
+		this.basisOfRecord = basisOfRecord;
+		this.basisOfData = basisOfData;
 	}
 
 	public Long getObservationId() {
@@ -466,9 +486,16 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		return recoVoteCount;
 	}
 
+	public String getDataTableTitle() {
+		return dataTableTitle;
+	}
 
-	
+	public String getBasisOfRecord() {
+		return basisOfRecord;
+	}
 
+	public String getBasisOfData() {
+		return basisOfData;
+	}
 
-	
 }

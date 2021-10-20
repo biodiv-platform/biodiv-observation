@@ -12,6 +12,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriter;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
@@ -78,8 +79,11 @@ public class ObservationListCSVThread implements Runnable {
 	private String authorId;
 	private String notes;
 	private String url;
+	private String dataSetName;
+	private String dataTableName;
 	private MailService mailService;
 	private UserServiceApi userServiceApi;
+	private ObjectMapper objectMapper;
 
 	public ObservationListCSVThread() {
 		super();
@@ -95,7 +99,8 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url, MailService mailService, UserServiceApi userServiceApi) {
+			String authorId, String notes, String url,String dataSetName,String  dataTableName, MailService mailService,
+			UserServiceApi userServiceApi,ObjectMapper objectMapper) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -144,8 +149,11 @@ public class ObservationListCSVThread implements Runnable {
 		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
+		this.dataSetName = dataSetName;
+		this.dataTableName = dataTableName;
 		this.mailService = mailService;
 		this.userServiceApi = userServiceApi;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -175,7 +183,7 @@ public class ObservationListCSVThread implements Runnable {
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
 						traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, null,
 						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade, null,null,null,null);
+						tags, publicationGrade, null,dataSetName,dataTableName,null);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
@@ -183,7 +191,7 @@ public class ObservationListCSVThread implements Runnable {
 
 				epochSize = epochSet.size();
 				offset = offset + max;
-				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc);
+				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,objectMapper);
 				logger.info(
 						"Observation List Download RequestId = " + authorId + dtf.format(now) + "@ offset = " + offset);
 			} while (epochSize >= max);

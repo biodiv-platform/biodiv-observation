@@ -35,6 +35,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.pac4j.core.profile.CommonProfile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
@@ -1196,6 +1197,9 @@ public class ObservationController {
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
 			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
 			@QueryParam("recoName") String recoName,
+			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
+			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
+
 			@DefaultValue("265799") @QueryParam("classification") String classificationid,
 			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
 			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
@@ -1221,7 +1225,7 @@ public class ObservationController {
 			Map<String, List<String>> customParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("custom"))
 					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-
+			ObjectMapper objectMapper = new ObjectMapper();
 			MapBounds bounds = null;
 			if (top != null || bottom != null || left != null || right != null) {
 				bounds = new MapBounds();
@@ -1260,8 +1264,8 @@ public class ObservationController {
 					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
 					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
 					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), mailService,
-					userService);
+					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), dataSetName,dataTableName,mailService,
+					userService,objectMapper);
 			Thread thread = new Thread(csvThread);
 			thread.start();
 			return Response.status(Status.OK).build();
