@@ -150,6 +150,9 @@ public class ObservationController {
 
 	@Inject
 	private UserServiceApi userService;
+	
+	@Inject 
+	private ObjectMapper objectMapper;
 
 	@Inject
 	private Headers headers;
@@ -1225,7 +1228,6 @@ public class ObservationController {
 			Map<String, List<String>> customParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("custom"))
 					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-			ObjectMapper objectMapper = new ObjectMapper();
 			MapBounds bounds = null;
 			if (top != null || bottom != null || left != null || right != null) {
 				bounds = new MapBounds();
