@@ -106,7 +106,7 @@ public class ObservationESDocument {
 	private Long dataset_id;
 	private String dataset_title;
 	private String data_table_title;
-	private String checklist_annotation;
+	private String checklist_annotations;
 	private String basis_of_record;
 	private String  basis_of_data ;
 	private Long repr_image_id;
@@ -216,7 +216,7 @@ public class ObservationESDocument {
 			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
 			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
 			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade,
-			String data_table_title,String checklist_annotation,String basis_of_data,String basis_of_record) {
+			String data_table_title,String checklist_annotations,String basis_of_data,String basis_of_record) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -266,7 +266,7 @@ public class ObservationESDocument {
 		this.facts = facts;
 		this.is_publication_grade = is_publication_grade;
 		this.data_table_title = data_table_title;
-		this.checklist_annotation = checklist_annotation;
+		this.checklist_annotations = checklist_annotations;
 		this.basis_of_data = basis_of_data;
 		this.basis_of_record = basis_of_record ;
 	}
@@ -656,11 +656,11 @@ public class ObservationESDocument {
 	}
 
 	public String getChecklist_annotation() {
-		return checklist_annotation;
+		return checklist_annotations;
 	}
 
-	public void setChecklist_annotation(String checklist_annotation) {
-		this.checklist_annotation = checklist_annotation;
+	public void setChecklist_annotation(String checklistAnnotation) {
+		this.checklist_annotations = checklistAnnotation;
 	}
 
 	public String getBasis_of_record() {
