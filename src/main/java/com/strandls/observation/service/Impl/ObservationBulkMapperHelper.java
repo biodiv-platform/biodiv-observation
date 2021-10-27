@@ -620,31 +620,28 @@ public class ObservationBulkMapperHelper {
 	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<UserGroupIbp> userGroupsList, String userGroup, Long observationId) {
-		String[] cellGroups ;
+		String[] cellGroups;
 		try {
-			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
+			if (fieldMapping.get("userGroups") == null && userGroup.isEmpty())
 				return;
-			
 
 			if (fieldMapping.get("userGroups") != null) {
 				Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				cell.setCellType(CellType.STRING);
-				cellGroups =   cell.getStringCellValue().split(",");
-			}else {
+				cellGroups = cell.getStringCellValue().split(",");
+			} else {
 				cellGroups = userGroup.split(",");
 			}
-		
-			List<Long> accpectedList= userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
-			.collect(Collectors.toList());
 
-			List<Long> userGroupIds = Arrays.asList(cellGroups).stream()
-					.map(s -> Long.parseLong(s.trim()))
-					.filter(s -> accpectedList.contains(s))
+			List<Long> accpectedList = userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
 					.collect(Collectors.toList());
+
+			List<Long> userGroupIds = Arrays.asList(cellGroups).stream().map(s -> Long.parseLong(s.trim()))
+					.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
 
 			if (userGroupIds.isEmpty())
 				return;
-			
+
 			UserGroupMappingCreateData userGroupMappingCreateData = new UserGroupMappingCreateData();
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);
@@ -665,11 +662,13 @@ public class ObservationBulkMapperHelper {
 	public void createCustomFieldMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<Long> userGroupIds, Long observationId) {
 		try {
-			List<CustomFieldFactsInsert> customFieldFactsInsertList = new ArrayList<>();
-			cfServiceApi = headers.addCFHeaders(cfServiceApi, requestAuthHeader);
+
 			for (Long userGroupId : userGroupIds) {
+				cfServiceApi = headers.addCFHeaders(cfServiceApi, requestAuthHeader);
+				List<CustomFieldUGData> customFieldData = new ArrayList<CustomFieldUGData>();
 				List<CustomFieldDetails> customFieldDetails = cfServiceApi
 						.getUserGroupCustomFields(String.valueOf(userGroupId));
+
 				for (CustomFieldDetails customFieldDetail : customFieldDetails) {
 					String customFieldLabel = customFieldDetail.getCustomFields().getName();
 					if (fieldMapping.get(customFieldLabel) != null) {
@@ -679,61 +678,56 @@ public class ObservationBulkMapperHelper {
 							continue;
 
 						docCustomFieldCell.setCellType(CellType.STRING);
-						String docCellValue = docCustomFieldCell.getStringCellValue();
-						List<CustomFieldValues> customFieldValues = cfServiceApi.getCustomFieldOptions(
-								String.valueOf(observationId), String.valueOf(userGroupId),
-								String.valueOf(customFieldDetail.getCustomFields().getId()));
 
-						CustomFieldFactsInsert customFieldFactsInsert = new CustomFieldFactsInsert();
-						customFieldFactsInsert.setCustomFieldId(customFieldDetail.getCustomFields().getId());
-						customFieldFactsInsert.setObservationId(observationId);
-						customFieldFactsInsert.setUserGroupId(userGroupId);
+						String[] customFieldValues = docCustomFieldCell.getStringCellValue().split(",");
 
-						if (customFieldDetail.getCustomFields().getFieldType().equalsIgnoreCase("FIELD TEXT")) {
-							customFieldFactsInsert.setTextBoxValue(docCellValue);
+						if (customFieldValues == null || customFieldValues.length == 0)
+							continue;
+
+						CustomFieldUGData ugData = new CustomFieldUGData();
+						ugData.setCustomFieldId(customFieldDetail.getCustomFields().getId());
+						ugData.setAllowedParticipation(customFieldDetail.getAllowedParticipation());
+						ugData.setIsMandatory(customFieldDetail.getIsMandatory());
+						ugData.setDisplayOrder(customFieldDetail.getDisplayOrder());
+
+						if (customFieldDetail.getCustomFields().getFieldType().equalsIgnoreCase("FIELD TEXT")
+								&& !customFieldValues[0].isEmpty()) {
+							ugData.setDefaultValue(customFieldValues[0]);
+
 						} else if (customFieldDetail.getCustomFields().getFieldType()
-								.equalsIgnoreCase("SINGLE CATEGORICAL")) {
-							CustomFieldValues customFieldValue = null;
-							for (CustomFieldValues customField : customFieldValues) {
-								if (customField.getValues().equalsIgnoreCase(docCellValue)) {
-									customFieldValue = customField;
-									break;
+								.equalsIgnoreCase("SINGLE CATEGORICAL") && !customFieldValues[0].isEmpty()) {
+							for (CustomFieldValues customField : customFieldDetail.getCfValues()) {
+								if (customField.getValues().equalsIgnoreCase(customFieldValues[0])) {
+									ugData.setDefaultValue(customFieldValues[0]);
 								}
 							}
-							if (customFieldValue == null)
-								continue;
 
-							customFieldFactsInsert.setSingleCategorical(customFieldValue.getId());
 						} else if (customFieldDetail.getCustomFields().getFieldType()
-								.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-							List<Long> multiCatValues = new ArrayList<>();
-							for (CustomFieldValues customField : customFieldValues) {
-								if (customField.getValues().equalsIgnoreCase(docCellValue)) {
-									multiCatValues.add(customField.getId());
-								}
-							}
-							if (multiCatValues.isEmpty())
-								continue;
+								.equalsIgnoreCase("MULTI CATEGORICAL") && customFieldValues.length > 0) {
 
-							customFieldFactsInsert.setMultipleCategorical(multiCatValues);
-						} else if (customFieldDetail.getCustomFields().getFieldType().equalsIgnoreCase("RANGE")) {
-							// fill this
+							for (String inputVal : customFieldValues) {
+								if (customFieldDetail.getCfValues().stream().map(item -> item.getValues())
+										.collect(Collectors.joining(",")).contains(inputVal)) {
+									ugData.setDefaultValue(ugData.getDefaultValue().isEmpty() ? inputVal
+											: ugData.getDefaultValue() + "," + inputVal);
+								}
+								;
+							}
 						}
 
-						customFieldFactsInsertList.add(customFieldFactsInsert);
+						if (ugData.getDefaultValue().isEmpty() || ugData.getDefaultValue() == null)
+							continue;
+						customFieldData.add(ugData);
+
 					}
 				}
+
+				if (customFieldData.isEmpty())
+					return;
+				cfServiceApi.addCustomField(userGroupId.toString(), customFieldData);
+
 			}
 
-			if (customFieldFactsInsertList.isEmpty())
-				return;
-
-			for (CustomFieldFactsInsert customFieldFactsInsert : customFieldFactsInsertList) {
-				CustomFieldFactsInsertData customFieldFactsInsertData = new CustomFieldFactsInsertData();
-				customFieldFactsInsertData.setFactsCreateData(customFieldFactsInsert);
-				customFieldFactsInsertData.setMailData(null);
-				cfServiceApi.addUpdateCustomFieldData(customFieldFactsInsertData);
-			}
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
