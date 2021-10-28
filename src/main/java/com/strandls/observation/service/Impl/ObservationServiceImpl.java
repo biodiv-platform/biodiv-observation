@@ -920,13 +920,12 @@ public class ObservationServiceImpl implements ObservationService {
 		MailData mailData = Boolean.TRUE.equals(hasMail) ? generateMailData(observationId) : null;
 
 		observation.setIsDeleted(true);
-		MapQueryResponse esResponse = esService.delete(ObservationIndex.INDEX.getValue(),
-				ObservationIndex.TYPE.getValue(), observationId.toString());
-		ResultEnum result = esResponse.getResult();
-		if (result.getValue().equals("DELETED")) {
-			observationDao.update(observation);
+		observation = observationDao.update(observation);
+		if  (Boolean.TRUE.equals(observation.getIsDeleted())) {
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
 					"observation", observationId, "Observation Deleted", mailData);
+			esService.delete(ObservationIndex.INDEX.getValue(),
+					ObservationIndex.TYPE.getValue(), observationId.toString());
 			return true;
 		}
 
