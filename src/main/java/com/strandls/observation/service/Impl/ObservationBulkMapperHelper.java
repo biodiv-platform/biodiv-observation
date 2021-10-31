@@ -377,10 +377,12 @@ public class ObservationBulkMapperHelper {
 					String[] traitsValues = traitCell.getStringCellValue().split(",");
 
 					List<Long> traits = new ArrayList<>();
-					for (TraitsValue tv : pair.getValues()) {
-						for (String t : traitsValues) {
-							if (t.equalsIgnoreCase(tv.getValue())) {
+
+					for (String trait : traitsValues) {
+						for (TraitsValue tv:pair.getValues()) {
+							if (trait.replaceAll("\\s", "").toLowerCase().equalsIgnoreCase(tv.getValue().toLowerCase())) {
 								traits.add(tv.getId());
+								continue;
 							}
 						}
 					}
@@ -736,6 +738,7 @@ public class ObservationBulkMapperHelper {
 			logger.error(ex.getMessage());
 		}
 	}
+
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvFilterData ugObvFilterData = observationMapperHelper.getUGFilterObvData(observation);

@@ -226,7 +226,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
 			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
 			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
-			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
+				locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
 					dataTable.getGeographicalCoverageLongitude().toString());
 			dataTableRes.setAuthorInfo(user);
 			dataTableRes.setLayerInfo(null);
@@ -298,7 +298,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					if (facts != null && !facts.isEmpty()) {
 
 						for (FactValuePair fact : facts) {
-							checkListAnnotation.put(fact.getName(), fact.getValue());
+
+							checkListAnnotation.put(fact.getName(),
+									checkListAnnotation.containsKey(fact.getName())
+											? checkListAnnotation.get(fact.getName()) + "," + fact.getValue()
+											: fact.getValue());
 
 						}
 
@@ -306,19 +310,21 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					if (cfDataList != null && !cfDataList.isEmpty()) {
 						for (CustomFieldObservationData item : cfDataList) {
 							for (CustomFieldData cf : item.getCustomField()) {
-								if (cf.getFieldType().equalsIgnoreCase("FIELD TEXT")) {
-									checkListAnnotation.put(cf.getCfName(),
-											cf.getCustomFieldValues().getFieldTextData());
-								} else if (cf.getFieldType().equalsIgnoreCase("SINGLE CATEGORICAL")) {
-									checkListAnnotation.put(cf.getCfName(),
-											cf.getCustomFieldValues().getSingleCategoricalData().getValues());
-								} else if (cf.getFieldType().equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-									List<String> customFieldValue = cf.getCustomFieldValues()
-											.getMultipleCategoricalData().stream().map((cVal) -> cVal.getValues())
-											.collect(Collectors.toList());
-									checkListAnnotation.put(cf.getCfName(),
-											(customFieldValue.isEmpty() || customFieldValue == null) ? ""
-													: String.join(",", customFieldValue));
+								if (cf.getCustomFieldValues() != null) {
+									if (cf.getFieldType().equalsIgnoreCase("FIELD TEXT")) {
+										checkListAnnotation.put(cf.getCfName(),
+												cf.getCustomFieldValues().getFieldTextData());
+									} else if (cf.getFieldType().equalsIgnoreCase("SINGLE CATEGORICAL")) {
+										checkListAnnotation.put(cf.getCfName(),
+												cf.getCustomFieldValues().getSingleCategoricalData().getValues());
+									} else if (cf.getFieldType().equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+										List<String> customFieldValue = cf.getCustomFieldValues()
+												.getMultipleCategoricalData().stream().map((cVal) -> cVal.getValues())
+												.collect(Collectors.toList());
+										checkListAnnotation.put(cf.getCfName(),
+												(customFieldValue.isEmpty() || customFieldValue == null) ? ""
+														: String.join(",", customFieldValue));
+									}
 
 								}
 
