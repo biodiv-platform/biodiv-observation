@@ -142,7 +142,11 @@ public class ObservationBulkMapperHelper {
 				if (fromDateCell != null) {
 					fromDateCell.setCellType(CellType.NUMERIC);
 					fromDate = fromDateCell.getDateCellValue();
+				} else {
+					dataTable.getTemporalCoverageFromDate();
 				}
+			} else {
+				dataTable.getTemporalCoverageFromDate();
 			}
 
 			Date toDate = null;
@@ -151,7 +155,11 @@ public class ObservationBulkMapperHelper {
 				if (toDateCell != null) {
 					toDateCell.setCellType(CellType.NUMERIC);
 					toDate = toDateCell.getDateCellValue();
+				} else {
+					toDate = dataTable.getTemporalCoverageToDate();
 				}
+			} else {
+				toDate = dataTable.getTemporalCoverageToDate();
 			}
 
 			String observedAt = "";
@@ -379,8 +387,9 @@ public class ObservationBulkMapperHelper {
 					List<Long> traits = new ArrayList<>();
 
 					for (String trait : traitsValues) {
-						for (TraitsValue tv:pair.getValues()) {
-							if (trait.replaceAll("\\s", "").toLowerCase().equalsIgnoreCase(tv.getValue().toLowerCase())) {
+						for (TraitsValue tv : pair.getValues()) {
+							if (trait.replaceAll("\\s", "").toLowerCase()
+									.equalsIgnoreCase(tv.getValue().toLowerCase())) {
 								traits.add(tv.getId());
 								continue;
 							}
