@@ -143,10 +143,10 @@ public class ObservationBulkMapperHelper {
 					fromDateCell.setCellType(CellType.NUMERIC);
 					fromDate = fromDateCell.getDateCellValue();
 				} else {
-					dataTable.getTemporalCoverageFromDate();
+					fromDate = dataTable.getTemporalCoverageFromDate();
 				}
 			} else {
-				dataTable.getTemporalCoverageFromDate();
+				fromDate = dataTable.getTemporalCoverageFromDate();
 			}
 
 			Date toDate = null;
