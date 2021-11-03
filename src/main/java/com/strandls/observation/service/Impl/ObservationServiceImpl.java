@@ -38,8 +38,6 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AuthorUploadedObservationInfo;
 import com.strandls.esmodule.pojo.MapDocument;
-import com.strandls.esmodule.pojo.MapQueryResponse;
-import com.strandls.esmodule.pojo.MapQueryResponse.ResultEnum;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;

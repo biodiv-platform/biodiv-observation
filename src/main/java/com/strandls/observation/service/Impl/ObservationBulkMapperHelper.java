@@ -268,7 +268,6 @@ public class ObservationBulkMapperHelper {
 
 			observation.setAuthorId(userId);
 			observation.setIsShowable(true);
-			observation.setVersion(0L);
 			observation.setCreatedOn(new Date());
 			observation.setGroupId(speciesGroup != null ? speciesGroup.getId() : 830);
 			observation.setLatitude(latitude);
@@ -302,19 +301,7 @@ public class ObservationBulkMapperHelper {
 			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
 			observation.setChecklistAnnotations(checklistString);// from data set
-			observation.setAccessRights(null);// null for nrml case only used in GBIF
-			observation.setCatalogNumber(null);// null for nrml case only used in GBIF
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
-			observation.setExternalDatasetKey(null);// null for nrml case only used in GBIF
-			observation.setExternalId(null);// null for nrml case only used in GBIF
-			observation.setExternalUrl(null);// null for nrml case only used in GBIF
-			observation.setInformationWithheld(null);// null for nrml case only used in GBIF
-			observation.setLastCrawled(null);// null for nrml case only used in GBIF
-			observation.setLastInterpreted(null);// null for nrml case only used in GBIF
-			observation.setOriginalAuthor(null);// null for nrml case only used in GBIF
-			observation.setPublishingCountry(null);// from IP address
-			observation.setViaCode(null);// null for nrml case only used in GBIF
-			observation.setViaId(null);// null for nrml case only used in GBIF
 			observation.setIsVerified(isVerified);
 			observation = observationDAO.save(observation);
 			if (observation != null) {
@@ -445,17 +432,6 @@ public class ObservationBulkMapperHelper {
 					scientificName = scientificNameCell.getStringCellValue();
 
 					recoData.setTaxonScientificName(scientificName);
-				}
-			}
-
-			String comment;
-			if (fieldMapping.get("comment") != null) {
-				Cell commentCell = dataRow.getCell(fieldMapping.get("comment"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (commentCell != null) {
-					commentCell.setCellType(CellType.STRING);
-					comment = commentCell.getStringCellValue();
-
-					recoData.setRecoComment(comment);
 				}
 			}
 
@@ -620,31 +596,28 @@ public class ObservationBulkMapperHelper {
 	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<UserGroupIbp> userGroupsList, String userGroup, Long observationId) {
-		String[] cellGroups ;
+		String[] cellGroups;
 		try {
-			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
+			if (fieldMapping.get("userGroups") == null && userGroup.isEmpty())
 				return;
-			
 
 			if (fieldMapping.get("userGroups") != null) {
 				Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				cell.setCellType(CellType.STRING);
-				cellGroups =   cell.getStringCellValue().split(",");
-			}else {
+				cellGroups = cell.getStringCellValue().split(",");
+			} else {
 				cellGroups = userGroup.split(",");
 			}
-		
-			List<Long> accpectedList= userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
-			.collect(Collectors.toList());
 
-			List<Long> userGroupIds = Arrays.asList(cellGroups).stream()
-					.map(s -> Long.parseLong(s.trim()))
-					.filter(s -> accpectedList.contains(s))
+			List<Long> accpectedList = userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
 					.collect(Collectors.toList());
+
+			List<Long> userGroupIds = Arrays.asList(cellGroups).stream().map(s -> Long.parseLong(s.trim()))
+					.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
 
 			if (userGroupIds.isEmpty())
 				return;
-			
+
 			UserGroupMappingCreateData userGroupMappingCreateData = new UserGroupMappingCreateData();
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);

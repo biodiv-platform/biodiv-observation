@@ -157,7 +157,6 @@ public class ObservationMapperHelper {
 
 			Observation observation = new Observation();
 			observation.setAuthorId(userId);
-			observation.setVersion(0L);
 			observation.setCreatedOn(new Date());
 			observation.setGroupId(observationData.getsGroup());
 			observation.setLatitude(observationData.getLatitude());
@@ -171,14 +170,12 @@ public class ObservationMapperHelper {
 																						// and long
 			observation.setFlagCount(0);// during creation it should be 0
 			observation.setGeoPrivacy(observationData.getHidePreciseLocation());
-			observation.setHabitatId(null);// has to Depricate , default to all
 			observation.setIsDeleted(false);
 			observation.setLastRevised(new Date());// initially same as date of creation of object
 													// later
 													// when updated
 			observation.setLocationAccuracy(null); // what to insert
 			observation.setVisitCount(0L); // updateble field
-			observation.setSearchText(null); // it is not used as of now , maybe in future
 
 			observation.setAgreeTerms(true);
 			observation.setIsShowable(true);
@@ -222,19 +219,7 @@ public class ObservationMapperHelper {
 			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
 			observation.setChecklistAnnotations(null);// from data set
-			observation.setAccessRights(null);// null for nrml case only used in GBIF
-			observation.setCatalogNumber(null);// null for nrml case only used in GBIF
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
-			observation.setExternalDatasetKey(null);// null for nrml case only used in GBIF
-			observation.setExternalId(null);// null for nrml case only used in GBIF
-			observation.setExternalUrl(null);// null for nrml case only used in GBIF
-			observation.setInformationWithheld(null);// null for nrml case only used in GBIF
-			observation.setLastCrawled(null);// null for nrml case only used in GBIF
-			observation.setLastInterpreted(null);// null for nrml case only used in GBIF
-			observation.setOriginalAuthor(null);// null for nrml case only used in GBIF
-			observation.setPublishingCountry(null);// from IP address
-			observation.setViaCode(null);// null for nrml case only used in GBIF
-			observation.setViaId(null);// null for nrml case only used in GBIF
 
 			return observation;
 
@@ -270,8 +255,6 @@ public class ObservationMapperHelper {
 		}
 
 		RecoCreate recoCreate = new RecoCreate();
-		recoCreate.setConfidence(recoData.getConfidence());
-		recoCreate.setRecoComment(recoData.getRecoComment());
 		recoCreate.setCommonName(commonName);
 		recoCreate.setCommonNameId(commonNameId);
 		recoCreate.setScientificName(scientificName);
