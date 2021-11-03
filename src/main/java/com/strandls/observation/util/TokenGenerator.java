@@ -48,12 +48,10 @@ public class TokenGenerator {
 			com.strandls.authentication_utility.model.Role r = new com.strandls.authentication_utility.model.Role();
 			r.setAuthority(role.getAuthority());
 			r.setId(role.getId());
-			r.setVersion(role.getVersion());
 			r1.add(r);
 
 		}
 		u1.setRoles(r1);
-		u1.setSendDigest(user.getSendDigest());
 		u1.setSendNotification(user.getSendNotification());
 		u1.setSendPushNotification(user.getSendPushNotification());
 		u1.setSexType(user.getSexType());
@@ -61,7 +59,6 @@ public class TokenGenerator {
 		Set<com.strandls.authentication_utility.model.FirebaseTokens> fb = new HashSet<com.strandls.authentication_utility.model.FirebaseTokens>();
 		u1.setTokens(fb);
 		u1.setUserName(user.getUserName());
-		u1.setVersion(user.getVersion());
 
 		Map<String, Object> token = AuthUtil.generateToken(u1, false);
 

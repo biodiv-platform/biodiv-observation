@@ -437,7 +437,6 @@ public class ObservationMapperHelper {
 
 			for (ResourceDataObs resourceData : resourceDataList) {
 				Resource resource = new Resource();
-				resource.setVersion(0L);
 				if (resourceData.getCaption() != null)
 					resource.setDescription(
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
@@ -476,9 +475,6 @@ public class ObservationMapperHelper {
 					resource.setLanguageId(resourceData.getLanguageId());
 				else
 					resource.setLanguageId(defaultLanguageId);
-				resource.setAccessRights(null);
-				resource.setAnnotations(null);
-				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
 
 				resources.add(resource);

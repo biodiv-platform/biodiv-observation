@@ -536,7 +536,6 @@ public class ObservationBulkMapperHelper {
 			for (Map.Entry<String, Object> resourceData : fileResponse.entrySet()) {
 				Map<String, String> values = (Map<String, String>) resourceData.getValue();
 				Resource resource = new Resource();
-				resource.setVersion(0L);
 				resource.setDescription(null);
 
 				resource.setMimeType(null);
@@ -553,9 +552,6 @@ public class ObservationBulkMapperHelper {
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
 				resource.setLanguageId(defaultLanguageId);
-				resource.setAccessRights(null);
-				resource.setAnnotations(null);
-				resource.setGbifId(null);
 
 				License license;
 				if (fieldMapping.get("license") != null) {
