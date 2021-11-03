@@ -51,11 +51,15 @@ import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.CustomFieldData;
+import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.UserGroupCreateDatatable;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
@@ -73,6 +77,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private UserGroupSerivceApi userGroupService;
+
+	@Inject
+	private CustomFieldServiceApi customFieldService;
 
 	@Inject
 	private LayerServiceApi layerService;
@@ -155,10 +162,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
 						.collect(Collectors.toList());
 
-				List<Long> userGroupIds = observationBulkData.getUserGroup().isEmpty()?new ArrayList<Long>(): Arrays.asList(observationBulkData.getUserGroup().split(",")).stream().map(s -> Long.parseLong(s.trim()))
-						.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
-				
-				if (!userGroupIds.isEmpty()) {	
+				List<Long> userGroupIds = observationBulkData.getUserGroup().isEmpty() ? new ArrayList<Long>()
+						: Arrays.asList(observationBulkData.getUserGroup().split(",")).stream()
+								.map(s -> Long.parseLong(s.trim())).filter(s -> accpectedList.contains(s))
+								.collect(Collectors.toList());
+
+				if (!userGroupIds.isEmpty()) {
 					userGroupService = headers.addUserGroupHeader(userGroupService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
@@ -217,7 +226,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
 			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
 			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
-			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
+				locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
 					dataTable.getGeographicalCoverageLongitude().toString());
 			dataTableRes.setAuthorInfo(user);
 			dataTableRes.setLayerInfo(null);
@@ -255,18 +264,23 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			}
 
 			observationList.forEach((ob) -> {
-				Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
-				RecoIbp reco = null;
-				UserIbp userInfo = null;
-				String commonName = null;
-				String scientificName = null;
-				String fromDate = null;
-				if (ob.getFromDate() != null) {
-					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-					fromDate = dateFormat.format(ob.getFromDate());
-				}
-
 				try {
+					List<CustomFieldObservationData> cfDataList = customFieldService
+							.getObservationCustomFields(ob.getId().toString());
+					Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
+					List<FactValuePair> facts = traitService.getFacts("species.participation.Observation",
+							ob.getId().toString());
+
+					RecoIbp reco = null;
+					UserIbp userInfo = null;
+					String commonName = null;
+					String scientificName = null;
+					String fromDate = null;
+					if (ob.getFromDate() != null) {
+						SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+						fromDate = dateFormat.format(ob.getFromDate());
+					}
+
 					if (ob.getMaxVotedRecoId() != null) {
 						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
 						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
@@ -280,45 +294,83 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 							? om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
 							})
 							: null;
+
+					if (facts != null && !facts.isEmpty()) {
+
+						for (FactValuePair fact : facts) {
+
+							checkListAnnotation.put(fact.getName(),
+									checkListAnnotation.containsKey(fact.getName())
+											? checkListAnnotation.get(fact.getName()) + "," + fact.getValue()
+											: fact.getValue());
+
+						}
+
+					}
+					if (cfDataList != null && !cfDataList.isEmpty()) {
+						for (CustomFieldObservationData item : cfDataList) {
+							for (CustomFieldData cf : item.getCustomField()) {
+								if (cf.getCustomFieldValues() != null) {
+									if (cf.getFieldType().equalsIgnoreCase("FIELD TEXT")) {
+										checkListAnnotation.put(cf.getCfName(),
+												cf.getCustomFieldValues().getFieldTextData());
+									} else if (cf.getFieldType().equalsIgnoreCase("SINGLE CATEGORICAL")) {
+										checkListAnnotation.put(cf.getCfName(),
+												cf.getCustomFieldValues().getSingleCategoricalData().getValues());
+									} else if (cf.getFieldType().equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+										List<String> customFieldValue = cf.getCustomFieldValues()
+												.getMultipleCategoricalData().stream().map((cVal) -> cVal.getValues())
+												.collect(Collectors.toList());
+										checkListAnnotation.put(cf.getCfName(),
+												(customFieldValue.isEmpty() || customFieldValue == null) ? ""
+														: String.join(",", customFieldValue));
+									}
+
+								}
+
+							}
+						}
+
+					}
+
+					ObservationDataTableShow data = new ObservationDataTableShow();
+					data.setId(ob.getId());
+					data.setChecklistAnnotation(checkListAnnotation);
+					if (dataTable.getFieldMapping() != null) {
+						String[] fieldMapping = dataTable.getFieldMapping().split(",");
+						for (String field : fieldMapping) {
+							if (field.contains(DataTableMappingField.SGROUP.getValue())) {
+								data.setsGroup(ob.getGroupId());
+							} else if (field.contains(DataTableMappingField.SCIENTIFICNAME.getValue())) {
+								data.setScientificName(scientificName);
+							} else if (field.contains(DataTableMappingField.COMMONNAME.getValue())) {
+								data.setCommonName(commonName);
+							} else if (field.contains(DataTableMappingField.USER.getValue())) {
+								data.setUserInfo(userInfo);
+							} else if (field.contains(DataTableMappingField.FROMDATE.getValue())) {
+								data.setFromDate(fromDate);
+							} else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
+								data.setObservedAt(ob.getPlaceName());
+							} else if (field.contains(DataTableMappingField.LOCATIONSCALE.getValue())) {
+								data.setLocationScale(ob.getLocationScale());
+							} else if (field.contains(DataTableMappingField.LONGITUDE.getValue())) {
+								data.setLongitude(ob.getLongitude());
+							} else if (field.contains(DataTableMappingField.LATITUDE.getValue())) {
+								data.setLatitude(ob.getLatitude());
+							} else if (field.contains(DataTableMappingField.DATEACCURACY.getValue())) {
+								data.setDateAccuracy(ob.getDateAccuracy());
+							} else if (field.contains(DataTableMappingField.NOTES.getValue())) {
+								data.setNotes(ob.getNotes());
+							} else if (field.contains(DataTableMappingField.GEOPRIVACY.getValue())) {
+								data.setGeoPrivacy(ob.getGeoPrivacy());
+							}
+						}
+					}
+
+					showDataList.add(data);
 				} catch (Exception e) {
 					logger.error(e.getMessage());
 				}
-
-				ObservationDataTableShow data = new ObservationDataTableShow();
-				data.setId(ob.getId());
-				data.setChecklistAnnotation(checkListAnnotation);
-				if (dataTable.getFieldMapping() != null) {
-					String[] fieldMapping = dataTable.getFieldMapping().split(",");
-					for (String field : fieldMapping) {
-						if (field.contains(DataTableMappingField.SGROUP.getValue())) {
-							data.setsGroup(ob.getGroupId());
-						} else if (field.contains(DataTableMappingField.SCIENTIFICNAME.getValue())) {
-							data.setScientificName(scientificName);
-						} else if (field.contains(DataTableMappingField.COMMONNAME.getValue())) {
-							data.setCommonName(commonName);
-						} else if (field.contains(DataTableMappingField.USER.getValue())) {
-							data.setUserInfo(userInfo);
-						} else if (field.contains(DataTableMappingField.FROMDATE.getValue())) {
-							data.setFromDate(fromDate);
-						} else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
-							data.setObservedAt(ob.getPlaceName());
-						} else if (field.contains(DataTableMappingField.LOCATIONSCALE.getValue())) {
-							data.setLocationScale(ob.getLocationScale());
-						} else if (field.contains(DataTableMappingField.LONGITUDE.getValue())) {
-							data.setLongitude(ob.getLongitude());
-						} else if (field.contains(DataTableMappingField.LATITUDE.getValue())) {
-							data.setLatitude(ob.getLatitude());
-						} else if (field.contains(DataTableMappingField.DATEACCURACY.getValue())) {
-							data.setDateAccuracy(ob.getDateAccuracy());
-						} else if (field.contains(DataTableMappingField.NOTES.getValue())) {
-							data.setNotes(ob.getNotes());
-						} else if (field.contains(DataTableMappingField.GEOPRIVACY.getValue())) {
-							data.setGeoPrivacy(ob.getGeoPrivacy());
-						}
-					}
-				}
-
-				showDataList.add(data);
 
 			});
 

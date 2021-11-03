@@ -142,7 +142,11 @@ public class ObservationBulkMapperHelper {
 				if (fromDateCell != null) {
 					fromDateCell.setCellType(CellType.NUMERIC);
 					fromDate = fromDateCell.getDateCellValue();
+				} else {
+					fromDate = dataTable.getTemporalCoverageFromDate();
 				}
+			} else {
+				fromDate = dataTable.getTemporalCoverageFromDate();
 			}
 
 			Date toDate = null;
@@ -151,7 +155,11 @@ public class ObservationBulkMapperHelper {
 				if (toDateCell != null) {
 					toDateCell.setCellType(CellType.NUMERIC);
 					toDate = toDateCell.getDateCellValue();
+				} else {
+					toDate = dataTable.getTemporalCoverageToDate();
 				}
+			} else {
+				toDate = dataTable.getTemporalCoverageToDate();
 			}
 
 			String observedAt = "";
@@ -377,10 +385,13 @@ public class ObservationBulkMapperHelper {
 					String[] traitsValues = traitCell.getStringCellValue().split(",");
 
 					List<Long> traits = new ArrayList<>();
-					for (TraitsValue tv : pair.getValues()) {
-						for (String t : traitsValues) {
-							if (t.equalsIgnoreCase(tv.getValue())) {
+
+					for (String trait : traitsValues) {
+						for (TraitsValue tv : pair.getValues()) {
+							if (trait.replaceAll("\\s", "").toLowerCase()
+									.equalsIgnoreCase(tv.getValue().toLowerCase())) {
 								traits.add(tv.getId());
+								continue;
 							}
 						}
 					}
@@ -620,31 +631,28 @@ public class ObservationBulkMapperHelper {
 	@SuppressWarnings("deprecation")
 	public void createUserGroupMapping(String requestAuthHeader, Map<String, Integer> fieldMapping, Row dataRow,
 			List<UserGroupIbp> userGroupsList, String userGroup, Long observationId) {
-		String[] cellGroups ;
+		String[] cellGroups;
 		try {
-			if (fieldMapping.get("userGroups") == null&& userGroup.isEmpty())
+			if (fieldMapping.get("userGroups") == null && userGroup.isEmpty())
 				return;
-			
 
 			if (fieldMapping.get("userGroups") != null) {
 				Cell cell = dataRow.getCell(fieldMapping.get("userGroups"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				cell.setCellType(CellType.STRING);
-				cellGroups =   cell.getStringCellValue().split(",");
-			}else {
+				cellGroups = cell.getStringCellValue().split(",");
+			} else {
 				cellGroups = userGroup.split(",");
 			}
-		
-			List<Long> accpectedList= userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
-			.collect(Collectors.toList());
 
-			List<Long> userGroupIds = Arrays.asList(cellGroups).stream()
-					.map(s -> Long.parseLong(s.trim()))
-					.filter(s -> accpectedList.contains(s))
+			List<Long> accpectedList = userGroupsList.stream().map(s -> Long.parseLong(s.getId().toString()))
 					.collect(Collectors.toList());
+
+			List<Long> userGroupIds = Arrays.asList(cellGroups).stream().map(s -> Long.parseLong(s.trim()))
+					.filter(s -> accpectedList.contains(s)).collect(Collectors.toList());
 
 			if (userGroupIds.isEmpty())
 				return;
-			
+
 			UserGroupMappingCreateData userGroupMappingCreateData = new UserGroupMappingCreateData();
 			userGroupMappingCreateData.setUserGroups(userGroupIds);
 			userGroupMappingCreateData.setMailData(null);
