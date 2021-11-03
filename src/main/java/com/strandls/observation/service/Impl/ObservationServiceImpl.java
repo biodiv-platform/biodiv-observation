@@ -922,10 +922,10 @@ public class ObservationServiceImpl implements ObservationService {
 		observation.setIsDeleted(true);
 		observation = observationDao.update(observation);
 		if  (Boolean.TRUE.equals(observation.getIsDeleted())) {
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
-					"observation", observationId, "Observation Deleted", mailData);
 			esService.delete(ObservationIndex.INDEX.getValue(),
 					ObservationIndex.TYPE.getValue(), observationId.toString());
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
+					"observation", observationId, "Observation Deleted", mailData);
 			return true;
 		}
 
