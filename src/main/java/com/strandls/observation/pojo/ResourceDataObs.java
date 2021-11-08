@@ -20,6 +20,7 @@ public class ResourceDataObs {
 	private Long licenseId;
 	private String context;
 	private Long languageId;
+	private String contributor;
 
 	/**
 	 * 
@@ -37,10 +38,10 @@ public class ResourceDataObs {
 	 * @param licenseId
 	 * @param context
 	 * @param languageId
+	 * @param contributor
 	 */
-
 	public ResourceDataObs(String path, String url, String type, String caption, Integer rating, Long licenseId,
-			String context, Long languageId) {
+			String context, Long languageId, String contributor) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -50,6 +51,7 @@ public class ResourceDataObs {
 		this.licenseId = licenseId;
 		this.context = context;
 		this.languageId = languageId;
+		this.contributor = contributor;
 	}
 
 	public String getPath() {
@@ -116,11 +118,19 @@ public class ResourceDataObs {
 		this.languageId = languageId;
 	}
 
+	public String getContributor() {
+		return contributor;
+	}
+
+	public void setContributor(String contributor) {
+		this.contributor = contributor;
+	}
+
 	@Override
 	public String toString() {
-		return "ObservationResourceData [path=" + path + ", url=" + url + ", type=" + type + ", caption=" + caption
+		return "ResourceDataObs [path=" + path + ", url=" + url + ", type=" + type + ", caption=" + caption
 				+ ", rating=" + rating + ", licenseId=" + licenseId + ", context=" + context + ", languageId="
-				+ languageId + "]";
+				+ languageId + ", contributor=" + contributor + "]";
 	}
 
 }

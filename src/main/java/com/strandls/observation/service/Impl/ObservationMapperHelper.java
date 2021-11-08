@@ -497,6 +497,7 @@ public class ObservationMapperHelper {
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
+				resource.setContributor(resourceData.getContributor());
 
 				resources.add(resource);
 			}
@@ -552,7 +553,7 @@ public class ObservationMapperHelper {
 			Resource resource = resourceUser.getResource();
 			editResource.add(new ResourceDataObs(resource.getFileName(), resource.getUrl(), resource.getType(),
 					resource.getDescription(), resource.getRating(), resource.getLicenseId(), resource.getContext(),
-					resource.getLanguageId()));
+					resource.getLanguageId(), resource.getContributor()));
 
 		}
 		return editResource;
