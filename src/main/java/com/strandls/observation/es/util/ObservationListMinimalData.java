@@ -21,6 +21,8 @@ public class ObservationListMinimalData {
 	private String thumbnail;
 	private RecoIbp recoIbp;
 	private UserIbp user;
+	private Double latitude;
+	private Double longitude;
 
 	@JsonProperty("observation_id")
 	private void unpackName(Long observation_id) {
@@ -35,6 +37,12 @@ public class ObservationListMinimalData {
 	@JsonProperty(value = "group_name")
 	private void unpacksGroup(String group_name) {
 		speciesGroup = group_name;
+	}
+
+	@JsonProperty(value = "location")
+	private void unpackLocation(Location location) {
+		latitude = location.getLat();
+		longitude = location.getLon();
 	}
 
 	@JsonProperty(value = "repr_image_url")
@@ -106,9 +114,11 @@ public class ObservationListMinimalData {
 	 * @param thumbnail
 	 * @param recoIbp
 	 * @param user
+	 * @param latitude
+	 * @param longitude
 	 */
 	public ObservationListMinimalData(Long observationId, Long speciesGroupId, String speciesGroup, String thumbnail,
-			RecoIbp recoIbp, UserIbp user) {
+			RecoIbp recoIbp, UserIbp user, Double latitude, Double longitude) {
 		super();
 		this.observationId = observationId;
 		this.speciesGroupId = speciesGroupId;
@@ -116,6 +126,8 @@ public class ObservationListMinimalData {
 		this.thumbnail = thumbnail;
 		this.recoIbp = recoIbp;
 		this.user = user;
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 
 	public Long getObservationId() {
@@ -164,6 +176,22 @@ public class ObservationListMinimalData {
 
 	public void setUser(UserIbp user) {
 		this.user = user;
+	}
+
+	public Double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
+
+	public Double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
 	}
 
 }
