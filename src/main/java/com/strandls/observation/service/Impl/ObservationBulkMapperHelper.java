@@ -276,7 +276,6 @@ public class ObservationBulkMapperHelper {
 
 			observation.setAuthorId(userId);
 			observation.setIsShowable(true);
-			observation.setVersion(0L);
 			observation.setCreatedOn(new Date());
 			observation.setGroupId(speciesGroup != null ? speciesGroup.getId() : 830);
 			observation.setLatitude(latitude);
@@ -310,19 +309,7 @@ public class ObservationBulkMapperHelper {
 			observation.setIsChecklist(false);// false for nrml case only used in DATATABLE
 			observation.setSourceId(null);// observation id in nrml case, used only in GBIF
 			observation.setChecklistAnnotations(checklistString);// from data set
-			observation.setAccessRights(null);// null for nrml case only used in GBIF
-			observation.setCatalogNumber(null);// null for nrml case only used in GBIF
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
-			observation.setExternalDatasetKey(null);// null for nrml case only used in GBIF
-			observation.setExternalId(null);// null for nrml case only used in GBIF
-			observation.setExternalUrl(null);// null for nrml case only used in GBIF
-			observation.setInformationWithheld(null);// null for nrml case only used in GBIF
-			observation.setLastCrawled(null);// null for nrml case only used in GBIF
-			observation.setLastInterpreted(null);// null for nrml case only used in GBIF
-			observation.setOriginalAuthor(null);// null for nrml case only used in GBIF
-			observation.setPublishingCountry(null);// from IP address
-			observation.setViaCode(null);// null for nrml case only used in GBIF
-			observation.setViaId(null);// null for nrml case only used in GBIF
 			observation.setIsVerified(isVerified);
 			observation = observationDAO.save(observation);
 			if (observation != null) {
@@ -459,17 +446,6 @@ public class ObservationBulkMapperHelper {
 				}
 			}
 
-			String comment;
-			if (fieldMapping.get("comment") != null) {
-				Cell commentCell = dataRow.getCell(fieldMapping.get("comment"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
-				if (commentCell != null) {
-					commentCell.setCellType(CellType.STRING);
-					comment = commentCell.getStringCellValue();
-
-					recoData.setRecoComment(comment);
-				}
-			}
-
 			recoCreate = observationMapperHelper.createRecoMapping(recoData);
 		} catch (Exception ex) {
 
@@ -571,7 +547,6 @@ public class ObservationBulkMapperHelper {
 			for (Map.Entry<String, Object> resourceData : fileResponse.entrySet()) {
 				Map<String, String> values = (Map<String, String>) resourceData.getValue();
 				Resource resource = new Resource();
-				resource.setVersion(0L);
 				resource.setDescription(null);
 
 				resource.setMimeType(null);
@@ -588,9 +563,6 @@ public class ObservationBulkMapperHelper {
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
 				resource.setLanguageId(defaultLanguageId);
-				resource.setAccessRights(null);
-				resource.setAnnotations(null);
-				resource.setGbifId(null);
 
 				License license;
 				if (fieldMapping.get("license") != null) {

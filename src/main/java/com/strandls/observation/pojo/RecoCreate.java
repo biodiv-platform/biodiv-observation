@@ -3,14 +3,15 @@
  */
 package com.strandls.observation.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RecoCreate {
 
-	private String confidence;
-	private String recoComment;
 	private Long commonNameId;
 	private String commonName;
 	private Long scientificNameId;
@@ -26,41 +27,22 @@ public class RecoCreate {
 	}
 
 	/**
-	 * @param confidence
-	 * @param recoComment
 	 * @param commonNameId
 	 * @param commonName
 	 * @param scientificNameId
+	 * @param taxonId
 	 * @param scientificName
 	 * @param flag
 	 */
-	public RecoCreate(String confidence, String recoComment, Long commonNameId, String commonName,
-			Long scientificNameId, String scientificName, Long taxonId,Boolean flag) {
+	public RecoCreate(Long commonNameId, String commonName, Long scientificNameId, Long taxonId, String scientificName,
+			Boolean flag) {
 		super();
-		this.confidence = confidence;
-		this.recoComment = recoComment;
 		this.commonNameId = commonNameId;
 		this.commonName = commonName;
 		this.scientificNameId = scientificNameId;
-		this.scientificName = scientificName;
 		this.taxonId = taxonId;
+		this.scientificName = scientificName;
 		this.flag = flag;
-	}
-
-	public String getConfidence() {
-		return confidence;
-	}
-
-	public void setConfidence(String confidence) {
-		this.confidence = confidence;
-	}
-
-	public String getRecoComment() {
-		return recoComment;
-	}
-
-	public void setRecoComment(String recoComment) {
-		this.recoComment = recoComment;
 	}
 
 	public Long getCommonNameId() {
@@ -110,6 +92,5 @@ public class RecoCreate {
 	public void setTaxonId(Long taxonId) {
 		this.taxonId = taxonId;
 	}
-	
 
 }

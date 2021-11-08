@@ -30,7 +30,6 @@ public class Observation implements Serializable {
 	 */
 	private static final long serialVersionUID = 8040652447273785394L;
 	private Long id;
-	private Long version;
 	private Long authorId;
 	private Date createdOn;
 	private Long groupId;
@@ -43,12 +42,10 @@ public class Observation implements Serializable {
 	private String reverseGeocodedName;
 	private Integer flagCount;
 	private Boolean geoPrivacy;
-	private Long habitatId;
 	private Boolean isDeleted;
 	private Date lastRevised;
 	private String locationAccuracy;
 	private Long visitCount;
-	private String searchText;
 	private Long maxVotedRecoId;
 	private Boolean agreeTerms;
 	private Boolean isChecklist;
@@ -62,20 +59,8 @@ public class Observation implements Serializable {
 	private Long licenseId;
 	private Long languageId;
 	private String locationScale;
-	private String accessRights;
-	private String catalogNumber;
 	private Long datasetId;
-	private String externalDatasetKey;
-	private String externalId;
-	private String externalUrl;
-	private String informationWithheld;
-	private Date lastCrawled;
-	private Date lastInterpreted;
-	private String originalAuthor;
-	private String publishingCountry;
 	private Long reprImageId;
-	private String viaCode;
-	private String viaId;
 	private String protocol;
 	private String basisOfRecord;
 	private Integer noOfImages;
@@ -95,15 +80,6 @@ public class Observation implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	@Column(name = "version", nullable = false)
-	public Long getVersion() {
-		return this.version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
 	}
 
 	@Column(name = "author_id", nullable = false)
@@ -151,7 +127,7 @@ public class Observation implements Serializable {
 		this.longitude = longitude;
 	}
 
-	@Column(name = "notes",columnDefinition="TEXT")
+	@Column(name = "notes", columnDefinition = "TEXT")
 	public String getNotes() {
 		return this.notes;
 	}
@@ -214,15 +190,6 @@ public class Observation implements Serializable {
 		this.geoPrivacy = geoPrivacy;
 	}
 
-	@Column(name = "habitat_id")
-	public Long getHabitatId() {
-		return this.habitatId;
-	}
-
-	public void setHabitatId(Long habitatId) {
-		this.habitatId = habitatId;
-	}
-
 	@Column(name = "is_deleted")
 	public Boolean getIsDeleted() {
 		return this.isDeleted;
@@ -257,15 +224,6 @@ public class Observation implements Serializable {
 
 	public void setVisitCount(Long visitCount) {
 		this.visitCount = visitCount;
-	}
-
-	@Column(name = "search_text")
-	public String getSearchText() {
-		return this.searchText;
-	}
-
-	public void setSearchText(String searchText) {
-		this.searchText = searchText;
 	}
 
 	@Column(name = "max_voted_reco_id")
@@ -333,7 +291,7 @@ public class Observation implements Serializable {
 		this.topology = topology;
 	}
 
-	@Column(name = "checklist_annotations",columnDefinition="TEXT")
+	@Column(name = "checklist_annotations", columnDefinition = "TEXT")
 	public String getChecklistAnnotations() {
 		return this.checklistAnnotations;
 	}
@@ -387,24 +345,6 @@ public class Observation implements Serializable {
 		this.locationScale = locationScale;
 	}
 
-	@Column(name = "access_rights")
-	public String getAccessRights() {
-		return this.accessRights;
-	}
-
-	public void setAccessRights(String accessRights) {
-		this.accessRights = accessRights;
-	}
-
-	@Column(name = "catalog_number")
-	public String getCatalogNumber() {
-		return this.catalogNumber;
-	}
-
-	public void setCatalogNumber(String catalogNumber) {
-		this.catalogNumber = catalogNumber;
-	}
-
 	@Column(name = "dataset_id")
 	public Long getDatasetId() {
 		return this.datasetId;
@@ -414,78 +354,6 @@ public class Observation implements Serializable {
 		this.datasetId = datasetId;
 	}
 
-	@Column(name = "external_dataset_key")
-	public String getExternalDatasetKey() {
-		return this.externalDatasetKey;
-	}
-
-	public void setExternalDatasetKey(String externalDatasetKey) {
-		this.externalDatasetKey = externalDatasetKey;
-	}
-
-	@Column(name = "external_id")
-	public String getExternalId() {
-		return this.externalId;
-	}
-
-	public void setExternalId(String externalId) {
-		this.externalId = externalId;
-	}
-
-	@Column(name = "external_url")
-	public String getExternalUrl() {
-		return this.externalUrl;
-	}
-
-	public void setExternalUrl(String externalUrl) {
-		this.externalUrl = externalUrl;
-	}
-
-	@Column(name = "information_withheld")
-	public String getInformationWithheld() {
-		return this.informationWithheld;
-	}
-
-	public void setInformationWithheld(String informationWithheld) {
-		this.informationWithheld = informationWithheld;
-	}
-
-	@Column(name = "last_crawled", length = 29)
-	public Date getLastCrawled() {
-		return this.lastCrawled;
-	}
-
-	public void setLastCrawled(Date lastCrawled) {
-		this.lastCrawled = lastCrawled;
-	}
-
-	@Column(name = "last_interpreted", length = 29)
-	public Date getLastInterpreted() {
-		return this.lastInterpreted;
-	}
-
-	public void setLastInterpreted(Date lastInterpreted) {
-		this.lastInterpreted = lastInterpreted;
-	}
-
-	@Column(name = "original_author")
-	public String getOriginalAuthor() {
-		return this.originalAuthor;
-	}
-
-	public void setOriginalAuthor(String originalAuthor) {
-		this.originalAuthor = originalAuthor;
-	}
-
-	@Column(name = "publishing_country")
-	public String getPublishingCountry() {
-		return this.publishingCountry;
-	}
-
-	public void setPublishingCountry(String publishingCountry) {
-		this.publishingCountry = publishingCountry;
-	}
-
 	@Column(name = "repr_image_id")
 	public Long getReprImageId() {
 		return this.reprImageId;
@@ -493,24 +361,6 @@ public class Observation implements Serializable {
 
 	public void setReprImageId(Long reprImageId) {
 		this.reprImageId = reprImageId;
-	}
-
-	@Column(name = "via_code")
-	public String getViaCode() {
-		return this.viaCode;
-	}
-
-	public void setViaCode(String viaCode) {
-		this.viaCode = viaCode;
-	}
-
-	@Column(name = "via_id")
-	public String getViaId() {
-		return this.viaId;
-	}
-
-	public void setViaId(String viaId) {
-		this.viaId = viaId;
 	}
 
 	@Column(name = "protocol", nullable = false)
@@ -585,7 +435,7 @@ public class Observation implements Serializable {
 		this.dateAccuracy = dateAccuracy;
 	}
 
-	@Column(name = "is_verified",columnDefinition = "boolean default false")
+	@Column(name = "is_verified", columnDefinition = "boolean default false")
 	public Boolean getIsVerified() {
 		return isVerified;
 	}

@@ -12,12 +12,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  */
 @Entity
 @Table(name = "recommendation_vote")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RecommendationVote implements Serializable {
 
 	/**
@@ -26,18 +29,13 @@ public class RecommendationVote implements Serializable {
 	private static final long serialVersionUID = -7166935130639476076L;
 
 	private Long id;
-	private Long version;
 	private Long authorId;
-	private String confidence;
 	private Long observationId;
 	private Long recommendationId;
-	private Integer userWeight;
 	private Date votedOn;
-	private String comment;
 	private Long commonNameRecoId;
 	private String givenCommonName;
 	private String givenSciName;
-	private String originalAuthor;
 	private Boolean flag;
 
 	/**
@@ -49,37 +47,26 @@ public class RecommendationVote implements Serializable {
 
 	/**
 	 * @param id
-	 * @param version
 	 * @param authorId
-	 * @param confidence
 	 * @param observationId
 	 * @param recommendationId
-	 * @param userWeight
 	 * @param votedOn
-	 * @param comment
 	 * @param commonNameRecoId
 	 * @param givenCommonName
 	 * @param givenSciName
-	 * @param originalAuthor
 	 * @param flag
 	 */
-	public RecommendationVote(Long id, Long version, Long authorId, String confidence, Long observationId,
-			Long recommendationId, Integer userWeight, Date votedOn, String comment, Long commonNameRecoId,
-			String givenCommonName, String givenSciName, String originalAuthor, Boolean flag) {
+	public RecommendationVote(Long id, Long authorId, Long observationId, Long recommendationId, Date votedOn,
+			Long commonNameRecoId, String givenCommonName, String givenSciName, Boolean flag) {
 		super();
 		this.id = id;
-		this.version = version;
 		this.authorId = authorId;
-		this.confidence = confidence;
 		this.observationId = observationId;
 		this.recommendationId = recommendationId;
-		this.userWeight = userWeight;
 		this.votedOn = votedOn;
-		this.comment = comment;
 		this.commonNameRecoId = commonNameRecoId;
 		this.givenCommonName = givenCommonName;
 		this.givenSciName = givenSciName;
-		this.originalAuthor = originalAuthor;
 		this.flag = flag;
 	}
 
@@ -94,15 +81,6 @@ public class RecommendationVote implements Serializable {
 		this.id = id;
 	}
 
-	@Column(name = "version")
-	public Long getVersion() {
-		return version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
-	}
-
 	@Column(name = "author_id")
 	public Long getAuthorId() {
 		return authorId;
@@ -110,15 +88,6 @@ public class RecommendationVote implements Serializable {
 
 	public void setAuthorId(Long authorId) {
 		this.authorId = authorId;
-	}
-
-	@Column(name = "confidence")
-	public String getConfidence() {
-		return confidence;
-	}
-
-	public void setConfidence(String confidence) {
-		this.confidence = confidence;
 	}
 
 	@Column(name = "observation_id")
@@ -139,15 +108,6 @@ public class RecommendationVote implements Serializable {
 		this.recommendationId = recommendationId;
 	}
 
-	@Column(name = "user_weight")
-	public Integer getUserWeight() {
-		return userWeight;
-	}
-
-	public void setUserWeight(Integer userWeight) {
-		this.userWeight = userWeight;
-	}
-
 	@Column(name = "voted_on")
 	public Date getVotedOn() {
 		return votedOn;
@@ -155,15 +115,6 @@ public class RecommendationVote implements Serializable {
 
 	public void setVotedOn(Date votedOn) {
 		this.votedOn = votedOn;
-	}
-
-	@Column(name = "comment")
-	public String getComment() {
-		return comment;
-	}
-
-	public void setComment(String comment) {
-		this.comment = comment;
 	}
 
 	@Column(name = "common_name_reco_id")
@@ -191,15 +142,6 @@ public class RecommendationVote implements Serializable {
 
 	public void setGivenSciName(String givenSciName) {
 		this.givenSciName = givenSciName;
-	}
-
-	@Column(name = "original_author")
-	public String getOriginalAuthor() {
-		return originalAuthor;
-	}
-
-	public void setOriginalAuthor(String originalAuthor) {
-		this.originalAuthor = originalAuthor;
 	}
 
 	@Column(name = "flag")

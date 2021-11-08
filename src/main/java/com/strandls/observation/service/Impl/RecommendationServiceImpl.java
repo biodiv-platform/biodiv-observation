@@ -217,14 +217,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		RecommendationVote recoVote = null;
 		if (recoCreate.getScientificNameId() != null) {
-			recoVote = new RecommendationVote(null, 0L, userId, recoCreate.getConfidence(), observationId,
-					recoCreate.getScientificNameId(), 0, new Date(), recoCreate.getRecoComment(),
-					recoCreate.getCommonNameId(), recoCreate.getCommonName(), recoCreate.getScientificName(), null,
+			recoVote = new RecommendationVote(null, userId, observationId, recoCreate.getScientificNameId(), new Date(),
+					recoCreate.getCommonNameId(), recoCreate.getCommonName(), recoCreate.getScientificName(),
 					recoCreate.getFlag());
 		} else {
-			recoVote = new RecommendationVote(null, 0L, userId, recoCreate.getConfidence(), observationId,
-					recoCreate.getCommonNameId(), 0, new Date(), recoCreate.getRecoComment(),
-					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, null, recoCreate.getFlag());
+			recoVote = new RecommendationVote(null, userId, observationId, recoCreate.getCommonNameId(), new Date(),
+					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, recoCreate.getFlag());
 		}
 		recoVote = recoVoteDao.save(recoVote);
 		Long maxRecoVote = maxRecoVote(observationId);

@@ -15,8 +15,6 @@ public class RecoData {
 	private String taxonCommonName;
 	private Long scientificNameTaxonId;
 	private String taxonScientificName;
-	private String recoComment;
-	private String confidence;
 	private Long languageId;
 
 	/**
@@ -30,18 +28,13 @@ public class RecoData {
 	 * @param taxonCommonName
 	 * @param scientificNameTaxonId
 	 * @param taxonScientificName
-	 * @param recoComment
-	 * @param confidence
 	 * @param languageId
 	 */
-	public RecoData(String taxonCommonName, Long scientificNameTaxonId, String taxonScientificName, String recoComment,
-			String confidence, Long languageId) {
+	public RecoData(String taxonCommonName, Long scientificNameTaxonId, String taxonScientificName, Long languageId) {
 		super();
 		this.taxonCommonName = taxonCommonName;
 		this.scientificNameTaxonId = scientificNameTaxonId;
 		this.taxonScientificName = taxonScientificName;
-		this.recoComment = recoComment;
-		this.confidence = confidence;
 		this.languageId = languageId;
 	}
 
@@ -67,22 +60,6 @@ public class RecoData {
 
 	public void setTaxonScientificName(String taxonScientificName) {
 		this.taxonScientificName = taxonScientificName;
-	}
-
-	public String getRecoComment() {
-		return recoComment;
-	}
-
-	public void setRecoComment(String recoComment) {
-		this.recoComment = recoComment;
-	}
-
-	public String getConfidence() {
-		return confidence;
-	}
-
-	public void setConfidence(String confidence) {
-		this.confidence = confidence;
 	}
 
 	public Long getLanguageId() {
