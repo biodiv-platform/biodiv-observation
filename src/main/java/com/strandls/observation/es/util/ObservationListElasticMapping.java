@@ -210,7 +210,7 @@ public class ObservationListElasticMapping {
 		organismRemarks = notes;
 	}
 	
-	@JsonProperty(value = "checklist_annotations")
+	@JsonProperty(value = "checklist_annotation")
 	private void unpackChecklist(String notes) {
 		annotations = notes;
 	}
