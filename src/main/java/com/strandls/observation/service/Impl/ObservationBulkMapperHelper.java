@@ -136,7 +136,11 @@ public class ObservationBulkMapperHelper {
 			}
 
 			Date fromDate = null;
-			if (fieldMapping.get("fromDate") != null) {
+			Date toDate = null;
+
+//          both date fields are mapped
+			if (fieldMapping.get("fromDate") != null && fieldMapping.get("toDate") != null) {
+
 				Cell fromDateCell = dataRow.getCell(fieldMapping.get("fromDate"),
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (fromDateCell != null) {
@@ -145,12 +149,7 @@ public class ObservationBulkMapperHelper {
 				} else {
 					fromDate = dataTable.getTemporalCoverageFromDate();
 				}
-			} else {
-				fromDate = dataTable.getTemporalCoverageFromDate();
-			}
 
-			Date toDate = null;
-			if (fieldMapping.get("toDate") != null) {
 				Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (toDateCell != null) {
 					toDateCell.setCellType(CellType.NUMERIC);
@@ -158,7 +157,43 @@ public class ObservationBulkMapperHelper {
 				} else {
 					toDate = dataTable.getTemporalCoverageToDate();
 				}
+
+				if (fromDate != null && toDate == null) {
+					toDate = fromDate;
+				} else if (fromDate == null && toDate != null
+						|| ((fromDate != null && toDate != null && fromDate.compareTo(toDate) >= 0))) {
+					fromDate = toDate;
+				}
+
+				// toDate is mapped and not fromDate
+			} else if (fieldMapping.get("fromDate") == null && fieldMapping.get("toDate") != null) {
+
+				Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (toDateCell != null) {
+					toDateCell.setCellType(CellType.NUMERIC);
+					toDate = toDateCell.getDateCellValue();
+				} else {
+					toDate = dataTable.getTemporalCoverageToDate();
+				}
+
+				fromDate = toDate;
+
+//				fromDate is mapped and not toDate
+			} else if (fieldMapping.get("fromDate") != null && fieldMapping.get("toDate") == null) {
+
+				Cell fromDateCell = dataRow.getCell(fieldMapping.get("fromDate"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (fromDateCell != null) {
+					fromDateCell.setCellType(CellType.NUMERIC);
+					fromDate = fromDateCell.getDateCellValue();
+				} else {
+					fromDate = dataTable.getTemporalCoverageFromDate();
+				}
+
+				toDate = fromDate;
+//          when both date field are not mapped
 			} else {
+				fromDate = dataTable.getTemporalCoverageFromDate();
 				toDate = dataTable.getTemporalCoverageToDate();
 			}
 

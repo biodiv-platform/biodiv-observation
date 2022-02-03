@@ -276,11 +276,18 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					String commonName = null;
 					String scientificName = null;
 					String fromDate = null;
+					String toDate = null;
 					if (ob.getFromDate() != null) {
 						SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 						fromDate = dateFormat.format(ob.getFromDate());
 					}
 
+					if (ob.getToDate() != null) {
+						SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+						toDate = dateFormat.format(ob.getToDate());
+					}
+
+					
 					if (ob.getMaxVotedRecoId() != null) {
 						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
 						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
@@ -349,7 +356,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 								data.setUserInfo(userInfo);
 							} else if (field.contains(DataTableMappingField.FROMDATE.getValue())) {
 								data.setFromDate(fromDate);
-							} else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
+							} 	else if (field.contains(DataTableMappingField.TODATE.getValue())) {
+								data.setToDate(toDate);
+							} 
+							else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
 								data.setObservedAt(ob.getPlaceName());
 							} else if (field.contains(DataTableMappingField.LOCATIONSCALE.getValue())) {
 								data.setLocationScale(ob.getLocationScale());

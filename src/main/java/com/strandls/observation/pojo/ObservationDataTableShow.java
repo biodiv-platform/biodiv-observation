@@ -15,6 +15,8 @@ public class ObservationDataTableShow {
 	private Long sGroup;
 
 	private String fromDate;
+	
+	private String toDate;
 
 	private String observedAt;
 
@@ -148,6 +150,14 @@ public class ObservationDataTableShow {
 
 	public void setUserInfo(UserIbp userInfo) {
 		this.userInfo = userInfo;
+	}
+
+	public String getToDate() {
+		return toDate;
+	}
+
+	public void setToDate(String toDate) {
+		this.toDate = toDate;
 	}
 
 
