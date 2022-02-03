@@ -158,11 +158,14 @@ public class ObservationBulkMapperHelper {
 					toDate = dataTable.getTemporalCoverageToDate();
 				}
 
-				if (fromDate.compareTo(toDate) >= 0) {
+				if (fromDate != null && toDate == null) {
 					toDate = fromDate;
+				} else if (fromDate == null && toDate != null
+						|| ((fromDate != null && toDate != null && fromDate.compareTo(toDate) >= 0))) {
+					fromDate = toDate;
 				}
 
-				// toDate is mapped and not fromDate 
+				// toDate is mapped and not fromDate
 			} else if (fieldMapping.get("fromDate") == null && fieldMapping.get("toDate") != null) {
 
 				Cell toDateCell = dataRow.getCell(fieldMapping.get("toDate"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
