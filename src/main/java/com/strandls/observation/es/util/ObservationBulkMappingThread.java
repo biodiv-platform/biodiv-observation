@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +16,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
@@ -44,17 +48,17 @@ public class ObservationBulkMappingThread implements Runnable {
 	private ObservationMapperHelper observationMapperHelper;
 	private ObservationDAO observationDao;
 	private ObjectMapper objectMapper;
+	private final HttpServletRequest request;
+	private final Headers headers;
+	private final String requestAuthHeader;
 
-	public ObservationBulkMappingThread() {
-		super();
-	}
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, List<Long> bulkObservationIds,
 			List<Long> bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
-			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao) {
+			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,HttpServletRequest request, Headers headers) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -72,6 +76,9 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.esService = esService;
 		this.observationMapperHelper = observationMapperHelper;
 		this.observationDao = observationDao;
+		this.request = request;
+		this.headers = headers;
+		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 	}
 
 	@Override
@@ -114,11 +121,69 @@ public class ObservationBulkMappingThread implements Runnable {
 
 		}
 
-		if (!list.isEmpty()) {
-			UGBulkMappingThread ne = new UGBulkMappingThread();
-			Thread thread = new Thread(ne);
-			thread.start();
+		if (!list.isEmpty() && bulkAction.isEmpty()
+				&& (bulkAction.contains("ugBulkPosting") || bulkAction.contains("ugBulkUnPosting"))) {
 
+			List<UserGroupObvFilterData> ugObsList = new ArrayList<UserGroupObvFilterData>();
+			;
+			Integer count = 0;
+
+			while (count < list.size()) {
+				ugObsList.add(list.get(count));
+
+				if (ugObsList.size() >= 200) {
+
+					BulkGroupPostingData ugBulkPostingData = bulkAction.contains("ugBulkPosting")
+							? new BulkGroupPostingData()
+							: null;
+					BulkGroupUnPostingData ugBulkUnPostingData = bulkAction.contains("ugBulkUnPosting")
+							? new BulkGroupUnPostingData()
+							: null;
+					if (ugBulkPostingData != null) {
+						ugBulkPostingData.setRecordType("observation");
+						ugBulkPostingData.setUgObvFilterDataList(ugObsList);
+						ugBulkPostingData.setUserGroupList(bulkUsergroupIds);
+					} else if (ugBulkUnPostingData != null) {
+						ugBulkUnPostingData.setRecordType("observation");
+						ugBulkUnPostingData.setUgFilterDataList(ugObsList);
+						ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
+					}
+					ugService = headers.addUserGroupHeader(ugService,requestAuthHeader);
+					UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
+							ugBulkUnPostingData);
+					Thread thread = new Thread(ugThread);
+					thread.start();
+					ugObsList.clear();
+				}
+
+				count++;
+			}
+
+			if (!ugObsList.isEmpty()) {
+				BulkGroupPostingData ugBulkPostingData = bulkAction.contains("ugBulkPosting")
+						? new BulkGroupPostingData()
+						: null;
+				BulkGroupUnPostingData ugBulkUnPostingData = bulkAction.contains("ugBulkUnPosting")
+						? new BulkGroupUnPostingData()
+						: null;
+				if (ugBulkPostingData != null) {
+					ugBulkPostingData.setRecordType("observation");
+					ugBulkPostingData.setUgObvFilterDataList(ugObsList);
+					ugBulkPostingData.setUserGroupList(bulkUsergroupIds);
+				} else if (ugBulkUnPostingData != null) {
+					ugBulkUnPostingData.setRecordType("observation");
+					ugBulkUnPostingData.setUgFilterDataList(ugObsList);
+					ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
+				}
+				
+				ugService = headers.addUserGroupHeader(ugService,requestAuthHeader);
+				UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
+						ugBulkUnPostingData);
+				Thread thread = new Thread(ugThread);
+				thread.start();
+				ugObsList.clear();
+
+			}
 		}
 
 	}

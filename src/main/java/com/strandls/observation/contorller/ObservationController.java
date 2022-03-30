@@ -510,7 +510,7 @@ public class ObservationController {
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao);
+						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao, request, headers);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();

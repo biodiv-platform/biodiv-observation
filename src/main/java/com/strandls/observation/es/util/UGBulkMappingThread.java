@@ -8,9 +8,20 @@ import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
 public class UGBulkMappingThread implements Runnable {
 
 	private BulkGroupPostingData bulkPostingData;
+	
 	private UserGroupSerivceApi ugService;
 	private BulkGroupUnPostingData bulkUnPostingData;
 
+	
+	public UGBulkMappingThread(BulkGroupPostingData bulkPostingData, UserGroupSerivceApi ugService,
+			BulkGroupUnPostingData bulkUnPostingData) {
+		super();
+		this.bulkPostingData = bulkPostingData;
+		this.ugService = ugService;
+		this.bulkUnPostingData = bulkUnPostingData;
+	}
+
+	
 	@Override
 	public void run() {
 
