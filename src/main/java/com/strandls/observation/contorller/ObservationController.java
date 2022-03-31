@@ -497,9 +497,9 @@ public class ObservationController {
 
 			} else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
 					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
-					&& view.equalsIgnoreCase("bulk_mapping"))
+					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
-							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulk_mapping"))) {
+							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 
 				MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
 						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
@@ -510,7 +510,7 @@ public class ObservationController {
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao, request, headers);
+						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao, request, headers,objectMapper);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();

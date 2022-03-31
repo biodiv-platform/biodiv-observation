@@ -52,13 +52,13 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Headers headers;
 	private final String requestAuthHeader;
 
-
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, List<Long> bulkObservationIds,
 			List<Long> bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
-			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,HttpServletRequest request, Headers headers) {
+			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
+			HttpServletRequest request, Headers headers, ObjectMapper objectMapper) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -78,6 +78,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.observationDao = observationDao;
 		this.request = request;
 		this.headers = headers;
+		this.objectMapper = objectMapper;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 	}
 
@@ -86,7 +87,7 @@ public class ObservationBulkMappingThread implements Runnable {
 
 		List<UserGroupObvFilterData> list = new ArrayList<UserGroupObvFilterData>();
 
-		if (!bulkObservationIds.isEmpty() && bulkObservationIds != null && Boolean.FALSE.equals(selectAll)) {
+		if (bulkObservationIds != null &&!bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
 			List<Observation> obsDataList = observationDao.fecthByListOfIds(bulkObservationIds);
 
 			for (Observation obs : obsDataList) {
@@ -116,12 +117,13 @@ public class ObservationBulkMappingThread implements Runnable {
 				}
 
 			} catch (IOException | ApiException e) {
+				e.printStackTrace();
 				logger.error(e.getMessage());
 			}
 
 		}
 
-		if (!list.isEmpty() && bulkAction.isEmpty()
+		if (!list.isEmpty() && !bulkAction.isEmpty()
 				&& (bulkAction.contains("ugBulkPosting") || bulkAction.contains("ugBulkUnPosting"))) {
 
 			List<UserGroupObvFilterData> ugObsList = new ArrayList<UserGroupObvFilterData>();
@@ -148,9 +150,9 @@ public class ObservationBulkMappingThread implements Runnable {
 						ugBulkUnPostingData.setUgFilterDataList(ugObsList);
 						ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
 					}
-					ugService = headers.addUserGroupHeader(ugService,requestAuthHeader);
+
 					UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
-							ugBulkUnPostingData);
+							ugBulkUnPostingData, headers, requestAuthHeader);
 					Thread thread = new Thread(ugThread);
 					thread.start();
 					ugObsList.clear();
@@ -175,13 +177,11 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugBulkUnPostingData.setUgFilterDataList(ugObsList);
 					ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
 				}
-				
-				ugService = headers.addUserGroupHeader(ugService,requestAuthHeader);
+
 				UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
-						ugBulkUnPostingData);
+						ugBulkUnPostingData, headers, requestAuthHeader);
 				Thread thread = new Thread(ugThread);
 				thread.start();
-				ugObsList.clear();
 
 			}
 		}
