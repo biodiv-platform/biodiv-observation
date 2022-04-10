@@ -3,6 +3,7 @@ package com.strandls.observation.es.util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
@@ -33,8 +34,8 @@ public class ObservationBulkMappingThread implements Runnable {
 
 	private Boolean selectAll;
 	private String bulkAction;
-	private List<Long> bulkObservationIds;
-	private List<Long> bulkUsergroupIds;
+	private List<String> bulkObservationIds;
+	private List<String> bulkUsergroupIds;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -52,8 +53,8 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Headers headers;
 	private final String requestAuthHeader;
 
-	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, List<Long> bulkObservationIds,
-			List<Long> bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, List<String> bulkObservationIds,
+			List<String> bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
@@ -86,9 +87,19 @@ public class ObservationBulkMappingThread implements Runnable {
 	public void run() {
 
 		List<UserGroupObvFilterData> list = new ArrayList<UserGroupObvFilterData>();
+		List<Long> oservationIds = new ArrayList<Long>();
+		List<Long> ugIds = new ArrayList<Long>();
 
-		if (bulkObservationIds != null &&!bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
-			List<Observation> obsDataList = observationDao.fecthByListOfIds(bulkObservationIds);
+		if (bulkObservationIds != null && !bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
+			oservationIds.addAll(bulkObservationIds.stream().map(Long::valueOf).collect(Collectors.toList()));
+		}
+
+		if (bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()) {
+			ugIds.addAll(bulkUsergroupIds.stream().map(Long::valueOf).collect(Collectors.toList()));
+		}
+
+		if (!oservationIds.isEmpty()) {
+			List<Observation> obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
 			for (Observation obs : obsDataList) {
 				UserGroupObvFilterData data = observationMapperHelper.getUGFilterObvData(obs);
@@ -144,11 +155,11 @@ public class ObservationBulkMappingThread implements Runnable {
 					if (ugBulkPostingData != null) {
 						ugBulkPostingData.setRecordType("observation");
 						ugBulkPostingData.setUgObvFilterDataList(ugObsList);
-						ugBulkPostingData.setUserGroupList(bulkUsergroupIds);
+						ugBulkPostingData.setUserGroupList(ugIds);
 					} else if (ugBulkUnPostingData != null) {
 						ugBulkUnPostingData.setRecordType("observation");
 						ugBulkUnPostingData.setUgFilterDataList(ugObsList);
-						ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
+						ugBulkUnPostingData.setUserGroupList(ugIds);
 					}
 
 					UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
@@ -171,11 +182,11 @@ public class ObservationBulkMappingThread implements Runnable {
 				if (ugBulkPostingData != null) {
 					ugBulkPostingData.setRecordType("observation");
 					ugBulkPostingData.setUgObvFilterDataList(ugObsList);
-					ugBulkPostingData.setUserGroupList(bulkUsergroupIds);
+					ugBulkPostingData.setUserGroupList(ugIds);
 				} else if (ugBulkUnPostingData != null) {
 					ugBulkUnPostingData.setRecordType("observation");
 					ugBulkUnPostingData.setUgFilterDataList(ugObsList);
-					ugBulkUnPostingData.setUserGroupList(bulkUsergroupIds);
+					ugBulkUnPostingData.setUserGroupList(ugIds);
 				}
 
 				UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,

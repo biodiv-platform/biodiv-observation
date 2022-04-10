@@ -429,8 +429,8 @@ public class ObservationController {
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
-			@QueryParam("bulkUsergroupIds") List<Long> bulkUsergroupIds,
-			@QueryParam("bulkObservationIds") List<Long> bulkObservationIds,
+			@QueryParam("bulkUsergroupIds") List<String> bulkUsergroupIds,
+			@QueryParam("bulkObservationIds") List<String> bulkObservationIds,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
