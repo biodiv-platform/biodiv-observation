@@ -562,66 +562,6 @@ public class ObservationController {
 
 	}
 
-//	@GET
-//	@Path(ApiConstants.LISTCSV + "/{index}/{type}")
-//	@Consumes(MediaType.TEXT_PLAIN)
-//	@Produces(MediaType.APPLICATION_JSON)
-//
-//	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
-//	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-//	@ValidateUser
-//	public Response observationListCsv(@PathParam("index") String index, @PathParam("type") String type,
-//			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
-//			@DefaultValue("") @QueryParam("user") String user,
-//			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
-//			@DefaultValue("") @QueryParam("webaddress") String webaddress,
-//			@DefaultValue("") @QueryParam("speciesName") String speciesName,
-//			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
-//			@DefaultValue("") @QueryParam("months") String months,
-//			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
-//			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
-//			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
-//			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
-//			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
-//			@QueryParam("recoName") String recoName,
-//			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
-//			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
-//
-//			@DefaultValue("265799") @QueryParam("classification") String classificationid,
-//			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
-//			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
-//			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
-//			@QueryParam("bottom") Double bottom, 
-//			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
-//			@QueryParam("termsAggregationField") String termsAggregationField, @QueryParam("rank") String rank,
-//			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
-//			@QueryParam("state") String state, @QueryParam("tags") String tags,
-//			@QueryParam("publicationgrade") String publicationGrade,
-//			
-//			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
-//
-//		try {
-//			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-//			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
-//					.filter(entry -> entry.getKey().startsWith("trait"))
-//					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-//			Map<String, List<String>> customParams = queryParams.entrySet().stream()
-//					.filter(entry -> entry.getKey().startsWith("custom"))
-//					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-//			MapBounds bounds = null;
-//			if (top != null || bottom != null || left != null || right != null) {
-//				bounds = new MapBounds();
-//				bounds.setBottom(bottom);
-//				bounds.setLeft(left);
-//				bounds.setRight(right);
-//				bounds.setTop(top);
-//			}
-//			
-//			
-//		} catch (Exception e) {
-//			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-//		}
-//	}
 
 	@PUT
 	@Path(ApiConstants.SPECIESGROUP + "/{observationId}/{sGroupId}")

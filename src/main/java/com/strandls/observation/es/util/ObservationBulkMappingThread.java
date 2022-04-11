@@ -145,58 +145,39 @@ public class ObservationBulkMappingThread implements Runnable {
 				ugObsList.add(list.get(count));
 
 				if (ugObsList.size() >= 200) {
-
-					BulkGroupPostingData ugBulkPostingData = bulkAction.contains("ugBulkPosting")
-							? new BulkGroupPostingData()
-							: null;
-					BulkGroupUnPostingData ugBulkUnPostingData = bulkAction.contains("ugBulkUnPosting")
-							? new BulkGroupUnPostingData()
-							: null;
-					if (ugBulkPostingData != null) {
-						ugBulkPostingData.setRecordType("observation");
-						ugBulkPostingData.setUgObvFilterDataList(ugObsList);
-						ugBulkPostingData.setUserGroupList(ugIds);
-					} else if (ugBulkUnPostingData != null) {
-						ugBulkUnPostingData.setRecordType("observation");
-						ugBulkUnPostingData.setUgFilterDataList(ugObsList);
-						ugBulkUnPostingData.setUserGroupList(ugIds);
-					}
-
-					UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
-							ugBulkUnPostingData, headers, requestAuthHeader);
-					Thread thread = new Thread(ugThread);
-					thread.start();
-					ugObsList.clear();
+					bulkGroupAction(ugObsList, ugIds);
 				}
-
 				count++;
 			}
 
-			if (!ugObsList.isEmpty()) {
-				BulkGroupPostingData ugBulkPostingData = bulkAction.contains("ugBulkPosting")
-						? new BulkGroupPostingData()
-						: null;
-				BulkGroupUnPostingData ugBulkUnPostingData = bulkAction.contains("ugBulkUnPosting")
-						? new BulkGroupUnPostingData()
-						: null;
-				if (ugBulkPostingData != null) {
-					ugBulkPostingData.setRecordType("observation");
-					ugBulkPostingData.setUgObvFilterDataList(ugObsList);
-					ugBulkPostingData.setUserGroupList(ugIds);
-				} else if (ugBulkUnPostingData != null) {
-					ugBulkUnPostingData.setRecordType("observation");
-					ugBulkUnPostingData.setUgFilterDataList(ugObsList);
-					ugBulkUnPostingData.setUserGroupList(ugIds);
-				}
-
-				UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService,
-						ugBulkUnPostingData, headers, requestAuthHeader);
-				Thread thread = new Thread(ugThread);
-				thread.start();
-
-			}
+			bulkGroupAction(ugObsList, ugIds);
 		}
 
+	}
+
+	private void bulkGroupAction(List<UserGroupObvFilterData> ugObsList, List<Long> ugIds) {
+		if (!ugObsList.isEmpty()) {
+			BulkGroupPostingData ugBulkPostingData = bulkAction.contains("ugBulkPosting") ? new BulkGroupPostingData()
+					: null;
+			BulkGroupUnPostingData ugBulkUnPostingData = bulkAction.contains("ugBulkUnPosting")
+					? new BulkGroupUnPostingData()
+					: null;
+			if (ugBulkPostingData != null) {
+				ugBulkPostingData.setRecordType("observation");
+				ugBulkPostingData.setUgObvFilterDataList(ugObsList);
+				ugBulkPostingData.setUserGroupList(ugIds);
+			} else if (ugBulkUnPostingData != null) {
+				ugBulkUnPostingData.setRecordType("observation");
+				ugBulkUnPostingData.setUgFilterDataList(ugObsList);
+				ugBulkUnPostingData.setUserGroupList(ugIds);
+			}
+
+			UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService, ugBulkUnPostingData,
+					headers, requestAuthHeader);
+			Thread thread = new Thread(ugThread);
+			thread.start();
+
+		}
 	}
 
 }
