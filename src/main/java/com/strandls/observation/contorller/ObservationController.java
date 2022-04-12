@@ -429,8 +429,8 @@ public class ObservationController {
 			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
-			@QueryParam("bulkUsergroupIds") List<String> bulkUsergroupIds,
-			@QueryParam("bulkObservationIds") List<String> bulkObservationIds,
+			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkObservationIds") String bulkObservationIds,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
@@ -477,13 +477,12 @@ public class ObservationController {
 				}
 			}
 
-			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
-					webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-					traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-					tags, publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity);
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+					dataTableName, geoEntity);
 
-		
 			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
 					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
@@ -497,7 +496,7 @@ public class ObservationController {
 						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper,mapSearchQuery);
+						objectMapper, mapSearchQuery, geoShapeFilterField);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();
@@ -507,18 +506,20 @@ public class ObservationController {
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
-
+				mapSearchParams.setFrom(0);
+				mapSearchParams.setLimit(10000000);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao, request, headers,objectMapper);
+						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
+						request, headers, objectMapper);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
 				return Response.status(Status.OK).build();
 
 			} else if (view.equalsIgnoreCase("list")) {
-				
+
 				MapAggregationResponse aggregationResult = null;
 				MapAggregationStatsResponse aggregationStatsResult = null;
 
@@ -557,7 +558,6 @@ public class ObservationController {
 		}
 
 	}
-
 
 	@PUT
 	@Path(ApiConstants.SPECIESGROUP + "/{observationId}/{sGroupId}")

@@ -85,6 +85,7 @@ public class ObservationListCSVThread implements Runnable {
 	private UserServiceApi userServiceApi;
 	private ObjectMapper objectMapper;
 	private MapSearchQuery mapSearchQuery;
+	private String geoShapeFilterField;
 
 	public ObservationListCSVThread() {
 		super();
@@ -102,7 +103,7 @@ public class ObservationListCSVThread implements Runnable {
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
 			String authorId, String notes, String url, String dataSetName, String dataTableName,
 			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
-			MapSearchQuery mapSearchQuery) {
+			MapSearchQuery mapSearchQuery,String geoShapeFilterField) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -157,6 +158,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.userServiceApi = userServiceApi;
 		this.objectMapper = objectMapper;
 		this.mapSearchQuery = mapSearchQuery;
+		this.geoShapeFilterField = geoShapeFilterField;
 	}
 
 	@Override
@@ -191,7 +193,7 @@ public class ObservationListCSVThread implements Runnable {
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						searchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-						termsAggregationField);
+						termsAggregationField, geoShapeFilterField);
 
 				epochSize = epochSet.size();
 				offset = offset + max;

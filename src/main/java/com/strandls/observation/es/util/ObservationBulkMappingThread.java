@@ -2,6 +2,7 @@ package com.strandls.observation.es.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +35,8 @@ public class ObservationBulkMappingThread implements Runnable {
 
 	private Boolean selectAll;
 	private String bulkAction;
-	private List<String> bulkObservationIds;
-	private List<String> bulkUsergroupIds;
+	private String bulkObservationIds;
+	private String bulkUsergroupIds;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -53,8 +54,8 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Headers headers;
 	private final String requestAuthHeader;
 
-	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, List<String> bulkObservationIds,
-			List<String> bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
+			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
@@ -91,11 +92,11 @@ public class ObservationBulkMappingThread implements Runnable {
 		List<Long> ugIds = new ArrayList<Long>();
 
 		if (bulkObservationIds != null && !bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
-			oservationIds.addAll(bulkObservationIds.stream().map(Long::valueOf).collect(Collectors.toList()));
+			oservationIds.addAll(Arrays.stream(bulkObservationIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
 		}
 
 		if (bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()) {
-			ugIds.addAll(bulkUsergroupIds.stream().map(Long::valueOf).collect(Collectors.toList()));
+			ugIds.addAll(Arrays.stream(bulkUsergroupIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
 		}
 
 		if (!oservationIds.isEmpty()) {
