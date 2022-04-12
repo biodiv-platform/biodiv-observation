@@ -121,9 +121,9 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugFilterData.setCreatedOnDate(data.getCreatedOn());
 					ugFilterData.setLatitude(data.getLatitude());
 					ugFilterData.setLongitude(data.getLongitude());
-					ugFilterData.setObservedOnDate(data.getObservedOn());
-					ugFilterData.setAuthorId(data.getUser().getId());
-					ugFilterData.setTaxonomyId(data.getRecoIbp().getTaxonId());
+					ugFilterData.setObservedOnDate(data.getObservedOn() != null ? data.getObservedOn() : null);
+					ugFilterData.setAuthorId(data.getUser() != null ? data.getUser().getId() : null);
+					ugFilterData.setTaxonomyId(data.getRecoIbp() != null ? data.getRecoIbp().getTaxonId() : null);
 					list.add(ugFilterData);
 				}
 

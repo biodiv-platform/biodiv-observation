@@ -84,6 +84,7 @@ public class ObservationListCSVThread implements Runnable {
 	private MailService mailService;
 	private UserServiceApi userServiceApi;
 	private ObjectMapper objectMapper;
+	private MapSearchQuery mapSearchQuery;
 
 	public ObservationListCSVThread() {
 		super();
@@ -99,8 +100,9 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url,String dataSetName,String  dataTableName, MailService mailService,
-			UserServiceApi userServiceApi,ObjectMapper objectMapper) {
+			String authorId, String notes, String url, String dataSetName, String dataTableName,
+			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
+			MapSearchQuery mapSearchQuery) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -154,6 +156,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.mailService = mailService;
 		this.userServiceApi = userServiceApi;
 		this.objectMapper = objectMapper;
+		this.mapSearchQuery = mapSearchQuery;
 	}
 
 	@Override
@@ -179,19 +182,21 @@ public class ObservationListCSVThread implements Runnable {
 				mapSearchParams.setFrom(offset);
 				mapSearchParams.setLimit(max);
 
-				MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
-						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-						traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, null,
-						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade, null,dataSetName,dataTableName,null);
+				MapSearchQuery searchQuery = mapSearchQuery != null ? mapSearchQuery
+						: esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress, speciesName,
+								mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+								classificationid, mapSearchParams, maxvotedrecoid, null, createdOnMaxDate,
+								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+								publicationGrade, null, dataSetName, dataTableName, null);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
-						mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
+						searchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 						termsAggregationField);
 
 				epochSize = epochSet.size();
 				offset = offset + max;
-				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,objectMapper);
+				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
+						objectMapper);
 				logger.info(
 						"Observation List Download RequestId = " + authorId + dtf.format(now) + "@ offset = " + offset);
 			} while (epochSize >= max);

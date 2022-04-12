@@ -477,6 +477,13 @@ public class ObservationController {
 				}
 			}
 
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
+					webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+					traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
+					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
+					tags, publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity);
+
+		
 			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
 					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
@@ -490,7 +497,7 @@ public class ObservationController {
 						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper);
+						objectMapper,mapSearchQuery);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();
@@ -500,12 +507,6 @@ public class ObservationController {
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
-
-				MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
-						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity);
 
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
@@ -517,12 +518,7 @@ public class ObservationController {
 				return Response.status(Status.OK).build();
 
 			} else if (view.equalsIgnoreCase("list")) {
-				MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList,
-						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity);
-
+				
 				MapAggregationResponse aggregationResult = null;
 				MapAggregationStatsResponse aggregationStatsResult = null;
 
