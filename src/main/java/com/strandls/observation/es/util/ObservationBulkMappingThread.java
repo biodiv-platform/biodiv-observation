@@ -177,12 +177,19 @@ public class ObservationBulkMappingThread implements Runnable {
 				ugBulkUnPostingData.setUserGroupList(ugIds);
 			}
 
-			UGBulkMappingThread ugThread = new UGBulkMappingThread(ugBulkPostingData, ugService, ugBulkUnPostingData,
-					headers, requestAuthHeader);
-			Thread thread = new Thread(ugThread);
-			thread.start();
-			
-			List<Long> obsIds = ugObsList.stream().map(item->item.getObservationId()).collect(Collectors.toList());
+			ugService = headers.addUserGroupHeader(ugService, requestAuthHeader);
+			try {
+				if (ugBulkPostingData != null) {
+					ugService.bulkPostingObservationUG(ugBulkPostingData);
+				} else if (ugBulkUnPostingData != null) {
+					ugService.bulkRemovingObservation(ugBulkUnPostingData);
+				}
+
+			} catch (com.strandls.userGroup.ApiException e) {
+				e.printStackTrace();
+			}
+
+			List<Long> obsIds = ugObsList.stream().map(item -> item.getObservationId()).collect(Collectors.toList());
 			String observationList = StringUtils.join(obsIds, ',');
 			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 			Thread esThreadUpdate = new Thread(updateThread);
