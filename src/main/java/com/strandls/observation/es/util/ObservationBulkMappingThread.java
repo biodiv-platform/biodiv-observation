@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final HttpServletRequest request;
 	private final Headers headers;
 	private final String requestAuthHeader;
+	private final ESUpdate esUpdate;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -60,7 +62,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
-			HttpServletRequest request, Headers headers, ObjectMapper objectMapper) {
+			HttpServletRequest request, Headers headers, ObjectMapper objectMapper, ESUpdate esUpdate) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -82,6 +84,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.headers = headers;
 		this.objectMapper = objectMapper;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+		this.esUpdate = esUpdate;
 	}
 
 	@Override
@@ -92,7 +95,8 @@ public class ObservationBulkMappingThread implements Runnable {
 		List<Long> ugIds = new ArrayList<Long>();
 
 		if (bulkObservationIds != null && !bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
-			oservationIds.addAll(Arrays.stream(bulkObservationIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
+			oservationIds.addAll(
+					Arrays.stream(bulkObservationIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
 		}
 
 		if (bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()) {
@@ -177,6 +181,12 @@ public class ObservationBulkMappingThread implements Runnable {
 					headers, requestAuthHeader);
 			Thread thread = new Thread(ugThread);
 			thread.start();
+			
+			List<Long> obsIds = ugObsList.stream().map(item->item.getObservationId()).collect(Collectors.toList());
+			String observationList = StringUtils.join(obsIds, ',');
+			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+			Thread esThreadUpdate = new Thread(updateThread);
+			esThreadUpdate.start();
 
 		}
 	}

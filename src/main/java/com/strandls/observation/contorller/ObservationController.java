@@ -54,6 +54,7 @@ import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
+import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationBulkMappingThread;
 import com.strandls.observation.es.util.ObservationListCSVThread;
@@ -174,6 +175,9 @@ public class ObservationController {
 
 	@Inject
 	private UserGroupSerivceApi ugService;
+	
+	@Inject
+	private ESUpdate esUpdate;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -512,7 +516,7 @@ public class ObservationController {
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper);
+						request, headers, objectMapper,esUpdate);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
