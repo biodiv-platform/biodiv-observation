@@ -186,7 +186,7 @@ public class ObservationBulkMappingThread implements Runnable {
 				}
 
 			} catch (com.strandls.userGroup.ApiException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 
 			List<Long> obsIds = ugObsList.stream().map(item -> item.getObservationId()).collect(Collectors.toList());
