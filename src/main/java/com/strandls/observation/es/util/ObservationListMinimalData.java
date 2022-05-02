@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.es.util;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.strandls.observation.pojo.RecoIbp;
@@ -23,6 +25,8 @@ public class ObservationListMinimalData {
 	private UserIbp user;
 	private Double latitude;
 	private Double longitude;
+	private Date createdOn;
+	private Date observedOn;
 
 	@JsonProperty("observation_id")
 	private void unpackName(Long observation_id) {
@@ -48,6 +52,16 @@ public class ObservationListMinimalData {
 	@JsonProperty(value = "repr_image_url")
 	private void unpackReprImage(String reprImage) {
 		thumbnail = reprImage;
+	}
+
+	@JsonProperty(value = "from_date")
+	private void unpackObservedOnDate(Date observedDate) {
+		observedOn = observedDate;
+	}
+
+	@JsonProperty("created_on")
+	private void unpackDate(Date created_on) {
+		createdOn = created_on;
 	}
 
 	@JsonProperty(value = "max_voted_reco")
@@ -118,7 +132,7 @@ public class ObservationListMinimalData {
 	 * @param longitude
 	 */
 	public ObservationListMinimalData(Long observationId, Long speciesGroupId, String speciesGroup, String thumbnail,
-			RecoIbp recoIbp, UserIbp user, Double latitude, Double longitude) {
+			RecoIbp recoIbp, UserIbp user, Double latitude, Double longitude, Date createdOn, Date observedOn) {
 		super();
 		this.observationId = observationId;
 		this.speciesGroupId = speciesGroupId;
@@ -128,6 +142,8 @@ public class ObservationListMinimalData {
 		this.user = user;
 		this.latitude = latitude;
 		this.longitude = longitude;
+		this.createdOn = createdOn;
+		this.observedOn = observedOn;
 	}
 
 	public Long getObservationId() {
@@ -192,6 +208,22 @@ public class ObservationListMinimalData {
 
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
+	}
+
+	public Date getObservedOn() {
+		return observedOn;
+	}
+
+	public void setObservedOn(Date observedOn) {
+		this.observedOn = observedOn;
+	}
+
+	public Date getCreatedOn() {
+		return createdOn;
+	}
+
+	public void setCreatedOn(Date createdOn) {
+		this.createdOn = createdOn;
 	}
 
 }
