@@ -5,6 +5,7 @@ package com.strandls.observation.contorller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +41,7 @@ import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapBounds;
@@ -49,9 +51,12 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.Headers;
+import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
+import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ESUtility;
+import com.strandls.observation.es.util.ObservationBulkMappingThread;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
@@ -91,12 +96,14 @@ import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
@@ -150,12 +157,27 @@ public class ObservationController {
 
 	@Inject
 	private UserServiceApi userService;
-	
-	@Inject 
+
+	@Inject
 	private ObjectMapper objectMapper;
 
 	@Inject
 	private Headers headers;
+
+	@Inject
+	private ObservationDAO observationDao;
+
+	@Inject
+	private ObservationMapperHelper observationMapperHelper;
+
+	@Inject
+	private EsServicesApi esService;
+
+	@Inject
+	private UserGroupSerivceApi ugService;
+	
+	@Inject
+	private ESUpdate esUpdate;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -403,7 +425,18 @@ public class ObservationController {
 			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
 			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
-			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset, @Context UriInfo uriInfo) {
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset,
+
+			@QueryParam("recom") String maxvotedrecoid, @DefaultValue("") @QueryParam("notes") String notes,
+			@DefaultValue("") @QueryParam("authorId") String authorId,
+			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
+			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
+			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
+			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
+			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkObservationIds") String bulkObservationIds,
+
+			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
 		try {
 
@@ -454,34 +487,75 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
 					dataTableName, geoEntity);
 
-			MapAggregationResponse aggregationResult = null;
-			MapAggregationStatsResponse aggregationStatsResult = null;
+			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
+					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
+					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
+				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
-			if (offset == 0) {
-				aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user, userGroupList,
-						webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-						traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
-						tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName, dataTableName,
-						geoEntity);
+				ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
+						downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
+						userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+						validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
+						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
+						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
+						onlyFilteredAggregation, termsAggregationField, authorId, notes,
+						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
+						objectMapper, mapSearchQuery, geoShapeFilterField);
+				Thread thread = new Thread(csvThread);
+				thread.start();
+				return Response.status(Status.OK).build();
 
-				if (view.equalsIgnoreCase("stats")) {
-					aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon, user,
+			} else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
+					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					&& view.equalsIgnoreCase("bulkMapping"))
+					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
+				mapSearchParams.setFrom(0);
+				mapSearchParams.setLimit(100000);
+				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
+						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
+						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
+						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
+						request, headers, objectMapper,esUpdate);
+
+				Thread thread = new Thread(bulkMappingThread);
+				thread.start();
+				return Response.status(Status.OK).build();
+
+			} else if (view.equalsIgnoreCase("list")) {
+
+				MapAggregationResponse aggregationResult = null;
+				MapAggregationStatsResponse aggregationStatsResult = null;
+
+				if (offset == 0) {
+					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
 							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-							rank, tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset,
-							uploadersoffset, identifiersoffset, dataSetName, dataTableName, geoEntity,
-							geoShapeFilterField);
+							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+							dataTableName, geoEntity);
+
+					if (view.equalsIgnoreCase("stats")) {
+						aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon,
+								user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
+								maxDate, validate, traitParams, customParams, classificationid, mapSearchParams,
+								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
+								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
+								lifeListOffset, uploadersoffset, identifiersoffset, dataSetName, dataTableName,
+								geoEntity, geoShapeFilterField);
+
+					}
 
 				}
 
+				ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
+						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
+						geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
+				return Response.status(Status.OK).entity(result).build();
+
 			}
 
-			ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
-					geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-					geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
-			return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.OK).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -1198,104 +1272,6 @@ public class ObservationController {
 				return Response.status(Status.OK).entity("Rating updated").build();
 			return Response.status(Status.NOT_FOUND).entity("Cannot Update the Rating").build();
 
-		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}
-	}
-
-	@GET
-	@Path(ApiConstants.LISTCSV + "/{index}/{type}")
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-	@ValidateUser
-	public Response observationListCsv(@PathParam("index") String index, @PathParam("type") String type,
-			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
-			@DefaultValue("") @QueryParam("user") String user,
-			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
-			@DefaultValue("") @QueryParam("webaddress") String webaddress,
-			@DefaultValue("") @QueryParam("speciesName") String speciesName,
-			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
-			@DefaultValue("") @QueryParam("months") String months,
-			@DefaultValue("") @QueryParam("isFlagged") String isFlagged, @QueryParam("location") String location,
-			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
-			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
-			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
-			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
-			@QueryParam("recoName") String recoName,
-			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
-			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
-
-			@DefaultValue("265799") @QueryParam("classification") String classificationid,
-			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
-			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
-			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
-			@QueryParam("bottom") Double bottom, @QueryParam("recom") String maxvotedrecoid,
-			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
-			@QueryParam("termsAggregationField") String termsAggregationField, @QueryParam("rank") String rank,
-			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
-			@QueryParam("state") String state, @QueryParam("tags") String tags,
-			@QueryParam("publicationgrade") String publicationGrade,
-			@DefaultValue("") @QueryParam("notes") String notes,
-			@NotBlank @NotEmpty @NotNull @QueryParam("authorId") String authorId,
-			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
-			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
-			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
-			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
-
-		try {
-			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
-					.filter(entry -> entry.getKey().startsWith("trait"))
-					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-			Map<String, List<String>> customParams = queryParams.entrySet().stream()
-					.filter(entry -> entry.getKey().startsWith("custom"))
-					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-			MapBounds bounds = null;
-			if (top != null || bottom != null || left != null || right != null) {
-				bounds = new MapBounds();
-				bounds.setBottom(bottom);
-				bounds.setLeft(left);
-				bounds.setRight(right);
-				bounds.setTop(top);
-			}
-			List<MapGeoPoint> polygon = new ArrayList<MapGeoPoint>();
-			if (location != null) {
-				double[] point = Stream.of(location.split(",")).mapToDouble(Double::parseDouble).toArray();
-				for (int i = 0; i < point.length; i = i + 2) {
-					String singlePoint = point[i + 1] + "," + point[i];
-
-					int comma = singlePoint.indexOf(',');
-					if (comma != -1) {
-						MapGeoPoint geoPoint = new MapGeoPoint();
-						geoPoint.setLat(Double.parseDouble(singlePoint.substring(0, comma).trim()));
-						geoPoint.setLon(Double.parseDouble(singlePoint.substring(comma + 1).trim()));
-						polygon.add(geoPoint);
-					}
-				}
-			}
-			MapBoundParams mapBoundsParams = new MapBoundParams();
-			mapBoundsParams.setBounds(bounds);
-			mapBoundsParams.setPolygon(polygon);
-			MapSearchParams mapSearchParams = new MapSearchParams();
-			mapSearchParams.setSortOn(sortOn);
-			mapSearchParams.setSortType(SortTypeEnum.DESC);
-			mapSearchParams.setMapBoundParams(mapBoundsParams);
-			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-
-			ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
-					downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
-					userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-					traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid, createdOnMaxDate,
-					createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade,
-					index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-					termsAggregationField, authorId, notes, uriInfo.getRequestUri().toString(), dataSetName,dataTableName,mailService,
-					userService,objectMapper);
-			Thread thread = new Thread(csvThread);
-			thread.start();
-			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

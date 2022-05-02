@@ -997,11 +997,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Override
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
-			String termsAggregationField) {
+			String termsAggregationField,String geoShapeFilterField) {
 		try {
 			List<ObservationListElasticMapping> observationList = new ArrayList<ObservationListElasticMapping>();
 			MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-					onlyFilteredAggregation, termsAggregationField, null, querys);
+					onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, querys);
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {
