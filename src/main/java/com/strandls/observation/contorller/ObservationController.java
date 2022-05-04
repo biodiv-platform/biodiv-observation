@@ -522,7 +522,7 @@ public class ObservationController {
 				thread.start();
 				return Response.status(Status.OK).build();
 
-			} else if (view.equalsIgnoreCase("stats")|| view.equalsIgnoreCase("list")||view.equalsIgnoreCase("list_minimal")) {
+			} else if (view.equalsIgnoreCase("map") || view.equalsIgnoreCase("stats")|| view.equalsIgnoreCase("list")||view.equalsIgnoreCase("list_minimal")) {
 
 				MapAggregationResponse aggregationResult = null;
 				MapAggregationStatsResponse aggregationStatsResult = null;
