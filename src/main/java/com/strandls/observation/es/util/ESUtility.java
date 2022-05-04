@@ -147,7 +147,8 @@ public class ESUtility {
 			Map<String, List<String>> customParams, String classificationid, MapSearchParams mapSearchParams,
 			String maxvotedrecoid, String recoId, String createdOnMaxDate, String createdOnMinDate, String status,
 			String taxonId, String recoName, String rank, String tahsil, String district, String state, String tags,
-			String publicationGrade, String authorVoted, String dataSetName, String dataTableName, String geoEntity) {
+			String publicationGrade, String authorVoted, String dataSetName, String dataTableName, String geoEntity,
+			String dataTableId) {
 
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -669,6 +670,12 @@ public class ESUtility {
 			List<Object> geoEntityList = cSTSOT(geoEntity);
 			if (!geoEntityList.isEmpty()) {
 				boolAndLists.add(assignBoolAndQuery(ObservationIndex.GEOENTITY.getValue(), geoEntityList));
+			}
+
+//			datatable id  
+			List<Object> dataTableList = cSTSOT(dataTableId);
+			if (!dataTableList.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(ObservationIndex.DATATABLEID.getValue(), dataTableList));
 			}
 			/**
 			 * combine all the queries

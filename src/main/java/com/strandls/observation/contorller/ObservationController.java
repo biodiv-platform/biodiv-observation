@@ -175,7 +175,7 @@ public class ObservationController {
 
 	@Inject
 	private UserGroupSerivceApi ugService;
-	
+
 	@Inject
 	private ESUpdate esUpdate;
 
@@ -403,6 +403,7 @@ public class ObservationController {
 			@DefaultValue("") @QueryParam("isFlagged") String isFlagged,
 			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
 			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
+			@DefaultValue("") @QueryParam("dataTableId") String dataTableId,
 			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
 			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
 			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
@@ -485,7 +486,7 @@ public class ObservationController {
 					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-					dataTableName, geoEntity);
+					dataTableName, geoEntity, dataTableId);
 
 			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
 					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
@@ -500,7 +501,7 @@ public class ObservationController {
 						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper, mapSearchQuery, geoShapeFilterField);
+						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();
@@ -516,13 +517,14 @@ public class ObservationController {
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper,esUpdate);
+						request, headers, objectMapper, esUpdate);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
 				return Response.status(Status.OK).build();
 
-			} else if (view.equalsIgnoreCase("map") || view.equalsIgnoreCase("stats")|| view.equalsIgnoreCase("list")||view.equalsIgnoreCase("list_minimal")) {
+			} else if (view.equalsIgnoreCase("map") || view.equalsIgnoreCase("stats") || view.equalsIgnoreCase("list")
+					|| view.equalsIgnoreCase("list_minimal")) {
 
 				MapAggregationResponse aggregationResult = null;
 				MapAggregationStatsResponse aggregationStatsResult = null;
@@ -533,7 +535,7 @@ public class ObservationController {
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
 							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-							dataTableName, geoEntity);
+							dataTableName, geoEntity, dataTableId);
 
 					if (view.equalsIgnoreCase("stats")) {
 						aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon,
@@ -542,7 +544,7 @@ public class ObservationController {
 								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
 								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
 								lifeListOffset, uploadersoffset, identifiersoffset, dataSetName, dataTableName,
-								geoEntity, geoShapeFilterField);
+								geoEntity, geoShapeFilterField, dataTableId);
 
 					}
 
