@@ -81,6 +81,7 @@ public class ObservationListCSVThread implements Runnable {
 	private String url;
 	private String dataSetName;
 	private String dataTableName;
+	private String dataTableId;
 	private MailService mailService;
 	private UserServiceApi userServiceApi;
 	private ObjectMapper objectMapper;
@@ -103,7 +104,7 @@ public class ObservationListCSVThread implements Runnable {
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
 			String authorId, String notes, String url, String dataSetName, String dataTableName,
 			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
-			MapSearchQuery mapSearchQuery,String geoShapeFilterField) {
+			MapSearchQuery mapSearchQuery,String geoShapeFilterField,String dataTableId) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -159,6 +160,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.objectMapper = objectMapper;
 		this.mapSearchQuery = mapSearchQuery;
 		this.geoShapeFilterField = geoShapeFilterField;
+		this.dataTableId = dataTableId;
 	}
 
 	@Override
@@ -189,7 +191,7 @@ public class ObservationListCSVThread implements Runnable {
 								mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 								classificationid, mapSearchParams, maxvotedrecoid, null, createdOnMaxDate,
 								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-								publicationGrade, null, dataSetName, dataTableName, null);
+								publicationGrade, null, dataSetName, dataTableName, null,dataTableId);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						searchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,

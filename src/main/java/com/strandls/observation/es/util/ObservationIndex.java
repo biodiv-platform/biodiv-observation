@@ -25,7 +25,7 @@ public enum ObservationIndex {
 	RESOURCE("observation_resource.file_name.keyword"), MAXVTEDRECO("max_voted_reco.id"),
 	AUTHORVOTED("all_reco_vote.authors_voted.id"), GEOENTITY("location_information.name.raw"),
 	RECOID("all_reco_vote.recommendation_id"), PUBLICATIONGRADE("is_publication_grade"), DATASETNAME("dataset_title"),
-	DATATABLENAME("data_table_title");
+	DATATABLENAME("data_table_title"), DATATABLEID("data_table_id");
 
 	private String field;
 
