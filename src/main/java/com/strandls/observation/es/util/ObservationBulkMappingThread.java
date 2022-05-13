@@ -151,11 +151,13 @@ public class ObservationBulkMappingThread implements Runnable {
 
 				if (ugObsList.size() >= 200) {
 					bulkGroupAction(ugObsList, ugIds);
+					ugObsList.clear();
 				}
 				count++;
 			}
 
 			bulkGroupAction(ugObsList, ugIds);
+			ugObsList.clear();
 		}
 
 	}
