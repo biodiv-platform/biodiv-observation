@@ -18,7 +18,6 @@ import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
-import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
@@ -52,8 +51,6 @@ import com.strandls.utility.pojo.TagsMapping;
 public interface ObservationService {
 
 	public ShowData findById(Long id);
-
-	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData);
 
 	public ObservationUpdateData getObservationEditPageData(CommonProfile profile, Long observationId) throws Exception;
 
