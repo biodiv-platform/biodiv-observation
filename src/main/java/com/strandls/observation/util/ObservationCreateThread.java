@@ -17,11 +17,9 @@ import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
-import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
-import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -49,7 +47,6 @@ public class ObservationCreateThread implements Runnable {
 	private final Headers headers;
 	private final Long userId;
 
-	private final RecommendationServiceImpl recoService;
 	private TraitsServiceApi traitService;
 	private UtilityServiceApi utilityServices;
 	private UserGroupSerivceApi userGroupService;
@@ -60,7 +57,7 @@ public class ObservationCreateThread implements Runnable {
 	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, UserServiceApi userService,
 			ObservationMapperHelper observationHelper,ObservationDAO observationDao,
 			ResourceServicesApi resourceService, Observation observation, ObservationCreate observationData,
-			Headers headers, Long userId, RecommendationServiceImpl recoService, TraitsServiceApi traitService,
+			Headers headers, Long userId, TraitsServiceApi traitService,
 			UtilityServiceApi utilityServices, UserGroupSerivceApi userGroupService, LogActivities logActivity,
 			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl) {
 		super();
@@ -75,7 +72,6 @@ public class ObservationCreateThread implements Runnable {
 		this.observationData = observationData;
 		this.headers = headers;
 		this.userId = userId;
-		this.recoService = recoService;
 		this.traitService = traitService;
 		this.utilityServices = utilityServices;
 		this.userGroupService = userGroupService;
@@ -85,8 +81,6 @@ public class ObservationCreateThread implements Runnable {
 	}
 
 	public void run() {
-
-		Long maxVotedReco = null;
 
 		try {
 
@@ -130,14 +124,6 @@ public class ObservationCreateThread implements Runnable {
 			logActivity.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(), "observation",
 					null, "Observation created", null);
 
-			if (!(observationData.getHelpIdentify())) {
-				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
-						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
-
-				observation.setMaxVotedRecoId(maxVotedReco);
-				observationDao.update(observation);
-			}
 
 			if ((observationData.getFactValuePairs() != null && !observationData.getFactValuePairs().isEmpty())
 					|| (observationData.getFactValueStringPairs() != null
@@ -201,7 +187,6 @@ public class ObservationCreateThread implements Runnable {
 			thread.start();
 
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 

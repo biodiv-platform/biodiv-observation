@@ -14,6 +14,7 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
+import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.service.ObservationCreateService;
 import com.strandls.observation.util.ObservationCreateThread;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -61,6 +62,9 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 
 	@Inject
 	private Headers headers;
+	
+	@Inject
+	private ObservationServiceImpl observationImpl;
 
 	@Override
 	public Long createObservation(HttpServletRequest request, ObservationCreate observationData) {
@@ -71,12 +75,21 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
-			observation = observationDao.save(observation);		
+			observation = observationDao.save(observation);	
+			
+			if (!(observationData.getHelpIdentify())) {
+				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
+				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
+						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
+
+				observation.setMaxVotedRecoId(maxVotedReco);
+				observationDao.update(observation);
+			}
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, userService,
 					observationHelper, observationDao, resourceService, observation, observationData, headers,
-					maxVotedReco, recoService, traitService, utilityServices, userGroupService, logActivity,
-					activityService, null);
+					userId, traitService, utilityServices, userGroupService, logActivity,
+					activityService, observationImpl);
 			Thread thread = new Thread(createThread);
 			thread.start();
 			
