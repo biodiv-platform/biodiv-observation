@@ -201,6 +201,7 @@ public class ObservationCreateThread implements Runnable {
 			thread.start();
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 
