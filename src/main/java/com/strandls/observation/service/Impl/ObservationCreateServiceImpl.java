@@ -71,11 +71,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
-			observation = observationDao.save(observation);
-
-			if (observation != null) {
-				return observation.getId();
-			}
+			observation = observationDao.save(observation);		
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, userService,
 					observationHelper, observationDao, resourceService, observation, observationData, headers,
@@ -83,6 +79,10 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 					activityService, null);
 			Thread thread = new Thread(createThread);
 			thread.start();
+			
+			if (observation != null) {
+				return observation.getId();
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
