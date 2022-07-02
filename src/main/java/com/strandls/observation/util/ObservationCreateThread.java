@@ -181,7 +181,6 @@ public class ObservationCreateThread implements Runnable {
 			ugObvFilterData = observationImpl.getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
 			userGroupService.getFilterRule(ugObvFilterData);
-			esUpdate.pushToElastic(observation.getId().toString());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

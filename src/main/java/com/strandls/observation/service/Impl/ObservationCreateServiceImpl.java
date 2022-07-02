@@ -11,6 +11,7 @@ import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
@@ -62,7 +63,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 
 	@Inject
 	private Headers headers;
-	
+
 	@Inject
 	private ObservationServiceImpl observationImpl;
 
@@ -75,8 +76,8 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			Long userId = Long.parseLong(profile.getId());
 			Long maxVotedReco = null;
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
-			observation = observationDao.save(observation);	
-			
+			observation = observationDao.save(observation);
+
 			if (!(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
 				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
@@ -87,13 +88,15 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			}
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, userService,
-					observationHelper, observationDao, resourceService, observation, observationData, headers,
-					userId, traitService, utilityServices, userGroupService, logActivity,
-					activityService, observationImpl);
+					observationHelper, observationDao, resourceService, observation, observationData, headers, userId,
+					traitService, utilityServices, userGroupService, logActivity, activityService, observationImpl);
 			Thread thread = new Thread(createThread);
 			thread.start();
-			
+
 			if (observation != null) {
+				ESCreateThread esCreate = new ESCreateThread(esUpdate, observation.getId().toString());
+				Thread esThread = new Thread(esCreate);
+				esThread.start();
 				return observation.getId();
 			}
 
