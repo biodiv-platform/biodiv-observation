@@ -77,6 +77,7 @@ import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
+import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
@@ -1500,5 +1501,19 @@ public class ObservationController {
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+	}
+
+	@GET
+	@Path("/crop/resources/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getImageCropResources(@PathParam("observationId") Long observationId) {
+		try {
+			Resources result = observationService.getObservationResources(observationId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
 	}
 }

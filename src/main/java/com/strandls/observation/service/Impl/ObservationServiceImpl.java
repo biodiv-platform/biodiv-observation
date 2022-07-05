@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -57,6 +58,7 @@ import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.ObservatioImageResourceCropinfo;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
@@ -67,12 +69,14 @@ import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceCropInfo;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
@@ -919,9 +923,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 		observation.setIsDeleted(true);
 		observation = observationDao.update(observation);
-		if  (Boolean.TRUE.equals(observation.getIsDeleted())) {
-			esService.delete(ObservationIndex.INDEX.getValue(),
-					ObservationIndex.TYPE.getValue(), observationId.toString());
+		if (Boolean.TRUE.equals(observation.getIsDeleted())) {
+			esService.delete(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
+					observationId.toString());
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observationId, observationId,
 					"observation", observationId, "Observation Deleted", mailData);
 			return true;
@@ -1078,10 +1082,9 @@ public class ObservationServiceImpl implements ObservationService {
 					observation.setNoOfImages(noOfImages);
 					observation.setNoOfVideos(noOfVideo);
 					observation.setReprImageId(reprImage);
-					
+
 				}
 				observationDao.update(observation);
-
 
 //				---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
@@ -1634,6 +1637,86 @@ public class ObservationServiceImpl implements ObservationService {
 			logger.error(e.getMessage());
 		}
 		return false;
+
+	}
+
+	@SuppressWarnings({ "null", "unused" })
+	public Resources getObservationResources(Long observationId) {
+		try {
+			List<ResourceData> observationImageResources = resourceService.getImageResource("observation",
+					observationId.toString());
+			List<Long> resourceIds = new ArrayList<Long>();
+			Map<Long, ResourceData> m = new HashMap<>();
+
+			Resources ans = new Resources();
+			Integer countOfValidCropStatus = 0;
+			ans.setCropStatus("NOT_VALIDATED");
+
+			if (observationImageResources != null) {
+				for (ResourceData resourceData : observationImageResources) {
+					resourceIds.add(resourceData.getResource().getId());
+					m.put(resourceData.getResource().getId(), resourceData);
+				}
+
+				String commaSeparatedStringOfResourceIds = resourceIds.stream().map(i -> i.toString())
+						.collect(Collectors.joining(","));
+
+				List<ResourceCropInfo> resourcesCropInfo = resourceService
+						.getResourcesCropInfo(commaSeparatedStringOfResourceIds);
+
+				Map<Long, ResourceCropInfo> cropInfo = new HashMap<Long, ResourceCropInfo>();
+
+				if (resourcesCropInfo.size() > 0) {
+					for (ResourceCropInfo info : resourcesCropInfo) {
+						cropInfo.put(info.getId(), info);
+					}
+
+				}
+
+				ans.setId(observationId);
+				List<ObservatioImageResourceCropinfo> observationResources = new ArrayList<>();
+				for (Long id : resourceIds) {
+					ObservatioImageResourceCropinfo t = new ObservatioImageResourceCropinfo();
+
+					t.setResource(m.get(id));
+					if (resourcesCropInfo.size() > 0) {
+						t.setCropStatus(cropInfo.get(id).getCropStatus());
+
+						if (cropInfo.get(id).getCropStatus().equals("VALID")) {
+							countOfValidCropStatus++;
+						}
+
+						Long[] box = new Long[4];
+						box[0] = cropInfo.get(id).getX();
+						box[1] = cropInfo.get(id).getY();
+						box[2] = cropInfo.get(id).getWidth();
+						box[3] = cropInfo.get(id).getHeight();
+
+						t.setBbox(box);
+
+					}
+
+					observationResources.add(t);
+
+				}
+
+				if (countOfValidCropStatus == observationImageResources.size()) {
+					ans.setCropStatus("VALID");
+				} else if (countOfValidCropStatus > 0 && countOfValidCropStatus < observationImageResources.size()) {
+					ans.setCropStatus("PARTIALLY_VALIDATED");
+				} else {
+					ans.setCropStatus("NOT_VALIDATED");
+				}
+
+				ans.setObservationResource(observationResources);
+
+			}
+
+			return ans;
+		} catch (com.strandls.resource.ApiException e) {
+			e.printStackTrace();
+		}
+		return null;
 
 	}
 
