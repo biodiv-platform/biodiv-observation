@@ -119,7 +119,7 @@ public interface ObservationService {
 	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(HttpServletRequest request,
 			Long userGroupId);
 
-	public ShowData creteObservationUGContext(HttpServletRequest request,
+	public Long creteObservationUGContext(HttpServletRequest request,
 			ObservationCreateUGContext observationUGContext);
 
 	public Boolean updateLastRevised(Long observationId);

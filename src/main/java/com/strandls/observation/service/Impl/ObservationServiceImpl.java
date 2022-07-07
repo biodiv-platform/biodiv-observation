@@ -1231,7 +1231,7 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ShowData creteObservationUGContext(HttpServletRequest request,
+	public Long creteObservationUGContext(HttpServletRequest request,
 			ObservationCreateUGContext observationUGContext) {
 		try {
 			Long observationId = observationCreateService.createObservation(request,
@@ -1244,11 +1244,10 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
-
-			ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observationId.toString());
-			Thread thread = new Thread(esCreateThread);
-			thread.start();
-			return findById(observationId);
+			
+			produceToRabbitMQ(observationId.toString(), "new Observation");
+			
+			return observationId;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

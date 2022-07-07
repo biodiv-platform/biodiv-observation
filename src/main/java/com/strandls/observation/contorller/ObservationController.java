@@ -1116,7 +1116,7 @@ public class ObservationController {
 
 	@ValidateUser
 
-	@ApiOperation(value = "create observation on UG context", notes = "Returns the user the complete show page", response = ShowData.class)
+	@ApiOperation(value = "create observation on UG context", notes = "Returns the user observation id", response = Long.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to create the observation", response = String.class) })
 
@@ -1148,7 +1148,7 @@ public class ObservationController {
 				throw new ObservationInputException("Without resource observation");
 			}
 
-			ShowData result = observationService.creteObservationUGContext(request, observationUGContext);
+			Long result = observationService.creteObservationUGContext(request, observationUGContext);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

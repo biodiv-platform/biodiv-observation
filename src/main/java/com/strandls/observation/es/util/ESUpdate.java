@@ -44,7 +44,6 @@ public class ESUpdate {
 //			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 //			om.setDateFormat(df);
 			String resultString = om.writeValueAsString(result.get(0));
-			System.out.println("observation update es data============    "+resultString);
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);
 			MapQueryResponse response = esService.create(ObservationIndex.INDEX.getValue(),
