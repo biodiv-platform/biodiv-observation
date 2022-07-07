@@ -12,16 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.ActivityLoggingData;
 import com.strandls.observation.Headers;
-import com.strandls.observation.dao.ObservationDAO;
-import com.strandls.observation.es.util.ESCreateThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.service.Impl.LogActivities;
-import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
-import com.strandls.resource.controllers.ResourceServicesApi;
-import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactsCreateData;
 import com.strandls.user.controller.UserServiceApi;
@@ -38,14 +33,11 @@ public class ObservationCreateThread implements Runnable {
 
 	private final String requestAuthHeader;
 	private final ESUpdate esUpdate;
-	private final ObservationMapperHelper observationHelper;
 	private final HttpServletRequest request;
-	private final ObservationDAO observationDao;
-	private ResourceServicesApi resourceService;
 	private Observation observation;
 	private final ObservationCreate observationData;
 	private final Headers headers;
-	private final Long userId;
+	private final Boolean updateEs;
 
 	private TraitsServiceApi traitService;
 	private UtilityServiceApi utilityServices;
@@ -55,29 +47,24 @@ public class ObservationCreateThread implements Runnable {
 	private final ObservationServiceImpl observationImpl;
 
 	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, UserServiceApi userService,
-			ObservationMapperHelper observationHelper,ObservationDAO observationDao,
-			ResourceServicesApi resourceService, Observation observation, ObservationCreate observationData,
-			Headers headers, Long userId, TraitsServiceApi traitService,
+			Observation observation, ObservationCreate observationData, Headers headers, TraitsServiceApi traitService,
 			UtilityServiceApi utilityServices, UserGroupSerivceApi userGroupService, LogActivities logActivity,
-			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl) {
+			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl, Boolean updateEs) {
 		super();
-		
+
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 		this.esUpdate = esUpdate;
-		this.observationHelper = observationHelper;
 		this.request = request;
-		this.observationDao = observationDao;
-		this.resourceService = resourceService;
 		this.observation = observation;
 		this.observationData = observationData;
 		this.headers = headers;
-		this.userId = userId;
 		this.traitService = traitService;
 		this.utilityServices = utilityServices;
 		this.userGroupService = userGroupService;
 		this.logActivity = logActivity;
 		this.activityService = activityService;
 		this.observationImpl = observationImpl;
+		this.updateEs = updateEs;
 	}
 
 	public void run() {
@@ -143,9 +130,12 @@ public class ObservationCreateThread implements Runnable {
 			ugObvFilterData = observationImpl.getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
 			userGroupService.getFilterRule(ugObvFilterData);
-			
+
 //		----------------ES UPDATE---------------------
-			esUpdate.pushToElastic(observation.getId().toString());
+			if (Boolean.TRUE.equals(updateEs)) {
+				esUpdate.pushToElastic(observation.getId().toString());
+			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

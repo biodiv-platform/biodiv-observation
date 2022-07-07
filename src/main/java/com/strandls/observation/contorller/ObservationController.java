@@ -249,7 +249,7 @@ public class ObservationController {
 				throw new ObservationInputException("Without resource observation");
 			}
 			
-			Long result = observationCreateService.createObservation(request, observationData);
+			Long result = observationCreateService.createObservation(request, observationData,true);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();

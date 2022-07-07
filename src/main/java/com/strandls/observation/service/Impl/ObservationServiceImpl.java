@@ -1235,7 +1235,7 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationCreateUGContext observationUGContext) {
 		try {
 			Long observationId = observationCreateService.createObservation(request,
-					observationUGContext.getObservationData());
+					observationUGContext.getObservationData(),false);
 			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
 				cfInsert.setObservationId(observationId);
 				CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();

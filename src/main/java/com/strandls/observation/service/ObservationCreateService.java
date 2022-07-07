@@ -6,6 +6,6 @@ import com.strandls.observation.pojo.ObservationCreate;
 
 public interface ObservationCreateService {
 
-	public Long createObservation(HttpServletRequest request, ObservationCreate observationData);
+	public Long createObservation(HttpServletRequest request, ObservationCreate observationData,Boolean updateEs);
 
 }

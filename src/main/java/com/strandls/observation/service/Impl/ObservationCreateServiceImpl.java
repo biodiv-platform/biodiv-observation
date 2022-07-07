@@ -71,7 +71,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	private ObservationServiceImpl observationImpl;
 
 	@Override
-	public Long createObservation(HttpServletRequest request, ObservationCreate observationData) {
+	public Long createObservation(HttpServletRequest request, ObservationCreate observationData, Boolean updateEs) {
 		try {
 			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString()
 					+ " ***** \n\n\n");
@@ -89,14 +89,15 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 				observation.setMaxVotedRecoId(maxVotedReco);
 				observationDao.update(observation);
 			}
-			
+
 			if (observationData.getResources() != null && !observationData.getResources().isEmpty()) {
 				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
 						observationData.getResources());
 				if (resources == null || resources.isEmpty()) {
 					observationDao.delete(observation);
 				}
-				resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
+				resourceService = headers.addResourceHeaders(resourceService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
 
 				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
@@ -129,8 +130,8 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			}
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, userService,
-					observationHelper, observationDao, resourceService, observation, observationData, headers, userId,
-					traitService, utilityServices, userGroupService, logActivity, activityService, observationImpl);
+					observation, observationData, headers, traitService, utilityServices, userGroupService, logActivity,
+					activityService, observationImpl, updateEs);
 			Thread thread = new Thread(createThread);
 			thread.start();
 
