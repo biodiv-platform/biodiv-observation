@@ -53,9 +53,6 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	private UtilityServiceApi utilityServices;
 
 	@Inject
-	private UserServiceApi userService;
-
-	@Inject
 	private ObservationMapperHelper observationHelper;
 
 	@Inject
@@ -102,35 +99,12 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
 						resources);
 
-				Integer noOfImages = 0;
-				Integer noOfAudio = 0;
-				Integer noOfVideo = 0;
-
-				Long reprImage = null;
-				int rating = 0;
-				for (Resource res : resources) {
-					if (res.getType().equals("AUDIO"))
-						noOfAudio++;
-					else if (res.getType().equals("IMAGE")) {
-						noOfImages++;
-						if (reprImage == null)
-							reprImage = res.getId();
-						if (res.getRating() != null && res.getRating() > rating) {
-							reprImage = res.getId();
-							rating = res.getRating();
-						}
-					} else if (res.getType().equals("VIDEO"))
-						noOfVideo++;
-				}
-				observation.setNoOfAudio(noOfAudio);
-				observation.setNoOfImages(noOfImages);
-				observation.setNoOfVideos(noOfVideo);
-				observation.setReprImageId(reprImage);
-				observation = observationDao.update(observation);
+				observation = observationDao
+						.update(observationHelper.updateObservationResourceCount(observation, resources));
 			}
 
-			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, userService,
-					observation, observationData, headers, traitService, utilityServices, userGroupService, logActivity,
+			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, observation,
+					observationData, headers, traitService, utilityServices, userGroupService, logActivity,
 					activityService, observationImpl, updateEs);
 			Thread thread = new Thread(createThread);
 			thread.start();

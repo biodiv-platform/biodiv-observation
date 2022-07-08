@@ -19,10 +19,8 @@ import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactsCreateData;
-import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
-import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.TagsMapping;
 import com.strandls.utility.pojo.TagsMappingData;
@@ -33,7 +31,6 @@ public class ObservationCreateThread implements Runnable {
 
 	private final String requestAuthHeader;
 	private final ESUpdate esUpdate;
-	private final HttpServletRequest request;
 	private Observation observation;
 	private final ObservationCreate observationData;
 	private final Headers headers;
@@ -46,7 +43,7 @@ public class ObservationCreateThread implements Runnable {
 	private ActivitySerivceApi activityService;
 	private final ObservationServiceImpl observationImpl;
 
-	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, UserServiceApi userService,
+	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, 
 			Observation observation, ObservationCreate observationData, Headers headers, TraitsServiceApi traitService,
 			UtilityServiceApi utilityServices, UserGroupSerivceApi userGroupService, LogActivities logActivity,
 			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl, Boolean updateEs) {
@@ -54,7 +51,6 @@ public class ObservationCreateThread implements Runnable {
 
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 		this.esUpdate = esUpdate;
-		this.request = request;
 		this.observation = observation;
 		this.observationData = observationData;
 		this.headers = headers;
@@ -121,15 +117,13 @@ public class ObservationCreateThread implements Runnable {
 //		----------------POST CREATE ACTIONS------------
 
 //		----------------GEO PRIVACY CHECK-------------
-			List<Observation> observationList = new ArrayList<Observation>();
+			List<Observation> observationList = new ArrayList<>();
 			observationList.add(observation);
 			observationImpl.updateGeoPrivacy(observationList);
 
 //		---------------USER GROUP FILTER RULE----------
-			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-			ugObvFilterData = observationImpl.getUGFilterObvData(observation);
 			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
-			userGroupService.getFilterRule(ugObvFilterData);
+			userGroupService.getFilterRule(observationImpl.getUGFilterObvData(observation));
 
 //		----------------ES UPDATE---------------------
 			if (Boolean.TRUE.equals(updateEs)) {
