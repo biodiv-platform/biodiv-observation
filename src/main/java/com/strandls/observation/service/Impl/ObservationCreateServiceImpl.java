@@ -23,13 +23,12 @@ import com.strandls.observation.util.ObservationCreateThread;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
-import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
 
 public class ObservationCreateServiceImpl implements ObservationCreateService {
 
-	private final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationCreateServiceImpl.class);
 
 	@Inject
 	private LogActivities logActivity;
@@ -78,7 +77,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 			Observation observation = observationHelper.createObservationMapping(userId, observationData);
 			observation = observationDao.save(observation);
 
-			if (!(observationData.getHelpIdentify())) {
+			if (Boolean.FALSE.equals(observationData.getHelpIdentify())) {
 				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
 				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
 						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
