@@ -1,6 +1,5 @@
 package com.strandls.observation.pojo;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Resources {
@@ -10,7 +9,6 @@ public class Resources {
 
 	public Resources() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public Resources(Long id, String cropStatus, List<ObservatioImageResourceCropinfo> observationResource) {

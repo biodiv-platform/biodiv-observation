@@ -73,6 +73,7 @@ public class ApiConstants {
 	public static final String IDENTIFIED = "/identified";
 	public static final String PULL = "/pull";
 	public static final String DATATABLEOBSERVATION = "/dataTableObservation";
+	public static final String CROPIMAGERESOURCES="/crop/resources";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";

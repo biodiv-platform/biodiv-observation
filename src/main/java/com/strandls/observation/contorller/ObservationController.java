@@ -5,17 +5,14 @@ package com.strandls.observation.contorller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -104,7 +101,6 @@ import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
@@ -1504,7 +1500,7 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path("/crop/resources/{observationId}")
+	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getImageCropResources(@PathParam("observationId") Long observationId) {
@@ -1516,4 +1512,24 @@ public class ObservationController {
 		}
 
 	}
+
+	@PUT
+	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updatedImageCropResources(@Context HttpServletRequest request,
+			@PathParam("observationId") Long observationId, Resources resourcesUpdateData) {
+
+		try {
+
+			Resources resultResources = observationService.updateObservationImageResources(request, observationId,
+					resourcesUpdateData);
+
+			return Response.status(Status.OK).entity(resultResources).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

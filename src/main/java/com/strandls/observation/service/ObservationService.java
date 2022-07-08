@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.common.io.Resources;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
@@ -155,4 +154,7 @@ public interface ObservationService {
 	public Boolean speciesObservationValidate(HttpServletRequest request, Long taxonId, List<Long> observationId);
 
 	public com.strandls.observation.pojo.Resources getObservationResources(Long observationId);
+
+	public com.strandls.observation.pojo.Resources updateObservationImageResources(HttpServletRequest request,
+			Long observationId, com.strandls.observation.pojo.Resources resourcesUpdatedInfo);
 }

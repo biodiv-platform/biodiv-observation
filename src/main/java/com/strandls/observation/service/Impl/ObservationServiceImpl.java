@@ -1646,16 +1646,16 @@ public class ObservationServiceImpl implements ObservationService {
 			List<ResourceData> observationImageResources = resourceService.getImageResource("observation",
 					observationId.toString());
 			List<Long> resourceIds = new ArrayList<Long>();
-			Map<Long, ResourceData> m = new HashMap<>();
+			Map<Long, ResourceData> findResourceDataById = new HashMap<>();
 
-			Resources ans = new Resources();
+			Resources result = new Resources();
 			Integer countOfValidCropStatus = 0;
-			ans.setCropStatus("NOT_VALIDATED");
+			result.setCropStatus("NOT_VALIDATED");
 
 			if (observationImageResources != null) {
 				for (ResourceData resourceData : observationImageResources) {
 					resourceIds.add(resourceData.getResource().getId());
-					m.put(resourceData.getResource().getId(), resourceData);
+					findResourceDataById.put(resourceData.getResource().getId(), resourceData);
 				}
 
 				String commaSeparatedStringOfResourceIds = resourceIds.stream().map(i -> i.toString())
@@ -1673,14 +1673,17 @@ public class ObservationServiceImpl implements ObservationService {
 
 				}
 
-				ans.setId(observationId);
+				result.setId(observationId);
 				List<ObservatioImageResourceCropinfo> observationResources = new ArrayList<>();
 				for (Long id : resourceIds) {
-					ObservatioImageResourceCropinfo t = new ObservatioImageResourceCropinfo();
+					ObservatioImageResourceCropinfo observationImageCropInfo = new ObservatioImageResourceCropinfo();
 
-					t.setResource(m.get(id));
+					observationImageCropInfo.setResource(findResourceDataById.get(id).getResource());
+					observationImageCropInfo.setUserIbp(findResourceDataById.get(id).getUserIbp());
+					observationImageCropInfo.setLicense(findResourceDataById.get(id).getLicense());
+
 					if (resourcesCropInfo.size() > 0) {
-						t.setCropStatus(cropInfo.get(id).getCropStatus());
+						observationImageCropInfo.setCropStatus(cropInfo.get(id).getCropStatus());
 
 						if (cropInfo.get(id).getCropStatus().equals("VALID")) {
 							countOfValidCropStatus++;
@@ -1692,32 +1695,62 @@ public class ObservationServiceImpl implements ObservationService {
 						box[2] = cropInfo.get(id).getWidth();
 						box[3] = cropInfo.get(id).getHeight();
 
-						t.setBbox(box);
+						observationImageCropInfo.setBbox(box);
 
 					}
 
-					observationResources.add(t);
+					observationResources.add(observationImageCropInfo);
 
 				}
 
 				if (countOfValidCropStatus == observationImageResources.size()) {
-					ans.setCropStatus("VALID");
+					result.setCropStatus("VALID");
 				} else if (countOfValidCropStatus > 0 && countOfValidCropStatus < observationImageResources.size()) {
-					ans.setCropStatus("PARTIALLY_VALIDATED");
+					result.setCropStatus("PARTIALLY_VALIDATED");
 				} else {
-					ans.setCropStatus("NOT_VALIDATED");
+					result.setCropStatus("NOT_VALIDATED");
 				}
 
-				ans.setObservationResource(observationResources);
+				result.setObservationResource(observationResources);
 
 			}
 
-			return ans;
-		} catch (com.strandls.resource.ApiException e) {
-			e.printStackTrace();
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 		return null;
 
+	}
+
+	@Override
+	public Resources updateObservationImageResources(HttpServletRequest request, Long observationId,
+			Resources resourcesUpdatedInfo) {
+
+		resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+		try {
+
+			for (ObservatioImageResourceCropinfo cropInfo : resourcesUpdatedInfo.getObservationResource()) {
+				ResourceCropInfo imageCropInfo = new ResourceCropInfo();
+				imageCropInfo.setCropStatus(cropInfo.getCropStatus());
+				imageCropInfo.setId(cropInfo.getResource().getId());
+				imageCropInfo.setX(cropInfo.getBbox()[0]);
+				imageCropInfo.setY(cropInfo.getBbox()[1]);
+				imageCropInfo.setWidth(cropInfo.getBbox()[2]);
+				imageCropInfo.setHeight(cropInfo.getBbox()[3]);
+
+				resourceService.updateResourcesCropInfo(imageCropInfo);
+
+			}
+
+			return resourcesUpdatedInfo;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 
 }
