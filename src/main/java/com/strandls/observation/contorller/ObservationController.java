@@ -5,17 +5,12 @@ package com.strandls.observation.contorller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -80,6 +75,7 @@ import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
+import com.strandls.observation.service.ObservationCreateService;
 import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
@@ -103,7 +99,6 @@ import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
@@ -148,6 +143,10 @@ public class ObservationController {
 
 	@Inject
 	private ObservationListService observationListService;
+	
+	
+	@Inject
+	private ObservationCreateService observationCreateService;
 
 	@Inject
 	private MailService mailService;
@@ -220,7 +219,7 @@ public class ObservationController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Create a Observation", notes = "Returns the show Page of Observation", response = ShowData.class)
+	@ApiOperation(value = "Create a Observation", notes = "Returns the show Page of Observation", response = Long.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "observation Cannot be created", response = String.class) })
 
@@ -249,7 +248,8 @@ public class ObservationController {
 			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
 				throw new ObservationInputException("Without resource observation");
 			}
-			ShowData result = observationService.createObservation(request, observationData);
+			
+			Long result = observationCreateService.createObservation(request, observationData,true);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
@@ -1116,7 +1116,7 @@ public class ObservationController {
 
 	@ValidateUser
 
-	@ApiOperation(value = "create observation on UG context", notes = "Returns the user the complete show page", response = ShowData.class)
+	@ApiOperation(value = "create observation on UG context", notes = "Returns the user observation id", response = Long.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to create the observation", response = String.class) })
 
@@ -1148,7 +1148,7 @@ public class ObservationController {
 				throw new ObservationInputException("Without resource observation");
 			}
 
-			ShowData result = observationService.creteObservationUGContext(request, observationUGContext);
+			Long result = observationService.creteObservationUGContext(request, observationUGContext);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
