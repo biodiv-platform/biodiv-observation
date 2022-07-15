@@ -4,17 +4,17 @@ import java.util.List;
 
 public class Resources {
 	Long id; // Observation id
-	String cropStatus;
+	String curationStatus;
 	List<ObservatioImageResourceCropinfo> observationResource;
 
 	public Resources() {
 		super();
 	}
 
-	public Resources(Long id, String cropStatus, List<ObservatioImageResourceCropinfo> observationResource) {
+	public Resources(Long id, String curationStatus, List<ObservatioImageResourceCropinfo> observationResource) {
 		super();
 		this.id = id;
-		this.cropStatus = cropStatus;
+		this.curationStatus = curationStatus;
 		this.observationResource = observationResource;
 	}
 
@@ -26,12 +26,12 @@ public class Resources {
 		this.id = id;
 	}
 
-	public String getCropStatus() {
-		return cropStatus;
+	public String getCurationStatus() {
+		return curationStatus;
 	}
 
-	public void setCropStatus(String cropStatus) {
-		this.cropStatus = cropStatus;
+	public void setCurationStatus(String curationStatus) {
+		this.curationStatus = curationStatus;
 	}
 
 	public List<ObservatioImageResourceCropinfo> getObservationResource() {

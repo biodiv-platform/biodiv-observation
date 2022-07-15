@@ -4,7 +4,7 @@ import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 
 public class ObservatioImageResourceCropinfo {
-	private String cropStatus;
+	private String selectionStatus;
 	private Long[] bbox;
 	private Resource resource;
 	private com.strandls.resource.pojo.UserIbp userIbp;
@@ -15,22 +15,22 @@ public class ObservatioImageResourceCropinfo {
 		// TODO Auto-generated constructor stub
 	}
 
-	public ObservatioImageResourceCropinfo(String cropStatus, Long[] bbox, Resource resource,
+	public ObservatioImageResourceCropinfo(String selectionStatus, Long[] bbox, Resource resource,
 			com.strandls.resource.pojo.UserIbp userIbp, License license) {
 		super();
-		this.cropStatus = cropStatus;
+		this.selectionStatus = selectionStatus;
 		this.bbox = bbox;
 		this.resource = resource;
 		this.userIbp = userIbp;
 		this.license = license;
 	}
 
-	public String getCropStatus() {
-		return cropStatus;
+	public String getSelectionStatus() {
+		return selectionStatus;
 	}
 
-	public void setCropStatus(String cropStatus) {
-		this.cropStatus = cropStatus;
+	public void setSelectionStatus(String selectionStatus) {
+		this.selectionStatus = selectionStatus;
 	}
 
 	public Long[] getBbox() {

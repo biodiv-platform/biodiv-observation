@@ -1649,8 +1649,8 @@ public class ObservationServiceImpl implements ObservationService {
 			Map<Long, ResourceData> findResourceDataById = new HashMap<>();
 
 			Resources result = new Resources();
-			Integer countOfValidCropStatus = 0;
-			result.setCropStatus("NOT_VALIDATED");
+			Integer countOfSelectedCropStatus = 0;
+			Integer countOfRejected = 0;
 
 			if (observationImageResources != null) {
 				for (ResourceData resourceData : observationImageResources) {
@@ -1683,10 +1683,14 @@ public class ObservationServiceImpl implements ObservationService {
 					observationImageCropInfo.setLicense(findResourceDataById.get(id).getLicense());
 
 					if (resourcesCropInfo.size() > 0) {
-						observationImageCropInfo.setCropStatus(cropInfo.get(id).getCropStatus());
+						observationImageCropInfo.setSelectionStatus(cropInfo.get(id).getSelectionStatus());
 
-						if (cropInfo.get(id).getCropStatus().equals("VALID")) {
-							countOfValidCropStatus++;
+						if (cropInfo.get(id).getSelectionStatus().equals("SELECTED")) {
+							countOfSelectedCropStatus++;
+						}
+
+						if (cropInfo.get(id).getSelectionStatus().equals("REJECTED")) {
+							countOfRejected++;
 						}
 
 						Long[] box = new Long[4];
@@ -1703,12 +1707,16 @@ public class ObservationServiceImpl implements ObservationService {
 
 				}
 
-				if (countOfValidCropStatus == observationImageResources.size()) {
-					result.setCropStatus("VALID");
-				} else if (countOfValidCropStatus > 0 && countOfValidCropStatus < observationImageResources.size()) {
-					result.setCropStatus("PARTIALLY_VALIDATED");
+				if (countOfSelectedCropStatus == observationImageResources.size()) {
+					result.setCurationStatus("CURATED");
+				} else if (countOfSelectedCropStatus > 0
+						&& countOfSelectedCropStatus < observationImageResources.size()) {
+					result.setCurationStatus("PARTIALLY_CURATED");
+				} else if (countOfRejected == observationImageResources.size()) {
+					result.setCurationStatus("REJECTED");
+
 				} else {
-					result.setCropStatus("NOT_VALIDATED");
+					result.setCurationStatus("NOT_CURATED");
 				}
 
 				result.setObservationResource(observationResources);
@@ -1733,17 +1741,22 @@ public class ObservationServiceImpl implements ObservationService {
 
 			for (ObservatioImageResourceCropinfo cropInfo : resourcesUpdatedInfo.getObservationResource()) {
 				ResourceCropInfo imageCropInfo = new ResourceCropInfo();
-				imageCropInfo.setCropStatus(cropInfo.getCropStatus());
+
+				imageCropInfo.setSelectionStatus(cropInfo.getSelectionStatus());
 				imageCropInfo.setId(cropInfo.getResource().getId());
-				imageCropInfo.setX(cropInfo.getBbox()[0]);
-				imageCropInfo.setY(cropInfo.getBbox()[1]);
-				imageCropInfo.setWidth(cropInfo.getBbox()[2]);
-				imageCropInfo.setHeight(cropInfo.getBbox()[3]);
+
+				if (!cropInfo.getSelectionStatus().equals("REJECTED")) {
+					imageCropInfo.setX(cropInfo.getBbox()[0]);
+					imageCropInfo.setY(cropInfo.getBbox()[1]);
+					imageCropInfo.setWidth(cropInfo.getBbox()[2]);
+					imageCropInfo.setHeight(cropInfo.getBbox()[3]);
+
+				}
 
 				resourceService.updateResourcesCropInfo(imageCropInfo);
 
 			}
-
+			produceToRabbitMQ(observationId.toString(), "Observation-image-resource-update");
 			return resourcesUpdatedInfo;
 
 		} catch (Exception e) {
