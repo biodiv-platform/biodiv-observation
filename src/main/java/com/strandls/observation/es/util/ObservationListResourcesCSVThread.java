@@ -24,11 +24,11 @@ import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.DownloadLogData;
 
-public class ObservationListCSVThread implements Runnable {
+public class ObservationListResourcesCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
 	private final String modulePath = "/data-archive/listpagecsv";
-	private final String basePath = "/home/prakhar/biodiv";
+	private final String basePath = "/home/prakhar/biodiv";//"/app/data/biodiv";
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -88,11 +88,12 @@ public class ObservationListCSVThread implements Runnable {
 	private MapSearchQuery mapSearchQuery;
 	private String geoShapeFilterField;
 
-	public ObservationListCSVThread() {
+	public ObservationListResourcesCSVThread() {
 		super();
+		// TODO Auto-generated constructor stub
 	}
 
-	public ObservationListCSVThread(ESUtility esUtility, ObservationListService observationListService,
+	public ObservationListResourcesCSVThread(ESUtility esUtility, ObservationListService observationListService,
 			ObservationDownloadLogDAO downloadLogDao, List<String> customfields, List<String> taxonomic,
 			List<String> spatial, List<String> traits, List<String> temporal, List<String> misc, String sGroup,
 			String taxon, String user, String userGroupList, String webaddress, String speciesName, String mediaFilter,
@@ -102,9 +103,9 @@ public class ObservationListCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url, String dataSetName, String dataTableName,
-			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
-			MapSearchQuery mapSearchQuery,String geoShapeFilterField,String dataTableId) {
+			String authorId, String notes, String url, String dataSetName, String dataTableName, MailService mailService2,
+			UserServiceApi userService, ObjectMapper objectMapper2, MapSearchQuery mapSearchQuery2,
+			String geoShapeFilterField2, String geoShapeFilterField) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -150,17 +151,16 @@ public class ObservationListCSVThread implements Runnable {
 		this.onlyFilteredAggregation = onlyFilteredAggregation;
 		this.termsAggregationField = termsAggregationField;
 		this.authorId = authorId;
-		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
 		this.dataSetName = dataSetName;
 		this.dataTableName = dataTableName;
-		this.mailService = mailService;
+		this.dataTableId =dataTableId;
+		this.mailService = mailService2;
 		this.userServiceApi = userServiceApi;
-		this.objectMapper = objectMapper;
-		this.mapSearchQuery = mapSearchQuery;
+		this.objectMapper = objectMapper2;
+		this.mapSearchQuery = mapSearchQuery2;
 		this.geoShapeFilterField = geoShapeFilterField;
-		this.dataTableId = dataTableId;
 	}
 
 	@Override
@@ -191,16 +191,17 @@ public class ObservationListCSVThread implements Runnable {
 								mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 								classificationid, mapSearchParams, maxvotedrecoid, null, createdOnMaxDate,
 								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-								publicationGrade, null, dataSetName, dataTableName, null,dataTableId);
+								publicationGrade, null, dataSetName, dataTableName, null, dataTableId);
 
-				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
-						searchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-						termsAggregationField, geoShapeFilterField);
+				List<ObservationListElasticResourceMapping> epochSet = observationListService
+						.getObservationListWithResourcesCsv(index, type, searchQuery, geoAggregationField,
+								geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
+								geoShapeFilterField);
 
 				epochSize = epochSet.size();
 				offset = offset + max;
-				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
-						objectMapper);
+//				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
+//						objectMapper);
 				logger.info(
 						"Observation List Download RequestId = " + authorId + dtf.format(now) + "@ offset = " + offset);
 			} while (epochSize >= max);
@@ -221,11 +222,11 @@ public class ObservationListCSVThread implements Runnable {
 			data.setStatus(fileGenerationStatus);
 			data.setNotes(notes);
 			data.setSourcetype("Observations");
-			try {
-				userServiceApi.logDocumentDownload(data);
-			} catch (ApiException e) {
-				logger.error(e.getMessage());
-			}
+//			try {
+//				userServiceApi.logDocumentDownload(data);
+//			} catch (ApiException e) {
+//				logger.error(e.getMessage());
+//			}
 		}
 		if (fileGenerationStatus.equalsIgnoreCase("failed")) {
 			try {

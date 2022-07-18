@@ -10,6 +10,7 @@ import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
+import com.strandls.observation.es.util.ObservationListElasticResourceMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
@@ -55,4 +56,8 @@ public interface ObservationListService {
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField);
+
+	public List<ObservationListElasticResourceMapping> getObservationListWithResourcesCsv(String index, String type,
+			MapSearchQuery querys, String geoAggregationField, Integer geoAggegationPrecision,
+			Boolean onlyFilteredAggregation, String termsAggregationField, String geoShapeFilterField);
 }

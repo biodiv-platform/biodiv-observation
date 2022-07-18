@@ -774,7 +774,6 @@ class Observation_resource {
 //		this.uploader_id = uploader_id;
 //		this.license_id = license_id;
 //	}
-
 	public Observation_resource(Long id, String description, String file_name, String type, String url, Integer rating,
 			Date upload_time, Integer uploader_id, Integer license_id, Long x, Long y, Long width, Long height,
 			String selection_status) {

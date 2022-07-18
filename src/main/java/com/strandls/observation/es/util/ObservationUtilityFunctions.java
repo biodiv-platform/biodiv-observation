@@ -57,7 +57,7 @@ public class ObservationUtilityFunctions {
 			"locationLat", "locationLon", "locationScale", "fromDate", "toDate", "rank", "scientificName", "commonName",
 			"kingdom", "phylum", "class", "order", "superfamily", "family", "genus", "species", "basisOfRecord" };
 	private final Integer hierarchyDepth = 8;
-	private final String csvFileDownloadPath = "/app/data/biodiv/data-archive/listpagecsv";
+	private final String csvFileDownloadPath = "/home/prakhar/biodiv/data-archive/listpagecsv"; // "app/data/biodiv/data-archive/listpagecsv";
 	private CSVWriter writer;
 
 	public String getCsvFileNameDownloadPath() {
