@@ -1745,7 +1745,7 @@ public class ObservationServiceImpl implements ObservationService {
 				imageCropInfo.setSelectionStatus(cropInfo.getSelectionStatus());
 				imageCropInfo.setId(cropInfo.getResource().getId());
 
-				if (!cropInfo.getSelectionStatus().equals("REJECTED")) {
+				if (cropInfo.getSelectionStatus().equals("SELECTED")) {
 					imageCropInfo.setX(cropInfo.getBbox()[0]);
 					imageCropInfo.setY(cropInfo.getBbox()[1]);
 					imageCropInfo.setWidth(cropInfo.getBbox()[2]);
