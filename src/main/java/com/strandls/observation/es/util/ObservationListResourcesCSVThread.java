@@ -28,7 +28,7 @@ public class ObservationListResourcesCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
 	private final String modulePath = "/data-archive/listpagecsv";
-	private final String basePath = "/home/prakhar/biodiv";//"/app/data/biodiv";
+	private final String basePath = "/home/prakhar/biodiv";// "/app/data/biodiv";
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -103,9 +103,9 @@ public class ObservationListResourcesCSVThread implements Runnable {
 			String status, String taxonId, String recoName, String rank, String tahsil, String district, String state,
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
-			String authorId, String notes, String url, String dataSetName, String dataTableName, MailService mailService2,
-			UserServiceApi userService, ObjectMapper objectMapper2, MapSearchQuery mapSearchQuery2,
-			String geoShapeFilterField2, String geoShapeFilterField) {
+			String authorId, String notes, String url, String dataSetName, String dataTableName,
+			MailService mailService2, UserServiceApi userService, ObjectMapper objectMapper2,
+			MapSearchQuery mapSearchQuery2, String geoShapeFilterField2, String geoShapeFilterField) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -155,7 +155,7 @@ public class ObservationListResourcesCSVThread implements Runnable {
 		this.url = url;
 		this.dataSetName = dataSetName;
 		this.dataTableName = dataTableName;
-		this.dataTableId =dataTableId;
+		this.dataTableId = dataTableId;
 		this.mailService = mailService2;
 		this.userServiceApi = userServiceApi;
 		this.objectMapper = objectMapper2;
@@ -172,7 +172,10 @@ public class ObservationListResourcesCSVThread implements Runnable {
 		String fileName = obUtil.getCsvFileNameDownloadPath();
 		String filePath = basePath + modulePath + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
-		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc));
+
+		obUtil.writeIntoCSV(writer, obUtil.getCsvHeadersForImageResourceDownloads(customfields, taxonomic, spatial,
+				traits, temporal, misc));
+
 		Integer max = 10000;
 		Integer offset = 0;
 		Integer epochSize = 0;
@@ -200,8 +203,8 @@ public class ObservationListResourcesCSVThread implements Runnable {
 
 				epochSize = epochSet.size();
 				offset = offset + max;
-//				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
-//						objectMapper);
+				obUtil.insertResourceListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal,
+						misc, objectMapper);
 				logger.info(
 						"Observation List Download RequestId = " + authorId + dtf.format(now) + "@ offset = " + offset);
 			} while (epochSize >= max);

@@ -56,6 +56,7 @@ public class ObservationUtilityFunctions {
 			"noOfIdentifications", "geoPrivacy", "createdOn", "associatedMedia", "group_id", "dateAccuracy", "isLocked",
 			"locationLat", "locationLon", "locationScale", "fromDate", "toDate", "rank", "scientificName", "commonName",
 			"kingdom", "phylum", "class", "order", "superfamily", "family", "genus", "species", "basisOfRecord" };
+	private final String[] csvHeadersCropInfo = { "x", "y", "width", "height", "selection_status" };
 	private final Integer hierarchyDepth = 8;
 	private final String csvFileDownloadPath = "/home/prakhar/biodiv/data-archive/listpagecsv"; // "app/data/biodiv/data-archive/listpagecsv";
 	private CSVWriter writer;
@@ -82,6 +83,19 @@ public class ObservationUtilityFunctions {
 		List<String> optionalHeaders = getOptionalHeaders(customfields, taxonomic, spatial, traits, temporal, misc);
 		List<String> header = Stream.concat(Arrays.asList(csvCoreHeaders).stream(), optionalHeaders.stream())
 				.collect(Collectors.toList());
+		headers.add(header.stream().toArray(String[]::new));
+		return headers;
+	}
+
+	public List<String[]> getCsvHeadersForImageResourceDownloads(List<String> customfields, List<String> taxonomic,
+			List<String> spatial, List<String> traits, List<String> temporal, List<String> misc) {
+		List<String[]> headers = new ArrayList<String[]>();
+		List<String> optionalHeaders = getOptionalHeaders(customfields, taxonomic, spatial, traits, temporal, misc);
+		List<String> header = Stream.concat(Arrays.asList(csvCoreHeaders).stream(), optionalHeaders.stream())
+				.collect(Collectors.toList());
+		header = Stream.concat(header.stream(), Arrays.asList(csvHeadersCropInfo).stream())
+				.collect(Collectors.toList());
+
 		headers.add(header.stream().toArray(String[]::new));
 		return headers;
 	}
@@ -173,6 +187,113 @@ public class ObservationUtilityFunctions {
 			rowSets.add(row.stream().toArray(String[]::new));
 		}
 		writer.writeAll(rowSets);
+
+	}
+
+	public void insertResourceListToCSV(List<ObservationListElasticResourceMapping> epochSet, CSVWriter writer2,
+			List<String> customfields, List<String> taxonomic, List<String> spatial, List<String> traits,
+			List<String> temporal, List<String> misc, ObjectMapper objectMapper) {
+
+		List<String[]> rowSets = new ArrayList<String[]>();
+		for (ObservationListElasticResourceMapping record : epochSet) {
+
+			List<Observation_resource> resources = record.getObservationResource();
+			for (Observation_resource resource : resources) {
+				List<String> row = new ArrayList<String>();
+				row.add(record.getObservationId().toString());
+				row.add(record.getUser().getName());
+				row.add(record.getPlaceName());
+				row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
+				row.add(record.getNoOfIdentification());
+				row.add(record.getGeoPrivacy().toString());
+				row.add(parseDate(record.getCreatedOn()));
+				row.add(record.getReprImageUrl());
+				row.add(record.getSpeciesGroup());
+				row.add(record.getDateAccuracy());
+				row.add(record.getIsLocked().toString());
+				row.add(record.getLatitude().toString());
+				row.add(record.getLongitude().toString());
+				row.add(record.getLocationScale());
+				row.add(parseDate(record.getFromDate()));
+				row.add(parseDate(record.getToDate()));
+				row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
+				row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
+				row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
+				row.addAll(record.getMaxVotedReco() != null
+						? (record.getMaxVotedReco().getHierarchy() != null
+								? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy())
+								: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
+						: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
+				row.add(record.getBasisOfRecord());
+
+				Integer flag = 0;
+
+				if (resource.getX() != null) {
+					row.add(resource.getX().toString());
+					flag++;
+				}
+
+				if (resource.getY() != null) {
+					row.add(resource.getY().toString());
+					flag++;
+				}
+
+				if (resource.getWidth() != null) {
+					row.add(resource.getWidth().toString());
+					flag++;
+				}
+
+				if (resource.getHeight() != null) {
+					row.add(resource.getHeight().toString());
+				}
+
+				if (flag > 0) {
+					row.add(resource.getSelection_status());
+				}
+
+				List<String> optionalHeader = null;
+				if (!customfields.isEmpty() && customfields.get(0) != null && !customfields.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(customfields.get(0).split(","));
+					Collection<String> values = fetchCustomFieldForCsv(optionalHeader, record.getCustomFields());
+					row.addAll(values);
+				}
+
+				if (!taxonomic.isEmpty() && taxonomic.get(0) != null && !taxonomic.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(taxonomic.get(0).split(","));
+					Collection<String> values = fetchTaxonomicForCsv(optionalHeader, record.getAllRecoVotes(),
+							record.getMaxVotedReco());
+					row.addAll(values);
+				}
+				if (!spatial.isEmpty() && spatial.get(0) != null && !spatial.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(spatial.get(0).split(","));
+					Collection<String> values = fetchSpatialForCsv(optionalHeader, record.getLocationInformation(),
+							record.getReverseGeocodedName());
+					row.addAll(values);
+				}
+				if (!traits.isEmpty() && traits.get(0) != null && !traits.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(traits.get(0).split(","));
+					Collection<String> values = fetchTraitsForCsv(optionalHeader, record.getFacts());
+					row.addAll(values);
+				}
+				if (!temporal.isEmpty() && temporal.get(0) != null && !temporal.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(temporal.get(0).split(","));
+					Collection<String> values = fetchTemporalForCsv(optionalHeader, record);
+					row.addAll(values);
+				}
+				if (!misc.isEmpty() && misc.get(0) != null && !misc.get(0).isEmpty()) {
+					optionalHeader = Arrays.asList(misc.get(0).split(","));
+					Collection<String> values = fetchMiscForCsv(optionalHeader, record, objectMapper);
+					row.addAll(values);
+				}
+
+				rowSets.add(row.stream().toArray(String[]::new));
+
+			}
+
+		}
+		writer.writeAll(rowSets);
+
+		// TODO Auto-generated method stub
 
 	}
 
@@ -581,4 +702,5 @@ public class ObservationUtilityFunctions {
 		return "";
 
 	}
+
 }
