@@ -215,7 +215,6 @@ public class ObservationUtilityFunctions {
 				row.add(record.getNoOfIdentification());
 				row.add(record.getGeoPrivacy().toString());
 				row.add(parseDate(record.getCreatedOn()));
-				// row.add(record.getReprImageUrl());
 				row.add(resource.getFile_name());
 				row.add(record.getSpeciesGroup());
 				row.add(record.getDateAccuracy());
@@ -237,7 +236,7 @@ public class ObservationUtilityFunctions {
 
 				row.add(record.getBasisOfRecord());
 
-				if (resource.getSelection_status().equals("SELECTED")) {
+				if (resource.getSelection_status() != null && resource.getSelection_status().equals("SELECTED")) {
 					row.add(resource.getX().toString());
 					row.add(resource.getY().toString());
 					row.add(resource.getWidth().toString());
@@ -298,8 +297,6 @@ public class ObservationUtilityFunctions {
 
 		}
 		writer.writeAll(rowSets);
-
-		// TODO Auto-generated method stub
 
 	}
 
