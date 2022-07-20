@@ -509,13 +509,13 @@ public class ObservationController {
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
 				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
-				ObservationListResourcesCSVThread csvThread = new ObservationListResourcesCSVThread(esUtility, observationListService,
-						downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
-						userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-						validate, traitParams, customParams, classificationid, mapSearchParams, maxvotedrecoid,
-						createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state,
-						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
-						onlyFilteredAggregation, termsAggregationField, authorId, notes,
+				ObservationListResourcesCSVThread csvThread = new ObservationListResourcesCSVThread(esUtility,
+						observationListService, downloadLogDao, customfields, taxonomic, spatial, traits, temporal,
+						misc, sGroup, taxon, user, userGroupList, webaddress, speciesName, mediaFilter, months,
+						isFlagged, minDate, maxDate, validate, traitParams, customParams, classificationid,
+						mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
+						rank, tahsil, district, state, tags, publicationGrade, index, type, geoAggregationField,
+						geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
 						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId);
 

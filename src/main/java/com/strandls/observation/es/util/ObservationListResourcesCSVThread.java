@@ -26,7 +26,7 @@ import com.strandls.user.pojo.DownloadLogData;
 
 public class ObservationListResourcesCSVThread implements Runnable {
 
-	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
+	private final Logger logger = LoggerFactory.getLogger(ObservationListResourcesCSVThread.class);
 	private final String modulePath = "/data-archive/listpageresourcescsv";
 	private final String basePath = "/app/data/biodiv";
 
@@ -90,7 +90,6 @@ public class ObservationListResourcesCSVThread implements Runnable {
 
 	public ObservationListResourcesCSVThread() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public ObservationListResourcesCSVThread(ESUtility esUtility, ObservationListService observationListService,
@@ -104,8 +103,8 @@ public class ObservationListResourcesCSVThread implements Runnable {
 			String tags, String publicationGrade, String index, String type, String geoAggregationField,
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
 			String authorId, String notes, String url, String dataSetName, String dataTableName,
-			MailService mailService2, UserServiceApi userService, ObjectMapper objectMapper2,
-			MapSearchQuery mapSearchQuery2, String geoShapeFilterField2, String geoShapeFilterField) {
+			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
+			MapSearchQuery mapSearchQuery, String geoShapeFilterField, String dataTableId) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -151,16 +150,17 @@ public class ObservationListResourcesCSVThread implements Runnable {
 		this.onlyFilteredAggregation = onlyFilteredAggregation;
 		this.termsAggregationField = termsAggregationField;
 		this.authorId = authorId;
+		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.notes = notes;
 		this.url = url;
 		this.dataSetName = dataSetName;
 		this.dataTableName = dataTableName;
-		this.dataTableId = dataTableId;
-		this.mailService = mailService2;
+		this.mailService = mailService;
 		this.userServiceApi = userServiceApi;
-		this.objectMapper = objectMapper2;
-		this.mapSearchQuery = mapSearchQuery2;
+		this.objectMapper = objectMapper;
+		this.mapSearchQuery = mapSearchQuery;
 		this.geoShapeFilterField = geoShapeFilterField;
+		this.dataTableId = dataTableId;
 	}
 
 	@Override
@@ -225,9 +225,9 @@ public class ObservationListResourcesCSVThread implements Runnable {
 			data.setStatus(fileGenerationStatus);
 			data.setNotes(notes);
 			data.setSourcetype("Observations");
-			// userServiceApi.logDocumentDownload(data);
 			try {
 				userServiceApi.logDocumentDownload(data);
+
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}

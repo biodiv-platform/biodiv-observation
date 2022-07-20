@@ -59,7 +59,7 @@ public class ObservationUtilityFunctions {
 	private final String[] csvHeadersCropInfo = { "x", "y", "width", "height", "selection_status", "contributor",
 			"license_name", "license_url" };
 	private final Integer hierarchyDepth = 8;
-	private final String csvFileDownloadPath = "app/data/biodiv/data-archive/listpagecsv";
+	private final String csvFileDownloadPath = "/app/data/biodiv/data-archive/listpagecsv";
 	private final String csvFileResourcesDownloadPath = "/app/data/biodiv/data-archive/listpageresourcescsv";
 	private CSVWriter writer;
 
