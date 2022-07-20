@@ -56,16 +56,23 @@ public class ObservationUtilityFunctions {
 			"noOfIdentifications", "geoPrivacy", "createdOn", "associatedMedia", "group_id", "dateAccuracy", "isLocked",
 			"locationLat", "locationLon", "locationScale", "fromDate", "toDate", "rank", "scientificName", "commonName",
 			"kingdom", "phylum", "class", "order", "superfamily", "family", "genus", "species", "basisOfRecord" };
-	private final String[] csvHeadersCropInfo = { "x", "y", "width", "height", "selection_status" };
+	private final String[] csvHeadersCropInfo = { "x", "y", "width", "height", "selection_status", "contributor",
+			"license_name", "license_url" };
 	private final Integer hierarchyDepth = 8;
-	private final String csvFileDownloadPath = "/home/prakhar/biodiv/data-archive/listpagecsv"; // "app/data/biodiv/data-archive/listpagecsv";
+	private final String csvFileDownloadPath = "app/data/biodiv/data-archive/listpagecsv";
+	private final String csvFileResourcesDownloadPath = "/app/data/biodiv/data-archive/listpageresourcescsv";
 	private CSVWriter writer;
 
-	public String getCsvFileNameDownloadPath() {
+	public String getCsvFileNameDownloadPath(Boolean isResourceDownload) {
 
 		Date date = new Date();
 		String fileName = "obv_" + date.getTime() + ".csv";
-		String filePathName = csvFileDownloadPath + File.separator + fileName;
+		String filePathName;
+		if (isResourceDownload) {
+			filePathName = csvFileResourcesDownloadPath + File.separator + fileName;
+		} else {
+			filePathName = csvFileDownloadPath + File.separator + fileName;
+		}
 		File file = new File(filePathName);
 		try {
 			boolean isFileCreated = file.createNewFile();
@@ -145,7 +152,8 @@ public class ObservationUtilityFunctions {
 			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
 			row.addAll(record.getMaxVotedReco() != null
 					? (record.getMaxVotedReco().getHierarchy() != null
-							? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy())
+							? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
+									record.getMaxVotedReco().getRank())
 							: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
 					: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
 			row.add(record.getBasisOfRecord());
@@ -207,7 +215,8 @@ public class ObservationUtilityFunctions {
 				row.add(record.getNoOfIdentification());
 				row.add(record.getGeoPrivacy().toString());
 				row.add(parseDate(record.getCreatedOn()));
-				row.add(record.getReprImageUrl());
+				// row.add(record.getReprImageUrl());
+				row.add(resource.getFile_name());
 				row.add(record.getSpeciesGroup());
 				row.add(record.getDateAccuracy());
 				row.add(record.getIsLocked().toString());
@@ -221,35 +230,32 @@ public class ObservationUtilityFunctions {
 				row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
 				row.addAll(record.getMaxVotedReco() != null
 						? (record.getMaxVotedReco().getHierarchy() != null
-								? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy())
+								? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
+										record.getMaxVotedReco().getRank())
 								: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
 						: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
+
 				row.add(record.getBasisOfRecord());
 
-				Integer flag = 0;
-
-				if (resource.getX() != null) {
+				if (resource.getSelection_status().equals("SELECTED")) {
 					row.add(resource.getX().toString());
-					flag++;
-				}
-
-				if (resource.getY() != null) {
 					row.add(resource.getY().toString());
-					flag++;
-				}
-
-				if (resource.getWidth() != null) {
 					row.add(resource.getWidth().toString());
-					flag++;
-				}
-
-				if (resource.getHeight() != null) {
 					row.add(resource.getHeight().toString());
-				}
+					row.add(resource.getSelection_status());
 
-				if (flag > 0) {
+				} else {
+					for (int i = 0; i < 4; i++) {
+						row.add(null);
+					}
 					row.add(resource.getSelection_status());
 				}
+
+//				
+
+				row.add(resource.getContributor());
+				row.add(resource.getLicense_name());
+				row.add(resource.getLicense_url());
 
 				List<String> optionalHeader = null;
 				if (!customfields.isEmpty() && customfields.get(0) != null && !customfields.get(0).isEmpty()) {
@@ -425,8 +431,10 @@ public class ObservationUtilityFunctions {
 		return value;
 	}
 
-	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy) {
-		List<String> hierarchyValues = new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null));
+	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy, String rank) {
+		// List<String> hierarchyValues = new
+		// ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null));
+		List<String> hierarchyValues = new ArrayList<String>();
 //		for (Hierarchy h : hierarchy) {
 //			int rank = h.getRank().intValue();
 //			if (rank == 7) {
@@ -437,6 +445,23 @@ public class ObservationUtilityFunctions {
 //			if (rank >= 0 && rank <= 7)
 //				hierarchyValues.set(rank, h.getNormalized_name());
 //		}
+		Integer flag = 0;
+
+		for (Hierarchy h : hierarchy) {
+			if (h.getRank().equalsIgnoreCase(rank.toLowerCase())) {
+				flag++;
+				break;
+			}
+
+			if (!h.getRank().equalsIgnoreCase("root")) {
+				hierarchyValues.add(h.getNormalized_name());
+			}
+		}
+
+		for (int remainingSlots = 0; remainingSlots <= (8 - hierarchyValues.size()); remainingSlots++) {
+			hierarchyValues.add(" ");
+		}
+
 		return hierarchyValues;
 	}
 

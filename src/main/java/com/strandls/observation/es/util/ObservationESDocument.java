@@ -742,6 +742,9 @@ class Observation_resource {
 	private Long width;
 	private Long height;
 	private String selection_status;
+	private String license_name;
+	private String license_url;
+	private String contributor;
 
 	/**
 	 * 
@@ -776,7 +779,7 @@ class Observation_resource {
 //	}
 	public Observation_resource(Long id, String description, String file_name, String type, String url, Integer rating,
 			Date upload_time, Integer uploader_id, Integer license_id, Long x, Long y, Long width, Long height,
-			String selection_status) {
+			String selection_status, String license_name, String license_url, String contributor) {
 		super();
 		this.id = id;
 		this.description = description;
@@ -792,6 +795,33 @@ class Observation_resource {
 		this.width = width;
 		this.height = height;
 		this.selection_status = selection_status;
+		this.license_name = license_name;
+		this.license_url = license_url;
+		this.contributor = contributor;
+	}
+
+	public String getLicense_name() {
+		return license_name;
+	}
+
+	public void setLicense_name(String license_name) {
+		this.license_name = license_name;
+	}
+
+	public String getLicense_url() {
+		return license_url;
+	}
+
+	public void setLicense_url(String license_url) {
+		this.license_url = license_url;
+	}
+
+	public String getContributor() {
+		return contributor;
+	}
+
+	public void setContributor(String contributor) {
+		this.contributor = contributor;
 	}
 
 	public String getFile_name() {

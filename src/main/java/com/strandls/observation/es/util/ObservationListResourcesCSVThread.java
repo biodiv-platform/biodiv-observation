@@ -27,8 +27,8 @@ import com.strandls.user.pojo.DownloadLogData;
 public class ObservationListResourcesCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
-	private final String modulePath = "/data-archive/listpagecsv";
-	private final String basePath = "/home/prakhar/biodiv";// "/app/data/biodiv";
+	private final String modulePath = "/data-archive/listpageresourcescsv";
+	private final String basePath = "/app/data/biodiv";
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -169,7 +169,7 @@ public class ObservationListResourcesCSVThread implements Runnable {
 		LocalDateTime now = LocalDateTime.now();
 		logger.info("Observation List Download Request Received : RequestId = " + authorId + dtf.format(now));
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-		String fileName = obUtil.getCsvFileNameDownloadPath();
+		String fileName = obUtil.getCsvFileNameDownloadPath(true);
 		String filePath = basePath + modulePath + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
 
@@ -225,11 +225,12 @@ public class ObservationListResourcesCSVThread implements Runnable {
 			data.setStatus(fileGenerationStatus);
 			data.setNotes(notes);
 			data.setSourcetype("Observations");
-//			try {
-//				userServiceApi.logDocumentDownload(data);
-//			} catch (ApiException e) {
-//				logger.error(e.getMessage());
-//			}
+			// userServiceApi.logDocumentDownload(data);
+			try {
+				userServiceApi.logDocumentDownload(data);
+			} catch (ApiException e) {
+				logger.error(e.getMessage());
+			}
 		}
 		if (fileGenerationStatus.equalsIgnoreCase("failed")) {
 			try {

@@ -28,7 +28,7 @@ public class ObservationListCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
 	private final String modulePath = "/data-archive/listpagecsv";
-	private final String basePath = "/home/prakhar/biodiv";
+	private final String basePath = "/app/data/biodiv";
 
 	private ESUtility esUtility;
 	private ObservationListService observationListService;
@@ -104,7 +104,7 @@ public class ObservationListCSVThread implements Runnable {
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
 			String authorId, String notes, String url, String dataSetName, String dataTableName,
 			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
-			MapSearchQuery mapSearchQuery,String geoShapeFilterField,String dataTableId) {
+			MapSearchQuery mapSearchQuery, String geoShapeFilterField, String dataTableId) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -169,7 +169,7 @@ public class ObservationListCSVThread implements Runnable {
 		LocalDateTime now = LocalDateTime.now();
 		logger.info("Observation List Download Request Received : RequestId = " + authorId + dtf.format(now));
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-		String fileName = obUtil.getCsvFileNameDownloadPath();
+		String fileName = obUtil.getCsvFileNameDownloadPath(false);
 		String filePath = basePath + modulePath + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
 		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc));
@@ -191,7 +191,7 @@ public class ObservationListCSVThread implements Runnable {
 								mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
 								classificationid, mapSearchParams, maxvotedrecoid, null, createdOnMaxDate,
 								createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-								publicationGrade, null, dataSetName, dataTableName, null,dataTableId);
+								publicationGrade, null, dataSetName, dataTableName, null, dataTableId);
 
 				List<ObservationListElasticMapping> epochSet = observationListService.getObservationListCsv(index, type,
 						searchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
