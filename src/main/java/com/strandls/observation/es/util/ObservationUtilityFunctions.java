@@ -377,20 +377,29 @@ public class ObservationUtilityFunctions {
 	}
 
 	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy, String rank) {
-		List<String> hierarchyValues = new ArrayList<String>();
-		Integer flag = 0;
+		List<String> hierarchyValues = new ArrayList<String>(Collections.nCopies(8, null));
 
-		for (Hierarchy h : hierarchy) {
-			if (h.getRank().equalsIgnoreCase(rank.toLowerCase())) {
-				flag++;
+		Map<String, Integer> rankname = new HashMap<String, Integer>();
+
+		rankname.put("kingdom", 1);
+		rankname.put("phylum", 2);
+		rankname.put("class", 3);
+		rankname.put("order", 4);
+		rankname.put("superfamily", 5);
+		rankname.put("family", 6);
+		rankname.put("genus", 7);
+		rankname.put("species", 8);
+
+		for (Integer rankNo = 0; rankNo < 8; rankNo++) {
+			if (hierarchy.get(rankNo).getRank().equalsIgnoreCase(rank.toLowerCase())) {
 				break;
 			}
-			if (!h.getRank().equalsIgnoreCase("root")) {
-				hierarchyValues.add(h.getNormalized_name());
+
+			if (rankNo != 0) {
+				hierarchyValues.set(rankname.get(hierarchy.get(rankNo).getRank()) - 1,
+						hierarchy.get(rankNo).getNormalized_name());
 			}
-		}
-		for (int remainingSlots = 0; remainingSlots <= (8 - hierarchyValues.size()); remainingSlots++) {
-			hierarchyValues.add(" ");
+
 		}
 
 		return hierarchyValues;
