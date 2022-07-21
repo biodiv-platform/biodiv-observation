@@ -37,7 +37,6 @@ import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
-import com.strandls.observation.es.util.ObservationListElasticResourceMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.AllRecoSugguestions;
@@ -1018,32 +1017,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 			logger.error(e.getMessage());
 		}
 		return null;
-	}
-
-	@Override
-	public List<ObservationListElasticResourceMapping> getObservationListWithResourcesCsv(String index, String type,
-			MapSearchQuery querys, String geoAggregationField, Integer geoAggegationPrecision,
-			Boolean onlyFilteredAggregation, String termsAggregationField, String geoShapeFilterField) {
-
-		try {
-			List<ObservationListElasticResourceMapping> observationList = new ArrayList<ObservationListElasticResourceMapping>();
-			MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-					onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, querys);
-			List<MapDocument> documents = result.getDocuments();
-			for (MapDocument document : documents) {
-				try {
-					observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
-							ObservationListElasticResourceMapping.class));
-				} catch (IOException e) {
-					logger.error(e.getMessage());
-				}
-			}
-			return observationList;
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		return null;
-
 	}
 
 }

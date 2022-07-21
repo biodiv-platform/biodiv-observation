@@ -57,7 +57,6 @@ import com.strandls.observation.es.util.ObservationBulkMappingThread;
 import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
-import com.strandls.observation.es.util.ObservationListResourcesCSVThread;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DownloadLog;
@@ -486,10 +485,15 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
 					dataTableName, geoEntity, dataTableId);
 
-			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
-					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
+			if ((view.equalsIgnoreCase("csv_download") || view.equalsIgnoreCase("resources_csv_download"))
+					&& !authorId.isEmpty() && request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
 				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+				Boolean imageResourcesDownload = false;
+				if (view.equalsIgnoreCase("resources_csv_download")) {
+					imageResourcesDownload = true;
+				}
 
 				ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
 						downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
@@ -499,26 +503,7 @@ public class ObservationController {
 						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId);
-				Thread thread = new Thread(csvThread);
-				thread.start();
-				return Response.status(Status.OK).build();
-
-			} else if (view.equalsIgnoreCase("resources_csv_download") && !authorId.isEmpty()
-					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
-					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
-				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-
-				ObservationListResourcesCSVThread csvThread = new ObservationListResourcesCSVThread(esUtility,
-						observationListService, downloadLogDao, customfields, taxonomic, spatial, traits, temporal,
-						misc, sGroup, taxon, user, userGroupList, webaddress, speciesName, mediaFilter, months,
-						isFlagged, minDate, maxDate, validate, traitParams, customParams, classificationid,
-						mapSearchParams, maxvotedrecoid, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
-						rank, tahsil, district, state, tags, publicationGrade, index, type, geoAggregationField,
-						geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField, authorId, notes,
-						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId);
-
+						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId, imageResourcesDownload);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();

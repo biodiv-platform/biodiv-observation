@@ -85,24 +85,15 @@ public class ObservationUtilityFunctions {
 	}
 
 	public List<String[]> getCsvHeaders(List<String> customfields, List<String> taxonomic, List<String> spatial,
-			List<String> traits, List<String> temporal, List<String> misc) {
+			List<String> traits, List<String> temporal, List<String> misc, Boolean isImageResourceDownload) {
 		List<String[]> headers = new ArrayList<String[]>();
 		List<String> optionalHeaders = getOptionalHeaders(customfields, taxonomic, spatial, traits, temporal, misc);
 		List<String> header = Stream.concat(Arrays.asList(csvCoreHeaders).stream(), optionalHeaders.stream())
 				.collect(Collectors.toList());
-		headers.add(header.stream().toArray(String[]::new));
-		return headers;
-	}
-
-	public List<String[]> getCsvHeadersForImageResourceDownloads(List<String> customfields, List<String> taxonomic,
-			List<String> spatial, List<String> traits, List<String> temporal, List<String> misc) {
-		List<String[]> headers = new ArrayList<String[]>();
-		List<String> optionalHeaders = getOptionalHeaders(customfields, taxonomic, spatial, traits, temporal, misc);
-		List<String> header = Stream.concat(Arrays.asList(csvCoreHeaders).stream(), optionalHeaders.stream())
-				.collect(Collectors.toList());
-		header = Stream.concat(header.stream(), Arrays.asList(csvHeadersCropInfo).stream())
-				.collect(Collectors.toList());
-
+		if (isImageResourceDownload) {
+			header = Stream.concat(header.stream(), Arrays.asList(csvHeadersCropInfo).stream())
+					.collect(Collectors.toList());
+		}
 		headers.add(header.stream().toArray(String[]::new));
 		return headers;
 	}
@@ -124,6 +115,78 @@ public class ObservationUtilityFunctions {
 
 	}
 
+	private void addOptionalHeaderValues(List<String> row, List<String> customfields, List<String> taxonomic,
+			List<String> spatial, List<String> traits, List<String> temporal, List<String> misc,
+			ObservationListElasticMapping record, ObjectMapper objectMapper) {
+
+		List<String> optionalHeader = null;
+		if (!customfields.isEmpty() && customfields.get(0) != null && !customfields.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(customfields.get(0).split(","));
+			Collection<String> values = fetchCustomFieldForCsv(optionalHeader, record.getCustomFields());
+			row.addAll(values);
+		}
+
+		if (!taxonomic.isEmpty() && taxonomic.get(0) != null && !taxonomic.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(taxonomic.get(0).split(","));
+			Collection<String> values = fetchTaxonomicForCsv(optionalHeader, record.getAllRecoVotes(),
+					record.getMaxVotedReco());
+			row.addAll(values);
+		}
+		if (!spatial.isEmpty() && spatial.get(0) != null && !spatial.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(spatial.get(0).split(","));
+			Collection<String> values = fetchSpatialForCsv(optionalHeader, record.getLocationInformation(),
+					record.getReverseGeocodedName());
+			row.addAll(values);
+		}
+		if (!traits.isEmpty() && traits.get(0) != null && !traits.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(traits.get(0).split(","));
+			Collection<String> values = fetchTraitsForCsv(optionalHeader, record.getFacts());
+			row.addAll(values);
+		}
+		if (!temporal.isEmpty() && temporal.get(0) != null && !temporal.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(temporal.get(0).split(","));
+			Collection<String> values = fetchTemporalForCsv(optionalHeader, record);
+			row.addAll(values);
+		}
+		if (!misc.isEmpty() && misc.get(0) != null && !misc.get(0).isEmpty()) {
+			optionalHeader = Arrays.asList(misc.get(0).split(","));
+			Collection<String> values = fetchMiscForCsv(optionalHeader, record, objectMapper);
+			row.addAll(values);
+		}
+
+	}
+
+	private void addCoreHeaderValues(List<String> row, ObservationListElasticMapping record, String fileName) {
+		row.add(record.getObservationId().toString());
+		row.add(record.getUser().getName());
+		row.add(record.getPlaceName());
+		row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
+		row.add(record.getNoOfIdentification());
+		row.add(record.getGeoPrivacy().toString());
+		row.add(parseDate(record.getCreatedOn()));
+		row.add(fileName);
+		row.add(record.getSpeciesGroup());
+		row.add(record.getDateAccuracy());
+		row.add(record.getIsLocked().toString());
+		row.add(record.getLatitude().toString());
+		row.add(record.getLongitude().toString());
+		row.add(record.getLocationScale());
+		row.add(parseDate(record.getFromDate()));
+		row.add(parseDate(record.getToDate()));
+		row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
+		row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
+		row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
+		row.addAll(record.getMaxVotedReco() != null
+				? (record.getMaxVotedReco().getHierarchy() != null
+						? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
+								record.getMaxVotedReco().getRank())
+						: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
+				: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
+
+		row.add(record.getBasisOfRecord());
+
+	}
+
 	public void insertListToCSV(List<ObservationListElasticMapping> records, CSVWriter writer,
 			List<String> customfields, List<String> taxonomic, List<String> spatial, List<String> traits,
 			List<String> temporal, List<String> misc, ObjectMapper objectMapper) {
@@ -131,66 +194,10 @@ public class ObservationUtilityFunctions {
 		List<String[]> rowSets = new ArrayList<String[]>();
 		for (ObservationListElasticMapping record : records) {
 			List<String> row = new ArrayList<String>();
-			row.add(record.getObservationId().toString());
-			row.add(record.getUser().getName());
-			row.add(record.getPlaceName());
-			row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
-			row.add(record.getNoOfIdentification());
-			row.add(record.getGeoPrivacy().toString());
-			row.add(parseDate(record.getCreatedOn()));
-			row.add(record.getReprImageUrl());
-			row.add(record.getSpeciesGroup());
-			row.add(record.getDateAccuracy());
-			row.add(record.getIsLocked().toString());
-			row.add(record.getLatitude().toString());
-			row.add(record.getLongitude().toString());
-			row.add(record.getLocationScale());
-			row.add(parseDate(record.getFromDate()));
-			row.add(parseDate(record.getToDate()));
-			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
-			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
-			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
-			row.addAll(record.getMaxVotedReco() != null
-					? (record.getMaxVotedReco().getHierarchy() != null
-							? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
-									record.getMaxVotedReco().getRank())
-							: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
-					: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
-			row.add(record.getBasisOfRecord());
-			List<String> optionalHeader = null;
-			if (!customfields.isEmpty() && customfields.get(0) != null && !customfields.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(customfields.get(0).split(","));
-				Collection<String> values = fetchCustomFieldForCsv(optionalHeader, record.getCustomFields());
-				row.addAll(values);
-			}
 
-			if (!taxonomic.isEmpty() && taxonomic.get(0) != null && !taxonomic.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(taxonomic.get(0).split(","));
-				Collection<String> values = fetchTaxonomicForCsv(optionalHeader, record.getAllRecoVotes(),
-						record.getMaxVotedReco());
-				row.addAll(values);
-			}
-			if (!spatial.isEmpty() && spatial.get(0) != null && !spatial.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(spatial.get(0).split(","));
-				Collection<String> values = fetchSpatialForCsv(optionalHeader, record.getLocationInformation(),
-						record.getReverseGeocodedName());
-				row.addAll(values);
-			}
-			if (!traits.isEmpty() && traits.get(0) != null && !traits.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(traits.get(0).split(","));
-				Collection<String> values = fetchTraitsForCsv(optionalHeader, record.getFacts());
-				row.addAll(values);
-			}
-			if (!temporal.isEmpty() && temporal.get(0) != null && !temporal.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(temporal.get(0).split(","));
-				Collection<String> values = fetchTemporalForCsv(optionalHeader, record);
-				row.addAll(values);
-			}
-			if (!misc.isEmpty() && misc.get(0) != null && !misc.get(0).isEmpty()) {
-				optionalHeader = Arrays.asList(misc.get(0).split(","));
-				Collection<String> values = fetchMiscForCsv(optionalHeader, record, objectMapper);
-				row.addAll(values);
-			}
+			addCoreHeaderValues(row, record, record.getReprImageUrl());
+			addOptionalHeaderValues(row, customfields, taxonomic, spatial, traits, temporal, misc, record,
+					objectMapper);
 
 			rowSets.add(row.stream().toArray(String[]::new));
 		}
@@ -198,43 +205,18 @@ public class ObservationUtilityFunctions {
 
 	}
 
-	public void insertResourceListToCSV(List<ObservationListElasticResourceMapping> epochSet, CSVWriter writer2,
+	public void insertResourceListToCSV(List<ObservationListElasticMapping> epochSet, CSVWriter writer2,
 			List<String> customfields, List<String> taxonomic, List<String> spatial, List<String> traits,
 			List<String> temporal, List<String> misc, ObjectMapper objectMapper) {
 
 		List<String[]> rowSets = new ArrayList<String[]>();
-		for (ObservationListElasticResourceMapping record : epochSet) {
+		for (ObservationListElasticMapping record : epochSet) {
 
 			List<Observation_resource> resources = record.getObservationResource();
 			for (Observation_resource resource : resources) {
 				List<String> row = new ArrayList<String>();
-				row.add(record.getObservationId().toString());
-				row.add(record.getUser().getName());
-				row.add(record.getPlaceName());
-				row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
-				row.add(record.getNoOfIdentification());
-				row.add(record.getGeoPrivacy().toString());
-				row.add(parseDate(record.getCreatedOn()));
-				row.add(resource.getFile_name());
-				row.add(record.getSpeciesGroup());
-				row.add(record.getDateAccuracy());
-				row.add(record.getIsLocked().toString());
-				row.add(record.getLatitude().toString());
-				row.add(record.getLongitude().toString());
-				row.add(record.getLocationScale());
-				row.add(parseDate(record.getFromDate()));
-				row.add(parseDate(record.getToDate()));
-				row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
-				row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
-				row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
-				row.addAll(record.getMaxVotedReco() != null
-						? (record.getMaxVotedReco().getHierarchy() != null
-								? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
-										record.getMaxVotedReco().getRank())
-								: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
-						: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
 
-				row.add(record.getBasisOfRecord());
+				addCoreHeaderValues(row, record, resource.getFile_name());
 
 				if (resource.getSelection_status() != null && resource.getSelection_status().equals("SELECTED")) {
 					row.add(resource.getX().toString());
@@ -250,46 +232,12 @@ public class ObservationUtilityFunctions {
 					row.add(resource.getSelection_status());
 				}
 
-//				
-
 				row.add(resource.getContributor());
 				row.add(resource.getLicense_name());
 				row.add(resource.getLicense_url());
 
-				List<String> optionalHeader = null;
-				if (!customfields.isEmpty() && customfields.get(0) != null && !customfields.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(customfields.get(0).split(","));
-					Collection<String> values = fetchCustomFieldForCsv(optionalHeader, record.getCustomFields());
-					row.addAll(values);
-				}
-
-				if (!taxonomic.isEmpty() && taxonomic.get(0) != null && !taxonomic.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(taxonomic.get(0).split(","));
-					Collection<String> values = fetchTaxonomicForCsv(optionalHeader, record.getAllRecoVotes(),
-							record.getMaxVotedReco());
-					row.addAll(values);
-				}
-				if (!spatial.isEmpty() && spatial.get(0) != null && !spatial.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(spatial.get(0).split(","));
-					Collection<String> values = fetchSpatialForCsv(optionalHeader, record.getLocationInformation(),
-							record.getReverseGeocodedName());
-					row.addAll(values);
-				}
-				if (!traits.isEmpty() && traits.get(0) != null && !traits.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(traits.get(0).split(","));
-					Collection<String> values = fetchTraitsForCsv(optionalHeader, record.getFacts());
-					row.addAll(values);
-				}
-				if (!temporal.isEmpty() && temporal.get(0) != null && !temporal.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(temporal.get(0).split(","));
-					Collection<String> values = fetchTemporalForCsv(optionalHeader, record);
-					row.addAll(values);
-				}
-				if (!misc.isEmpty() && misc.get(0) != null && !misc.get(0).isEmpty()) {
-					optionalHeader = Arrays.asList(misc.get(0).split(","));
-					Collection<String> values = fetchMiscForCsv(optionalHeader, record, objectMapper);
-					row.addAll(values);
-				}
+				addOptionalHeaderValues(row, customfields, taxonomic, spatial, traits, temporal, misc, record,
+						objectMapper);
 
 				rowSets.add(row.stream().toArray(String[]::new));
 
@@ -429,19 +377,7 @@ public class ObservationUtilityFunctions {
 	}
 
 	private List<String> getMaxVotedHierarchy(List<Hierarchy> hierarchy, String rank) {
-		// List<String> hierarchyValues = new
-		// ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null));
 		List<String> hierarchyValues = new ArrayList<String>();
-//		for (Hierarchy h : hierarchy) {
-//			int rank = h.getRank().intValue();
-//			if (rank == 7) {
-//				rank -= 1;
-//			} else if (rank == 9) {
-//				rank -= 2;
-//			}
-//			if (rank >= 0 && rank <= 7)
-//				hierarchyValues.set(rank, h.getNormalized_name());
-//		}
 		Integer flag = 0;
 
 		for (Hierarchy h : hierarchy) {
@@ -449,12 +385,10 @@ public class ObservationUtilityFunctions {
 				flag++;
 				break;
 			}
-
 			if (!h.getRank().equalsIgnoreCase("root")) {
 				hierarchyValues.add(h.getNormalized_name());
 			}
 		}
-
 		for (int remainingSlots = 0; remainingSlots <= (8 - hierarchyValues.size()); remainingSlots++) {
 			hierarchyValues.add(" ");
 		}

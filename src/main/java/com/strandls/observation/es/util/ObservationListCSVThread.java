@@ -28,6 +28,7 @@ public class ObservationListCSVThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationListCSVThread.class);
 	private final String modulePath = "/data-archive/listpagecsv";
+	private final String modulePathForImageResourceDownloads = "/data-archive/listpageresourcescsv";
 	private final String basePath = "/app/data/biodiv";
 
 	private ESUtility esUtility;
@@ -87,6 +88,7 @@ public class ObservationListCSVThread implements Runnable {
 	private ObjectMapper objectMapper;
 	private MapSearchQuery mapSearchQuery;
 	private String geoShapeFilterField;
+	private Boolean imageresourcesDownload;
 
 	public ObservationListCSVThread() {
 		super();
@@ -104,7 +106,8 @@ public class ObservationListCSVThread implements Runnable {
 			Integer geoAggegationPrecision, Boolean onlyFilteredAggregation, String termsAggregationField,
 			String authorId, String notes, String url, String dataSetName, String dataTableName,
 			MailService mailService, UserServiceApi userServiceApi, ObjectMapper objectMapper,
-			MapSearchQuery mapSearchQuery, String geoShapeFilterField, String dataTableId) {
+			MapSearchQuery mapSearchQuery, String geoShapeFilterField, String dataTableId,
+			Boolean imageResourcesDownload) {
 		super();
 		this.esUtility = esUtility;
 		this.observationListService = observationListService;
@@ -161,6 +164,7 @@ public class ObservationListCSVThread implements Runnable {
 		this.mapSearchQuery = mapSearchQuery;
 		this.geoShapeFilterField = geoShapeFilterField;
 		this.dataTableId = dataTableId;
+		this.imageresourcesDownload = imageResourcesDownload;
 	}
 
 	@Override
@@ -169,10 +173,17 @@ public class ObservationListCSVThread implements Runnable {
 		LocalDateTime now = LocalDateTime.now();
 		logger.info("Observation List Download Request Received : RequestId = " + authorId + dtf.format(now));
 		ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
-		String fileName = obUtil.getCsvFileNameDownloadPath(false);
-		String filePath = basePath + modulePath + File.separator + fileName;
+		String fileName = obUtil.getCsvFileNameDownloadPath(imageresourcesDownload);
+		String modulePathForDownloads = "";
+		if (imageresourcesDownload) {
+			modulePathForDownloads = modulePathForImageResourceDownloads;
+		} else {
+			modulePathForDownloads = modulePath;
+		}
+		String filePath = basePath + modulePathForDownloads + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
-		obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc));
+		obUtil.writeIntoCSV(writer,
+				obUtil.getCsvHeaders(customfields, taxonomic, spatial, traits, temporal, misc, imageresourcesDownload));
 		Integer max = 10000;
 		Integer offset = 0;
 		Integer epochSize = 0;
@@ -199,10 +210,17 @@ public class ObservationListCSVThread implements Runnable {
 
 				epochSize = epochSet.size();
 				offset = offset + max;
-				obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
-						objectMapper);
+				if (imageresourcesDownload) {
+					obUtil.insertResourceListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal,
+							misc, objectMapper);
+				} else {
+					obUtil.insertListToCSV(epochSet, writer, customfields, taxonomic, spatial, traits, temporal, misc,
+							objectMapper);
+				}
+
 				logger.info(
 						"Observation List Download RequestId = " + authorId + dtf.format(now) + "@ offset = " + offset);
+
 			} while (epochSize >= max);
 			entity.setFilePath(filePath);
 			entity.setStatus(fileGenerationStatus);
