@@ -233,7 +233,7 @@ public class ObservationListCSVThread implements Runnable {
 			obUtil.closeWriter();
 			entity.setStatus(fileGenerationStatus);
 			DownloadLogData data = new DownloadLogData();
-			data.setFilePath(modulePath + File.separator + fileName);
+			data.setFilePath(modulePathForDownloads + File.separator + fileName);
 			data.setFileType(fileType);
 			data.setFilterUrl(entity.getFilterUrl());
 			data.setStatus(fileGenerationStatus);
