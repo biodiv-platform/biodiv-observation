@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
-import com.strandls.activity.pojo.ActivityLoggingData;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.ObservationMailData;
@@ -49,8 +48,6 @@ import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
-import com.strandls.observation.es.util.ESCreateThread;
-import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
@@ -60,18 +57,17 @@ import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservatioImageResourceCropinfo;
 import com.strandls.observation.pojo.Observation;
-import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
-import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
+import com.strandls.observation.service.ObservationCreateService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -87,7 +83,6 @@ import com.strandls.taxonomy.pojo.SpeciesPermission;
 import com.strandls.taxonomy.pojo.TaxonTree;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
-import com.strandls.traits.pojo.FactsCreateData;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
@@ -176,9 +171,6 @@ public class ObservationServiceImpl implements ObservationService {
 	private RabbitMQProducer producer;
 
 	@Inject
-	private ESUpdate esUpdate;
-
-	@Inject
 	private MailMetaDataConverter converter;
 
 	@Inject
@@ -201,6 +193,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private DataTableServiceApi dataTableService;
+
+	@Inject
+	private ObservationCreateService observationCreateService;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -353,143 +348,6 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ShowData createObservation(HttpServletRequest request, ObservationCreate observationData) {
-
-		try {
-			System.out.println("\n\n\n***** Observation Create Data: " + observationData.getResources().toString()
-					+ " ***** \n\n\n");
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
-			Long maxVotedReco = null;
-			Observation observation = observationHelper.createObservationMapping(userId, observationData);
-			observation = observationDao.save(observation);
-
-			if (observationData.getResources() != null && !observationData.getResources().isEmpty()) {
-				List<Resource> resources = observationHelper.createResourceMapping(request, userId,
-						observationData.getResources());
-				if (resources == null || resources.isEmpty()) {
-					observationDao.delete(observation);
-					return null;
-				}
-				resourceService = headers.addResourceHeaders(resourceService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-
-				resources = resourceService.createResource("OBSERVATION", String.valueOf(observation.getId()),
-						resources);
-
-				Integer noOfImages = 0;
-				Integer noOfAudio = 0;
-				Integer noOfVideo = 0;
-
-				Long reprImage = null;
-				int rating = 0;
-				for (Resource res : resources) {
-					if (res.getType().equals("AUDIO"))
-						noOfAudio++;
-					else if (res.getType().equals("IMAGE")) {
-						noOfImages++;
-						if (reprImage == null)
-							reprImage = res.getId();
-						if (res.getRating() != null && res.getRating() > rating) {
-							reprImage = res.getId();
-							rating = res.getRating();
-						}
-					} else if (res.getType().equals("VIDEO"))
-						noOfVideo++;
-				}
-				observation.setNoOfAudio(noOfAudio);
-				observation.setNoOfImages(noOfImages);
-				observation.setNoOfVideos(noOfVideo);
-				observation.setReprImageId(reprImage);
-				observation = observationDao.update(observation);
-			}
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, observation.getId(),
-					observation.getId(), "observation", null, "Observation created", null);
-
-			if (!(observationData.getHelpIdentify())) {
-				RecoCreate recoCreate = observationHelper.createRecoMapping(observationData.getRecoData());
-				maxVotedReco = recoService.createRecoVote(request, userId, observation.getId(),
-						observationData.getRecoData().getScientificNameTaxonId(), recoCreate, true);
-
-				observation.setMaxVotedRecoId(maxVotedReco);
-				observationDao.update(observation);
-			}
-
-			if ((observationData.getFactValuePairs() != null && !observationData.getFactValuePairs().isEmpty())
-					|| (observationData.getFactValueStringPairs() != null
-							&& !observationData.getFactValueStringPairs().isEmpty())) {
-				FactsCreateData factsCreateData = new FactsCreateData();
-				factsCreateData.setFactValuePairs(observationData.getFactValuePairs());
-				factsCreateData.setFactValueString(observationData.getFactValueStringPairs());
-				factsCreateData.setMailData(null);
-				traitService = headers.addTraitsHeaders(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
-				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
-						factsCreateData);
-			}
-
-			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
-				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
-
-				userGroupData.setUserGroups(observationData.getUserGroupId());
-				userGroupData.setMailData(null);
-				userGroupData.setUgFilterData(getUGFilterObvData(observation));
-				userGroupService = headers.addUserGroupHeader(userGroupService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
-			}
-			if (!(observationData.getTags().isEmpty())) {
-				TagsMapping tagsMapping = new TagsMapping();
-				tagsMapping.setObjectId(observation.getId());
-				tagsMapping.setTags(observationData.getTags());
-				TagsMappingData tagMappingData = new TagsMappingData();
-				tagMappingData.setTagsMapping(tagsMapping);
-				tagMappingData.setMailData(null);
-				utilityServices = headers.addUtilityHeaders(utilityServices,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				utilityServices.createTags("observation", tagMappingData);
-
-			}
-
-//			send observation create mail
-			ActivityLoggingData activityLogging = new ActivityLoggingData();
-			activityLogging.setRootObjectId(observation.getId());
-			activityLogging.setSubRootObjectId(observation.getId());
-			activityLogging.setRootObjectType("observation");
-			activityLogging.setActivityType("Observation created");
-			activityLogging.setMailData(generateMailData(observation.getId()));
-
-			activityService = headers.addActivityHeaders(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			activityService.sendMailCreateObservation(activityLogging);
-
-//			----------------POST CREATE ACTIONS------------
-
-//			----------------GEO PRIVACY CHECK-------------
-			List<Observation> observationList = new ArrayList<Observation>();
-			observationList.add(observation);
-			updateGeoPrivacy(observationList);
-
-//			---------------USER GROUP FILTER RULE----------
-			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-			ugObvFilterData = getUGFilterObvData(observation);
-			userGroupService = headers.addUserGroupHeader(userGroupService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			userGroupService.getFilterRule(ugObvFilterData);
-
-			ESCreateThread esCreateThread = new ESCreateThread(esUpdate, observation.getId().toString());
-			Thread thread = new Thread(esCreateThread);
-			thread.start();
-
-			return findById(observation.getId());
-
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-
-		return null;
-
-	}
-
-	@Override
 	public Long updateSGroup(HttpServletRequest request, Long observationId, Long sGroupId) {
 		Observation observation = observationDao.findById(observationId);
 		Long previousGroupId = observation.getGroupId();
@@ -568,7 +426,7 @@ public class ObservationServiceImpl implements ObservationService {
 		return facts;
 	}
 
-	private UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
 		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
@@ -1054,34 +912,8 @@ public class ObservationServiceImpl implements ObservationService {
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
-
 //					calculate reprImageof observation
-
-					Integer noOfImages = 0;
-					Integer noOfAudio = 0;
-					Integer noOfVideo = 0;
-
-					Long reprImage = null;
-					int rating = 0;
-					for (Resource res : resources) {
-						if (res.getType().equals("AUDIO"))
-							noOfAudio++;
-						else if (res.getType().equals("IMAGE")) {
-							noOfImages++;
-							if (reprImage == null)
-								reprImage = res.getId();
-							if (res.getRating() != null && res.getRating() > rating) {
-								reprImage = res.getId();
-								rating = res.getRating();
-							}
-						} else if (res.getType().equals("VIDEO"))
-							noOfVideo++;
-
-					}
-					observation.setNoOfAudio(noOfAudio);
-					observation.setNoOfImages(noOfImages);
-					observation.setNoOfVideos(noOfVideo);
-					observation.setReprImageId(reprImage);
+					observation = 	observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
@@ -1244,7 +1076,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	}
 
-	private void updateGeoPrivacy(List<Observation> observationList) {
+	public void updateGeoPrivacy(List<Observation> observationList) {
 
 		try {
 
@@ -1372,25 +1204,23 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ShowData creteObservationUGContext(HttpServletRequest request,
+	public Long creteObservationUGContext(HttpServletRequest request,
 			ObservationCreateUGContext observationUGContext) {
 		try {
-			ShowData observationData = createObservation(request, observationUGContext.getObservationData());
+			Long observationId = observationCreateService.createObservation(request,
+					observationUGContext.getObservationData(),false);
 			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
-				cfInsert.setObservationId(observationData.getObservation().getId());
+				cfInsert.setObservationId(observationId);
 				CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
 				factsInsertData.setFactsCreateData(cfInsert);
-				factsInsertData.setMailData(
-						converter.userGroupMetadata(generateMailData(observationData.getObservation().getId())));
+				factsInsertData.setMailData(converter.userGroupMetadata(generateMailData(observationId)));
 				cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
-
-			ESCreateThread esCreateThread = new ESCreateThread(esUpdate,
-					observationData.getObservation().getId().toString());
-			Thread thread = new Thread(esCreateThread);
-			thread.start();
-			return findById(observationData.getObservation().getId());
+			
+			produceToRabbitMQ(observationId.toString(), "new Observation");
+			
+			return observationId;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());

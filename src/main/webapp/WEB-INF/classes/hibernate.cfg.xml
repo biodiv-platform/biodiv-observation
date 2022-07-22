@@ -20,13 +20,13 @@
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
 
 		<!-- Maximum waiting time for a connection from the pool -->
-		<property name="hibernate.hikari.connectionTimeout">1000</property>
+		<property name="hibernate.hikari.connectionTimeout">55000</property>
 
 		<!-- Minimum number of ideal connections in the pool -->
 		<property name="hibernate.hikari.minimumIdle">5</property>
 
 		<!-- Maximum number of actual connection in the pool -->
-		<property name="hibernate.hikari.maximumPoolSize">50</property>
+		<property name="hibernate.hikari.maximumPoolSize">100</property>
 
 		<!-- Maximum time that a connection is allowed to sit ideal in the pool -->
 		<property name="hibernate.hikari.idleTimeout">10000</property>
