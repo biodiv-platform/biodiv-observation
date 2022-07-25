@@ -373,7 +373,6 @@ public class ConstructESDocument {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
 			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
-			System.out.println(query.getQueryString());
 			result = query.getResultList();
 			System.out.println();
 			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);

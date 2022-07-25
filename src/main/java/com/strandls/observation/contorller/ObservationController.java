@@ -1528,6 +1528,7 @@ public class ObservationController {
 	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
 	public Response updatedImageCropResources(@Context HttpServletRequest request,
 			@PathParam("observationId") Long observationId, Resources resourcesUpdateData) {
 

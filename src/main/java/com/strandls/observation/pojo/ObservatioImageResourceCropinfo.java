@@ -12,7 +12,6 @@ public class ObservatioImageResourceCropinfo {
 
 	public ObservatioImageResourceCropinfo() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public ObservatioImageResourceCropinfo(String selectionStatus, Long[] bbox, Resource resource,
