@@ -170,7 +170,7 @@ public class ConstructESDocument {
 				+ "		(SELECT resource_id or_resource_id, observation_id FROM observation_resource WHERE observation_id in ("
 				+ observationId + " )) EO " + "		INNER JOIN "
 				+ "		(SELECT R.id resource_id, description , file_name , type ,R.url, rating , upload_time , uploader_id,contributor,license_id,L.name license_name,L.url license_url FROM resource R left outer join license L on R.license_id=L.id) extended_resource "
-				+ "		ON or_resource_id = resource_id inner JOIN (select* from resource_crop_info) rco on resource_id=rco.id GROUP BY observation_id"
+				+ "		ON or_resource_id = resource_id LEFT OUTER JOIN (select* from resource_crop_info) rco on resource_id=rco.id GROUP BY observation_id"
 				+ "		) obr ON obr.observation_id = O.id  " + "LEFT OUTER JOIN "
 				+ "		(SELECT U.observation_id, custom_fields, user_group_observations " + "		FROM "
 				+ "			(SELECT ugo_observation_id observation_id,  "
