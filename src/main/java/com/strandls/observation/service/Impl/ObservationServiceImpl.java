@@ -913,7 +913,7 @@ public class ObservationServiceImpl implements ObservationService {
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
 //					calculate reprImageof observation
-					observation = 	observationHelper.updateObservationResourceCount(observation, resources);
+					observation = observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
@@ -1204,11 +1204,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Long creteObservationUGContext(HttpServletRequest request,
-			ObservationCreateUGContext observationUGContext) {
+	public Long creteObservationUGContext(HttpServletRequest request, ObservationCreateUGContext observationUGContext) {
 		try {
 			Long observationId = observationCreateService.createObservation(request,
-					observationUGContext.getObservationData(),false);
+					observationUGContext.getObservationData(), false);
 			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
 				cfInsert.setObservationId(observationId);
 				CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
@@ -1217,9 +1216,9 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
-			
+
 			produceToRabbitMQ(observationId.toString(), "new Observation");
-			
+
 			return observationId;
 
 		} catch (Exception e) {
@@ -1513,13 +1512,19 @@ public class ObservationServiceImpl implements ObservationService {
 					observationImageCropInfo.setLicense(findResourceDataById.get(id).getLicense());
 
 					if (resourcesCropInfo.size() > 0) {
-						observationImageCropInfo.setSelectionStatus(cropInfo.get(id).getSelectionStatus());
 
-						if (cropInfo.get(id).getSelectionStatus().equals("SELECTED")) {
+						if (cropInfo.get(id).getSelectionStatus() != null) {
+							observationImageCropInfo.setSelectionStatus(cropInfo.get(id).getSelectionStatus());
+
+						}
+
+						if (cropInfo.get(id).getSelectionStatus() != null
+								&& cropInfo.get(id).getSelectionStatus().equals("SELECTED")) {
 							countOfSelectedCropStatus++;
 						}
 
-						if (cropInfo.get(id).getSelectionStatus().equals("REJECTED")) {
+						if (cropInfo.get(id).getSelectionStatus() != null
+								&& cropInfo.get(id).getSelectionStatus().equals("REJECTED")) {
 							countOfRejected++;
 						}
 
@@ -1575,7 +1580,7 @@ public class ObservationServiceImpl implements ObservationService {
 				imageCropInfo.setSelectionStatus(cropInfo.getSelectionStatus());
 				imageCropInfo.setId(cropInfo.getResource().getId());
 
-				if (cropInfo.getSelectionStatus().equals("SELECTED")) {
+				if (cropInfo.getSelectionStatus() != null && cropInfo.getSelectionStatus().equals("SELECTED")) {
 					imageCropInfo.setX(cropInfo.getBbox()[0]);
 					imageCropInfo.setY(cropInfo.getBbox()[1]);
 					imageCropInfo.setWidth(cropInfo.getBbox()[2]);
