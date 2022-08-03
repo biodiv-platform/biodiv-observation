@@ -108,7 +108,7 @@ public class ObservationESDocument {
 	private String data_table_title;
 	private String checklist_annotations;
 	private String basis_of_record;
-	private String  basis_of_data ;
+	private String basis_of_data;
 	private Long repr_image_id;
 	private String repr_image_url;
 	private String protocol;
@@ -215,8 +215,8 @@ public class ObservationESDocument {
 			String date_accuracy, Max_voted_reco max_voted_reco, List<All_reco_vote> all_reco_vote,
 			List<Observation_resource> observation_resource, List<Custom_fields> custom_fields,
 			List<User_group_observations> user_group_observations, List<Tags> tags, List<Flags> flags,
-			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade,
-			String data_table_title,String checklist_annotations,String basis_of_data,String basis_of_record) {
+			List<Featured> featured, List<Facts> facts, Boolean is_publication_grade, String data_table_title,
+			String checklist_annotations, String basis_of_data, String basis_of_record) {
 		super();
 		this.observation_id = observation_id;
 		this.author_id = author_id;
@@ -268,7 +268,7 @@ public class ObservationESDocument {
 		this.data_table_title = data_table_title;
 		this.checklist_annotations = checklist_annotations;
 		this.basis_of_data = basis_of_data;
-		this.basis_of_record = basis_of_record ;
+		this.basis_of_record = basis_of_record;
 	}
 
 	public Long getObservation_id() {
@@ -737,6 +737,14 @@ class Observation_resource {
 	private Date upload_time;
 	private Integer uploader_id;
 	private Integer license_id;
+	private Long x;
+	private Long y;
+	private Long width;
+	private Long height;
+	private String selection_status;
+	private String license_name;
+	private String license_url;
+	private String contributor;
 
 	/**
 	 * 
@@ -756,8 +764,10 @@ class Observation_resource {
 	 * @param uploader_id
 	 * @param license_id
 	 */
+
 	public Observation_resource(Long id, String description, String file_name, String type, String url, Integer rating,
-			Date upload_time, Integer uploader_id, Integer license_id) {
+			Date upload_time, Integer uploader_id, Integer license_id, Long x, Long y, Long width, Long height,
+			String selection_status, String license_name, String license_url, String contributor) {
 		super();
 		this.id = id;
 		this.description = description;
@@ -768,6 +778,38 @@ class Observation_resource {
 		this.upload_time = upload_time;
 		this.uploader_id = uploader_id;
 		this.license_id = license_id;
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.selection_status = selection_status;
+		this.license_name = license_name;
+		this.license_url = license_url;
+		this.contributor = contributor;
+	}
+
+	public String getLicense_name() {
+		return license_name;
+	}
+
+	public void setLicense_name(String license_name) {
+		this.license_name = license_name;
+	}
+
+	public String getLicense_url() {
+		return license_url;
+	}
+
+	public void setLicense_url(String license_url) {
+		this.license_url = license_url;
+	}
+
+	public String getContributor() {
+		return contributor;
+	}
+
+	public void setContributor(String contributor) {
+		this.contributor = contributor;
 	}
 
 	public String getFile_name() {
@@ -840,6 +882,46 @@ class Observation_resource {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public Long getX() {
+		return x;
+	}
+
+	public void setX(Long x) {
+		this.x = x;
+	}
+
+	public Long getY() {
+		return y;
+	}
+
+	public void setY(Long y) {
+		this.y = y;
+	}
+
+	public Long getWidth() {
+		return width;
+	}
+
+	public void setWidth(Long width) {
+		this.width = width;
+	}
+
+	public Long getHeight() {
+		return height;
+	}
+
+	public void setHeight(Long height) {
+		this.height = height;
+	}
+
+	public String getSelection_status() {
+		return selection_status;
+	}
+
+	public void setSelection_status(String selection_status) {
+		this.selection_status = selection_status;
 	}
 
 }

@@ -72,6 +72,7 @@ import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
+import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.MailService;
@@ -488,10 +489,15 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
 					dataTableName, geoEntity, dataTableId);
 
-			if (view.equalsIgnoreCase("csv_download") && !authorId.isEmpty()
-					&& request.getHeader(HttpHeaders.AUTHORIZATION) != null
+			if ((view.equalsIgnoreCase("csv_download") || view.equalsIgnoreCase("resources_csv_download"))
+					&& !authorId.isEmpty() && request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
 				userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+				Boolean imageResourcesDownload = false;
+				if (view.equalsIgnoreCase("resources_csv_download")) {
+					imageResourcesDownload = true;
+				}
 
 				ObservationListCSVThread csvThread = new ObservationListCSVThread(esUtility, observationListService,
 						downloadLogDao, customfields, taxonomic, spatial, traits, temporal, misc, sGroup, taxon, user,
@@ -501,12 +507,14 @@ public class ObservationController {
 						tags, publicationGrade, index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, authorId, notes,
 						uriInfo.getRequestUri().toString(), dataSetName, dataTableName, mailService, userService,
-						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId);
+						objectMapper, mapSearchQuery, geoShapeFilterField, dataTableId, imageResourcesDownload);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();
 
-			} else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
+			}
+
+			else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
 					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
@@ -1501,4 +1509,39 @@ public class ObservationController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@GET
+	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getImageCropResources(@PathParam("observationId") Long observationId) {
+		try {
+			Resources result = observationService.getObservationResources(observationId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@PUT
+	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	public Response updatedImageCropResources(@Context HttpServletRequest request,
+			@PathParam("observationId") Long observationId, Resources resourcesUpdateData) {
+
+		try {
+
+			Resources resultResources = observationService.updateObservationImageResources(request, observationId,
+					resourcesUpdateData);
+
+			return Response.status(Status.OK).entity(resultResources).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -54,6 +55,7 @@ import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
+import com.strandls.observation.pojo.ObservatioImageResourceCropinfo;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
 import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
@@ -62,6 +64,7 @@ import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
 import com.strandls.observation.service.ObservationCreateService;
@@ -69,6 +72,7 @@ import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
+import com.strandls.resource.pojo.ResourceCropInfo;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
@@ -909,7 +913,7 @@ public class ObservationServiceImpl implements ObservationService {
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
 //					calculate reprImageof observation
-					observation = 	observationHelper.updateObservationResourceCount(observation, resources);
+					observation = observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
@@ -1200,11 +1204,10 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public Long creteObservationUGContext(HttpServletRequest request,
-			ObservationCreateUGContext observationUGContext) {
+	public Long creteObservationUGContext(HttpServletRequest request, ObservationCreateUGContext observationUGContext) {
 		try {
 			Long observationId = observationCreateService.createObservation(request,
-					observationUGContext.getObservationData(),false);
+					observationUGContext.getObservationData(), false);
 			for (CustomFieldFactsInsert cfInsert : observationUGContext.getCustomFieldData()) {
 				cfInsert.setObservationId(observationId);
 				CustomFieldFactsInsertData factsInsertData = new CustomFieldFactsInsertData();
@@ -1213,9 +1216,9 @@ public class ObservationServiceImpl implements ObservationService {
 				cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				cfService.addUpdateCustomFieldData(factsInsertData);
 			}
-			
+
 			produceToRabbitMQ(observationId.toString(), "new Observation");
-			
+
 			return observationId;
 
 		} catch (Exception e) {
@@ -1464,6 +1467,138 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 		return false;
 
+	}
+
+	@SuppressWarnings({ "null", "unused" })
+	public Resources getObservationResources(Long observationId) {
+		try {
+			List<ResourceData> observationImageResources = resourceService.getImageResource("observation",
+					observationId.toString());
+			List<Long> resourceIds = new ArrayList<Long>();
+			Map<Long, ResourceData> findResourceDataById = new HashMap<>();
+
+			Resources result = new Resources();
+			Integer countOfSelectedCropStatus = 0;
+			Integer countOfRejected = 0;
+
+			if (observationImageResources != null) {
+				for (ResourceData resourceData : observationImageResources) {
+					resourceIds.add(resourceData.getResource().getId());
+					findResourceDataById.put(resourceData.getResource().getId(), resourceData);
+				}
+
+				String commaSeparatedStringOfResourceIds = resourceIds.stream().map(i -> i.toString())
+						.collect(Collectors.joining(","));
+
+				List<ResourceCropInfo> resourcesCropInfo = resourceService
+						.getResourcesCropInfo(commaSeparatedStringOfResourceIds);
+
+				Map<Long, ResourceCropInfo> cropInfo = new HashMap<Long, ResourceCropInfo>();
+
+				if (resourcesCropInfo.size() > 0) {
+					for (ResourceCropInfo info : resourcesCropInfo) {
+						cropInfo.put(info.getId(), info);
+					}
+
+				}
+
+				result.setId(observationId);
+				List<ObservatioImageResourceCropinfo> observationResources = new ArrayList<>();
+				for (Long id : resourceIds) {
+					ObservatioImageResourceCropinfo observationImageCropInfo = new ObservatioImageResourceCropinfo();
+
+					observationImageCropInfo.setResource(findResourceDataById.get(id).getResource());
+					observationImageCropInfo.setUserIbp(findResourceDataById.get(id).getUserIbp());
+					observationImageCropInfo.setLicense(findResourceDataById.get(id).getLicense());
+
+					if (resourcesCropInfo.size() > 0) {
+
+						if (cropInfo.get(id).getSelectionStatus() != null) {
+							observationImageCropInfo.setSelectionStatus(cropInfo.get(id).getSelectionStatus());
+
+						}
+
+						if (cropInfo.get(id).getSelectionStatus() != null
+								&& cropInfo.get(id).getSelectionStatus().equals("SELECTED")) {
+							countOfSelectedCropStatus++;
+						}
+
+						if (cropInfo.get(id).getSelectionStatus() != null
+								&& cropInfo.get(id).getSelectionStatus().equals("REJECTED")) {
+							countOfRejected++;
+						}
+
+						Long[] box = new Long[4];
+						box[0] = cropInfo.get(id).getX();
+						box[1] = cropInfo.get(id).getY();
+						box[2] = cropInfo.get(id).getWidth();
+						box[3] = cropInfo.get(id).getHeight();
+
+						observationImageCropInfo.setBbox(box);
+
+					}
+
+					observationResources.add(observationImageCropInfo);
+
+				}
+
+				if (countOfSelectedCropStatus == observationImageResources.size()) {
+					result.setCurationStatus("CURATED");
+				} else if (countOfSelectedCropStatus > 0
+						&& countOfSelectedCropStatus < observationImageResources.size()) {
+					result.setCurationStatus("PARTIALLY_CURATED");
+				} else if (countOfRejected == observationImageResources.size()) {
+					result.setCurationStatus("REJECTED");
+
+				} else {
+					result.setCurationStatus("NOT_CURATED");
+				}
+
+				result.setObservationResource(observationResources);
+
+			}
+
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
+	@Override
+	public Resources updateObservationImageResources(HttpServletRequest request, Long observationId,
+			Resources resourcesUpdatedInfo) {
+
+		resourceService = headers.addResourceHeaders(resourceService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+		try {
+
+			for (ObservatioImageResourceCropinfo cropInfo : resourcesUpdatedInfo.getObservationResource()) {
+				ResourceCropInfo imageCropInfo = new ResourceCropInfo();
+
+				imageCropInfo.setSelectionStatus(cropInfo.getSelectionStatus());
+				imageCropInfo.setId(cropInfo.getResource().getId());
+
+				if (cropInfo.getSelectionStatus() != null && cropInfo.getSelectionStatus().equals("SELECTED")) {
+					imageCropInfo.setX(cropInfo.getBbox()[0]);
+					imageCropInfo.setY(cropInfo.getBbox()[1]);
+					imageCropInfo.setWidth(cropInfo.getBbox()[2]);
+					imageCropInfo.setHeight(cropInfo.getBbox()[3]);
+
+				}
+
+				resourceService.updateResourcesCropInfo(imageCropInfo);
+
+			}
+			produceToRabbitMQ(observationId.toString(), "Observation-image-resource-update");
+			return resourcesUpdatedInfo;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 
 }

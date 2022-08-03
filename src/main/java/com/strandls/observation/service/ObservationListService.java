@@ -55,4 +55,5 @@ public interface ObservationListService {
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField);
+
 }

@@ -30,7 +30,7 @@ public class ObservationListElasticMapping {
 	private String reprImageUrl;
 	private Boolean isLocked;
 	private String locationScale;
-	private Double latitude; 
+	private Double latitude;
 	private Double longitude;
 	private String dateAccuracy;
 	private String fromDate;
@@ -44,37 +44,43 @@ public class ObservationListElasticMapping {
 	private UserIbp user;
 	private List<Facts> facts;
 	private List<Flags> flags;
-	
+
 	private Max_voted_reco maxVotedReco;
-	private List<All_reco_vote>allRecoVotes; 
-	
+	private List<All_reco_vote> allRecoVotes;
+
 	private List<User_group_observations> userGroup;
-	
+
 	private List<Custom_fields> customFields;
-	
+
 	private List<com.strandls.observation.es.util.Tags> tags;
 	private Boolean containsMedia;
 	private String uploadProtocol;
 	private Integer flagCount;
 	private String organismRemarks;
 	private String annotations;
-	private String  basisOfRecord;
+	private String basisOfRecord;
 	private String basisOfData;
+	private List<Observation_resource> observationResource;
+
+	@JsonProperty(value = "observation_resource")
+	private void unpackObservationResource(List<Observation_resource> observationResources) {
+		observationResource = observationResources;
+	}
 
 	@JsonProperty("observation_id")
 	private void unpackObservationId(Long observation_id) {
 		observationId = observation_id;
 	}
-	
+
 	@JsonProperty("place_name")
 	private void unpackPlaceName(String name) {
 		placeName = name;
 	}
+
 	@JsonProperty("no_of_identifications")
 	private void unpackNumberOfIndetification(String number) {
 		noOfIdentification = number;
 	}
-
 
 	@JsonProperty("created_on")
 	private void unpackDate(String created_on) {
@@ -85,7 +91,7 @@ public class ObservationListElasticMapping {
 	private void unpackLastRevised(String lastModified) {
 		lastRevised = lastModified;
 	}
-	
+
 	@JsonProperty(value = "reverse_geocoded_name")
 	private void unpackAddress(String reverse_geocoded_name) {
 		reverseGeocodedName = reverse_geocoded_name;
@@ -120,111 +126,116 @@ public class ObservationListElasticMapping {
 	private void unpackReprImage(String reprImage) {
 		reprImageUrl = reprImage;
 	}
-	
+
 	@JsonProperty(value = "is_locked")
 	private void unpackisLocked(Boolean value) {
 		isLocked = value;
 	}
-	
+
 	@JsonProperty(value = "max_voted_reco")
 	private void unpackMaxVotedReco(Max_voted_reco reco) {
 		maxVotedReco = reco;
 	}
-	
+
 	@JsonProperty(value = "all_reco_vote")
 	private void unpackAllRecoVotes(List<All_reco_vote> recos) {
 		allRecoVotes = recos;
 	}
-	
+
 	@JsonProperty(value = "location_scale")
 	private void unpackLocationScale(String scale) {
 		locationScale = scale;
 	}
-	
+
 	@JsonProperty(value = "location")
 	private void unpackLocation(Location location) {
 		latitude = location.getLat();
 		longitude = location.getLon();
 	}
+
 	@JsonProperty(value = "date_accuracy")
 	private void unpackDateAccuracy(String accuracy) {
 		dateAccuracy = accuracy;
 	}
+
 	@JsonProperty(value = "from_date")
 	private void unpackFromDate(String date) {
 		fromDate = date;
 	}
+
 	@JsonProperty(value = "to_date")
 	private void unpackToDate(String date) {
 		toDate = date;
 	}
-	
+
 	@JsonProperty(value = "observed_in_month")
 	private void unpackObservedMonth(String month) {
 		observedInMonth = month;
 	}
+
 	@JsonProperty(value = "geo_privacy")
 	private void unpackGeoPrivacy(Boolean value) {
 		geoPrivacy = value;
 	}
-	
+
 	@JsonProperty(value = "no_media")
 	private void unpackNoMedia(Integer value) {
-		if(value == 1) { 
-			containsMedia = false;}
-		else if(value == 0) {
-			containsMedia = true;}
+		if (value == 1) {
+			containsMedia = false;
+		} else if (value == 0) {
+			containsMedia = true;
+		}
 	}
-	
+
 	@JsonProperty(value = "dataset_title")
 	private void unpackDatasetTitle(String title) {
 		datasetTitle = title;
 	}
-	
+
 	@JsonProperty(value = "data_table_title")
 	private void unpackDataTableTitle(String datatableTitle) {
 		dataTableTitle = datatableTitle;
 	}
-	
+
 	@JsonProperty(value = "basis_of_record")
 	private void unpackBasisOfRecord(String basisRecord) {
 		basisOfRecord = basisRecord;
 	}
+
 	@JsonProperty(value = "basis_of_data")
 	private void unpackBasisOfData(String basisData) {
 		basisOfData = basisData;
 	}
-	
+
 	@JsonProperty(value = "protocol")
 	private void unpackProtocol(String protocol) {
 		uploadProtocol = protocol;
 	}
-	
+
 	@JsonProperty(value = "flag_count")
 	private void unpackFlagCount(Integer count) {
 		flagCount = count;
 	}
-	
+
 	@JsonProperty(value = "notes")
 	private void unpackNotes(String notes) {
 		organismRemarks = notes;
 	}
-	
+
 	@JsonProperty(value = "checklist_annotation")
 	private void unpackChecklist(String notes) {
 		annotations = notes;
 	}
-	
+
 	@JsonProperty(value = "location_information")
 	private void unpackLocationInformation(LocationInformation location) {
 		locationInformation = location;
 	}
-	
+
 	@JsonProperty(value = "reco_vote_count")
 	private void unpackRecoVoteCount(Integer count) {
 		recoVoteCount = count;
 	}
-
 
 //	---------USER IBP------------
 
@@ -254,7 +265,7 @@ public class ObservationListElasticMapping {
 	@JsonProperty(value = "facts")
 	private void unpackFacts(List<Facts> allFacts) {
 		facts = allFacts;
-		}
+	}
 
 //	------------FLAG SHOW--------------
 
@@ -262,8 +273,9 @@ public class ObservationListElasticMapping {
 	private void unpackFlags(List<Flags> allFlag) {
 		flags = allFlag;
 	}
-@JsonProperty(value = "user_group_observations")
-private void unpackUserGroup(List<User_group_observations> ugObservation) {
+
+	@JsonProperty(value = "user_group_observations")
+	private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		userGroup = ugObservation;
 	}
 
@@ -292,10 +304,12 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 			Long noOfImages, Long noOfAudios, Long noOfVideos, String reprImageUrl, Boolean isLocked,
 			String locationScale, Double latitude, Double longitude, String dateAccuracy, String fromDate,
 			String toDate, String observedInMonth, Boolean geoPrivacy, String datasetTitle, String dataTableTitle,
-			LocationInformation locationInformation, Integer recoVoteCount, UserIbp user, List<Facts> facts, List<Flags> flags,
-			Max_voted_reco maxVotedReco, List<All_reco_vote> allRecoVotes, List<User_group_observations> userGroup,
-			List<Custom_fields> customFields, List<com.strandls.observation.es.util.Tags> tags, Boolean containsMedia,
-			String uploadProtocol, Integer flagCount, String organismRemarks, String annotations,String basisOfRecord,String basisOfData) {
+			LocationInformation locationInformation, Integer recoVoteCount, UserIbp user, List<Facts> facts,
+			List<Flags> flags, Max_voted_reco maxVotedReco, List<All_reco_vote> allRecoVotes,
+			List<User_group_observations> userGroup, List<Custom_fields> customFields,
+			List<com.strandls.observation.es.util.Tags> tags, Boolean containsMedia, String uploadProtocol,
+			Integer flagCount, String organismRemarks, String annotations, String basisOfRecord, String basisOfData,
+			List<Observation_resource> observationResource) {
 		super();
 		this.observationId = observationId;
 		this.placeName = placeName;
@@ -337,6 +351,7 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 		this.annotations = annotations;
 		this.basisOfRecord = basisOfRecord;
 		this.basisOfData = basisOfData;
+		this.observationResource = observationResource;
 	}
 
 	public Long getObservationId() {
@@ -478,6 +493,7 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 	public String getOrganismRemarks() {
 		return organismRemarks;
 	}
+
 	public String getAnnotations() {
 		return annotations;
 	}
@@ -496,6 +512,10 @@ private void unpackUserGroup(List<User_group_observations> ugObservation) {
 
 	public String getBasisOfData() {
 		return basisOfData;
+	}
+
+	public List<Observation_resource> getObservationResource() {
+		return observationResource;
 	}
 
 }
