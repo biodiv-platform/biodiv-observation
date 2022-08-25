@@ -8,6 +8,7 @@ import javax.ws.rs.core.HttpHeaders;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.file.api.UploadApi;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -50,6 +51,11 @@ public class Headers {
 	public UserGroupSerivceApi addUserGroupHeader(UserGroupSerivceApi ugService, String authHeader) {
 		ugService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return ugService;
+	}
+	
+	public IntergratorServicesApi addIntergratorHeader(IntergratorServicesApi intergratorService,String authHeader) {
+		intergratorService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return intergratorService;
 	}
 
 	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, String authHeader) {

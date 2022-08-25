@@ -1,13 +1,35 @@
 package com.strandls.observation.service.Impl;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
-import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
@@ -24,7 +46,12 @@ import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
-import com.strandls.userGroup.pojo.*;
+import com.strandls.userGroup.pojo.CustomFieldDetails;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
+import com.strandls.userGroup.pojo.CustomFieldFactsInsertData;
+import com.strandls.userGroup.pojo.CustomFieldValues;
+import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
@@ -33,19 +60,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class ObservationBulkMapperHelper {
 
@@ -88,8 +102,10 @@ public class ObservationBulkMapperHelper {
 	private RecommendationVoteDao recoVoteDao;
 
 	@Inject
-	ObservationDAO observationDAO;
+	private ObservationDAO observationDAO;
 
+	@Inject
+	private IntergratorServicesApi intergratorService;
 	@Inject
 	private Headers headers;
 
@@ -757,9 +773,10 @@ public class ObservationBulkMapperHelper {
 
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
-			UserGroupObvFilterData ugObvFilterData = observationMapperHelper.getUGFilterObvData(observation);
-			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi, requestAuthHeader);
-			userGroupServiceApi.getFilterRule(ugObvFilterData);
+			com.strandls.integrator.pojo.UserGroupObvFilterData ugObvFilterData = observationMapperHelper
+					.getUGFilterObvData(observation);
+			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+			intergratorService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());

@@ -26,6 +26,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
+import com.strandls.integrator.pojo.UserGroupObvFilterData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
@@ -42,7 +43,6 @@ import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.traits.controller.TraitsServiceApi;
-import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -541,6 +541,22 @@ public class ObservationMapperHelper {
 
 	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
 		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+	
+	public com.strandls.userGroup.pojo.UserGroupObvFilterData getFilterObvData(Observation observation) {
+		com.strandls.userGroup.pojo.UserGroupObvFilterData ugFilterData = new com.strandls.userGroup.pojo.UserGroupObvFilterData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
 			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());

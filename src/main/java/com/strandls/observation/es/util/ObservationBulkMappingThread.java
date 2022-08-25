@@ -1,6 +1,5 @@
 package com.strandls.observation.es.util;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,11 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.MapAggregationResponse;
@@ -55,6 +55,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Headers headers;
 	private final String requestAuthHeader;
 	private final ESUpdate esUpdate;
+	private IntergratorServicesApi intergratorService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -62,7 +63,8 @@ public class ObservationBulkMappingThread implements Runnable {
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
-			HttpServletRequest request, Headers headers, ObjectMapper objectMapper, ESUpdate esUpdate) {
+			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -84,37 +86,50 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.headers = headers;
 		this.objectMapper = objectMapper;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+		this.intergratorService = intergratorService;
 		this.esUpdate = esUpdate;
 	}
 
 	@Override
 	public void run() {
 
-		List<UserGroupObvFilterData> list = new ArrayList<UserGroupObvFilterData>();
-		List<Long> oservationIds = new ArrayList<Long>();
-		List<Long> ugIds = new ArrayList<Long>();
+		try {
 
-		if (bulkObservationIds != null && !bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
-			oservationIds.addAll(
-					Arrays.stream(bulkObservationIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
-		}
+			List<UserGroupObvFilterData> list = new ArrayList<UserGroupObvFilterData>();
+			List<Long> oservationIds = new ArrayList<Long>();
+			List<Long> ugIds = new ArrayList<Long>();
 
-		if (bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()) {
-			ugIds.addAll(Arrays.stream(bulkUsergroupIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
-		}
-
-		if (!oservationIds.isEmpty()) {
-			List<Observation> obsDataList = observationDao.fecthByListOfIds(oservationIds);
-
-			for (Observation obs : obsDataList) {
-				UserGroupObvFilterData data = observationMapperHelper.getUGFilterObvData(obs);
-				list.add(data);
+			if (bulkObservationIds != null && !bulkObservationIds.isEmpty() && Boolean.FALSE.equals(selectAll)) {
+				oservationIds.addAll(
+						Arrays.stream(bulkObservationIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
 			}
 
-		}
+			if (bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()) {
+				ugIds.addAll(
+						Arrays.stream(bulkUsergroupIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
+			}
 
-		if (Boolean.TRUE.equals(selectAll)) {
-			try {
+			if (!oservationIds.isEmpty()) {
+				List<Observation> obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+				for (Observation obs : obsDataList) {
+					com.strandls.integrator.pojo.UserGroupObvFilterData data = observationMapperHelper
+							.getUGFilterObvData(obs);
+					CheckFilterRule checkFilterRule = new CheckFilterRule();
+					checkFilterRule.setUserGroupId(ugIds);
+					checkFilterRule.setUgObvFilterData(data);
+					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+					if (filterUGId != null && !filterUGId.isEmpty()) {
+						list.add(observationMapperHelper.getFilterObvData(obs));
+					}
+
+				}
+
+			}
+
+			if (Boolean.TRUE.equals(selectAll)) {
+
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 				List<MapDocument> documents = result.getDocuments();
@@ -129,35 +144,48 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugFilterData.setObservedOnDate(data.getObservedOn() != null ? data.getObservedOn() : null);
 					ugFilterData.setAuthorId(data.getUser() != null ? data.getUser().getId() : null);
 					ugFilterData.setTaxonomyId(data.getRecoIbp() != null ? data.getRecoIbp().getTaxonId() : null);
-					list.add(ugFilterData);
+
+					com.strandls.integrator.pojo.UserGroupObvFilterData filterData = observationMapperHelper
+							.getUGFilterObvData(observationDao.findById(data.getObservationId()));
+					CheckFilterRule checkFilterRule = new CheckFilterRule();
+					checkFilterRule.setUserGroupId(ugIds);
+					checkFilterRule.setUgObvFilterData(filterData);
+					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+					if (filterUGId != null && !filterUGId.isEmpty()) {
+						list.add(observationMapperHelper
+								.getFilterObvData(observationDao.findById(data.getObservationId())));
+					}
+
+//					list.add(ugFilterData);
 				}
 
-			} catch (IOException | ApiException e) {
-				e.printStackTrace();
-				logger.error(e.getMessage());
 			}
 
-		}
+			if (!list.isEmpty() && !bulkAction.isEmpty()
+					&& (bulkAction.contains("ugBulkPosting") || bulkAction.contains("ugBulkUnPosting"))) {
 
-		if (!list.isEmpty() && !bulkAction.isEmpty()
-				&& (bulkAction.contains("ugBulkPosting") || bulkAction.contains("ugBulkUnPosting"))) {
+				List<UserGroupObvFilterData> ugObsList = new ArrayList<UserGroupObvFilterData>();
+				;
+				Integer count = 0;
 
-			List<UserGroupObvFilterData> ugObsList = new ArrayList<UserGroupObvFilterData>();
-			;
-			Integer count = 0;
+				while (count < list.size()) {
+					ugObsList.add(list.get(count));
 
-			while (count < list.size()) {
-				ugObsList.add(list.get(count));
-
-				if (ugObsList.size() >= 200) {
-					bulkGroupAction(ugObsList, ugIds);
-					ugObsList.clear();
+					if (ugObsList.size() >= 200) {
+						bulkGroupAction(ugObsList, ugIds);
+						ugObsList.clear();
+					}
+					count++;
 				}
-				count++;
+
+				bulkGroupAction(ugObsList, ugIds);
+				ugObsList.clear();
 			}
 
-			bulkGroupAction(ugObsList, ugIds);
-			ugObsList.clear();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
 		}
 
 	}
