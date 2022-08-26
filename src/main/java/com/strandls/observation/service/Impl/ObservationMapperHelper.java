@@ -26,7 +26,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
-import com.strandls.integrator.pojo.UserGroupObvFilterData;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
@@ -43,6 +43,7 @@ import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.userGroup.pojo.UserGroupObvFilterData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -539,8 +540,8 @@ public class ObservationMapperHelper {
 
 	}
 
-	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
-		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
+	public UserGroupObvRuleData getUGObvRuleData(Observation observation) {
+		UserGroupObvRuleData ugFilterData = new UserGroupObvRuleData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
 			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
@@ -554,9 +555,9 @@ public class ObservationMapperHelper {
 
 		return ugFilterData;
 	}
-	
-	public com.strandls.userGroup.pojo.UserGroupObvFilterData getFilterObvData(Observation observation) {
-		com.strandls.userGroup.pojo.UserGroupObvFilterData ugFilterData = new com.strandls.userGroup.pojo.UserGroupObvFilterData();
+
+	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
+		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
 			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());

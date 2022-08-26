@@ -19,6 +19,7 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.MapAggregationResponse;
@@ -113,15 +114,14 @@ public class ObservationBulkMappingThread implements Runnable {
 				List<Observation> obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
 				for (Observation obs : obsDataList) {
-					com.strandls.integrator.pojo.UserGroupObvFilterData data = observationMapperHelper
-							.getUGFilterObvData(obs);
+					UserGroupObvRuleData data = observationMapperHelper.getUGObvRuleData(obs);
 					CheckFilterRule checkFilterRule = new CheckFilterRule();
 					checkFilterRule.setUserGroupId(ugIds);
 					checkFilterRule.setUgObvFilterData(data);
 					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 					if (filterUGId != null && !filterUGId.isEmpty()) {
-						list.add(observationMapperHelper.getFilterObvData(obs));
+						list.add(observationMapperHelper.getUGFilterObvData(obs));
 					}
 
 				}
@@ -145,8 +145,8 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugFilterData.setAuthorId(data.getUser() != null ? data.getUser().getId() : null);
 					ugFilterData.setTaxonomyId(data.getRecoIbp() != null ? data.getRecoIbp().getTaxonId() : null);
 
-					com.strandls.integrator.pojo.UserGroupObvFilterData filterData = observationMapperHelper
-							.getUGFilterObvData(observationDao.findById(data.getObservationId()));
+					UserGroupObvRuleData filterData = observationMapperHelper
+							.getUGObvRuleData(observationDao.findById(data.getObservationId()));
 					CheckFilterRule checkFilterRule = new CheckFilterRule();
 					checkFilterRule.setUserGroupId(ugIds);
 					checkFilterRule.setUgObvFilterData(filterData);
@@ -154,7 +154,7 @@ public class ObservationBulkMappingThread implements Runnable {
 					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 					if (filterUGId != null && !filterUGId.isEmpty()) {
 						list.add(observationMapperHelper
-								.getFilterObvData(observationDao.findById(data.getObservationId())));
+								.getUGFilterObvData(observationDao.findById(data.getObservationId())));
 					}
 
 //					list.add(ugFilterData);

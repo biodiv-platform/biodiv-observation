@@ -27,6 +27,7 @@ import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
@@ -773,8 +774,8 @@ public class ObservationBulkMapperHelper {
 
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
-			com.strandls.integrator.pojo.UserGroupObvFilterData ugObvFilterData = observationMapperHelper
-					.getUGFilterObvData(observation);
+			UserGroupObvRuleData  ugObvFilterData = observationMapperHelper
+					.getUGObvRuleData(observation);
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 			intergratorService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {

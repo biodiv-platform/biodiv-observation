@@ -89,18 +89,23 @@ public class ObservationCreateThread implements Runnable {
 
 			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
-				//filter usergroup by rule eligility
-				CheckFilterRule checkFilterRule  = new CheckFilterRule();
+				List<Long> eligibleUgIds = new ArrayList<>();
+				// filter usergroup by rule eligility
+				CheckFilterRule checkFilterRule = new CheckFilterRule();
 				checkFilterRule.setUserGroupId(observationData.getUserGroupId());
-				checkFilterRule.setUgObvFilterData(observationImpl.getUGFilterObvData(observation));
-				intergratorService = headers.addIntergratorHeader(intergratorService,
-						requestAuthHeader);
-				
-				userGroupData.setUserGroups(intergratorService.checkUserGroupEligiblity(checkFilterRule));
-				userGroupData.setMailData(null);
-				userGroupData.setUgFilterData(observationImpl.getFilterObvData(observation));
-				userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
-				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
+				checkFilterRule.setUgObvFilterData(observationImpl.getUGObvRuleData(observation));
+				intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+				eligibleUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+
+				if (eligibleUgIds != null && !eligibleUgIds.isEmpty()) {
+					userGroupData.setUserGroups(eligibleUgIds);
+					userGroupData.setMailData(null);
+					userGroupData.setUgFilterData(observationImpl.getUGFilterObvData(observation));
+					userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
+					userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
+							userGroupData);
+
+				}
 			}
 			if (!(observationData.getTags().isEmpty())) {
 				TagsMapping tagsMapping = new TagsMapping();
@@ -134,7 +139,7 @@ public class ObservationCreateThread implements Runnable {
 
 //		---------------USER GROUP FILTER RULE----------
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-			intergratorService.getFilterRule(observationImpl.getUGFilterObvData(observation));
+			intergratorService.getFilterRule(observationImpl.getUGObvRuleData(observation));
 
 //		----------------ES UPDATE---------------------
 			if (Boolean.TRUE.equals(updateEs)) {
