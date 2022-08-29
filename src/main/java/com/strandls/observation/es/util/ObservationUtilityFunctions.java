@@ -395,7 +395,7 @@ public class ObservationUtilityFunctions {
 				break;
 			}
 
-			if (rankNo != 0) {
+			if (rankNo != 0 && !hierarchy.get(rankNo).getRank().equalsIgnoreCase("subfamily")) {
 				hierarchyValues.set(rankname.get(hierarchy.get(rankNo).getRank()) - 1,
 						hierarchy.get(rankNo).getNormalized_name());
 			}
