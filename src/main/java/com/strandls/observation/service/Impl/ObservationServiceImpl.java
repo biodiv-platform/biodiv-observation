@@ -480,7 +480,7 @@ public class ObservationServiceImpl implements ObservationService {
 					request.getHeader(HttpHeaders.AUTHORIZATION));
 			userGroupList = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 
-			if (userGroupList!=null && !userGroupList.isEmpty()) {
+			if (userGroupList!=null) {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
 				userGroupData.setUserGroups(userGroupList);
 				userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
