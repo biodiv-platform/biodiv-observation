@@ -466,36 +466,35 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
-			List<Long> userGroupList) {
+			List<Long> userGroupList) throws Exception {
 
 		List<UserGroupIbp> result = null;
-		try {
 
-			// filter usergroup by rule eligility
-			CheckFilterRule checkFilterRule = new CheckFilterRule();
-			checkFilterRule.setUserGroupId(userGroupList);
-			checkFilterRule
-					.setUgObvFilterData(getUGObvRuleData(observationDao.findById(Long.parseLong(observationId))));
-			intergratorService = headers.addIntergratorHeader(intergratorService,
+		// filter usergroup by rule eligility
+		CheckFilterRule checkFilterRule = new CheckFilterRule();
+		checkFilterRule.setUserGroupId(userGroupList);
+		checkFilterRule.setUgObvFilterData(getUGObvRuleData(observationDao.findById(Long.parseLong(observationId))));
+		intergratorService = headers.addIntergratorHeader(intergratorService,
+				request.getHeader(HttpHeaders.AUTHORIZATION));
+		List<Long> verifiedUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+
+		if (!userGroupList.isEmpty() && (verifiedUgIds == null || verifiedUgIds.isEmpty())) {
+
+			throw new Exception("Unable to update usergroup,Check group rules");
+
+		}
+		if (verifiedUgIds != null) {
+			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+			userGroupData.setUserGroups(verifiedUgIds);
+			userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
+			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
+			userGroupService = headers.addUserGroupHeader(userGroupService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			userGroupList = intergratorService.checkUserGroupEligiblity(checkFilterRule);
-
-			if (userGroupList!=null) {
-				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
-				userGroupData.setUserGroups(userGroupList);
-				userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
-				userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
-				userGroupService = headers.addUserGroupHeader(userGroupService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				result = userGroupService.updateUserGroupMapping(observationId, userGroupData);
-				Observation observation = observationDao.findById(Long.parseLong(observationId));
-				observation.setLastRevised(new Date());
-				observationDao.update(observation);
-				produceToRabbitMQ(observationId, "UserGroups");
-			}
-			
-		} catch (Exception e) {
-			logger.error(e.getMessage());
+			result = userGroupService.updateUserGroupMapping(observationId, userGroupData);
+			Observation observation = observationDao.findById(Long.parseLong(observationId));
+			observation.setLastRevised(new Date());
+			observationDao.update(observation);
+			produceToRabbitMQ(observationId, "UserGroups");
 		}
 
 		return result;

@@ -69,7 +69,7 @@ public interface ObservationService {
 			FactsUpdateData updateData);
 
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
-			List<Long> userGroupList);
+			List<Long> userGroupList)throws Exception;
 
 	public List<SpeciesGroup> getAllSpeciesGroup();
 

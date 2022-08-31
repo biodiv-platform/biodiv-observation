@@ -657,7 +657,6 @@ public class ObservationController {
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			List<UserGroupIbp> result = observationService.updateUserGroup(request, observationId, userGroupList);
-
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
