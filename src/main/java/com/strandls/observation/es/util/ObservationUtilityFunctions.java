@@ -157,33 +157,38 @@ public class ObservationUtilityFunctions {
 	}
 
 	private void addCoreHeaderValues(List<String> row, ObservationListElasticMapping record, String fileName) {
-		row.add(record.getObservationId().toString());
-		row.add(record.getUser().getName());
-		row.add(record.getPlaceName());
-		row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
-		row.add(record.getNoOfIdentification());
-		row.add(record.getGeoPrivacy().toString());
-		row.add(parseDate(record.getCreatedOn()));
-		row.add(fileName);
-		row.add(record.getSpeciesGroup());
-		row.add(record.getDateAccuracy());
-		row.add(record.getIsLocked().toString());
-		row.add(record.getLatitude().toString());
-		row.add(record.getLongitude().toString());
-		row.add(record.getLocationScale());
-		row.add(parseDate(record.getFromDate()));
-		row.add(parseDate(record.getToDate()));
-		row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
-		row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
-		row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
-		row.addAll(record.getMaxVotedReco() != null
-				? (record.getMaxVotedReco().getHierarchy() != null
-						? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
-								record.getMaxVotedReco().getRank())
-						: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
-				: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
+		try {
+			row.add(record.getObservationId().toString());
+			row.add(record.getUser().getName());
+			row.add(record.getPlaceName());
+			row.add(record.getFlags() != null ? fetchFlags(record.getFlags()) : null);
+			row.add(record.getNoOfIdentification());
+			row.add(record.getGeoPrivacy().toString());
+			row.add(parseDate(record.getCreatedOn()));
+			row.add(fileName);
+			row.add(record.getSpeciesGroup());
+			row.add(record.getDateAccuracy());
+			row.add(record.getIsLocked().toString());
+			row.add(record.getLatitude().toString());
+			row.add(record.getLongitude().toString());
+			row.add(record.getLocationScale());
+			row.add(parseDate(record.getFromDate()));
+			row.add(parseDate(record.getToDate()));
+			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getRank() : null);
+			row.add(record.getMaxVotedReco() != null ? record.getMaxVotedReco().getScientific_name() : null);
+			row.add(record.getMaxVotedReco() != null ? fetchMaxVotedCommonName(record.getMaxVotedReco()) : null);
+			row.addAll(record.getMaxVotedReco() != null
+					? (record.getMaxVotedReco().getHierarchy() != null
+							? getMaxVotedHierarchy(record.getMaxVotedReco().getHierarchy(),
+									record.getMaxVotedReco().getRank())
+							: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)))
+					: new ArrayList<String>(Collections.nCopies(hierarchyDepth, (String) null)));
 
-		row.add(record.getBasisOfRecord());
+			row.add(record.getBasisOfRecord());
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 	}
 
@@ -390,16 +395,15 @@ public class ObservationUtilityFunctions {
 		rankname.put("genus", 7);
 		rankname.put("species", 8);
 
-		for (Integer rankNo = 0; rankNo < 8; rankNo++) {
-			if (hierarchy.get(rankNo).getRank().equalsIgnoreCase(rank.toLowerCase())) {
+		for (Hierarchy node : hierarchy) {
+			if (node.getRank().equalsIgnoreCase(rank)) {
 				break;
 			}
 
-			if (rankNo != 0 && !hierarchy.get(rankNo).getRank().equalsIgnoreCase("subfamily")) {
-				hierarchyValues.set(rankname.get(hierarchy.get(rankNo).getRank()) - 1,
-						hierarchy.get(rankNo).getNormalized_name());
-			}
+			if (!node.getRank().equalsIgnoreCase("root") && rankname.containsKey(node.getRank())) {
+				hierarchyValues.set(rankname.get(node.getRank()) - 1, node.getNormalized_name());
 
+			}
 		}
 
 		return hierarchyValues;
