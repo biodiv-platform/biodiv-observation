@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.net.HttpHeaders;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.es.util.ESUpdate;
@@ -66,6 +67,9 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	@Inject
 	private ObservationServiceImpl observationImpl;
 
+	@Inject
+	private IntergratorServicesApi intergratorService;
+
 	@Override
 	public Long createObservation(HttpServletRequest request, ObservationCreate observationData, Boolean updateEs) {
 		try {
@@ -104,7 +108,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, observation,
 					observationData, headers, traitService, utilityServices, userGroupService, logActivity,
-					activityService, observationImpl, updateEs);
+					activityService, observationImpl, intergratorService, updateEs);
 			Thread thread = new Thread(createThread);
 			thread.start();
 

@@ -43,6 +43,7 @@ import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.contorller.ObservationControllerModule;
@@ -130,6 +131,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
 					bind(UploadApi.class).in(Scopes.SINGLETON);
 					bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
+					bind(IntergratorServicesApi.class).in(Scopes.SINGLETON);
 					bind(Headers.class).in(Scopes.SINGLETON);
 					bind(ServletContainer.class).in(Scopes.SINGLETON);
 					bind(TokenGenerator.class).in(Scopes.SINGLETON);
