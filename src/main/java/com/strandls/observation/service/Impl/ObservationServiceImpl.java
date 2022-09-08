@@ -42,6 +42,9 @@ import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.pojo.CheckFilterRule;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
@@ -193,6 +196,9 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private DataTableServiceApi dataTableService;
+
+	@Inject
+	private IntergratorServicesApi intergratorService;
 
 	@Inject
 	private ObservationCreateService observationCreateService;
@@ -426,6 +432,22 @@ public class ObservationServiceImpl implements ObservationService {
 		return facts;
 	}
 
+	public UserGroupObvRuleData getUGObvRuleData(Observation observation) {
+		UserGroupObvRuleData ugFilterData = new UserGroupObvRuleData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
+	}
+
 	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
 		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
 		Long taxonomyId = null;
@@ -444,12 +466,26 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
-			List<Long> userGroupList) {
+			List<Long> userGroupList) throws Exception {
 
 		List<UserGroupIbp> result = null;
-		try {
+
+		// filter usergroup by rule eligility
+		CheckFilterRule checkFilterRule = new CheckFilterRule();
+		checkFilterRule.setUserGroupId(userGroupList);
+		checkFilterRule.setUgObvFilterData(getUGObvRuleData(observationDao.findById(Long.parseLong(observationId))));
+		intergratorService = headers.addIntergratorHeader(intergratorService,
+				request.getHeader(HttpHeaders.AUTHORIZATION));
+		List<Long> verifiedUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+
+		if (!userGroupList.isEmpty() && (verifiedUgIds == null || verifiedUgIds.isEmpty())) {
+
+			throw new Exception("Unable to update usergroup,Check group rules");
+
+		}
+		if (verifiedUgIds != null) {
 			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
-			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setUserGroups(verifiedUgIds);
 			userGroupData.setUgFilterData(getUGFilterObvData(observationDao.findById(Long.parseLong(observationId))));
 			userGroupData.setMailData(converter.userGroupMetadata(generateMailData(Long.parseLong(observationId))));
 			userGroupService = headers.addUserGroupHeader(userGroupService,
@@ -459,8 +495,6 @@ public class ObservationServiceImpl implements ObservationService {
 			observation.setLastRevised(new Date());
 			observationDao.update(observation);
 			produceToRabbitMQ(observationId, "UserGroups");
-		} catch (Exception e) {
-			logger.error(e.getMessage());
 		}
 
 		return result;
@@ -923,11 +957,10 @@ public class ObservationServiceImpl implements ObservationService {
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
 //				------------BG rules-----------------
-				UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-				ugObvFilterData = getUGFilterObvData(observation);
-				userGroupService = headers.addUserGroupHeader(userGroupService,
+				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
+				intergratorService = headers.addIntergratorHeader(intergratorService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				userGroupService.getFilterRule(ugObvFilterData);
+				intergratorService.getFilterRule(ugObvFilterData);
 
 				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
 
@@ -1004,11 +1037,11 @@ public class ObservationServiceImpl implements ObservationService {
 					hasNext = false;
 				totalObservation = totalObservation + observationList.size();
 				startPoint = totalObservation + 1;
-				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
+				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
-					ugObvFilterDataList.add(getUGFilterObvData(observation));
+					ugObvFilterDataList.add(getUGObvRuleData(observation));
 				}
-				userGroupService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
+				intergratorService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
 			}
 
 			System.out.println("Filter Rule Process Completed");
@@ -1037,11 +1070,11 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 				total = total + idList.size();
 				List<Observation> observationList = observationDao.fecthByListOfIds(idList);
-				List<UserGroupObvFilterData> ugObvFilterDataList = new ArrayList<UserGroupObvFilterData>();
+				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
-					ugObvFilterDataList.add(getUGFilterObvData(observation));
+					ugObvFilterDataList.add(getUGObvRuleData(observation));
 				}
-				userGroupService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
+				intergratorService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
 			}
 
 		} catch (Exception e) {
@@ -1359,11 +1392,11 @@ public class ObservationServiceImpl implements ObservationService {
 	public void bgfilterRule(HttpServletRequest request, Long observationId) {
 		try {
 			Observation observation = observationDao.findById(observationId);
-			UserGroupObvFilterData ugObvFilterData = new UserGroupObvFilterData();
-			ugObvFilterData = getUGFilterObvData(observation);
-			userGroupService = headers.addUserGroupHeader(userGroupService,
+			UserGroupObvRuleData ugObvFilterData = new UserGroupObvRuleData();
+			ugObvFilterData = getUGObvRuleData(observation);
+			intergratorService = headers.addIntergratorHeader(intergratorService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			userGroupService.getFilterRule(ugObvFilterData);
+			intergratorService.getFilterRule(ugObvFilterData);
 			produceToRabbitMQ(observationId.toString(), "Recommendation");
 
 		} catch (Exception e) {

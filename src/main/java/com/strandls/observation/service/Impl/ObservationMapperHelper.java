@@ -26,6 +26,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
@@ -537,6 +538,22 @@ public class ObservationMapperHelper {
 		}
 		return editResource;
 
+	}
+
+	public UserGroupObvRuleData getUGObvRuleData(Observation observation) {
+		UserGroupObvRuleData ugFilterData = new UserGroupObvRuleData();
+		Long taxonomyId = null;
+		if (observation.getMaxVotedRecoId() != null)
+			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+		ugFilterData.setObservationId(observation.getId());
+		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
+		ugFilterData.setLatitude(observation.getLatitude());
+		ugFilterData.setLongitude(observation.getLongitude());
+		ugFilterData.setObservedOnDate(observation.getFromDate());
+		ugFilterData.setAuthorId(observation.getAuthorId());
+		ugFilterData.setTaxonomyId(taxonomyId);
+
+		return ugFilterData;
 	}
 
 	public UserGroupObvFilterData getUGFilterObvData(Observation observation) {
