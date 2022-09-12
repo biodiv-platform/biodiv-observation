@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.ActivityLoggingData;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.observation.Headers;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
@@ -39,14 +41,16 @@ public class ObservationCreateThread implements Runnable {
 	private TraitsServiceApi traitService;
 	private UtilityServiceApi utilityServices;
 	private UserGroupSerivceApi userGroupService;
+	private IntergratorServicesApi intergratorService;
 	private final LogActivities logActivity;
 	private ActivitySerivceApi activityService;
 	private final ObservationServiceImpl observationImpl;
 
-	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, 
-			Observation observation, ObservationCreate observationData, Headers headers, TraitsServiceApi traitService,
+	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, Observation observation,
+			ObservationCreate observationData, Headers headers, TraitsServiceApi traitService,
 			UtilityServiceApi utilityServices, UserGroupSerivceApi userGroupService, LogActivities logActivity,
-			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl, Boolean updateEs) {
+			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl,
+			IntergratorServicesApi intergratorService, Boolean updateEs) {
 		super();
 
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -60,6 +64,7 @@ public class ObservationCreateThread implements Runnable {
 		this.logActivity = logActivity;
 		this.activityService = activityService;
 		this.observationImpl = observationImpl;
+		this.intergratorService = intergratorService;
 		this.updateEs = updateEs;
 	}
 
@@ -84,12 +89,23 @@ public class ObservationCreateThread implements Runnable {
 
 			if (observationData.getUserGroupId() != null && !observationData.getUserGroupId().isEmpty()) {
 				UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+				List<Long> eligibleUgIds = new ArrayList<>();
+				// filter usergroup by rule eligility
+				CheckFilterRule checkFilterRule = new CheckFilterRule();
+				checkFilterRule.setUserGroupId(observationData.getUserGroupId());
+				checkFilterRule.setUgObvFilterData(observationImpl.getUGObvRuleData(observation));
+				intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+				eligibleUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 
-				userGroupData.setUserGroups(observationData.getUserGroupId());
-				userGroupData.setMailData(null);
-				userGroupData.setUgFilterData(observationImpl.getUGFilterObvData(observation));
-				userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
-				userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()), userGroupData);
+				if (eligibleUgIds != null && !eligibleUgIds.isEmpty()) {
+					userGroupData.setUserGroups(eligibleUgIds);
+					userGroupData.setMailData(null);
+					userGroupData.setUgFilterData(observationImpl.getUGFilterObvData(observation));
+					userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
+					userGroupService.createObservationUserGroupMapping(String.valueOf(observation.getId()),
+							userGroupData);
+
+				}
 			}
 			if (!(observationData.getTags().isEmpty())) {
 				TagsMapping tagsMapping = new TagsMapping();
@@ -122,8 +138,8 @@ public class ObservationCreateThread implements Runnable {
 			observationImpl.updateGeoPrivacy(observationList);
 
 //		---------------USER GROUP FILTER RULE----------
-			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
-			userGroupService.getFilterRule(observationImpl.getUGFilterObvData(observation));
+			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+			intergratorService.getFilterRule(observationImpl.getUGObvRuleData(observation));
 
 //		----------------ES UPDATE---------------------
 			if (Boolean.TRUE.equals(updateEs)) {

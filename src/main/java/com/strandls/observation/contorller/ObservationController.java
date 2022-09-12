@@ -44,6 +44,7 @@ import com.strandls.esmodule.pojo.MapGeoPoint;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
@@ -144,8 +145,7 @@ public class ObservationController {
 
 	@Inject
 	private ObservationListService observationListService;
-	
-	
+
 	@Inject
 	private ObservationCreateService observationCreateService;
 
@@ -175,6 +175,9 @@ public class ObservationController {
 
 	@Inject
 	private UserGroupSerivceApi ugService;
+
+	@Inject
+	private IntergratorServicesApi intergratorService;
 
 	@Inject
 	private ESUpdate esUpdate;
@@ -249,8 +252,8 @@ public class ObservationController {
 			if (observationData.getResources() == null || observationData.getResources().isEmpty()) {
 				throw new ObservationInputException("Without resource observation");
 			}
-			
-			Long result = observationCreateService.createObservation(request, observationData,true);
+
+			Long result = observationCreateService.createObservation(request, observationData, true);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
@@ -525,7 +528,7 @@ public class ObservationController {
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper, esUpdate);
+						request, headers, objectMapper, intergratorService, esUpdate);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
@@ -654,7 +657,6 @@ public class ObservationController {
 			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			List<UserGroupIbp> result = observationService.updateUserGroup(request, observationId, userGroupList);
-
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
