@@ -1424,7 +1424,7 @@ public class ObservationController {
 
 	public Response getObservationDatatableId(@Context HttpServletRequest request,
 			@PathParam("dataTableId") String dataTableId, @DefaultValue("0") @QueryParam("offset") String Offset,
-			@DefaultValue("10") @QueryParam("limit") String Limit) {
+			@DefaultValue("12") @QueryParam("limit") String Limit) {
 
 		try {
 			Long id = Long.parseLong(dataTableId);
