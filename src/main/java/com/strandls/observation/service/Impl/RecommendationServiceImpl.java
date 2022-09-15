@@ -260,9 +260,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 			} else {
 				maxRecoVote = observaitonService.updateMaxVotedReco(observationId, maxRecoVote);
 //				Bg process for userGroup filter rule
-				observaitonService.bgfilterRule(request, observationId);
 				logActivities.LogActivity(userAuthToken, description, observationId, observationId, "observation",
 						recoVote.getId(), "Suggested species name", observaitonService.generateMailData(observationId));
+				observaitonService.bgfilterRule(request, observationId);
+
 			}
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
@@ -445,15 +446,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				description = objectMapper.writeValueAsString(rvActivity);
 //				Bg process for userGroup filter rule
+
+				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+						observationId, "observation", observationId, "Suggestion removed",
+						observaitonService.generateMailData(observationId));
+
 				observaitonService.bgfilterRule(request, observationId);
 
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
-
-			logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-					observationId, "observation", observationId, "Suggestion removed",
-					observaitonService.generateMailData(observationId));
 
 			return result;
 
@@ -675,11 +677,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				description = objectMapper.writeValueAsString(rvActivity);
 //				Bg process for userGroup filter rule
-				observaitonService.bgfilterRule(request, observationId);
 
 				logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
 						observationId, "observation", recoVote.getId(), "obv locked",
 						observaitonService.generateMailData(observationId));
+				observaitonService.bgfilterRule(request, observationId);
+
 
 				observaitonService.produceToRabbitMQ(observationId.toString(), "obv locked");
 
@@ -736,11 +739,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 					description = objectMapper.writeValueAsString(rvActivity);
 
 //					Bg process for userGroup filter rule
-					observaitonService.bgfilterRule(request, observationId);
 
 					logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
 							observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
 							observaitonService.generateMailData(observationId));
+					observaitonService.bgfilterRule(request, observationId);
+
 					return result;
 				}
 			}
