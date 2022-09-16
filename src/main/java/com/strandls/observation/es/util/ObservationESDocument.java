@@ -734,7 +734,7 @@ class Observation_resource {
 	private String type;
 	private String url;
 	private Integer rating;
-	private Date upload_time;
+	private String upload_time;
 	private Integer uploader_id;
 	private Integer license_id;
 	private Long x;
@@ -766,7 +766,7 @@ class Observation_resource {
 	 */
 
 	public Observation_resource(Long id, String description, String file_name, String type, String url, Integer rating,
-			Date upload_time, Integer uploader_id, Integer license_id, Long x, Long y, Long width, Long height,
+			String upload_time, Integer uploader_id, Integer license_id, Long x, Long y, Long width, Long height,
 			String selection_status, String license_name, String license_url, String contributor) {
 		super();
 		this.id = id;
@@ -868,11 +868,11 @@ class Observation_resource {
 		this.uploader_id = uploader_id;
 	}
 
-	public Date getUpload_time() {
+	public String getUpload_time() {
 		return upload_time;
 	}
 
-	public void setUpload_time(Date upload_time) {
+	public void setUpload_time(String upload_time) {
 		this.upload_time = upload_time;
 	}
 
