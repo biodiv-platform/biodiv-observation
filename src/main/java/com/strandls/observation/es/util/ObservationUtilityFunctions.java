@@ -55,7 +55,7 @@ public class ObservationUtilityFunctions {
 	private final Logger logger = LoggerFactory.getLogger(ObservationUtilityFunctions.class);
 
 	private final String[] csvCoreHeaders = { "catalogNumber", "createdBy", "placeName", "flagNotes",
-			"noOfIdentifications", "geoPrivacy", "createdOn(UTC)", "createdOn(Portal time)", "associatedMedia",
+			"noOfIdentifications", "geoPrivacy", "createdOn (UTC)", "createdOn (Portal time)", "associatedMedia",
 			"group_id", "dateAccuracy", "isLocked", "locationLat", "locationLon", "locationScale", "fromDate", "toDate",
 			"rank", "scientificName", "commonName", "kingdom", "phylum", "class", "order", "superfamily", "family",
 			"genus", "species", "basisOfRecord" };
