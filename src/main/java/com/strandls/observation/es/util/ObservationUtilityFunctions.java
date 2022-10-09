@@ -10,6 +10,10 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,9 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.inject.Inject;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -41,6 +42,7 @@ import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.observation.util.TokenGenerator;
 import com.strandls.user.controller.UserServiceApi;
 
@@ -53,9 +55,10 @@ public class ObservationUtilityFunctions {
 	private final Logger logger = LoggerFactory.getLogger(ObservationUtilityFunctions.class);
 
 	private final String[] csvCoreHeaders = { "catalogNumber", "createdBy", "placeName", "flagNotes",
-			"noOfIdentifications", "geoPrivacy", "createdOn", "associatedMedia", "group_id", "dateAccuracy", "isLocked",
-			"locationLat", "locationLon", "locationScale", "fromDate", "toDate", "rank", "scientificName", "commonName",
-			"kingdom", "phylum", "class", "order", "superfamily", "family", "genus", "species", "basisOfRecord" };
+			"noOfIdentifications", "geoPrivacy", "createdOn (UTC)", "createdOn (Portal time)", "associatedMedia",
+			"group_id", "dateAccuracy", "isLocked", "locationLat", "locationLon", "locationScale", "fromDate", "toDate",
+			"rank", "scientificName", "commonName", "kingdom", "phylum", "class", "order", "superfamily", "family",
+			"genus", "species", "basisOfRecord" };
 	private final String[] csvHeadersCropInfo = { "x", "y", "width", "height", "selection_status", "contributor",
 			"license_name", "license_url" };
 	private final Integer hierarchyDepth = 8;
@@ -165,6 +168,7 @@ public class ObservationUtilityFunctions {
 			row.add(record.getNoOfIdentification());
 			row.add(record.getGeoPrivacy().toString());
 			row.add(parseDate(record.getCreatedOn()));
+			row.add(parseDateForLocale(record.getCreatedOn()));
 			row.add(fileName);
 			row.add(record.getSpeciesGroup());
 			row.add(record.getDateAccuracy());
@@ -672,4 +676,26 @@ public class ObservationUtilityFunctions {
 
 	}
 
+	private ZonedDateTime epochMilliSecondsToZDT(String epochMilliSeconds, ZoneId zoneId) {
+		Long epoch = Long.parseLong(epochMilliSeconds);
+		return ZonedDateTime.ofInstant(Instant.ofEpochMilli(epoch), zoneId);
+	}
+
+	private String parseDateForLocale(String date) {
+		String timeZone = PropertyFileUtil.fetchProperty("config.properties", "time_zone");
+		if (!(date == null)) {
+			ZoneId zoneId = ZoneId.of(timeZone);
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+			if (date.contains("-") || date.contains("T")) {
+				Instant instant = Instant.parse(date);
+				ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
+				String formattedDate = zdt.format(formatter);
+				return formattedDate;
+			} else {
+				return epochMilliSecondsToZDT(date, zoneId).format(formatter);
+			}
+		}
+		return "";
+	}
 }
