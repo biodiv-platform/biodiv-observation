@@ -60,7 +60,7 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.CustomFieldData;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
-import com.strandls.userGroup.pojo.UserGroupCreateDatatable;
+import com.strandls.dataTable.pojo.UserGroupCreateDatatable;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
 
@@ -172,7 +172,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
 					ugMapping.setUserGroupIds(userGroupIds);
-					userGroupService.createDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
+					dataTableService.updateDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
 				}
 
 				FilesDTO filesDto = new FilesDTO();
