@@ -37,6 +37,7 @@ public class RecommendationVote implements Serializable {
 	private String givenCommonName;
 	private String givenSciName;
 	private Boolean flag;
+	private String source;
 
 	/**
 	 * 
@@ -57,7 +58,7 @@ public class RecommendationVote implements Serializable {
 	 * @param flag
 	 */
 	public RecommendationVote(Long id, Long authorId, Long observationId, Long recommendationId, Date votedOn,
-			Long commonNameRecoId, String givenCommonName, String givenSciName, Boolean flag) {
+			Long commonNameRecoId, String givenCommonName, String givenSciName, Boolean flag,String source) {
 		super();
 		this.id = id;
 		this.authorId = authorId;
@@ -68,6 +69,7 @@ public class RecommendationVote implements Serializable {
 		this.givenCommonName = givenCommonName;
 		this.givenSciName = givenSciName;
 		this.flag = flag;
+		this.source=source;
 	}
 
 	@Id
@@ -151,6 +153,15 @@ public class RecommendationVote implements Serializable {
 
 	public void setFlag(Boolean flag) {
 		this.flag = flag;
+	}
+
+	@Column(name = "source")
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 }
