@@ -18,6 +18,7 @@ public class RecoCreate {
 	private Long taxonId;
 	private String scientificName;
 	private Boolean flag;
+	private String source;
 
 	/**
 	 * 
@@ -35,7 +36,7 @@ public class RecoCreate {
 	 * @param flag
 	 */
 	public RecoCreate(Long commonNameId, String commonName, Long scientificNameId, Long taxonId, String scientificName,
-			Boolean flag) {
+			Boolean flag, String source) {
 		super();
 		this.commonNameId = commonNameId;
 		this.commonName = commonName;
@@ -43,6 +44,7 @@ public class RecoCreate {
 		this.taxonId = taxonId;
 		this.scientificName = scientificName;
 		this.flag = flag;
+		this.source = source;
 	}
 
 	public Long getCommonNameId() {
@@ -91,6 +93,14 @@ public class RecoCreate {
 
 	public void setTaxonId(Long taxonId) {
 		this.taxonId = taxonId;
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 }
