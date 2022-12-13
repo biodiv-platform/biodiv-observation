@@ -261,6 +261,7 @@ public class ObservationMapperHelper {
 		recoCreate.setScientificName(scientificName);
 		recoCreate.setScientificNameId(scientificNameId);
 		recoCreate.setTaxonId(taxonId);
+		recoCreate.setSource(recoData.getSource());
 		if (scientificResult != null && scientificResult.isEmpty() == false && scientificResult.get("flag") == 1L)
 			recoCreate.setFlag(true);
 		else

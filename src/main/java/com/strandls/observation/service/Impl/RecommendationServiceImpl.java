@@ -219,10 +219,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 		if (recoCreate.getScientificNameId() != null) {
 			recoVote = new RecommendationVote(null, userId, observationId, recoCreate.getScientificNameId(), new Date(),
 					recoCreate.getCommonNameId(), recoCreate.getCommonName(), recoCreate.getScientificName(),
-					recoCreate.getFlag());
+					recoCreate.getFlag(), recoCreate.getSource());
 		} else {
 			recoVote = new RecommendationVote(null, userId, observationId, recoCreate.getCommonNameId(), new Date(),
-					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, recoCreate.getFlag());
+					recoCreate.getCommonNameId(), recoCreate.getCommonName(), null, recoCreate.getFlag(),
+					recoCreate.getSource());
 		}
 		recoVote = recoVoteDao.save(recoVote);
 		Long maxRecoVote = maxRecoVote(observationId);
@@ -242,6 +243,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 				rvActivity.setCommonName(recoCreate.getCommonName());
 			if (recoCreate.getScientificName() != null && recoCreate.getScientificName().trim().length() > 0)
 				rvActivity.setGivenName(recoCreate.getScientificName());
+
+			rvActivity.setSource(recoCreate.getSource());
 
 			description = objectMapper.writeValueAsString(rvActivity);
 
@@ -682,7 +685,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 						observationId, "observation", recoVote.getId(), "obv locked",
 						observaitonService.generateMailData(observationId));
 				observaitonService.bgfilterRule(request, observationId);
-
 
 				observaitonService.produceToRabbitMQ(observationId.toString(), "obv locked");
 
