@@ -688,6 +688,9 @@ public class ObservationUtilityFunctions {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 			if (date.contains("-") || date.contains("T")) {
+				if (date.charAt(date.length() - 1) != 'Z') {
+					date = date + "Z";
+				}
 				Instant instant = Instant.parse(date);
 				ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
 				String formattedDate = zdt.format(formatter);
