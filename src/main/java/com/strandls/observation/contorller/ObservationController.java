@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -88,6 +89,7 @@ import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.UserGroupPostingFilterThread;
 import com.strandls.observation.service.Impl.UserGroupUnPostingFilterThread;
 import com.strandls.observation.util.ObservationInputException;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.FactValuePair;
@@ -632,84 +634,88 @@ public class ObservationController {
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
-		System.out.println("domain= " + request.getRemoteAddr());
-		System.out.println("host name header="+request.getHeader("Host"));
-		InetAddress addr;
-		try {
-			addr = InetAddress.getByName(request.getRemoteAddr());
-			System.out.println("Host name is: " + addr.getHostName());
-		} catch (UnknownHostException e) {
+		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
+		String whitelistedDomain = properties.getProperty("whitelisted_domain");
+		String whitelistedDomainApiKey = properties.getProperty("whitelisted_domain_api_key");
 
-			e.printStackTrace();
-		}
+		String host = request.getHeader("Host");
+		String apiKey = request.getHeader("api-key");
 
-		MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
-		Map<String, List<String>> traitParams = queryParams.entrySet().stream()
-				.filter(entry -> entry.getKey().startsWith("trait"))
-				.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+		if (host.equals(whitelistedDomain) && apiKey.equals(whitelistedDomainApiKey)) {
 
-		Map<String, List<String>> customParams = queryParams.entrySet().stream()
-				.filter(entry -> entry.getKey().startsWith("custom"))
-				.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("trait"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
 
-		MapBounds bounds = null;
-		if (top != null || bottom != null || left != null || right != null) {
-			bounds = new MapBounds();
-			bounds.setBottom(bottom);
-			bounds.setLeft(left);
-			bounds.setRight(right);
-			bounds.setTop(top);
-		}
-		MapBoundParams mapBoundsParams = new MapBoundParams();
-		mapBoundsParams.setBounds(bounds);
+			Map<String, List<String>> customParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("custom"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
 
-		MapSearchParams mapSearchParams = new MapSearchParams();
-		mapSearchParams.setFrom(offset);
-		mapSearchParams.setLimit(max);
-		mapSearchParams.setSortOn(sortOn);
-		mapSearchParams.setSortType(SortTypeEnum.DESC);
-		mapSearchParams.setMapBoundParams(mapBoundsParams);
-
-		String loc = location.getLocation();
-		if (loc != null) {
-			if (loc.contains("/")) {
-				String[] locationArray = loc.split("/");
-				List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
-				mapBoundsParams.setMultipolygon(multiPolygonPoint);
-			} else {
-				mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+			MapBounds bounds = null;
+			if (top != null || bottom != null || left != null || right != null) {
+				bounds = new MapBounds();
+				bounds.setBottom(bottom);
+				bounds.setLeft(left);
+				bounds.setRight(right);
+				bounds.setTop(top);
 			}
+			MapBoundParams mapBoundsParams = new MapBoundParams();
+			mapBoundsParams.setBounds(bounds);
+
+			MapSearchParams mapSearchParams = new MapSearchParams();
+			mapSearchParams.setFrom(offset);
+			mapSearchParams.setLimit(max);
+			mapSearchParams.setSortOn(sortOn);
+			mapSearchParams.setSortType(SortTypeEnum.DESC);
+			mapSearchParams.setMapBoundParams(mapBoundsParams);
+
+			String loc = location.getLocation();
+			if (loc != null) {
+				if (loc.contains("/")) {
+					String[] locationArray = loc.split("/");
+					List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
+					mapBoundsParams.setMultipolygon(multiPolygonPoint);
+				} else {
+					mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+				}
+			}
+
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+					speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+					classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
+					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+					dataTableName, geoEntity, dataTableId);
+
+			MapAggregationResponse aggregationResult = null;
+			MapAggregationStatsResponse aggregationStatsResult = null;
+
+			aggregationResult = observationListService.mapAggregate("extended_observation", "_doc", sGroup, taxon, user,
+					userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+					traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
+					createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
+					district, state, tags, publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity,
+					dataTableId);
+
+			aggregationStatsResult = observationListService.mapAggregateStats("extended_observation", "_doc", sGroup,
+					taxon, user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
+					maxDate, validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
+					recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank,
+					tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset, uploadersoffset,
+					identifiersoffset, dataSetName, dataTableName, geoEntity, geoShapeFilterField, dataTableId);
+
+			ObservationListData result = observationListService.getObservationList("extended_observation", "_doc",
+					mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
+					termsAggregationField, geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
+
+			return Response.status(Status.OK)
+					.header("Access-Control-Allow-Origin", "https://www.citynaturechallenge.org/").entity(result)
+					.build();
+
+		} else {
+			return Response.status(Status.UNAUTHORIZED).entity(null).build();
+
 		}
-
-		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
-				classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
-				taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-				dataTableName, geoEntity, dataTableId);
-
-		MapAggregationResponse aggregationResult = null;
-		MapAggregationStatsResponse aggregationStatsResult = null;
-
-		aggregationResult = observationListService.mapAggregate("extended_observation", "_doc", sGroup, taxon, user,
-				userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
-				traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate,
-				createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil, district, state, tags,
-				publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-		aggregationStatsResult = observationListService.mapAggregateStats("extended_observation", "_doc", sGroup, taxon,
-				user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-				validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
-				createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
-				district, state, tags, publicationGrade, authorVoted, lifeListOffset, uploadersoffset,
-				identifiersoffset, dataSetName, dataTableName, geoEntity, geoShapeFilterField, dataTableId);
-
-		ObservationListData result = observationListService.getObservationList("extended_observation", "_doc",
-				mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-				termsAggregationField, geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
-
-		return Response.status(Status.OK).header("Access-Control-Allow-Origin", "https://www.citynaturechallenge.org/")
-				.entity(result).build();
-
 	}
 
 	@PUT
