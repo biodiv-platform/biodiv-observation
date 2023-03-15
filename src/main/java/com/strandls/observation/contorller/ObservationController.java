@@ -633,6 +633,7 @@ public class ObservationController {
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
 		System.out.println("domain= " + request.getRemoteAddr());
+		System.out.println("host name header="+request.getHeader("Host"));
 		InetAddress addr;
 		try {
 			addr = InetAddress.getByName(request.getRemoteAddr());
