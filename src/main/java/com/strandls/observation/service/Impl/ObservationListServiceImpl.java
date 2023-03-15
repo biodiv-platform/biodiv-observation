@@ -90,6 +90,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else if (view.equalsIgnoreCase("stats")) {
 
 				statsAggregates = aggregationStatsResult;
+				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+						onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, querys);
+				totalCount = result.getTotalDocuments();
 
 			} else {
 

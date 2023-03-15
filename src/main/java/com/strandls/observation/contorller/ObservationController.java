@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.contorller;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -573,6 +575,139 @@ public class ObservationController {
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+
+	}
+
+	@POST
+	@Path("/stats")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Fetch the observation stats based on the filter", notes = "Returns the observation stats based on the the filters", response = ObservationListData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response getObservationStatsData(@DefaultValue("") @QueryParam("sGroup") String sGroup,
+			@DefaultValue("") @QueryParam("taxon") String taxon, @DefaultValue("") @QueryParam("user") String user,
+			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
+			@DefaultValue("") @QueryParam("webaddress") String webaddress,
+			@DefaultValue("") @QueryParam("speciesName") String speciesName,
+			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
+			@DefaultValue("") @QueryParam("months") String months,
+			@DefaultValue("") @QueryParam("isFlagged") String isFlagged,
+			@DefaultValue("") @QueryParam("dataTableName") String dataTableName,
+			@DefaultValue("") @QueryParam("dataSetName") String dataSetName,
+			@DefaultValue("") @QueryParam("dataTableId") String dataTableId,
+			@DefaultValue("last_revised") @QueryParam("sort") String sortOn, @QueryParam("minDate") String minDate,
+			@QueryParam("maxDate") String maxDate, @QueryParam("createdOnMaxDate") String createdOnMaxDate,
+			@QueryParam("createdOnMinDate") String createdOnMinDate, @QueryParam("status") String status,
+			@QueryParam("taxonId") String taxonId, @QueryParam("validate") String validate,
+			@QueryParam("recoName") String recoName,
+			@DefaultValue("265799") @QueryParam("classification") String classificationid,
+			@DefaultValue("10") @QueryParam("max") Integer max, @DefaultValue("0") @QueryParam("offset") Integer offset,
+			@DefaultValue("location") @QueryParam("geoAggregationField") String geoAggregationField,
+			@DefaultValue("1") @QueryParam("geoAggegationPrecision") Integer geoAggegationPrecision,
+			@QueryParam("left") Double left, @QueryParam("right") Double right, @QueryParam("top") Double top,
+			@QueryParam("bottom") Double bottom, @QueryParam("recoId") String recoId,
+			@QueryParam("maxVotedReco") String maxVotedReco, @QueryParam("authorVoted") String authorVoted,
+			@QueryParam("onlyFilteredAggregation") Boolean onlyFilteredAggregation,
+			@QueryParam("termsAggregationField") String termsAggregationField,
+			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
+			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
+			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity,
+			@QueryParam("tags") String tags, @ApiParam(name = "location") EsLocationListParams location,
+			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
+			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
+			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
+			@DefaultValue("0") @QueryParam("uploadersoffset") Integer uploadersoffset,
+			@DefaultValue("0") @QueryParam("identifiersoffset") Integer identifiersoffset,
+
+			@QueryParam("recom") String maxvotedrecoid, @DefaultValue("") @QueryParam("notes") String notes,
+			@DefaultValue("") @QueryParam("authorId") String authorId,
+			@QueryParam("customfields") List<String> customfields, @QueryParam("taxonomic") List<String> taxonomic,
+			@QueryParam("spatial") List<String> spatial, @QueryParam("traits") List<String> traits,
+			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
+			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
+			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkObservationIds") String bulkObservationIds,
+
+			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
+
+		System.out.println("domain= " + request.getRemoteAddr());
+		InetAddress addr;
+		try {
+			addr = InetAddress.getByName(request.getRemoteAddr());
+			System.out.println("Host name is: " + addr.getHostName());
+		} catch (UnknownHostException e) {
+
+			e.printStackTrace();
+		}
+
+		MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+		Map<String, List<String>> traitParams = queryParams.entrySet().stream()
+				.filter(entry -> entry.getKey().startsWith("trait"))
+				.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+		Map<String, List<String>> customParams = queryParams.entrySet().stream()
+				.filter(entry -> entry.getKey().startsWith("custom"))
+				.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+		MapBounds bounds = null;
+		if (top != null || bottom != null || left != null || right != null) {
+			bounds = new MapBounds();
+			bounds.setBottom(bottom);
+			bounds.setLeft(left);
+			bounds.setRight(right);
+			bounds.setTop(top);
+		}
+		MapBoundParams mapBoundsParams = new MapBoundParams();
+		mapBoundsParams.setBounds(bounds);
+
+		MapSearchParams mapSearchParams = new MapSearchParams();
+		mapSearchParams.setFrom(offset);
+		mapSearchParams.setLimit(max);
+		mapSearchParams.setSortOn(sortOn);
+		mapSearchParams.setSortType(SortTypeEnum.DESC);
+		mapSearchParams.setMapBoundParams(mapBoundsParams);
+
+		String loc = location.getLocation();
+		if (loc != null) {
+			if (loc.contains("/")) {
+				String[] locationArray = loc.split("/");
+				List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
+				mapBoundsParams.setMultipolygon(multiPolygonPoint);
+			} else {
+				mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+			}
+		}
+
+		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
+				classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status,
+				taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
+				dataTableName, geoEntity, dataTableId);
+
+		MapAggregationResponse aggregationResult = null;
+		MapAggregationStatsResponse aggregationStatsResult = null;
+
+		aggregationResult = observationListService.mapAggregate("extended_observation", "_doc", sGroup, taxon, user,
+				userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate,
+				traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId, createdOnMaxDate,
+				createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil, district, state, tags,
+				publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+		aggregationStatsResult = observationListService.mapAggregateStats("extended_observation", "_doc", sGroup, taxon,
+				user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
+				validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco, recoId,
+				createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField, rank, tahsil,
+				district, state, tags, publicationGrade, authorVoted, lifeListOffset, uploadersoffset,
+				identifiersoffset, dataSetName, dataTableName, geoEntity, geoShapeFilterField, dataTableId);
+
+		ObservationListData result = observationListService.getObservationList("extended_observation", "_doc",
+				mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
+				termsAggregationField, geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
+
+		return Response.status(Status.OK).header("Access-Control-Allow-Origin", "https://www.citynaturechallenge.org/")
+				.entity(result).build();
 
 	}
 
