@@ -10,7 +10,7 @@ package com.strandls.observation;
 public class ApiConstants {
 
 	/**
-	 * since all the class members are static we need to add a private constructor 
+	 * since all the class members are static we need to add a private constructor
 	 */
 	private ApiConstants() {
 		super();
@@ -73,7 +73,7 @@ public class ApiConstants {
 	public static final String IDENTIFIED = "/identified";
 	public static final String PULL = "/pull";
 	public static final String DATATABLEOBSERVATION = "/dataTableObservation";
-	public static final String CROPIMAGERESOURCES="/crop/resources";
+	public static final String CROPIMAGERESOURCES = "/crop/resources";
 
 //	<-------------RECO Controller------------->
 	public static final String RECO = "/reco";
@@ -93,4 +93,9 @@ public class ApiConstants {
 	public static final String LISTDOWNLOAD = "/listdownload";
 
 	public static final String UPLOAD = "/upload";
+
+	// observation public api controller
+	public static final String PUBLIC = "public";
+	public static final String STATS = "/stats";
+
 }
