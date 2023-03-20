@@ -32,6 +32,7 @@ import com.strandls.observation.pojo.EsLocationListParams;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.ObservationListData;
+import com.strandls.observation.pojo.ObservationStatistics;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.util.PropertyFileUtil;
 
@@ -165,9 +166,15 @@ public class ObservationPublicApiController {
 					tahsil, district, state, tags, publicationGrade, authorVoted, lifeListOffset, uploadersoffset,
 					identifiersoffset, dataSetName, dataTableName, geoEntity, geoShapeFilterField, dataTableId);
 
-			ObservationListData result = observationListService.getObservationList("extended_observation", "_doc",
-					mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
+			ObservationListData observationListData = observationListService.getObservationList("extended_observation",
+					"_doc", mapSearchQuery, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 					termsAggregationField, geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
+
+			ObservationStatistics result = new ObservationStatistics();
+			result.setTitle("Some title");
+			result.setObservations(observationListData.getTotalCount());
+			result.setPeople(aggregationStatsResult.getTotalCounts().get("totalUploaders"));
+			result.setSpecies(aggregationStatsResult.getTotalCounts().get("totalTaxa"));
 
 			return Response.status(Status.OK)
 					.header("Access-Control-Allow-Origin", "https://www.citynaturechallenge.org/").entity(result)
