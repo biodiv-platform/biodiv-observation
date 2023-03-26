@@ -1,5 +1,6 @@
 package com.strandls.observation.contorller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -94,7 +95,7 @@ public class ObservationPublicApiController {
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
-			@QueryParam("bulkObservationIds") String bulkObservationIds,
+			@QueryParam("bulkObservationIds") String bulkObservationIds, @QueryParam("city") String city,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
@@ -113,6 +114,8 @@ public class ObservationPublicApiController {
 			Map<String, List<String>> customParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("custom"))
 					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
+			customParams.put("custom_17813311.field_text", Arrays.asList(city));
 
 			MapBounds bounds = null;
 			if (top != null || bottom != null || left != null || right != null) {
