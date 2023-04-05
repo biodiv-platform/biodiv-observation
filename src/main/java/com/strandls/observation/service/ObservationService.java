@@ -69,7 +69,7 @@ public interface ObservationService {
 			FactsUpdateData updateData);
 
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String observationId,
-			List<Long> userGroupList)throws Exception;
+			List<Long> userGroupList) throws Exception;
 
 	public List<SpeciesGroup> getAllSpeciesGroup();
 
@@ -119,8 +119,7 @@ public interface ObservationService {
 	public ObservationUGContextCreatePageData getUGContextObservationCreateDetails(HttpServletRequest request,
 			Long userGroupId);
 
-	public Long creteObservationUGContext(HttpServletRequest request,
-			ObservationCreateUGContext observationUGContext);
+	public Long creteObservationUGContext(HttpServletRequest request, ObservationCreateUGContext observationUGContext);
 
 	public Boolean updateLastRevised(Long observationId);
 
@@ -154,4 +153,6 @@ public interface ObservationService {
 
 	public com.strandls.observation.pojo.Resources updateObservationImageResources(HttpServletRequest request,
 			Long observationId, com.strandls.observation.pojo.Resources resourcesUpdatedInfo);
+
+	public Activity removeObservationComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
 }

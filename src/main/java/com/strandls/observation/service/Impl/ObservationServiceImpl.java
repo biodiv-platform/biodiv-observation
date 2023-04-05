@@ -1352,6 +1352,22 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
+	public Activity removeObservationComment(HttpServletRequest request, CommentLoggingData comment, String commentId) {
+		try {
+			comment.setMailData(generateMailData(comment.getRootHolderId()));
+			activityService = headers.addActivityHeaders(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			// Activity result = activityService.deleteComment("observation", comment);
+			Activity result = activityService.deleteComment("observation", commentId, comment);
+
+			// updateLastRevised(comment.getRootHolderId());
+			return null;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
 	public Boolean updateGalleryResourceRating(HttpServletRequest request, Long observationId,
 			ResourceRating resourceRating) {
 		try {
