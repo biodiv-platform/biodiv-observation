@@ -1356,11 +1356,9 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			comment.setMailData(generateMailData(comment.getRootHolderId()));
 			activityService = headers.addActivityHeaders(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			// Activity result = activityService.deleteComment("observation", comment);
-			Activity result = activityService.deleteComment("observation", commentId, comment);
 
-			// updateLastRevised(comment.getRootHolderId());
-			return null;
+			return activityService.deleteComment("observation", commentId, comment);
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
