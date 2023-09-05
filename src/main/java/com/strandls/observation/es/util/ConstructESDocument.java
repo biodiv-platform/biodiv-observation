@@ -282,7 +282,7 @@ public class ConstructESDocument {
 				+ "					observation_id o_observation_id, user_group_id o_user_group_id, value_date o_value_date, "
 				+ "					value_numeric o_value_numeric, value_string o_value_string "
 				+ "					FROM  " + "					observation_custom_field WHERE observation_id in ( "
-				+ observationId + " ))O  " + "					LEFT OUTER JOIN "
+				+ observationId + " ) AND is_usergroup_deleted = false)O  " + "					LEFT OUTER JOIN "
 				+ "					(SELECT id, author_id cv_author_id, custom_field_id cv_id, icon_url cv_icon_url, notes cv_notes,  "
 				+ "					value AS cv_value " + "					FROM  "
 				+ "					custom_field_values) CV ON CV.id = O.o_custom_field_value_id " + " "
