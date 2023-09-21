@@ -76,7 +76,7 @@ public class ConstructESDocument {
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
 				+ "LEFT OUTER JOIN " + "(SELECT lon, lat, public.ibp_tahsil_pull(lon, lat) as location_information FROM"
-				+ "(select longitude,latitude from observation where id in("+observationId+")) AS input(lon, lat) L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
+				+ "(select longitude,latitude from observation where id in("+observationId+")) AS input(lon, lat)) L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
 				+ "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
