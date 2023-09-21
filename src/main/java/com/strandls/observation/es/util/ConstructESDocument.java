@@ -373,7 +373,6 @@ public class ConstructESDocument {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 		List<ObservationESDocument> result = null;
-		System.out.println("PULL FUNCTION="+pull_function);
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
