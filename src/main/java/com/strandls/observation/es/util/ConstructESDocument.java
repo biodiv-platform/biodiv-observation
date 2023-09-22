@@ -28,7 +28,7 @@ public class ConstructESDocument {
 
 	private String classificationId = PropertyFileUtil.fetchProperty("config.properties", "classificationId");
 
-	private String locationInfoLayer = PropertyFileUtil.fetchProperty("config.properties", "locationinfo_layer_view");
+	private String pullFunction = PropertyFileUtil.fetchProperty("config.properties", "pull_function");
 
 	public List<ObservationESDocument> getESDocumentStub(String observationId) {
 
@@ -75,8 +75,10 @@ public class ConstructESDocument {
 				+ "(SELECT id s_id, name created_by, COALESCE(profile_pic,  icon) profile_pic FROM suser ) U ON U.s_id = O.author_id "
 				+ "LEFT OUTER JOIN "
 				+ "(SELECT id s_id, name group_name, group_order from species_group )S ON S.s_id = O.group_id "
-				+ "LEFT OUTER JOIN " + "(SELECT longitude lon , latitude lat, location_information FROM "
-				+ locationInfoLayer + ") L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
+				+ "LEFT OUTER JOIN " + "(SELECT lon, lat, public." + pullFunction
+				+ "(lon, lat) as location_information FROM "
+				+ "(SELECT longitude,latitude FROM observation where id in(" + observationId
+				+ ")) AS input(lon, lat)) L ON L.lon = O.longitude  " + "AND L.lat = O.latitude " + " "
 				+ "LEFT OUTER JOIN " + "( " + "SELECT  " + "observation_id,  "
 				+ "(reco_vote->>'recommendation_id')\\:\\:bigint AS recommendation_id, " + "CASE "
 				+ "	WHEN  reco_vote-> 'common_names' != 'null' THEN reco_vote-> 'common_names' " + "	ELSE null "
