@@ -374,7 +374,7 @@ public class ConstructESDocument {
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
-			String tempQry=qry.replace("null_pull_function(lon, lat)","null");
+			String tempQry=qry.replace("public.null_pull_function(lon, lat)","null");
 			Query<ObservationESDocument> query = session.createNativeQuery(tempQry, ObservationESDocument.class);
 			result = query.getResultList();
 			System.out.println();
