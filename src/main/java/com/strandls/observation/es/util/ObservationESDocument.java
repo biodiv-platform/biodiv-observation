@@ -1581,7 +1581,7 @@ class All_reco_vote {
 	private List<Common_names> common_names;
 	private Scientific_name scientific_name;
 	private List<Authors_voted> authors_voted;
-	private String last_modified;
+	private Date last_modified;
 
 	/**
 	 * 
@@ -1598,7 +1598,7 @@ class All_reco_vote {
 	 * @param last_modified
 	 */
 	public All_reco_vote(Long recommendation_id, List<Common_names> common_names, Scientific_name scientific_name,
-			List<Authors_voted> authors_voted, String last_modified) {
+			List<Authors_voted> authors_voted, Date last_modified) {
 		super();
 		this.recommendation_id = recommendation_id;
 		this.common_names = common_names;
@@ -1639,11 +1639,11 @@ class All_reco_vote {
 		this.authors_voted = authors_voted;
 	}
 
-	public String getLast_modified() {
+	public Date getLast_modified() {
 		return last_modified;
 	}
 
-	public void setLast_modified(String last_modified) {
+	public void setLast_modified(Date last_modified) {
 		this.last_modified = last_modified;
 	}
 

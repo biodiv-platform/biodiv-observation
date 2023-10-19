@@ -1008,7 +1008,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 				try {
 					observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 							ObservationListElasticMapping.class));
-				} catch (IOException e) {
+				} catch (Exception e) {
 					logger.error(e.getMessage());
 				}
 			}
