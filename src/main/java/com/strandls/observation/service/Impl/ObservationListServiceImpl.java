@@ -995,6 +995,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
@@ -1006,9 +1007,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {
+					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+					objectMapper.setDateFormat(df);
 					observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 							ObservationListElasticMapping.class));
-				} catch (Exception e) {
+				} catch (IOException e) {
 					logger.error(e.getMessage());
 				}
 			}
