@@ -995,7 +995,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return null;
 	}
 
-	
 	@Override
 	public List<ObservationListElasticMapping> getObservationListCsv(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
