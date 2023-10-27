@@ -123,7 +123,7 @@ public class ObservationBulkUploadThread implements Runnable {
 					observationIds.add(obsId);
 				}
 
-				if (observationIds.size() >= 100) {
+				if (observationIds.size() >= 500) {
 					String observationList = StringUtils.join(observationIds, ',');
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 					Thread thread = new Thread(updateThread);
