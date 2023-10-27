@@ -1006,6 +1006,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {
+					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+					objectMapper.setDateFormat(df);
 					observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 							ObservationListElasticMapping.class));
 				} catch (IOException e) {
