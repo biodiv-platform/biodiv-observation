@@ -123,37 +123,37 @@ public class ObservationBulkUploadThread implements Runnable {
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
 						observationDao, userService, data, myImageUpload,tokenGenerator,userGroup ,userId);
-				if (obsId != null) {
-					observationIds.add(obsId);
-				}
-
-				if (observationIds.size() >= 50) {
-					String observationList = StringUtils.join(observationIds, ',');
-					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-//					Thread thread = new Thread(updateThread);
-//					thread.start();
-					executor.execute(updateThread);
-					observationIds.clear();
-				}
-
-			}
-
-			if (!observationIds.isEmpty()) {
-				String observationList = StringUtils.join(observationIds, ',');
-				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-//				Thread thread = new Thread(updateThread);
-//				thread.start();
-				executor.execute(updateThread);
-				try {
-					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
-					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
-					dataTable.setUfileId(uFileId);
-					dataTableService.updateDataTable(dataTable);
-				} catch (Exception e) {
-					logger.error(e.getMessage());
-				}
+//				if (obsId != null) {
+//					observationIds.add(obsId);
+//				}
+//
+//				if (observationIds.size() >= 100) {
+//					String observationList = StringUtils.join(observationIds, ',');
+//					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+////					Thread thread = new Thread(updateThread);
+////					thread.start();
+//					executor.execute(updateThread);
+//					observationIds.clear();
+//				}
 
 			}
+
+//			if (!observationIds.isEmpty()) {
+//				String observationList = StringUtils.join(observationIds, ',');
+//				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+////				Thread thread = new Thread(updateThread);
+////				thread.start();
+//				executor.execute(updateThread);
+//				try {
+//					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
+//					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
+//					dataTable.setUfileId(uFileId);
+//					dataTableService.updateDataTable(dataTable);
+//				} catch (Exception e) {
+//					logger.error(e.getMessage());
+//				}
+//
+//			}
 			executor.shutdown();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
