@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
@@ -104,6 +106,8 @@ public class ObservationBulkUploadThread implements Runnable {
 			Row dataRow;
 			// skip header
 			rows.next();
+			
+			ExecutorService executor = Executors.newFixedThreadPool(5);
 
 			while (rows.hasNext()) {
 				dataRow = rows.next();
@@ -123,11 +127,12 @@ public class ObservationBulkUploadThread implements Runnable {
 					observationIds.add(obsId);
 				}
 
-				if (observationIds.size() >= 500) {
+				if (observationIds.size() >= 50) {
 					String observationList = StringUtils.join(observationIds, ',');
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-					Thread thread = new Thread(updateThread);
-					thread.start();
+//					Thread thread = new Thread(updateThread);
+//					thread.start();
+					executor.execute(updateThread);
 					observationIds.clear();
 				}
 
@@ -136,8 +141,9 @@ public class ObservationBulkUploadThread implements Runnable {
 			if (!observationIds.isEmpty()) {
 				String observationList = StringUtils.join(observationIds, ',');
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-				Thread thread = new Thread(updateThread);
-				thread.start();
+//				Thread thread = new Thread(updateThread);
+//				thread.start();
+				executor.execute(updateThread);
 				try {
 					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
 					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
