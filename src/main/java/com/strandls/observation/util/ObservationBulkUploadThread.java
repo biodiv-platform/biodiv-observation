@@ -154,6 +154,7 @@ public class ObservationBulkUploadThread implements Runnable {
 				}
 
 			}
+			executor.shutdown();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
