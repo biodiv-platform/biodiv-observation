@@ -196,7 +196,7 @@ public class ObservationBulkUploadThread implements Runnable {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			System.out.println("ERROR IN moveSheet=" + e.getMessage());
-			// throw new NullPointerException("Sheet Filename nout found");
+		    throw new NullPointerException("Sheet Filename nout found");
 		}
 	}
 
