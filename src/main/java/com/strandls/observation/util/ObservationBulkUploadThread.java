@@ -70,7 +70,8 @@ public class ObservationBulkUploadThread implements Runnable {
 			UserServiceApi userService, DataTableWkt dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
 			XSSFWorkbook workbook, Map<String, String> myImageUpload, ResourceServicesApi resourceService,
-			UploadApi fileUploadApi, DataTableServiceApi dataTableService,TokenGenerator tokenGenerator,String userGroup, Headers headers) {
+			UploadApi fileUploadApi, DataTableServiceApi dataTableService, TokenGenerator tokenGenerator,
+			String userGroup, Headers headers) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
@@ -106,7 +107,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			Row dataRow;
 			// skip header
 			rows.next();
-			
+
 			ExecutorService executor = Executors.newFixedThreadPool(5);
 
 			while (rows.hasNext()) {
@@ -122,38 +123,38 @@ public class ObservationBulkUploadThread implements Runnable {
 						observationBulkData.getBasisOfRecord());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-						observationDao, userService, data, myImageUpload,tokenGenerator,userGroup ,userId);
-//				if (obsId != null) {
-//					observationIds.add(obsId);
-//				}
-//
-//				if (observationIds.size() >= 100) {
-//					String observationList = StringUtils.join(observationIds, ',');
-//					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-////					Thread thread = new Thread(updateThread);
-////					thread.start();
-//					executor.execute(updateThread);
-//					observationIds.clear();
-//				}
+						observationDao, userService, data, myImageUpload, tokenGenerator, userGroup, userId);
+				if (obsId != null) {
+					observationIds.add(obsId);
+				}
+
+				if (observationIds.size() >= 100) {
+					String observationList = StringUtils.join(observationIds, ',');
+					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+					Thread thread = new Thread(updateThread);
+					thread.start();
+					executor.execute(updateThread);
+					observationIds.clear();
+				}
 
 			}
 
-//			if (!observationIds.isEmpty()) {
-//				String observationList = StringUtils.join(observationIds, ',');
-//				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-////				Thread thread = new Thread(updateThread);
-////				thread.start();
-//				executor.execute(updateThread);
-//				try {
-//					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
-//					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
-//					dataTable.setUfileId(uFileId);
-//					dataTableService.updateDataTable(dataTable);
-//				} catch (Exception e) {
-//					logger.error(e.getMessage());
-//				}
-//
-//			}
+			if (!observationIds.isEmpty()) {
+				String observationList = StringUtils.join(observationIds, ',');
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+				Thread thread = new Thread(updateThread);
+				thread.start();
+				executor.execute(updateThread);
+				try {
+					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
+					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
+					dataTable.setUfileId(uFileId);
+					dataTableService.updateDataTable(dataTable);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+			}
 			executor.shutdown();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -161,7 +162,7 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	}
 
-	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, String  requestAuthHeader)
+	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, String requestAuthHeader)
 			throws Exception {
 		try {
 			List<String> myUploadFilesPath = new ArrayList<String>();
@@ -173,7 +174,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			filesDataTable.setModule("DATASETS");
 			filesDataTable.setFiles(myUploadFilesPath);
 			Map<String, Object> fileRes;
-			fileUploadApi = headers.addFileUploadHeader(fileUploadApi,requestAuthHeader);
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
 			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 
 			fileRes = fileUploadApi.moveFiles(filesDataTable);
