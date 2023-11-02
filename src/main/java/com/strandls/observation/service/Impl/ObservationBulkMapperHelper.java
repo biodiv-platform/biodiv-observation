@@ -682,7 +682,7 @@ public class ObservationBulkMapperHelper {
 			userGroupMappingCreateData.setMailData(null);
 
 			userGroupServiceApi = headers.addUserGroupHeader(userGroupServiceApi, requestAuthHeader);
-			userGroupServiceApi.createObservationUserGroupMapping(String.valueOf(observationId),
+			userGroupServiceApi.createObservationUserGroupMappingDatatable(String.valueOf(observationId),
 					userGroupMappingCreateData);
 
 			// custom field function call
@@ -774,8 +774,7 @@ public class ObservationBulkMapperHelper {
 
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
-			UserGroupObvRuleData  ugObvFilterData = observationMapperHelper
-					.getUGObvRuleData(observation);
+			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 			intergratorService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
@@ -783,11 +782,10 @@ public class ObservationBulkMapperHelper {
 			logger.error(ex.getMessage());
 		}
 	}
-	
+
 	public void updateUserGroupFilterForDatatable(String requestAuthHeader, Observation observation) {
 		try {
-			UserGroupObvRuleData  ugObvFilterData = observationMapperHelper
-					.getUGObvRuleData(observation);
+			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 			intergratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
 		} catch (Exception ex) {
