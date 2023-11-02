@@ -783,6 +783,18 @@ public class ObservationBulkMapperHelper {
 			logger.error(ex.getMessage());
 		}
 	}
+	
+	public void updateUserGroupFilterForDatatable(String requestAuthHeader, Observation observation) {
+		try {
+			UserGroupObvRuleData  ugObvFilterData = observationMapperHelper
+					.getUGObvRuleData(observation);
+			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+			intergratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
+		} catch (Exception ex) {
+
+			logger.error(ex.getMessage());
+		}
+	}
 
 	public void updateGeoPrivacy(Observation observation) {
 		try {
