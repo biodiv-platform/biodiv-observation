@@ -106,8 +106,6 @@ public class ObservationBulkUploadThread implements Runnable {
 			// skip header
 			rows.next();
 
-			// ExecutorService executor = Executors.newFixedThreadPool(5);
-
 			while (rows.hasNext()) {
 				dataRow = rows.next();
 				if (isEmptyRow(dataRow)) {
@@ -131,7 +129,6 @@ public class ObservationBulkUploadThread implements Runnable {
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 					Thread thread = new Thread(updateThread);
 					thread.start();
-					// executor.execute(updateThread);
 					observationIds.clear();
 				}
 
@@ -142,7 +139,6 @@ public class ObservationBulkUploadThread implements Runnable {
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread thread = new Thread(updateThread);
 				thread.start();
-				// executor.execute(updateThread);
 				try {
 					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
 					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
@@ -153,10 +149,8 @@ public class ObservationBulkUploadThread implements Runnable {
 				}
 
 			}
-			// executor.shutdown();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			System.out.println("ERROR MSG = " + e.getMessage());
 		}
 
 	}
@@ -195,8 +189,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			System.out.println("ERROR IN moveSheet=" + e.getMessage());
-		    throw new NullPointerException("Sheet Filename nout found");
+			throw new NullPointerException("Sheet Filename nout found");
 		}
 	}
 
