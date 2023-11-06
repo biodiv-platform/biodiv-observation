@@ -359,7 +359,7 @@ public class ObservationUtilityFunctions {
 				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
 						observationData.getUserGroupsList(), userGroup, observation.getId());
 				mapper.updateGeoPrivacy(observation);
-				mapper.updateUserGroupFilter(requestAuthHeader, observation);
+				mapper.updateUserGroupFilterForDatatable(requestAuthHeader, observation);
 				return observation.getId();
 			}
 

@@ -68,7 +68,8 @@ public class ObservationBulkUploadThread implements Runnable {
 			UserServiceApi userService, DataTableWkt dataTable, Long userId, List<SpeciesGroup> speciesGroupList,
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
 			XSSFWorkbook workbook, Map<String, String> myImageUpload, ResourceServicesApi resourceService,
-			UploadApi fileUploadApi, DataTableServiceApi dataTableService,TokenGenerator tokenGenerator,String userGroup, Headers headers) {
+			UploadApi fileUploadApi, DataTableServiceApi dataTableService, TokenGenerator tokenGenerator,
+			String userGroup, Headers headers) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
@@ -118,12 +119,12 @@ public class ObservationBulkUploadThread implements Runnable {
 						observationBulkData.getBasisOfRecord());
 
 				Long obsId = obUtil.createObservationAndMappings(requestAuthHeader, observationBulkMapperHelper,
-						observationDao, userService, data, myImageUpload,tokenGenerator,userGroup ,userId);
+						observationDao, userService, data, myImageUpload, tokenGenerator, userGroup, userId);
 				if (obsId != null) {
 					observationIds.add(obsId);
 				}
 
-				if (observationIds.size() >= 100) {
+				if (observationIds.size() >= 200) {
 					String observationList = StringUtils.join(observationIds, ',');
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 					Thread thread = new Thread(updateThread);
@@ -154,7 +155,7 @@ public class ObservationBulkUploadThread implements Runnable {
 
 	}
 
-	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, String  requestAuthHeader)
+	private Map<String, Object> moveSheet(ObservationBulkDTO observationBulkData, String requestAuthHeader)
 			throws Exception {
 		try {
 			List<String> myUploadFilesPath = new ArrayList<String>();
@@ -166,7 +167,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			filesDataTable.setModule("DATASETS");
 			filesDataTable.setFiles(myUploadFilesPath);
 			Map<String, Object> fileRes;
-			fileUploadApi = headers.addFileUploadHeader(fileUploadApi,requestAuthHeader);
+			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
 			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 
 			fileRes = fileUploadApi.moveFiles(filesDataTable);
