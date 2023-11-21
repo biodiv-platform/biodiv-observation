@@ -66,6 +66,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Inject
 	private ESUtility esUtility;
 
+	private final String simpleFormatForDate = "yyyy-MM-dd'T'HH:mm:ss";
+
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
@@ -101,7 +103,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (view.equalsIgnoreCase("list_minimal")) {
 					for (MapDocument document : documents) {
 						try {
-
+							SimpleDateFormat df = new SimpleDateFormat(simpleFormatForDate);
+							objectMapper.setDateFormat(df);
 							observationListMinimal.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 									ObservationListMinimalData.class));
 						} catch (IOException e) {
@@ -112,6 +115,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 				} else {
 					for (MapDocument document : documents) {
 						try {
+							SimpleDateFormat df = new SimpleDateFormat(simpleFormatForDate);
+							objectMapper.setDateFormat(df);
 							ObservationListPageMapper observationMapper = objectMapper
 									.readValue(String.valueOf(document.getDocument()), ObservationListPageMapper.class);
 							if (observationMapper.getRecoShow() != null) {
@@ -1006,7 +1011,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			List<MapDocument> documents = result.getDocuments();
 			for (MapDocument document : documents) {
 				try {
-					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+					SimpleDateFormat df = new SimpleDateFormat(simpleFormatForDate);
 					objectMapper.setDateFormat(df);
 					observationList.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 							ObservationListElasticMapping.class));
