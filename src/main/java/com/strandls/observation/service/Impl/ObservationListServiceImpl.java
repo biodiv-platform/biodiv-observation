@@ -101,7 +101,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (view.equalsIgnoreCase("list_minimal")) {
 					for (MapDocument document : documents) {
 						try {
-
+							SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+							objectMapper.setDateFormat(df);
 							observationListMinimal.add(objectMapper.readValue(String.valueOf(document.getDocument()),
 									ObservationListMinimalData.class));
 						} catch (IOException e) {
@@ -112,6 +113,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 				} else {
 					for (MapDocument document : documents) {
 						try {
+							SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+							objectMapper.setDateFormat(df);
 							ObservationListPageMapper observationMapper = objectMapper
 									.readValue(String.valueOf(document.getDocument()), ObservationListPageMapper.class);
 							if (observationMapper.getRecoShow() != null) {
