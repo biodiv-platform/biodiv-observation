@@ -297,10 +297,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					if (ob.getAuthorId() != null) {
 						userInfo = userService.getUserIbp(ob.getAuthorId().toString());
 					}
-					checkListAnnotation = ob.getChecklistAnnotations() != null
-							? om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
-							})
-							: null;
+					
+					if(ob.getChecklistAnnotations() != null) {
+						checkListAnnotation=om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
+						});
+					}
 
 					if (facts != null && !facts.isEmpty()) {
 
