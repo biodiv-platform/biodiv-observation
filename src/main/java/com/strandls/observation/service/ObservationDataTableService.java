@@ -1,5 +1,6 @@
 package com.strandls.observation.service;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,9 +17,11 @@ public interface ObservationDataTableService {
 	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
 			Integer offset);
 
-	public ObservationDatatableList fetchAllObservationByDataTableId(Long dataTableId, Integer limit,
-			Integer offset);
+	public ObservationDatatableList fetchAllObservationByDataTableId(Long dataTableId, Integer limit, Integer offset);
 
 	public String removeObservationByDataTableId(HttpServletRequest request, Long dataTableId);
+
+	public Boolean updateDatatableUsergroup(HttpServletRequest request, Long dataTableId,
+			List<Long> userGroupList, String bulkAction);
 
 }
