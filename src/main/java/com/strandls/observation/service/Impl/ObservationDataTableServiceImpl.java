@@ -486,13 +486,13 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			thread1.start();
 
 			// bulk unpost
-			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
-					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate);
-
-			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
-			thread2.start();
+//			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
+//					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+//					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+//					observationDao, request, headers, om, intergratorService, esUpdate);
+//
+//			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
+//			thread2.start();
 
 			return true;
 
