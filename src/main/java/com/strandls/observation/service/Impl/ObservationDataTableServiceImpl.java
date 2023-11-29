@@ -65,6 +65,7 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.CustomFieldData;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
+import com.strandls.userGroup.pojo.UserGroupDataTable;
 import com.strandls.dataTable.pojo.UserGroupCreateDatatable;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
@@ -442,6 +443,26 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			String bulkObservationIds = observations.stream().map(observation -> String.valueOf(observation.getId()))
 					.collect(Collectors.joining(","));
 
+			List<UserGroupIbp> previousMapping = userGroupService.getDataTableUserGroup(String.valueOf(dataTableId));
+
+			List<Long> ugPost = new ArrayList<Long>();
+			List<Long> ugUnpost = new ArrayList<Long>();
+			List<Long> prevMapping = new ArrayList<Long>();
+
+			// ug list to unpost from
+			for (UserGroupIbp ug : previousMapping) {
+				if (!userGroupList.contains(ug.getId())) {
+					ugUnpost.add(ug.getId());
+				}
+				prevMapping.add(ug.getId());
+			}
+
+			for (Long ug : userGroupList) {
+				if (!prevMapping.contains(ug)) {
+					ugPost.add(ug);
+				}
+			}
+
 			// update datatable usergroup mapping
 			try {
 				dataTableService.updateDatatableUserGroupMapping(dataTableId.toString(), usergroups);
@@ -449,13 +470,30 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				logger.error(e.getMessage());
 			}
 
-			ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(false, bulkAction,
-					bulkObservationIds, bulkUsergroupIds, null, userGroupService, null, null, null, null, true, null,
-					null, null, null, "bulkMapping", esService, observationMapperHelper, observationDao, request,
-					headers, om, intergratorService, esUpdate);
+			String bulkPostUsergroupIds = ugPost.stream().map(ugId -> String.valueOf(ugId))
+					.collect(Collectors.joining(","));
 
-			Thread thread = new Thread(bulkMappingThread);
-			thread.start();
+			String bulkUnpostUsergroupIds = ugUnpost.stream().map(ugId -> String.valueOf(ugId))
+					.collect(Collectors.joining(","));
+
+			// bulk post
+			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
+					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+					observationDao, request, headers, om, intergratorService, esUpdate);
+
+			Thread thread1 = new Thread(bulkPostMappingThread);
+			thread1.start();
+
+			// bulk unpost
+			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+					observationDao, request, headers, om, intergratorService, esUpdate);
+
+			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
+			thread2.start();
+
 			return true;
 
 		} catch (Exception e) {
