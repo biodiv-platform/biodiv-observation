@@ -465,6 +465,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 			// update datatable usergroup mapping
 			try {
+				dataTableService = headers.addDataTableHeaders(dataTableService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
 				dataTableService.updateDatatableUserGroupMapping(dataTableId.toString(), usergroups);
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
@@ -486,13 +488,13 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			thread1.start();
 
 			// bulk unpost
-//			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-//					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
-//					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-//					observationDao, request, headers, om, intergratorService, esUpdate);
-//
-//			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
-//			thread2.start();
+			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+					observationDao, request, headers, om, intergratorService, esUpdate);
+
+			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
+			thread2.start();
 
 			return true;
 
