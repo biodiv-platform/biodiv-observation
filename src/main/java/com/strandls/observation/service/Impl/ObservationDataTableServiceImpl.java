@@ -427,8 +427,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	}
 
 	@Override
-	public Boolean updateDatatableUsergroup(HttpServletRequest request, Long dataTableId, List<Long> userGroupList,
-			String bulkAction) {
+	public List<com.strandls.dataTable.pojo.UserGroupIbp> updateDatatableUsergroup(HttpServletRequest request,
+			Long dataTableId, List<Long> userGroupList, String bulkAction) {
 
 		try {
 			UserGroupCreateDatatable usergroups = new UserGroupCreateDatatable();
@@ -449,6 +449,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			List<Long> ugUnpost = new ArrayList<Long>();
 			List<Long> prevMapping = new ArrayList<Long>();
 
+			List<com.strandls.dataTable.pojo.UserGroupIbp> finalGroups = new ArrayList<>();
+
 			// ug list to unpost from
 			for (UserGroupIbp ug : previousMapping) {
 				if (!userGroupList.contains(ug.getId())) {
@@ -467,7 +469,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			try {
 				dataTableService = headers.addDataTableHeaders(dataTableService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				dataTableService.updateDatatableUserGroupMapping(dataTableId.toString(), usergroups);
+				finalGroups = dataTableService.updateDatatableUserGroupMapping(dataTableId.toString(), usergroups);
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}
@@ -496,11 +498,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
 			thread2.start();
 
-			return true;
+			return finalGroups;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			return false;
+			return null;
 		}
 
 	}

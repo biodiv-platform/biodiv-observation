@@ -1466,7 +1466,7 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "", notes = "", response = Boolean.class)
+	@ApiOperation(value = "", notes = "", response = com.strandls.dataTable.pojo.UserGroupIbp.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "", response = String.class) })
 
 	public Response updateDatatableUserGroups(@Context HttpServletRequest request,
@@ -1475,8 +1475,9 @@ public class ObservationController {
 
 		try {
 
-			Boolean result = observationDataTableService.updateDatatableUsergroup(request, dataTableId,
-					datatableUgUpdateData.getUserGroupList(), datatableUgUpdateData.getBulkAction());
+			List<com.strandls.dataTable.pojo.UserGroupIbp> result = observationDataTableService
+					.updateDatatableUsergroup(request, dataTableId, datatableUgUpdateData.getUserGroupList(),
+							datatableUgUpdateData.getBulkAction());
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
