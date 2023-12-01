@@ -436,9 +436,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			List<Long> list = new ArrayList<>();
 			list.add(dataTableId);
 
-			String bulkUsergroupIds = userGroupList.stream().map(ugId -> String.valueOf(ugId))
-					.collect(Collectors.joining(","));
-
 			List<Observation> observations = observationDao.fetchByDataTableId(list, null, 0);
 			String bulkObservationIds = observations.stream().map(observation -> String.valueOf(observation.getId()))
 					.collect(Collectors.joining(","));
@@ -451,7 +448,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 			List<com.strandls.dataTable.pojo.UserGroupIbp> finalGroups = new ArrayList<>();
 
-			// ug list to unpost from
 			for (UserGroupIbp ug : previousMapping) {
 				if (!userGroupList.contains(ug.getId())) {
 					ugUnpost.add(ug.getId());
@@ -465,7 +461,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 				}
 			}
 
-			// update datatable usergroup mapping
 			try {
 				dataTableService = headers.addDataTableHeaders(dataTableService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -480,23 +475,21 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			String bulkUnpostUsergroupIds = ugUnpost.stream().map(ugId -> String.valueOf(ugId))
 					.collect(Collectors.joining(","));
 
-			// bulk post
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
 					observationDao, request, headers, om, intergratorService, esUpdate);
 
-			Thread thread1 = new Thread(bulkPostMappingThread);
-			thread1.start();
+			Thread groupPostingThread = new Thread(bulkPostMappingThread);
+			groupPostingThread.start();
 
-			// bulk unpost
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
 					observationDao, request, headers, om, intergratorService, esUpdate);
 
-			Thread thread2 = new Thread(bulkUnpostPostMappingThread);
-			thread2.start();
+			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
+			groupUnpostingThread.start();
 
 			return finalGroups;
 
