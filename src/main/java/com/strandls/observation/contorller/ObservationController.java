@@ -58,6 +58,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
+import com.strandls.observation.pojo.DatatableUserGroupUpdateData;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.observation.pojo.EsLocationListParams;
 import com.strandls.observation.pojo.ListPagePermissions;
@@ -1453,6 +1454,30 @@ public class ObservationController {
 			Integer offset = Integer.parseInt(Offset);
 			ShowObervationDataTable result = observationDataTableService.showObservatioDataTable(request, id, limit,
 					offset);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@PUT
+	@Path("/update/userGroup/datatable/{dataTableId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "", notes = "", response = com.strandls.dataTable.pojo.UserGroupIbp.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "", response = String.class) })
+
+	public Response updateDatatableUserGroups(@Context HttpServletRequest request,
+			@PathParam("dataTableId") Long dataTableId,
+			@ApiParam("DatatableUserGroupUpdateData") DatatableUserGroupUpdateData datatableUgUpdateData) {
+
+		try {
+
+			List<com.strandls.dataTable.pojo.UserGroupIbp> result = observationDataTableService
+					.updateDatatableUsergroup(request, dataTableId, datatableUgUpdateData.getUserGroupList(),
+							datatableUgUpdateData.getBulkAction());
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

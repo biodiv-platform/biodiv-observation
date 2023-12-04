@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.dataTable.ApiException;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.dataTable.pojo.BulkDTO;
 import com.strandls.dataTable.pojo.DataTableWkt;
@@ -31,12 +32,14 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
+import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
+import com.strandls.observation.es.util.ObservationBulkMappingThread;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.ObservationDatatableList;
@@ -120,6 +123,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	private ObjectMapper om;
 	@Inject
 	private TokenGenerator tokenGenerator;
+
+	@Inject
+	private ObservationMapperHelper observationMapperHelper;
+
+	@Inject
+	private IntergratorServicesApi intergratorService;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -226,7 +235,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
 			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
 			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
-				locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
+			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
 					dataTable.getGeographicalCoverageLongitude().toString());
 			dataTableRes.setAuthorInfo(user);
 			dataTableRes.setLayerInfo(null);
@@ -287,7 +296,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						toDate = dateFormat.format(ob.getToDate());
 					}
 
-					
 					if (ob.getMaxVotedRecoId() != null) {
 						reco = recoService.fetchRecoName(ob.getId(), ob.getMaxVotedRecoId());
 						scientificName = reco.getScientificName() != null ? reco.getScientificName() : null;
@@ -297,10 +305,11 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					if (ob.getAuthorId() != null) {
 						userInfo = userService.getUserIbp(ob.getAuthorId().toString());
 					}
-					
-					if(ob.getChecklistAnnotations() != null) {
-						checkListAnnotation=om.readValue(ob.getChecklistAnnotations(), new TypeReference<Map<String, Object>>() {
-						});
+
+					if (ob.getChecklistAnnotations() != null) {
+						checkListAnnotation = om.readValue(ob.getChecklistAnnotations(),
+								new TypeReference<Map<String, Object>>() {
+								});
 					}
 
 					if (facts != null && !facts.isEmpty()) {
@@ -357,10 +366,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 								data.setUserInfo(userInfo);
 							} else if (field.contains(DataTableMappingField.FROMDATE.getValue())) {
 								data.setFromDate(fromDate);
-							} 	else if (field.contains(DataTableMappingField.TODATE.getValue())) {
+							} else if (field.contains(DataTableMappingField.TODATE.getValue())) {
 								data.setToDate(toDate);
-							} 
-							else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
+							} else if (field.contains(DataTableMappingField.OBSERVEDAT.getValue())) {
 								data.setObservedAt(ob.getPlaceName());
 							} else if (field.contains(DataTableMappingField.LOCATIONSCALE.getValue())) {
 								data.setLocationScale(ob.getLocationScale());
@@ -413,6 +421,80 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<com.strandls.dataTable.pojo.UserGroupIbp> updateDatatableUsergroup(HttpServletRequest request,
+			Long dataTableId, List<Long> userGroupList, String bulkAction) {
+
+		try {
+			UserGroupCreateDatatable usergroups = new UserGroupCreateDatatable();
+			usergroups.setUserGroupIds(userGroupList);
+			List<Long> list = new ArrayList<>();
+			list.add(dataTableId);
+
+			List<Observation> observations = observationDao.fetchByDataTableId(list, null, 0);
+			String bulkObservationIds = observations.stream().map(observation -> String.valueOf(observation.getId()))
+					.collect(Collectors.joining(","));
+
+			List<UserGroupIbp> previousMapping = userGroupService.getDataTableUserGroup(String.valueOf(dataTableId));
+
+			List<Long> ugPost = new ArrayList<>();
+			List<Long> ugUnpost = new ArrayList<>();
+			List<Long> prevMapping = new ArrayList<>();
+
+			List<com.strandls.dataTable.pojo.UserGroupIbp> finalGroups = new ArrayList<>();
+
+			for (UserGroupIbp ug : previousMapping) {
+				if (!userGroupList.contains(ug.getId())) {
+					ugUnpost.add(ug.getId());
+				}
+				prevMapping.add(ug.getId());
+			}
+
+			for (Long ug : userGroupList) {
+				if (!prevMapping.contains(ug)) {
+					ugPost.add(ug);
+				}
+			}
+
+			try {
+				dataTableService = headers.addDataTableHeaders(dataTableService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				finalGroups = dataTableService.updateDatatableUserGroupMapping(dataTableId.toString(), usergroups);
+			} catch (ApiException e) {
+				logger.error(e.getMessage());
+			}
+
+			String bulkPostUsergroupIds = ugPost.stream().map(ugId -> String.valueOf(ugId))
+					.collect(Collectors.joining(","));
+
+			String bulkUnpostUsergroupIds = ugUnpost.stream().map(ugId -> String.valueOf(ugId))
+					.collect(Collectors.joining(","));
+
+			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
+					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+					observationDao, request, headers, om, intergratorService, esUpdate);
+
+			Thread groupPostingThread = new Thread(bulkPostMappingThread);
+			groupPostingThread.start();
+
+			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
+					observationDao, request, headers, om, intergratorService, esUpdate);
+
+			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
+			groupUnpostingThread.start();
+
+			return finalGroups;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			return null;
+		}
+
 	}
 
 }
