@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -41,7 +40,6 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationBulkMappingThread;
-import com.strandls.observation.es.util.ObservationListCSVThread;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.pojo.ObservationDataTableShow;
 import com.strandls.observation.pojo.ObservationDatatableList;
@@ -65,7 +63,6 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.CustomFieldData;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
-import com.strandls.userGroup.pojo.UserGroupDataTable;
 import com.strandls.dataTable.pojo.UserGroupCreateDatatable;
 
 public class ObservationDataTableServiceImpl implements ObservationDataTableService {
@@ -442,9 +439,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 			List<UserGroupIbp> previousMapping = userGroupService.getDataTableUserGroup(String.valueOf(dataTableId));
 
-			List<Long> ugPost = new ArrayList<Long>();
-			List<Long> ugUnpost = new ArrayList<Long>();
-			List<Long> prevMapping = new ArrayList<Long>();
+			List<Long> ugPost = new ArrayList<>();
+			List<Long> ugUnpost = new ArrayList<>();
+			List<Long> prevMapping = new ArrayList<>();
 
 			List<com.strandls.dataTable.pojo.UserGroupIbp> finalGroups = new ArrayList<>();
 
