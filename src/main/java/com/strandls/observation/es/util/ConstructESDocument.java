@@ -374,12 +374,7 @@ public class ConstructESDocument {
 		try {
 			System.out.println();
 			System.out.println("-------------QUERY STARTED--------OBSERVATIONID :" + observationId);
-
-			String finalQuery = qry;
-			if (pullFunction.equalsIgnoreCase("null_pull_function")) {
-				finalQuery = qry.replace("public.null_pull_function(lon, lat)", "null");
-			}
-			Query<ObservationESDocument> query = session.createNativeQuery(finalQuery, ObservationESDocument.class);
+			Query<ObservationESDocument> query = session.createNativeQuery(qry, ObservationESDocument.class);
 			result = query.getResultList();
 			System.out.println();
 			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);
