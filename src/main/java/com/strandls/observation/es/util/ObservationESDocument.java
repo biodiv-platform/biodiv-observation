@@ -2336,6 +2336,8 @@ class LocationInformation {
 	private String district;
 	private String province;
 	private String name;
+	private String dzongkhag;
+	private String geog;
 
 	/**
 	 * 
@@ -2349,13 +2351,16 @@ class LocationInformation {
 	 * @param state
 	 * @param district
 	 */
-	public LocationInformation(String tahsil, String state, String district, String name, String province) {
+	public LocationInformation(String tahsil, String state, String district, String name, String province,
+			String dzongkhag, String geog) {
 		super();
 		this.tahsil = tahsil;
 		this.state = state;
 		this.name = name;
 		this.province = province;
 		this.district = district;
+		this.dzongkhag = dzongkhag;
+		this.geog = geog;
 	}
 
 	public String getTahsil() {
@@ -2396,6 +2401,22 @@ class LocationInformation {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getDzongkhag() {
+		return dzongkhag;
+	}
+
+	public void setDzongkhag(String dzongkhag) {
+		this.dzongkhag = dzongkhag;
+	}
+
+	public String getGeog() {
+		return geog;
+	}
+
+	public void setGeog(String geog) {
+		this.geog = geog;
 	}
 
 }
