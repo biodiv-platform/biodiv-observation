@@ -156,7 +156,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
 
 			dataTableService = headers.addDataTableHeaders(dataTableService,
-					tokenGenerator.generate(userService.getUser(observationBulkData.getContributors().toString())));
+					tokenGenerator.generate(userService.getUser(userId.toString())));
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
 
 			if (dataTable == null) {
