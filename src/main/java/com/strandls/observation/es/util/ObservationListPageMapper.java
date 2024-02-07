@@ -52,6 +52,7 @@ public class ObservationListPageMapper {
 	private List<UserGroupIbp> userGroup;
 	private List<CustomFieldObservationData> customField;
 	private List<Tags> tags;
+	private String observationNotes;
 
 	@JsonProperty("observation_id")
 	private void unpackObservationId(Long observation_id) {
@@ -436,6 +437,11 @@ public class ObservationListPageMapper {
 
 	}
 
+	@JsonProperty(value = "notes")
+	private void unpackNotes(String notes) {
+		observationNotes = notes;
+	}
+
 	/**
 	 * 
 	 */
@@ -468,7 +474,7 @@ public class ObservationListPageMapper {
 			String placeName, String reverseGeocodedName, Long speciesGroupId, String speciesGroup, Long noOfImages,
 			Long noOfAudios, Long noOfVideos, String reprImageUrl, UserIbp user, List<FactValuePair> factValuePair,
 			List<FlagShow> flagShow, RecoShow recoShow, List<UserGroupIbp> userGroup,
-			List<CustomFieldObservationData> customField, List<Tags> tags) {
+			List<CustomFieldObservationData> customField, List<Tags> tags, String observationNotes) {
 		super();
 		this.observationId = observationId;
 		this.createdOn = createdOn;
@@ -489,6 +495,7 @@ public class ObservationListPageMapper {
 		this.userGroup = userGroup;
 		this.customField = customField;
 		this.tags = tags;
+		this.observationNotes = observationNotes;
 	}
 
 	public Long getObservationId() {
@@ -641,6 +648,14 @@ public class ObservationListPageMapper {
 
 	public void setTags(List<Tags> tags) {
 		this.tags = tags;
+	}
+
+	public String getObservationNotes() {
+		return observationNotes;
+	}
+
+	public void setObservationNotes(String observationNotes) {
+		this.observationNotes = observationNotes;
 	}
 
 }
