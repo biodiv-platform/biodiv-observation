@@ -355,6 +355,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public Long updateSGroup(HttpServletRequest request, Long observationId, Long sGroupId) {
+		Map<String, Object> partialEsDoc = new HashMap<>();
 		Observation observation = observationDao.findById(observationId);
 		Long previousGroupId = observation.getGroupId();
 		observation.setGroupId(sGroupId);
@@ -363,15 +364,29 @@ public class ObservationServiceImpl implements ObservationService {
 		List<SpeciesGroup> SpeciesGroupList = getAllSpeciesGroup();
 		String previousGroupName = "";
 		String newGroupName = "";
+		String sgroupFilter = "";
+
 		for (SpeciesGroup speciesGroup : SpeciesGroupList) {
 			if (speciesGroup.getId().equals(previousGroupId))
 				previousGroupName = speciesGroup.getName();
-			if (speciesGroup.getId().equals(sGroupId))
+			if (speciesGroup.getId().equals(sGroupId)) {
 				newGroupName = speciesGroup.getName();
+				sgroupFilter = speciesGroup.getId() + "|" + newGroupName + "|" + speciesGroup.getGroupOrder();
+			}
 		}
 		String description = previousGroupName + " to " + newGroupName;
 
-		produceToRabbitMQ(observationId.toString(), "Species Group");
+		partialEsDoc.put("group_id", sGroupId);
+		partialEsDoc.put("group_name", newGroupName);
+		partialEsDoc.put("sgroup_filter", sgroupFilter);
+
+		try {
+			esService.update("extended_observation", "_doc", observation.getId().toString(), partialEsDoc);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+
+		// produceToRabbitMQ(observationId.toString(), "Species Group");
 		logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId,
 				"observation", observationId, "Observation species group updated", generateMailData(observationId));
 		return observation.getGroupId();
