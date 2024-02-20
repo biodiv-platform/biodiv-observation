@@ -355,6 +355,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public Long updateSGroup(HttpServletRequest request, Long observationId, Long sGroupId) {
+		Map<String, Object> partialEsDoc = new HashMap<>();
 		Observation observation = observationDao.findById(observationId);
 		Long previousGroupId = observation.getGroupId();
 		observation.setGroupId(sGroupId);
@@ -363,15 +364,37 @@ public class ObservationServiceImpl implements ObservationService {
 		List<SpeciesGroup> SpeciesGroupList = getAllSpeciesGroup();
 		String previousGroupName = "";
 		String newGroupName = "";
+		String sgroupFilter = "";
+
 		for (SpeciesGroup speciesGroup : SpeciesGroupList) {
 			if (speciesGroup.getId().equals(previousGroupId))
 				previousGroupName = speciesGroup.getName();
-			if (speciesGroup.getId().equals(sGroupId))
+			if (speciesGroup.getId().equals(sGroupId)) {
 				newGroupName = speciesGroup.getName();
+				sgroupFilter = speciesGroup.getId() + "|" + newGroupName + "|" + speciesGroup.getGroupOrder();
+			}
 		}
 		String description = previousGroupName + " to " + newGroupName;
 
-		produceToRabbitMQ(observationId.toString(), "Species Group");
+		partialEsDoc.put(ObservationIndex.SGROUP.getValue(), sGroupId);
+		partialEsDoc.put(ObservationIndex.SPECIESNAMES.getValue(), newGroupName);
+		partialEsDoc.put("sgroup_filter", sgroupFilter);
+
+		try {
+			esService.update(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
+					observation.getId().toString(), partialEsDoc);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+
+		// produceToRabbitMQ(observationId.toString(), "Species Group");
+
+		/*
+		 * The above line is commented out because we are trying to perform a partial
+		 * update of es document instead of running the entire elastic stub query and
+		 * updating the entire document. It is, our first attempt towards decoupling
+		 * that big query into smaller chunks.
+		 */
 		logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId,
 				"observation", observationId, "Observation species group updated", generateMailData(observationId));
 		return observation.getGroupId();
