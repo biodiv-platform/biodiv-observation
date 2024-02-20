@@ -376,17 +376,25 @@ public class ObservationServiceImpl implements ObservationService {
 		}
 		String description = previousGroupName + " to " + newGroupName;
 
-		partialEsDoc.put("group_id", sGroupId);
-		partialEsDoc.put("group_name", newGroupName);
+		partialEsDoc.put(ObservationIndex.SGROUP.getValue(), sGroupId);
+		partialEsDoc.put(ObservationIndex.SPECIESNAMES.getValue(), newGroupName);
 		partialEsDoc.put("sgroup_filter", sgroupFilter);
 
 		try {
-			esService.update("extended_observation", "_doc", observation.getId().toString(), partialEsDoc);
+			esService.update(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
+					observation.getId().toString(), partialEsDoc);
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
 
 		// produceToRabbitMQ(observationId.toString(), "Species Group");
+
+		/*
+		 * The above line is commented out because we are trying to perform a partial
+		 * update of es document instead of running the entire elastic stub query and
+		 * updating the entire document. It is, our first attempt towards decoupling
+		 * that big query into smaller chunks.
+		 */
 		logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId, observationId,
 				"observation", observationId, "Observation species group updated", generateMailData(observationId));
 		return observation.getGroupId();
