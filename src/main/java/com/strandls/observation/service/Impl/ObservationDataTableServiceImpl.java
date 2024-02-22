@@ -439,6 +439,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 			List<UserGroupIbp> previousMapping = userGroupService.getDataTableUserGroup(String.valueOf(dataTableId));
 
+			if (previousMapping == null) {
+				previousMapping = new ArrayList<UserGroupIbp>();
+			}
+
 			List<Long> ugPost = new ArrayList<>();
 			List<Long> ugUnpost = new ArrayList<>();
 			List<Long> prevMapping = new ArrayList<>();
