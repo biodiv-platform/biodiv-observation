@@ -101,6 +101,7 @@ import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
+import com.strandls.userGroup.pojo.ObservationCustomisations;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.utility.pojo.FlagIbp;
 import com.strandls.utility.pojo.FlagShow;
@@ -441,6 +442,7 @@ public class ObservationController {
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
+			@DefaultValue("") @QueryParam("groupContextId") String groupContextId,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
@@ -449,6 +451,7 @@ public class ObservationController {
 			if (max > 50)
 				max = 50;
 
+			ObservationCustomisations customisations = null;
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
 			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("trait"))
@@ -549,6 +552,10 @@ public class ObservationController {
 							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
 							dataTableName, geoEntity, dataTableId);
 
+					if (groupContextId != null && !groupContextId.isEmpty()) {
+						customisations = ugService.getUserGroupMediaToggle(groupContextId);
+					}
+
 					if (view.equalsIgnoreCase("stats")) {
 						aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon,
 								user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
@@ -564,7 +571,8 @@ public class ObservationController {
 
 				ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-						geoShapeFilterField, aggregationStatsResult, aggregationResult, view);
+						geoShapeFilterField, aggregationStatsResult, aggregationResult, view,
+						customisations.getMediaToggle());
 				return Response.status(Status.OK).entity(result).build();
 
 			}

@@ -21,6 +21,7 @@ public class ObservationListData {
 	private MapAggregationResponse aggregationData;
 	private MapAggregationStatsResponse aggregateStatsData;
 	private List<ObservationListMinimalData> observationListMinimal;
+	private String mediaToggle;
 
 	/**
 	 * 
@@ -37,15 +38,17 @@ public class ObservationListData {
 	 * @param observationListMinimal
 	 */
 	public ObservationListData(List<ObservationListPageMapper> observationList, Long totalCount,
-			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData,MapAggregationStatsResponse aggregateStatsData,
-			List<ObservationListMinimalData> observationListMinimal) {
+			Map<String, Long> geohashAggregation, MapAggregationResponse aggregationData,
+			MapAggregationStatsResponse aggregateStatsData, List<ObservationListMinimalData> observationListMinimal,
+			String mediaToggle) {
 		super();
 		this.observationList = observationList;
 		this.totalCount = totalCount;
 		this.geohashAggregation = geohashAggregation;
 		this.aggregationData = aggregationData;
 		this.observationListMinimal = observationListMinimal;
-		this.aggregateStatsData=aggregateStatsData;
+		this.aggregateStatsData = aggregateStatsData;
+		this.mediaToggle = mediaToggle;
 
 	}
 
@@ -95,6 +98,14 @@ public class ObservationListData {
 
 	public void setObservationListMinimal(List<ObservationListMinimalData> observationListMinimal) {
 		this.observationListMinimal = observationListMinimal;
+	}
+
+	public String getMediaToggle() {
+		return mediaToggle;
+	}
+
+	public void setMediaToggle(String mediaToggle) {
+		this.mediaToggle = mediaToggle;
 	}
 
 }

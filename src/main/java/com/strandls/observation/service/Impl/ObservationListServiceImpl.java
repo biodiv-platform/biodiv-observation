@@ -72,7 +72,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
-			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view) {
+			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
+			String mediaToggle) {
 
 		ObservationListData listData = null;
 
@@ -173,7 +174,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 
 			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult,
-					statsAggregates, observationListMinimal);
+					statsAggregates, observationListMinimal, "withMedia");
 
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
