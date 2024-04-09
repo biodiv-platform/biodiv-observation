@@ -451,7 +451,7 @@ public class ObservationController {
 			if (max > 50)
 				max = 50;
 
-			ObservationCustomisations customisations = null;
+			String mediaToggle = null;
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
 			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
 					.filter(entry -> entry.getKey().startsWith("trait"))
@@ -553,7 +553,8 @@ public class ObservationController {
 							dataTableName, geoEntity, dataTableId);
 
 					if (groupContextId != null && !groupContextId.isEmpty()) {
-						customisations = ugService.getUserGroupMediaToggle(groupContextId);
+						ObservationCustomisations customisations = ugService.getUserGroupMediaToggle(groupContextId);
+						mediaToggle = customisations.getMediaToggle();
 					}
 
 					if (view.equalsIgnoreCase("stats")) {
@@ -571,8 +572,7 @@ public class ObservationController {
 
 				ObservationListData result = observationListService.getObservationList(index, type, mapSearchQuery,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
-						geoShapeFilterField, aggregationStatsResult, aggregationResult, view,
-						customisations.getMediaToggle());
+						geoShapeFilterField, aggregationStatsResult, aggregationResult, view, mediaToggle);
 				return Response.status(Status.OK).entity(result).build();
 
 			}

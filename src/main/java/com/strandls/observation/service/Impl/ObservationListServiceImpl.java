@@ -174,7 +174,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 
 			listData = new ObservationListData(observationList, totalCount, geoHashResult, aggregationResult,
-					statsAggregates, observationListMinimal, "withMedia");
+					statsAggregates, observationListMinimal, mediaToggle);
 
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
