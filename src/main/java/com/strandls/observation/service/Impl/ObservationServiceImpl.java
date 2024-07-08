@@ -602,11 +602,11 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public List<TraitsValuePair> getTraitList(String speciesId) {
+	public List<TraitsValuePair> getTraitList(String speciesGroupId) {
 
 		List<TraitsValuePair> result = null;
 		try {
-			result = traitService.getTraitList(speciesId);
+			result = traitService.getTraitList(speciesGroupId);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
