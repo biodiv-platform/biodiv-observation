@@ -237,7 +237,7 @@ public class ConstructESDocument {
 				+ "			o_value_date, o_value_numeric, o_value_string, cv_author_id, cv_icon_url, cv_notes, cv_value, "
 				+ "			CASE " + "				WHEN cf_field_type = 'FIELD TEXT' THEN " + "				CASE  "
 				+ "					WHEN cf_data_type = 'STRING' THEN o_value_string "
-				+ "					WHEN cf_data_type = 'NUMERIC' THEN o_value_numeric\\:\\:text "
+				+ "					WHEN cf_data_type = 'INTEGER' THEN o_value_numeric\\:\\:text "
 				+ "					WHEN cf_data_type = 'DATE' THEN o_value_date\\:\\:text " + "				END "
 				+ "			END AS field_text_data,  " + " " + "			CASE  "
 				+ "				WHEN cf_field_type = 'SINGLE CATEGORICAL' THEN cv_value " + "				ELSE NULL "
