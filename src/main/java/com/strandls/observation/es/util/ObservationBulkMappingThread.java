@@ -148,7 +148,6 @@ public class ObservationBulkMappingThread implements Runnable {
 					if (bulkAction.equalsIgnoreCase("ugBulkUnPosting")) {
 						list.add(ugFilterData);
 					} else if (bulkAction.equalsIgnoreCase("ugBulkPosting")) {
-
 						UserGroupObvRuleData filterData = observationMapperHelper
 								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
 						CheckFilterRule checkFilterRule = new CheckFilterRule();
