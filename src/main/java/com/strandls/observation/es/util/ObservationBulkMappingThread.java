@@ -145,19 +145,24 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugFilterData.setAuthorId(data.getUser() != null ? data.getUser().getId() : null);
 					ugFilterData.setTaxonomyId(data.getRecoIbp() != null ? data.getRecoIbp().getTaxonId() : null);
 
-					UserGroupObvRuleData filterData = observationMapperHelper
-							.getUGObvRuleData(observationDao.findById(data.getObservationId()));
-					CheckFilterRule checkFilterRule = new CheckFilterRule();
-					checkFilterRule.setUserGroupId(ugIds);
-					checkFilterRule.setUgObvFilterData(filterData);
-					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
-					if (filterUGId != null && !filterUGId.isEmpty()) {
-						list.add(observationMapperHelper
-								.getUGFilterObvData(observationDao.findById(data.getObservationId())));
+					if (bulkAction.equalsIgnoreCase("ugBulkUnPosting")) {
+						list.add(ugFilterData);
+					} else if (bulkAction.equalsIgnoreCase("ugBulkPosting")) {
+
+						UserGroupObvRuleData filterData = observationMapperHelper
+								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
+						CheckFilterRule checkFilterRule = new CheckFilterRule();
+						checkFilterRule.setUserGroupId(ugIds);
+						checkFilterRule.setUgObvFilterData(filterData);
+						intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
+						List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+						if (filterUGId != null && !filterUGId.isEmpty()) {
+							list.add(observationMapperHelper
+									.getUGFilterObvData(observationDao.findById(data.getObservationId())));
+						}
+
 					}
 
-//					list.add(ugFilterData);
 				}
 
 			}
