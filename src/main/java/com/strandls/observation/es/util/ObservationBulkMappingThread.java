@@ -35,6 +35,20 @@ public class ObservationBulkMappingThread implements Runnable {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkMappingThread.class);
 
+	private enum BULK_ACTION {
+		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting");
+
+		private String action;
+
+		private BULK_ACTION(String action) {
+			this.action = action;
+		}
+
+		public String getAction() {
+			return action;
+		}
+	}
+
 	private Boolean selectAll;
 	private String bulkAction;
 	private String bulkObservationIds;
@@ -145,9 +159,9 @@ public class ObservationBulkMappingThread implements Runnable {
 					ugFilterData.setAuthorId(data.getUser() != null ? data.getUser().getId() : null);
 					ugFilterData.setTaxonomyId(data.getRecoIbp() != null ? data.getRecoIbp().getTaxonId() : null);
 
-					if (bulkAction.equalsIgnoreCase("ugBulkUnPosting")) {
+					if (bulkAction.equalsIgnoreCase(BULK_ACTION.UG_BULK_UNPOSTING.getAction())) {
 						list.add(ugFilterData);
-					} else if (bulkAction.equalsIgnoreCase("ugBulkPosting")) {
+					} else if (bulkAction.equalsIgnoreCase(BULK_ACTION.UG_BULK_POSTING.getAction())) {
 						UserGroupObvRuleData filterData = observationMapperHelper
 								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
 						CheckFilterRule checkFilterRule = new CheckFilterRule();
@@ -167,7 +181,8 @@ public class ObservationBulkMappingThread implements Runnable {
 			}
 
 			if (!list.isEmpty() && !bulkAction.isEmpty()
-					&& (bulkAction.contains("ugBulkPosting") || bulkAction.contains("ugBulkUnPosting"))) {
+					&& (bulkAction.contains(BULK_ACTION.UG_BULK_POSTING.getAction())
+							|| bulkAction.contains(BULK_ACTION.UG_BULK_UNPOSTING.getAction()))) {
 
 				List<UserGroupObvFilterData> ugObsList = new ArrayList<UserGroupObvFilterData>();
 				;
