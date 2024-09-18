@@ -9,6 +9,7 @@ public class MapAggregationStatsResponse {
 	private List<TopUploadersInfo>groupTopUploaders;
 	private List<TopUploadersInfo>groupTopIdentifiers;
 	private Map<String,Long>totalCounts;
+	private Map<String,List<Map<String,Object>>>countPerDay;
 	
 
 	public Map<String, Long> getTotalCounts() {
@@ -17,6 +18,14 @@ public class MapAggregationStatsResponse {
 
 	public void setTotalCounts(Map<String, Long> totalCounts) {
 		this.totalCounts = totalCounts;
+	}
+
+	public Map<String, List<Map<String, Object>>> getCountPerDay() {
+		return countPerDay;
+	}
+
+	public void setCountPerDay(Map<String, List<Map<String,Object>>> countPerDay) {
+		this.countPerDay = countPerDay;
 	}
 
 	public List<TopUploadersInfo> getGroupTopIdentifiers() {

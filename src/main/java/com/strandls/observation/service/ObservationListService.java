@@ -56,4 +56,5 @@ public interface ObservationListService {
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField);
 
+	public Map<String, Object> getCountPerDay(String userId);
 }

@@ -192,6 +192,19 @@ public class ObservationController {
 	}
 
 	@GET
+	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns complete aggegation by day", response = Map.class)
+	@Path(ApiConstants.USER+"/{userId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> getObservationPerDay(@PathParam("userId") String userId) {
+
+			Map<String, Object> countResult = observationListService.getCountPerDay(userId);
+
+			return countResult;
+
+	}
+
+
+	@GET
 	@Path(ApiConstants.SHOW + "/{observationId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
