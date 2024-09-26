@@ -596,7 +596,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 4;
+		int totalLatch = 5;
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
@@ -605,6 +605,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 				mapAggStatsResponse, latch, null, geoShapeFilterField);
 
 		getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery,
+				mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+		getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery,
 				mapAggStatsResponse, latch, null, geoShapeFilterField);
 
 		// for top Uploaders
@@ -676,6 +679,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 			countPerDay.put(year, yeardata);
 		}
 		aggregationStatsResponse.setCountPerDay(countPerDay);
+
+		Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
+
+		List<Map<String, Object>> groupByMonth= new ArrayList();
+
+		for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
+			Map<String, Object> data = new HashMap<>();
+        	data.put("month", entry.getKey().substring(5,8));
+			data.put("year", entry.getKey().substring(0,4));
+        	data.put("value", entry.getValue());
+        	groupByMonth.add(data);
+		}
+
+		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
 
 		Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
 
