@@ -5,6 +5,7 @@ package com.strandls.observation.service.Impl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -682,14 +683,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 
-		List<Map<String, Object>> groupByMonth= new ArrayList();
+		Map<String, List<Map<String, Object>>> groupByMonth= new LinkedHashMap<>();
+		
+		List<String> years = new ArrayList(observedOnAgg.keySet());
+		
+		String currentYear = years.getLast().substring(0,4);
 
 		for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
+			String year = entry.getKey().substring(0,4);
+			Integer intervaldiff= Integer.parseInt(currentYear)-Integer.parseInt(year);
+			Integer intervalId = intervaldiff/50;
+			String intervalKey = String.valueOf(Integer.parseInt(currentYear)-(intervalId*50))+"-"+String.valueOf(Integer.parseInt(currentYear)-((intervalId+1)*50));
+			List<Map<String, Object>> intervaldata;
+			if(groupByMonth.containsKey(intervalKey)) {
+				intervaldata = groupByMonth.get(intervalKey);
+			} else {
+				intervaldata = new ArrayList<>();
+			}
 			Map<String, Object> data = new HashMap<>();
         	data.put("month", entry.getKey().substring(5,8));
 			data.put("year", entry.getKey().substring(0,4));
         	data.put("value", entry.getValue());
-        	groupByMonth.add(data);
+        	intervaldata.add(data);
+        	groupByMonth.put(intervalKey, intervaldata);
 		}
 
 		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
