@@ -693,7 +693,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String year = entry.getKey().substring(0,4);
 			Integer intervaldiff= Integer.parseInt(currentYear)-Integer.parseInt(year);
 			Integer intervalId = intervaldiff/50;
-			String intervalKey = String.valueOf(Integer.parseInt(currentYear)-(intervalId*50))+"-"+String.valueOf(Integer.parseInt(currentYear)-((intervalId+1)*50));
+			String intervalKey = String.format("%04d",Integer.parseInt(currentYear)-(intervalId*50))+"-"+String.format("%04d",Math.max( Integer.parseInt(currentYear)-((intervalId+1)*50),0));
 			List<Map<String, Object>> intervaldata;
 			if(groupByMonth.containsKey(intervalKey)) {
 				intervaldata = groupByMonth.get(intervalKey);
