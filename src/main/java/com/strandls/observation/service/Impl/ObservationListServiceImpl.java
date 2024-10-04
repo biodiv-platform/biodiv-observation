@@ -687,7 +687,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		
 		List<String> years = new ArrayList(observedOnAgg.keySet());
 		
-		String currentYear = years.getLast().substring(0,4);
+		String currentYear = years.get(years.size()-1).substring(0,4);
 
 		for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
 			String year = entry.getKey().substring(0,4);
