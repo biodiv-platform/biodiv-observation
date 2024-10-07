@@ -693,7 +693,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String year = entry.getKey().substring(0,4);
 			Integer intervaldiff= Integer.parseInt(currentYear)-Integer.parseInt(year);
 			Integer intervalId = intervaldiff/50;
-			String intervalKey = String.format("%04d",Integer.parseInt(currentYear)-(intervalId*50))+"-"+String.format("%04d",Math.max( Integer.parseInt(currentYear)-((intervalId+1)*50),0));
+			String intervalKey = String.format("%04d",Math.max( Integer.parseInt(currentYear)-((intervalId+1)*50),0)) + "-" + String.format("%04d",Integer.parseInt(currentYear)-(intervalId*50));
 			List<Map<String, Object>> intervaldata;
 			if(groupByMonth.containsKey(intervalKey)) {
 				intervaldata = groupByMonth.get(intervalKey);
@@ -1085,11 +1085,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	@Override
 	public Map<String, Object> getCountPerDay(String userId){
+		Map<String,Object> result = new HashMap<>();
 		try {
-			return esService.getAggregationPerDay(userId);
+			result.put("createdOn", esService.getAggregationPerDay(userId));
+			result.put("observedOn", esService.getAggregationPerMonth(userId));
+			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		return new HashMap<>();
+		return result;
 	}
 }
