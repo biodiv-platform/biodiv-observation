@@ -13,6 +13,7 @@ import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.ObservationListMinimalData;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
+import com.strandls.observation.pojo.ObservationDataByUser;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 
@@ -56,5 +57,5 @@ public interface ObservationListService {
 			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField);
 
-	public Map<String, Object> getCountPerDay(String userId);
+	public ObservationDataByUser getCountPerDay(String userId);
 }

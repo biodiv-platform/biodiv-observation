@@ -67,6 +67,7 @@ import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationDataByUser;
 import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
@@ -192,12 +193,12 @@ public class ObservationController {
 	}
 
 	@GET
-	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns complete aggegation by day", response = Map.class)
+	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns complete aggegation by day", response = ObservationDataByUser.class)
 	@Path(ApiConstants.USER+"/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> getObservationPerDay(@PathParam("userId") String userId) {
+	public ObservationDataByUser getObservationPerDay(@PathParam("userId") String userId) {
 
-			Map<String, Object> countResult = observationListService.getCountPerDay(userId);
+			ObservationDataByUser countResult = observationListService.getCountPerDay(userId);
 
 			return countResult;
 

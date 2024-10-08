@@ -49,6 +49,7 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
+import com.strandls.observation.pojo.ObservationDataByUser;
 
 /**
  * @author Abhishek Rudra
@@ -1084,11 +1085,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 	}
 
 	@Override
-	public Map<String, Object> getCountPerDay(String userId){
-		Map<String,Object> result = new HashMap<>();
+	public ObservationDataByUser getCountPerDay(String userId){
+		ObservationDataByUser result = new ObservationDataByUser();
 		try {
-			result.put("createdOn", esService.getAggregationPerDay(userId));
-			result.put("observedOn", esService.getAggregationPerMonth(userId));
+			result.setCreatedOn(esService.getAggregationPerDay(userId));
+			result.setObservedOn(esService.getAggregationPerMonth(userId));
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
