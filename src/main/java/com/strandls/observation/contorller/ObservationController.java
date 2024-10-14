@@ -193,17 +193,17 @@ public class ObservationController {
 	}
 
 	@GET
-	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns complete aggegation by day", response = ObservationDataByUser.class)
-	@Path(ApiConstants.USER+"/{userId}")
+	@Path(ApiConstants.USER + "/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns observations grouped by day and month", response = ObservationDataByUser.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 	public ObservationDataByUser getObservationPerDay(@PathParam("userId") String userId) {
 
-			ObservationDataByUser countResult = observationListService.getCountPerDay(userId);
+		ObservationDataByUser countResult = observationListService.getCountPerDay(userId);
 
-			return countResult;
+		return countResult;
 
 	}
-
 
 	@GET
 	@Path(ApiConstants.SHOW + "/{observationId}")

@@ -4,7 +4,7 @@
 package com.strandls.observation.pojo;
 
 /**
- * @author Abhishek Rudra
+ * @author Mekala Rishitha Ravi
  *
  */
 public class ObservationDataByUser {
