@@ -5,7 +5,6 @@ package com.strandls.observation.service.Impl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -689,7 +688,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
 
-		List<String> years = new ArrayList(observedOnAgg.keySet());
+		List<String> years = new ArrayList<>(observedOnAgg.keySet());
 
 		String currentYear = years.get(years.size() - 1).substring(0, 4);
 
@@ -717,10 +716,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
 
 		Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
-		int traits_index = 0;
+		int traitsIndex = 0;
 		List<Map<String, Object>> groupByTraits = new ArrayList();
 		for (Map.Entry<String, Long> entry : traitsAgg.entrySet()) {
-			if (traits_index % 12 == 0) {
+			if (traitsIndex % 12 == 0) {
 				Map<String, Object> traits = new LinkedHashMap();
 				traits.put("name", entry.getKey().split("_")[0]);
 				List<Map<String, Object>> values = new ArrayList();
@@ -734,13 +733,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 				Map<String, Object> monthSum = new HashMap();
 				monthSum.put("name", entry.getKey().split("_")[1]);
 				monthSum.put("value", entry.getValue());
-				Map<String, Object> series = groupByTraits.get(traits_index / 12);
+				Map<String, Object> series = groupByTraits.get(traitsIndex / 12);
 				List<Map<String, Object>> values = (List<Map<String, Object>>) series.get("values");
 				values.add(monthSum);
 				series.put("values", values);
-				groupByTraits.set(traits_index / 12, series);
+				groupByTraits.set(traitsIndex / 12, series);
 			}
-			traits_index++;
+			traitsIndex++;
 		}
 
 		aggregationStatsResponse.setGroupTraits(groupByTraits);

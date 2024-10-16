@@ -199,9 +199,7 @@ public class ObservationController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 	public ObservationDataByUser getObservationPerDay(@PathParam("userId") String userId) {
 
-		ObservationDataByUser countResult = observationListService.getCountPerDay(userId);
-
-		return countResult;
+		return observationListService.getCountPerDay(userId);
 
 	}
 
