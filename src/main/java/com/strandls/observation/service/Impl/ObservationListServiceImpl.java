@@ -717,20 +717,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
 		int traitsIndex = 0;
-		List<Map<String, Object>> groupByTraits = new ArrayList();
+		List<Map<String, Object>> groupByTraits = new ArrayList<>();
 		for (Map.Entry<String, Long> entry : traitsAgg.entrySet()) {
 			if (traitsIndex % 12 == 0) {
-				Map<String, Object> traits = new LinkedHashMap();
+				Map<String, Object> traits = new LinkedHashMap<>();
 				traits.put("name", entry.getKey().split("_")[0]);
-				List<Map<String, Object>> values = new ArrayList();
-				Map<String, Object> monthSum = new HashMap();
+				List<Map<String, Object>> values = new ArrayList<>();
+				Map<String, Object> monthSum = new HashMap<>();
 				monthSum.put("name", entry.getKey().split("_")[1]);
 				monthSum.put("value", entry.getValue());
 				values.add(monthSum);
 				traits.put("values", values);
 				groupByTraits.add(traits);
 			} else {
-				Map<String, Object> monthSum = new HashMap();
+				Map<String, Object> monthSum = new HashMap<>();
 				monthSum.put("name", entry.getKey().split("_")[1]);
 				monthSum.put("value", entry.getValue());
 				Map<String, Object> series = groupByTraits.get(traitsIndex / 12);
