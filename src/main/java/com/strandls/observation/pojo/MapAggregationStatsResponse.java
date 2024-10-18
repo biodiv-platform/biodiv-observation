@@ -6,10 +6,12 @@ import java.util.Map;
 public class MapAggregationStatsResponse {
 
 	private Map<String, Long> groupUniqueSpecies;
-	private List<TopUploadersInfo>groupTopUploaders;
-	private List<TopUploadersInfo>groupTopIdentifiers;
-	private Map<String,Long>totalCounts;
-	
+	private List<TopUploadersInfo> groupTopUploaders;
+	private List<TopUploadersInfo> groupTopIdentifiers;
+	private Map<String, Long> totalCounts;
+	private Map<String, List<Map<String, Object>>> countPerDay;
+	private Map<String, List<Map<String, Object>>> groupObservedOn;
+	private List<Map<String, Object>> groupTraits;
 
 	public Map<String, Long> getTotalCounts() {
 		return totalCounts;
@@ -17,6 +19,30 @@ public class MapAggregationStatsResponse {
 
 	public void setTotalCounts(Map<String, Long> totalCounts) {
 		this.totalCounts = totalCounts;
+	}
+
+	public List<Map<String, Object>> getGroupTraits() {
+		return groupTraits;
+	}
+
+	public void setGroupTraits(List<Map<String, Object>> groupByTraits) {
+		this.groupTraits = groupByTraits;
+	}
+
+	public Map<String, List<Map<String, Object>>> getCountPerDay() {
+		return countPerDay;
+	}
+
+	public void setCountPerDay(Map<String, List<Map<String, Object>>> countPerDay) {
+		this.countPerDay = countPerDay;
+	}
+
+	public Map<String, List<Map<String, Object>>> getGroupObservedOn() {
+		return groupObservedOn;
+	}
+
+	public void setGroupObservedOn(Map<String, List<Map<String, Object>>> groupByMonth) {
+		this.groupObservedOn = groupByMonth;
 	}
 
 	public List<TopUploadersInfo> getGroupTopIdentifiers() {
