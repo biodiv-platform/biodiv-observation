@@ -1121,8 +1121,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	public ObservationDataByUser getCountPerDay(String userId) {
 		ObservationDataByUser result = new ObservationDataByUser();
 		try {
-			result.setCreatedOn(esService.getAggregationPerDay("extended_observation", userId));
-			result.setObservedOn(esService.getAggregationPerMonth("extended_observation", userId));
+			result.setCreatedOn(esService.getAggregationPerDay(ObservationIndex.INDEX.getValue(), userId));
+			result.setObservedOn(esService.getAggregationPerMonth(ObservationIndex.INDEX.getValue(), userId));
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
