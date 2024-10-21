@@ -48,6 +48,7 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
+import com.strandls.observation.pojo.ObservationDataByUser;
 
 /**
  * @author Abhishek Rudra
@@ -596,13 +597,22 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 3;
+		int totalLatch = 6;
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
 		getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField, mapSearchQuery,
 				mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+		getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
+				null, geoShapeFilterField);
+
+		getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+				latch, null, geoShapeFilterField);
+
+		getAggregateLatch(index, type, "group_by_traits", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+				latch, null, geoShapeFilterField);
 
 		// for top Uploaders
 
@@ -652,6 +662,87 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 		}
 		aggregationStatsResponse.setGroupUniqueSpecies(t);
+
+		Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
+
+		Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
+
+		for (Map.Entry<String, Long> entry : agg.entrySet()) {
+			String year = entry.getKey().substring(0, 4);
+			List<Map<String, Object>> yeardata;
+			if (countPerDay.containsKey(year)) {
+				yeardata = countPerDay.get(year);
+			} else {
+				yeardata = new ArrayList<>();
+			}
+
+			Map<String, Object> data = new HashMap<>();
+			data.put("date", entry.getKey());
+			data.put("value", entry.getValue());
+			yeardata.add(data);
+			countPerDay.put(year, yeardata);
+		}
+		aggregationStatsResponse.setCountPerDay(countPerDay);
+
+		Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
+
+		Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
+
+		List<String> years = new ArrayList<>(observedOnAgg.keySet());
+
+		String currentYear = years.get(years.size() - 1).substring(0, 4);
+
+		for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
+			String year = entry.getKey().substring(0, 4);
+			Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
+			Integer intervalId = intervaldiff / 50;
+			String intervalKey = String.format("%04d",
+					Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50), 0)) + "-"
+					+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
+			List<Map<String, Object>> intervaldata;
+			if (groupByMonth.containsKey(intervalKey)) {
+				intervaldata = groupByMonth.get(intervalKey);
+			} else {
+				intervaldata = new ArrayList<>();
+			}
+			Map<String, Object> data = new HashMap<>();
+			data.put("month", entry.getKey().substring(5, 8));
+			data.put("year", entry.getKey().substring(0, 4));
+			data.put("value", entry.getValue());
+			intervaldata.add(data);
+			groupByMonth.put(intervalKey, intervaldata);
+		}
+
+		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
+
+		Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
+		int traitsIndex = 0;
+		List<Map<String, Object>> groupByTraits = new ArrayList<>();
+		for (Map.Entry<String, Long> entry : traitsAgg.entrySet()) {
+			if (traitsIndex % 12 == 0) {
+				Map<String, Object> traits = new LinkedHashMap<>();
+				traits.put("name", entry.getKey().split("_")[0]);
+				List<Map<String, Object>> values = new ArrayList<>();
+				Map<String, Object> monthSum = new HashMap<>();
+				monthSum.put("name", entry.getKey().split("_")[1]);
+				monthSum.put("value", entry.getValue());
+				values.add(monthSum);
+				traits.put("values", values);
+				groupByTraits.add(traits);
+			} else {
+				Map<String, Object> monthSum = new HashMap<>();
+				monthSum.put("name", entry.getKey().split("_")[1]);
+				monthSum.put("value", entry.getValue());
+				Map<String, Object> series = groupByTraits.get(traitsIndex / 12);
+				List<Map<String, Object>> values = (List<Map<String, Object>>) series.get("values");
+				values.add(monthSum);
+				series.put("values", values);
+				groupByTraits.set(traitsIndex / 12, series);
+			}
+			traitsIndex++;
+		}
+
+		aggregationStatsResponse.setGroupTraits(groupByTraits);
 
 		Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
 
@@ -1026,4 +1117,16 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return null;
 	}
 
+	@Override
+	public ObservationDataByUser getCountPerDay(String userId) {
+		ObservationDataByUser result = new ObservationDataByUser();
+		try {
+			result.setCreatedOn(esService.getAggregationPerDay(ObservationIndex.INDEX.getValue(), userId));
+			result.setObservedOn(esService.getAggregationPerMonth(ObservationIndex.INDEX.getValue(), userId));
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
 }

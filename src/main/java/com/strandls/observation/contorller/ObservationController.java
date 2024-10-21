@@ -67,6 +67,7 @@ import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.MaxVotedRecoPermission;
 import com.strandls.observation.pojo.ObservationCreate;
 import com.strandls.observation.pojo.ObservationCreateUGContext;
+import com.strandls.observation.pojo.ObservationDataByUser;
 import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
@@ -189,6 +190,17 @@ public class ObservationController {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong Observation";
+	}
+
+	@GET
+	@Path(ApiConstants.USERTEMPORALAGGREGATION + "/{userId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns observations grouped by day and month", response = ObservationDataByUser.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+	public ObservationDataByUser getObservationPerDay(@PathParam("userId") String userId) {
+
+		return observationListService.getCountPerDay(userId);
+
 	}
 
 	@GET
