@@ -193,7 +193,7 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path(ApiConstants.USER + "/{userId}")
+	@Path(ApiConstants.USERTEMPORALAGGREGATION + "/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns observations grouped by day and month", response = ObservationDataByUser.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })

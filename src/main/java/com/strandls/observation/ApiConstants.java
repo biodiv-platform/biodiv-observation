@@ -25,6 +25,7 @@ public class ApiConstants {
 	public static final String SHOW = "/show";
 	public static final String PING = "/ping";
 	public static final String USER = "/user";
+	public static final String USERTEMPORALAGGREGATION = "/userTemporalAggregation";
 	public static final String BULK = "/bulk";
 	public static final String CREATE = "/create";
 	public static final String SPECIESGROUP = "/speciesgroup";
