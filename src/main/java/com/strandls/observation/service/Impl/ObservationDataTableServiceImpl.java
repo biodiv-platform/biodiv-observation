@@ -192,11 +192,14 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 						.getAllFilePathsByUser(filesDto).entrySet().stream()
 						.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
 
+				String batchSize = properties.getProperty("datatableBatchSize");
+
 				ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
 						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
 						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
-						dataTableService, tokenGenerator, observationBulkData.getUserGroup(), headers);
+						dataTableService, tokenGenerator, observationBulkData.getUserGroup(), headers,
+						Long.valueOf(batchSize));
 				Thread thread = new Thread(uploadThread);
 				thread.start();
 			}
