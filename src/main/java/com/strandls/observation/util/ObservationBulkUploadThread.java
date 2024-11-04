@@ -62,6 +62,7 @@ public class ObservationBulkUploadThread implements Runnable {
 	private final XSSFWorkbook workbook;
 	private final Map<String, String> myImageUpload;
 	private final TokenGenerator tokenGenerator;
+	private final Long batchSize;
 
 	public ObservationBulkUploadThread(ObservationBulkDTO observationBulkData, HttpServletRequest request,
 			ObservationDAO observationDao, ObservationBulkMapperHelper observationBulkMapperHelper, ESUpdate esUpdate,
@@ -69,7 +70,7 @@ public class ObservationBulkUploadThread implements Runnable {
 			List<TraitsValuePair> traitsList, List<UserGroupIbp> userGroupIbpList, List<License> licenseList,
 			XSSFWorkbook workbook, Map<String, String> myImageUpload, ResourceServicesApi resourceService,
 			UploadApi fileUploadApi, DataTableServiceApi dataTableService, TokenGenerator tokenGenerator,
-			String userGroup, Headers headers) {
+			String userGroup, Headers headers, Long batchSize) {
 		super();
 		this.observationBulkData = observationBulkData;
 		this.observationDao = observationDao;
@@ -92,6 +93,7 @@ public class ObservationBulkUploadThread implements Runnable {
 		this.tokenGenerator = tokenGenerator;
 		this.userGroup = userGroup;
 		this.myImageUpload = myImageUpload;
+		this.batchSize = batchSize;
 	}
 
 	public void run() {
@@ -124,7 +126,7 @@ public class ObservationBulkUploadThread implements Runnable {
 					observationIds.add(obsId);
 				}
 
-				if (observationIds.size() >= 200) {
+				if (observationIds.size() >= batchSize) {
 					String observationList = StringUtils.join(observationIds, ',');
 					ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 					Thread thread = new Thread(updateThread);
