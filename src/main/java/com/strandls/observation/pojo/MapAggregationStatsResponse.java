@@ -3,8 +3,6 @@ package com.strandls.observation.pojo;
 import java.util.List;
 import java.util.Map;
 
-import com.strandls.taxonomy.pojo.TaxonomyNameListResponse;
-
 public class MapAggregationStatsResponse {
 
 	private Map<String, Long> groupUniqueSpecies;
