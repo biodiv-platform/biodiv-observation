@@ -597,7 +597,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 6;
+		int totalLatch = 7;
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
@@ -612,6 +612,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 				latch, null, geoShapeFilterField);
 
 		getAggregateLatch(index, type, "group_by_traits", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+				latch, null, geoShapeFilterField);
+
+		getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 				latch, null, geoShapeFilterField);
 
 		// for top Uploaders
@@ -715,6 +718,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
 
+		Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
+		aggregationStatsResponse.setGroupTaxon(taxonAgg);
 		Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
 		int traitsIndex = 0;
 		List<Map<String, Object>> groupByTraits = new ArrayList<>();

@@ -12,6 +12,7 @@ public class MapAggregationStatsResponse {
 	private Map<String, List<Map<String, Object>>> countPerDay;
 	private Map<String, List<Map<String, Object>>> groupObservedOn;
 	private List<Map<String, Object>> groupTraits;
+	private Map<String, Long> groupTaxon;
 
 	public Map<String, Long> getTotalCounts() {
 		return totalCounts;
@@ -67,6 +68,14 @@ public class MapAggregationStatsResponse {
 
 	public void setGroupUniqueSpecies(Map<String, Long> groupUniqueSpecies) {
 		this.groupUniqueSpecies = groupUniqueSpecies;
+	}
+
+	public Map<String, Long> getGroupTaxon() {
+		return groupTaxon;
+	}
+
+	public void setGroupTaxon(Map<String, Long> taxonAgg) {
+		this.groupTaxon = taxonAgg;
 	}
 
 }
