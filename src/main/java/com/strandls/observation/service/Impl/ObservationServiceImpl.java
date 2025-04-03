@@ -441,7 +441,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 		List<FactValuePair> facts = null;
 		try {
-			//updateData.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
+			updateData.setMailData(converter.traitMetaData(generateMailData(Long.parseLong(observationId))));
 			traitService = headers.addTraitsHeaders(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			facts = traitService.updateTraits("species.participation.Observation", observationId, traitId, updateData);
 			Observation observation = observationDao.findById(Long.parseLong(observationId));
