@@ -607,6 +607,7 @@ public class ObservationServiceImpl implements ObservationService {
 		try {
 			result = traitService.getTraitList(speciesGroupId, languageId);
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		return result;
