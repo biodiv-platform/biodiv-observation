@@ -3,6 +3,7 @@ package com.strandls.observation.es.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +27,8 @@ import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
+import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.BulkGroupPostingData;
 import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
@@ -71,6 +74,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final String requestAuthHeader;
 	private final ESUpdate esUpdate;
 	private IntergratorServicesApi intergratorService;
+	private TraitsServiceApi traitService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -79,7 +83,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
 			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -103,6 +107,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 		this.intergratorService = intergratorService;
 		this.esUpdate = esUpdate;
+		this.traitService = traitService;
 	}
 
 	@Override
@@ -129,9 +134,17 @@ public class ObservationBulkMappingThread implements Runnable {
 
 				for (Observation obs : obsDataList) {
 					UserGroupObvRuleData data = observationMapperHelper.getUGObvRuleData(obs);
+					UserGroupObvRuleData ugObvFilterData = data;
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+					Map<String, List<Long>> facts = traits.stream()
+				    .collect(Collectors.groupingBy(
+				    		trait -> trait.getNameId().toString(), 
+				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
+				        ));
+					ugObvFilterData.setTraits(facts);
 					CheckFilterRule checkFilterRule = new CheckFilterRule();
 					checkFilterRule.setUserGroupId(ugIds);
-					checkFilterRule.setUgObvFilterData(data);
+					checkFilterRule.setUgObvFilterData(ugObvFilterData);
 					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 					if (filterUGId != null && !filterUGId.isEmpty()) {
@@ -164,6 +177,13 @@ public class ObservationBulkMappingThread implements Runnable {
 					} else if (bulkAction.equalsIgnoreCase(BULK_ACTION.UG_BULK_POSTING.getAction())) {
 						UserGroupObvRuleData filterData = observationMapperHelper
 								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
+						List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+						Map<String, List<Long>> facts = traits.stream()
+					    .collect(Collectors.groupingBy(
+					    		trait -> trait.getNameId().toString(), 
+					            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
+					        ));
+						filterData.setTraits(facts);
 						CheckFilterRule checkFilterRule = new CheckFilterRule();
 						checkFilterRule.setUserGroupId(ugIds);
 						checkFilterRule.setUgObvFilterData(filterData);

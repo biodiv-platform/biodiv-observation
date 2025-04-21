@@ -13,6 +13,7 @@ import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.ActivityLoggingData;
 import com.strandls.integrator.controllers.IntergratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
+import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.pojo.Observation;
@@ -93,7 +94,9 @@ public class ObservationCreateThread implements Runnable {
 				// filter usergroup by rule eligility
 				CheckFilterRule checkFilterRule = new CheckFilterRule();
 				checkFilterRule.setUserGroupId(observationData.getUserGroupId());
-				checkFilterRule.setUgObvFilterData(observationImpl.getUGObvRuleData(observation));
+				UserGroupObvRuleData UgObvFilterData = observationImpl.getUGObvRuleData(observation);
+				UgObvFilterData.setTraits(observationData.getFactValuePairs());
+				checkFilterRule.setUgObvFilterData(UgObvFilterData);
 				intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 				eligibleUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
 
@@ -138,8 +141,10 @@ public class ObservationCreateThread implements Runnable {
 			observationImpl.updateGeoPrivacy(observationList);
 
 //		---------------USER GROUP FILTER RULE----------
+			UserGroupObvRuleData UgObvFilterData = observationImpl.getUGObvRuleData(observation);
+			UgObvFilterData.setTraits(observationData.getFactValuePairs());
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-			intergratorService.getFilterRule(observationImpl.getUGObvRuleData(observation));
+			intergratorService.getFilterRule(UgObvFilterData);
 
 //		----------------ES UPDATE---------------------
 			if (Boolean.TRUE.equals(updateEs)) {
