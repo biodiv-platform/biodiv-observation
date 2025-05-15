@@ -413,12 +413,22 @@ public class ESUtility {
 								if (trait.getId().toString().equals(traitKey)) {
 									List<Object> listOfIds = cSTSOT(Ids);
 									List<Object> traitValueList = new ArrayList<Object>();
+									List<Object> traitValueIdList = new ArrayList<Object>();
 									for (Object o : listOfIds) {
-										String valueList = trait.getName() + "|" + o.toString();
-										traitValueList.add(valueList);
+										if (o.toString().split("\\|").length == 1) {
+											String valueList = trait.getName() + "|" + o.toString().split("\\|")[0];
+											traitValueList.add(valueList);
+										} else {
+											traitValueIdList.add(Long.parseLong(o.toString().split("\\|")[1]));
+										}
 									}
+									if(!traitValueList.isEmpty()) {
 									boolAndLists.add(assignBoolAndQuery(ObservationIndex.TRAITSAGGREGATION.getValue(),
 											traitValueList));
+									}
+									if(!traitValueIdList.isEmpty()) {
+									boolAndLists.add(assignBoolAndQuery("facts.trait_value.trait_value_id",traitValueIdList));
+									}
 									break;
 								}
 
