@@ -582,7 +582,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
 			Integer uploadersoffset, Integer identifiersoffset, String dataSetName, String dataTableName,
-			String geoEntity, String geoShapeFilterField, String dataTableId) {
+			String geoEntity, String geoShapeFilterField, String dataTableId, String showData) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -605,16 +605,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 		getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField, mapSearchQuery,
 				mapAggStatsResponse, latch, null, geoShapeFilterField);
 
-		getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
-				null, geoShapeFilterField);
+		if (showData.equals("false")) {
+			getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+					latch, null, geoShapeFilterField);
+
+			getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+					latch, null, geoShapeFilterField);
+		}
 
 		getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 				latch, null, geoShapeFilterField);
 
 		getAggregateLatch(index, type, "group_by_traits", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
-				latch, null, geoShapeFilterField);
-
-		getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 				latch, null, geoShapeFilterField);
 
 		// for top Uploaders
@@ -646,7 +648,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			Thread.currentThread().interrupt();
 		}
 
-		int size = lifeListOffset + 10;
+		int size = lifeListOffset + (showData.equals("false") ? 10 : 8);
 		int count = 1;
 
 		Map<String, Long> temp = getAggregationValue(mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
@@ -666,26 +668,30 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 		aggregationStatsResponse.setGroupUniqueSpecies(t);
 
-		Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
+		if (showData.equals("false")) {
+			Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
 
-		Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
+			Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
 
-		for (Map.Entry<String, Long> entry : agg.entrySet()) {
-			String year = entry.getKey().substring(0, 4);
-			List<Map<String, Object>> yeardata;
-			if (countPerDay.containsKey(year)) {
-				yeardata = countPerDay.get(year);
-			} else {
-				yeardata = new ArrayList<>();
+			for (Map.Entry<String, Long> entry : agg.entrySet()) {
+				String year = entry.getKey().substring(0, 4);
+				List<Map<String, Object>> yeardata;
+				if (countPerDay.containsKey(year)) {
+					yeardata = countPerDay.get(year);
+				} else {
+					yeardata = new ArrayList<>();
+				}
+
+				Map<String, Object> data = new HashMap<>();
+				data.put("date", entry.getKey());
+				data.put("value", entry.getValue());
+				yeardata.add(data);
+				countPerDay.put(year, yeardata);
 			}
-
-			Map<String, Object> data = new HashMap<>();
-			data.put("date", entry.getKey());
-			data.put("value", entry.getValue());
-			yeardata.add(data);
-			countPerDay.put(year, yeardata);
+			aggregationStatsResponse.setCountPerDay(countPerDay);
+			Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
+			aggregationStatsResponse.setGroupTaxon(taxonAgg);
 		}
-		aggregationStatsResponse.setCountPerDay(countPerDay);
 
 		Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 
@@ -718,8 +724,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		aggregationStatsResponse.setGroupObservedOn(groupByMonth);
 
-		Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
-		aggregationStatsResponse.setGroupTaxon(taxonAgg);
 		Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
 		int traitsIndex = 0;
 		List<Map<String, Object>> groupByTraits = new ArrayList<>();

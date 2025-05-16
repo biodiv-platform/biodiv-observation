@@ -620,7 +620,7 @@ public class ObservationUtilityFunctions {
 					})
 					: null;
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		for (Entry<String, Object> item : checkListAnnotation.entrySet()) {
