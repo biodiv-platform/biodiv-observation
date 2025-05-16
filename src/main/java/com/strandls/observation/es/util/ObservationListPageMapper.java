@@ -142,7 +142,7 @@ public class ObservationListPageMapper {
 	@JsonProperty(value = "facts")
 	private void unpackFacts(List<Facts> facts) throws ParseException {
 		factValuePair = new ArrayList<FactValuePair>();
-		String pattern = "yyyy-MM-dd";
+		String pattern = "EEE MMM dd HH:mm:ss z yyyy";
 		SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 		if (facts != null) {
 			for (Facts fact : facts) {
@@ -164,7 +164,7 @@ public class ObservationListPageMapper {
 								fvp.setValue(value.getFrom_value());
 						} else {
 
-							if (value.getFrom_date() != null)
+							if (value.getFrom_date() != null)	
 								fvp.setFromDate(sdf.parse(value.getFrom_date().toString()));
 							if (value.getTo_date() != null)
 								fvp.setFromDate(sdf.parse(value.getTo_date().toString()));
