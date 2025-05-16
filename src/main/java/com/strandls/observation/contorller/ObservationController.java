@@ -90,6 +90,7 @@ import com.strandls.observation.service.Impl.UserGroupUnPostingFilterThread;
 import com.strandls.observation.util.ObservationInputException;
 import com.strandls.resource.pojo.ResourceRating;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValue;
@@ -183,6 +184,9 @@ public class ObservationController {
 
 	@Inject
 	private ESUpdate esUpdate;
+	
+	@Inject
+	private TraitsServiceApi traitService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -542,7 +546,7 @@ public class ObservationController {
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper, intergratorService, esUpdate);
+						request, headers, objectMapper, intergratorService, esUpdate, traitService);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
@@ -772,15 +776,15 @@ public class ObservationController {
 	}
 
 	@GET
-	@Path(ApiConstants.SPECIES + "/{speciesGroupId}")
+	@Path(ApiConstants.SPECIES + "/{speciesGroupId}/{languageId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
 
-	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId) {
+	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId, @PathParam("languageId") String languageId) {
 		try {
-			List<TraitsValuePair> result = observationService.getTraitList(speciesGroupId);
+			List<TraitsValuePair> result = observationService.getTraitList(speciesGroupId, languageId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

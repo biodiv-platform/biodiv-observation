@@ -42,6 +42,7 @@ import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.controller.TraitsServiceApi;
+import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsCreateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
@@ -775,6 +776,13 @@ public class ObservationBulkMapperHelper {
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
+			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation", observation.getId().toString());
+			Map<String, List<Long>> facts = traits.stream()
+		    .collect(Collectors.groupingBy(
+		    		trait -> trait.getNameId().toString(), 
+		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
+		        ));
+			ugObvFilterData.setTraits(facts);
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 			intergratorService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
@@ -786,6 +794,13 @@ public class ObservationBulkMapperHelper {
 	public void updateUserGroupFilterForDatatable(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
+			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation", observation.getId().toString());
+			Map<String, List<Long>> facts = traits.stream()
+		    .collect(Collectors.groupingBy(
+		    		trait -> trait.getNameId().toString(), 
+		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
+		        ));
+			ugObvFilterData.setTraits(facts);
 			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
 			intergratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
 		} catch (Exception ex) {
