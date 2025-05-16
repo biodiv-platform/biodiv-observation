@@ -453,6 +453,7 @@ public class ObservationController {
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
+			@DefaultValue("false") @QueryParam("showData") String showData,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
@@ -568,7 +569,7 @@ public class ObservationController {
 								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
 								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
 								lifeListOffset, uploadersoffset, identifiersoffset, dataSetName, dataTableName,
-								geoEntity, geoShapeFilterField, dataTableId);
+								geoEntity, geoShapeFilterField, dataTableId, showData);
 
 					}
 
