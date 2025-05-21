@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -597,7 +598,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 7;
+		int totalLatch = (showData.equals("false") ? 7 : 5);
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
@@ -642,13 +643,17 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 
 		try {
-			latch.await();
+			boolean connected = latch.await(35, TimeUnit.SECONDS);
+		    if (!connected) {
+		        logger.warn("Timeout: Elasticsearch connection did not complete in time.");
+		        return aggregationStatsResponse;
+		    }
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			Thread.currentThread().interrupt();
 		}
 
-		int size = lifeListOffset + (showData.equals("false") ? 10 : 8);
+		int size = lifeListOffset + 10;
 		int count = 1;
 
 		Map<String, Long> temp = getAggregationValue(mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
