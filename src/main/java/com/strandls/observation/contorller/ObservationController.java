@@ -184,7 +184,7 @@ public class ObservationController {
 
 	@Inject
 	private ESUpdate esUpdate;
-	
+
 	@Inject
 	private TraitsServiceApi traitService;
 
@@ -559,12 +559,14 @@ public class ObservationController {
 				MapAggregationStatsResponse aggregationStatsResult = null;
 
 				if (offset == 0) {
-					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
-							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
-							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-							dataTableName, geoEntity, dataTableId);
+					if (showData.equals("false")) {
+						aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
+								userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
+								maxDate, validate, traitParams, customParams, classificationid, mapSearchParams,
+								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
+								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
+								dataSetName, dataTableName, geoEntity, dataTableId);
+					}
 
 					if (view.equalsIgnoreCase("stats")) {
 						aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon,
@@ -782,7 +784,8 @@ public class ObservationController {
 	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
 
-	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId, @PathParam("languageId") String languageId) {
+	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId,
+			@PathParam("languageId") String languageId) {
 		try {
 			List<TraitsValuePair> result = observationService.getTraitList(speciesGroupId, languageId);
 			return Response.status(Status.OK).entity(result).build();
