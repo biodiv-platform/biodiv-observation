@@ -458,6 +458,7 @@ public class ObservationController {
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
 			@DefaultValue("false") @QueryParam("showData") String showData,
+			@DefaultValue("") @QueryParam("statsFilter") String statsFilter,
 
 			@Context HttpServletRequest request, @Context UriInfo uriInfo) {
 
@@ -559,7 +560,7 @@ public class ObservationController {
 				MapAggregationStatsResponse aggregationStatsResult = null;
 
 				if (offset == 0) {
-					if (showData.equals("false")) {
+					if (showData.equals("false") && statsFilter.isEmpty()) {
 					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
 							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
@@ -568,14 +569,14 @@ public class ObservationController {
 							dataTableName, geoEntity, dataTableId);
 					}
 
-					if (view.equalsIgnoreCase("stats")) {
+					if (view.equalsIgnoreCase("stats") && !statsFilter.isEmpty()) {
 						aggregationStatsResult = observationListService.mapAggregateStats(index, type, sGroup, taxon,
 								user, userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
 								maxDate, validate, traitParams, customParams, classificationid, mapSearchParams,
 								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
 								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
 								lifeListOffset, uploadersoffset, identifiersoffset, dataSetName, dataTableName,
-								geoEntity, geoShapeFilterField, dataTableId, showData);
+								geoEntity, geoShapeFilterField, dataTableId, showData, statsFilter);
 
 					}
 
