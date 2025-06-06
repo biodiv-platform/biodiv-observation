@@ -243,7 +243,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			customFieldList = filterList.getCustomFields();
 		}
 
-		int totalLatch = 15 + traitList.size() + customFieldList.size();
+		int totalLatch = (15 + 1 + customFieldList.size());
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -451,9 +451,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 //		new trait aggregation
 
 		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
-		for (Traits trait : traitList) {
-			String keyword = "trait_" + trait.getId() + "." + trait.getType();
-			if (!traitParams.isEmpty()) {
+		/*int unmatchedTraits = 0;
+		if (traitParams.isEmpty()) {
+			getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+					mapSearchQuery, mapAggResponse, latch, "traits", null);
+		} else {
+			for (Traits trait : traitList) {
+				String keyword = "trait_" + trait.getId() + "." + trait.getType();
 				List<String> tempTraitParams = new ArrayList<String>();
 				if (traitParams.containsKey(keyword)) {
 					tempTraitParams = traitParams.remove(keyword);
@@ -468,13 +472,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 							mapSearchQueryFilter, mapAggResponse, latch, trait.getName(), null);
 
 					traitParams.put(keyword, tempTraitParams);
+				} else {
+					unmatchedTraits += 1;
+				}
+				if(!traitParams.containsKey(keyword)) {
+					unmatchedTraits +=1;
 				}
 			}
-			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
+			if (unmatchedTraits > 0) {
 				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-						mapSearchQuery, mapAggResponse, latch, trait.getName(), null);
+						mapSearchQuery, mapAggResponse, latch, "traits", null);
 			}
-		}
+		}*/
+		getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+				mapSearchQuery, mapAggResponse, latch, "traits", null);
 
 //		custom Field Aggregation Start
 		String namedAggs = "";
@@ -543,7 +554,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 //		record traits aggregation
 		for (Traits traits : traitList) {
 			traitMaps.put(traits.getName(),
-					getTraitsAggregation(mapAggResponse.get(traits.getName()).getGroupAggregation(), traits.getName()));
+					getTraitsAggregation(mapAggResponse.get("traits")
+							.getGroupAggregation(), traits.getName()));
 		}
 		aggregationResponse.setGroupTraits(traitMaps);
 
@@ -599,16 +611,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new ConcurrentHashMap<String, AggregationResponse>();
 
-		int totalLatch = (showData.equals("false") ? (uploadersoffset == 0 ? 7 : 1) : 2);
+		int totalLatch = (showData.equals("false")
+				? (uploadersoffset == 0 && identifiersoffset == 0 && lifeListOffset == 0 ? 7 : 1)
+				: 2);
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
 		if (showData.equals("false")) {
+			if (uploadersoffset == 0 && identifiersoffset == 0) {
+				getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword" + "|" + lifeListOffset,
+						geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
+			}
 
-			if (uploadersoffset == 0) {
-				getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
-						mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
+			if (uploadersoffset == 0 && identifiersoffset == 0 && lifeListOffset == 0) {
 
 				getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 						latch, null, geoShapeFilterField);
@@ -626,25 +642,30 @@ public class ObservationListServiceImpl implements ObservationListService {
 						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
 						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
 
-				getAggregateLatch(index, type, "author_id"+"|"+uploadersoffset, geoAggregationField, mapSearchQueryFilter,
-						mapAggStatsResponse, latch, null, geoShapeFilterField);
-				if (uploadersoffset == 0) {
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
+				if (identifiersoffset == 0 && lifeListOffset == 0) {
+					getAggregateLatch(index, type, "author_id" + "|" + uploadersoffset, geoAggregationField,
 							mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
+				}
+				if (uploadersoffset == 0 && lifeListOffset == 0) {
+					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id" + "|" + identifiersoffset,
+							geoAggregationField, mapSearchQueryFilter, mapAggStatsResponse, latch, null,
+							geoShapeFilterField);
 				}
 
 			} else {
-				getAggregateLatch(index, type, "author_id"+"|"+uploadersoffset, geoAggregationField, mapSearchQuery, mapAggStatsResponse,
-						latch, null, geoShapeFilterField);
-				if (uploadersoffset == 0) {
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
+				if (identifiersoffset == 0 && lifeListOffset == 0) {
+					getAggregateLatch(index, type, "author_id" + "|" + uploadersoffset, geoAggregationField,
 							mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
+				}
+				if (uploadersoffset == 0 && lifeListOffset == 0) {
+					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id" + "|" + identifiersoffset,
+							geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
 				}
 
 			}
 		}
 
-		if (uploadersoffset == 0) {
+		if (uploadersoffset == 0 && identifiersoffset == 0 && lifeListOffset == 0) {
 			getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery,
 					mapAggStatsResponse, latch, null, geoShapeFilterField);
 
@@ -665,7 +686,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		if (showData.equals("false")) {
 
-			if (uploadersoffset == 0) {
+			if (uploadersoffset == 0 && identifiersoffset == 0 && lifeListOffset == 0) {
 
 				int size = lifeListOffset + 10;
 				int count = 1;
@@ -744,7 +765,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		}
 
-		if (uploadersoffset == 0) {
+		if (uploadersoffset == 0 && identifiersoffset == 0 && lifeListOffset == 0) {
 			Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 
 			Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
@@ -804,11 +825,37 @@ public class ObservationListServiceImpl implements ObservationListService {
 			}
 
 			aggregationStatsResponse.setGroupTraits(groupByTraits);
-		} else {
+		} else if (uploadersoffset != 0) {
 			Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
 
 			List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
 			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+		} else if (lifeListOffset != 0) {
+			int size = lifeListOffset + 10;
+			int count = 1;
+
+			Map<String, Long> temp = getAggregationValue(
+					mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
+
+			Map<String, Long> t = new LinkedHashMap<>();
+
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
+				if (count <= (size - 10)) {
+					count++;
+				} else {
+					if (count > size) {
+						break;
+					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
+				}
+			}
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+		} else {
+			Map<String, Long> identifiers = getAggregationValue(
+					mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
+			List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+			aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 		}
 
 		return aggregationStatsResponse;

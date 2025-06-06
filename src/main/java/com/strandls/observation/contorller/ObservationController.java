@@ -559,7 +559,7 @@ public class ObservationController {
 				MapAggregationStatsResponse aggregationStatsResult = null;
 
 				if (offset == 0) {
-					if (showData.equals("false")) {
+					if (showData.equals("false") && uploadersoffset==0 && identifiersoffset==0 && lifeListOffset==0) {
 					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
 							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
 							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
