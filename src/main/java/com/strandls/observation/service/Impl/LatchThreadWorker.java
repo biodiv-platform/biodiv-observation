@@ -73,7 +73,7 @@ public class LatchThreadWorker extends Thread {
 			if (namedAgg != null && !namedAgg.isEmpty())
 				mapResponse.put(namedAgg, response);
 			else
-				mapResponse.put(filter, response);
+				mapResponse.put(filter.split("\\|")[0], response);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
