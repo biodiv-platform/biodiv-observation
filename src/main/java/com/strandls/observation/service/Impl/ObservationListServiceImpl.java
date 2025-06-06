@@ -1065,10 +1065,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
 			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
-				traitsAgg.put(entry.getKey().split("\\|").length > 3
-						? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
-						: entry.getKey().split("\\|")[2], entry.getValue());
-
+				String capitalizeWord = toTitleCase(entry.getKey().split("\\|")[1]);
+				traitsAgg.put(capitalizeWord, entry.getValue());
 			}
 		}
 		return traitsAgg;
