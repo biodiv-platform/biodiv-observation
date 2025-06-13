@@ -872,7 +872,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			} else {
 				Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
-				Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse.get("taxon_path"));
+				Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse
+						.get(statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1]
+								: "taxon_path"));
 				for (Map.Entry<String, Long> entry : taxonPath.entrySet()) {
 					String[] parts = entry.getKey().split("\\|")[1].split("\\.");
 					Long value = taxonAgg.get(parts[parts.length - 1]);
