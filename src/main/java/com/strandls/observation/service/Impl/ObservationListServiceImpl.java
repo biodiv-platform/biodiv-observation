@@ -577,7 +577,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new ConcurrentHashMap<String, AggregationResponse>();
 
-		int totalLatch = (showData.equals("false") ? (statsFilter.equals("totals") ? 3 : 1) : 2);
+		int totalLatch = ((showData.equals("false"))
+				? (statsFilter.equals("totals") ? 3 : statsFilter.split("\\|")[0].equals("taxon") ? 2 : 1)
+				: 2);
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
@@ -655,6 +657,9 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else if (statsFilter.equals("countPerDay")) {
 				getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 						latch, null, geoShapeFilterField);
+			} else if (statsFilter.split("\\|")[0].equals("min")) {
+				getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+						latch, null, geoShapeFilterField);
 			} else if (statsFilter.equals("observedOn")) {
 				getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
@@ -664,6 +669,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 			} else {
 				getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+				getAggregateLatch(index, type,
+						statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1]
+								: "taxon_path",
+						geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
 			}
 		} else {
 
@@ -789,7 +799,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 					yeardata.add(data);
 					countPerDay.put(year, yeardata);
 				}
+
 				aggregationStatsResponse.setCountPerDay(countPerDay);
+			} else if (statsFilter.split("\\|")[0].equals("min")) {
+				Map<String, Long> min_agg = getAggregationValue(mapAggStatsResponse.get(statsFilter));
+				List<String> keyList = new ArrayList<>(min_agg.keySet());
+				aggregationStatsResponse.setMinDate(Collections.min(keyList));
+				aggregationStatsResponse.setmaxDate(Collections.max(keyList));
 			} else if (statsFilter.equals("observedOn")) {
 				Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 
@@ -797,27 +813,30 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 				List<String> years = new ArrayList<>(observedOnAgg.keySet());
 
-				String currentYear = years.get(years.size() - 1).substring(0, 4);
+				if (years.size() > 0) {
 
-				for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
-					String year = entry.getKey().substring(0, 4);
-					Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
-					Integer intervalId = intervaldiff / 50;
-					String intervalKey = String.format("%04d",
-							Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50), 0)) + "-"
-							+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
-					List<Map<String, Object>> intervaldata;
-					if (groupByMonth.containsKey(intervalKey)) {
-						intervaldata = groupByMonth.get(intervalKey);
-					} else {
-						intervaldata = new ArrayList<>();
+					String currentYear = years.get(years.size() - 1).substring(0, 4);
+
+					for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
+						String year = entry.getKey().substring(0, 4);
+						Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
+						Integer intervalId = intervaldiff / 50;
+						String intervalKey = String.format("%04d",
+								Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50) + 1, 0)) + "-"
+								+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
+						List<Map<String, Object>> intervaldata;
+						if (groupByMonth.containsKey(intervalKey)) {
+							intervaldata = groupByMonth.get(intervalKey);
+						} else {
+							intervaldata = new ArrayList<>();
+						}
+						Map<String, Object> data = new HashMap<>();
+						data.put("month", entry.getKey().substring(5, 8));
+						data.put("year", entry.getKey().substring(0, 4));
+						data.put("value", entry.getValue());
+						intervaldata.add(data);
+						groupByMonth.put(intervalKey, intervaldata);
 					}
-					Map<String, Object> data = new HashMap<>();
-					data.put("month", entry.getKey().substring(5, 8));
-					data.put("year", entry.getKey().substring(0, 4));
-					data.put("value", entry.getValue());
-					intervaldata.add(data);
-					groupByMonth.put(intervalKey, intervaldata);
 				}
 
 				aggregationStatsResponse.setGroupObservedOn(groupByMonth);
@@ -853,7 +872,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			} else {
 				Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
-				aggregationStatsResponse.setGroupTaxon(taxonAgg);
+				Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse.get("taxon_path"));
+				for (Map.Entry<String, Long> entry : taxonPath.entrySet()) {
+					String[] parts = entry.getKey().split("\\|")[1].split("\\.");
+					Long value = taxonAgg.get(parts[parts.length - 1]);
+					taxonPath.put(entry.getKey(), value != null ? value : 0);
+				}
+				aggregationStatsResponse.setGroupTaxon(taxonPath);
 			}
 
 		} else {
