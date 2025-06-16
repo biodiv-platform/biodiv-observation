@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -68,6 +71,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	private ESUtility esUtility;
 
 	private final String simpleFormatForDate = "yyyy-MM-dd'T'HH:mm:ss";
+
+	private final ExecutorService executor = Executors.newFixedThreadPool(25);
 
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
@@ -187,9 +192,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 			MapSearchQuery searchQuery, Map<String, AggregationResponse> mapResponse, CountDownLatch latch,
 			String namedAgg, String geoShapeFilterField) {
 
-		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, geoAggregationField, searchQuery,
-				mapResponse, namedAgg, latch, esService, geoShapeFilterField);
-		worker.start();
+//		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, geoAggregationField, searchQuery,
+//				mapResponse, namedAgg, latch, esService, geoShapeFilterField);
+		executor.submit(new LatchThreadWorker(index, type, filter, geoAggregationField, searchQuery, mapResponse,
+				namedAgg, latch, esService, geoShapeFilterField));
+
+		// worker.start();
 
 	}
 
@@ -508,11 +516,21 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 //		custom Field Aggregation ENDS
 
+//		try {
+//			latch.await();
+//		} catch (Exception e) {
+//			logger.error(e.getMessage());
+//			Thread.currentThread().interrupt();
+//		}
+
 		try {
-			latch.await();
-		} catch (Exception e) {
-			logger.error(e.getMessage());
+			if (!latch.await(30, TimeUnit.SECONDS)) { // Timeout after 30s
+				logger.warn("Timed out waiting for aggregations");
+				// Handle partial results or fail fast
+			}
+		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			throw new RuntimeException("Aggregation interrupted", e);
 		}
 
 		aggregationResponse.setGroupSpeciesName(getAggregationValue(mapAggResponse.get("group_name.keyword")));
@@ -928,8 +946,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 		for (Entry<String, Long> entry : aggregation.entrySet()) {
 			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
 				traitsAgg.put(entry.getKey().split("\\|").length > 3
-                       ? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
-                       : entry.getKey().split("\\|")[2], entry.getValue());
+						? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
+						: entry.getKey().split("\\|")[2], entry.getValue());
 
 			}
 		}
