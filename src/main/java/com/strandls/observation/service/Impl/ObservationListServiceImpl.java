@@ -942,15 +942,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {
 		Map<String, Long> traitsAgg = new HashMap<String, Long>();
+		try {
+			for (Entry<String, Long> entry : aggregation.entrySet()) {
+				if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
+					traitsAgg.put(entry.getKey().split("\\|").length > 3
+							? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
+							: entry.getKey().split("\\|")[2], entry.getValue());
 
-		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
-				traitsAgg.put(entry.getKey().split("\\|").length > 3
-						? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
-						: entry.getKey().split("\\|")[2], entry.getValue());
-
+				}
 			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
+		
 		return traitsAgg;
 	}
 
