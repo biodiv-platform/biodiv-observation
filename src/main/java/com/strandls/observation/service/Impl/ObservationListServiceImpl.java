@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
-import com.strandls.esmodule.pojo.CustomFieldValues;
 import com.strandls.esmodule.pojo.CustomFields;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.GeoHashAggregationData;
@@ -36,8 +35,6 @@ import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
-import com.strandls.esmodule.pojo.SpeciesGroup;
-import com.strandls.esmodule.pojo.TraitValue;
 import com.strandls.esmodule.pojo.Traits;
 import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
@@ -247,16 +244,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		List<Traits> traitList = null;
 		List<CustomFields> customFieldList = null;
-		List<SpeciesGroup> speciesGroup = null;
-		List<String> states = null;
 		if (filterList != null) {
 			traitList = filterList.getTraits();
 			customFieldList = filterList.getCustomFields();
-			speciesGroup = filterList.getSpeciesGroup();
-			states = filterList.getStates();
 		}
 
-		int totalLatch = 17;
+		int totalLatch = 15 + traitList.size() + customFieldList.size();
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -463,15 +456,64 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 //		new trait aggregation
 
-		Map<String, Map<String, Long>> traitMaps = new LinkedHashMap<String, Map<String, Long>>();
-		getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField, mapSearchQuery,
-				mapAggResponse, latch, "traits", null);
+		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
+		for (Traits trait : traitList) {
+			String keyword = "trait_" + trait.getId() + "." + trait.getType();
+			if (!traitParams.isEmpty()) {
+				List<String> tempTraitParams = new ArrayList<String>();
+				if (traitParams.containsKey(keyword)) {
+					tempTraitParams = traitParams.remove(keyword);
+
+					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+					getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+							mapSearchQueryFilter, mapAggResponse, latch, trait.getName(), null);
+
+					traitParams.put(keyword, tempTraitParams);
+				}
+			}
+			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
+				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+						mapSearchQuery, mapAggResponse, latch, trait.getName(), null);
+			}
+		}
 
 //		custom Field Aggregation Start
+		String namedAggs = "";
 
-		Map<String, Map<String, Long>> cfMaps = new LinkedHashMap<String, Map<String, Long>>();
-		getAggregateLatch(index, type, "custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-				geoAggregationField, mapSearchQuery, mapAggResponse, latch, "customFields", null);
+		Map<String, Map<String, Long>> cfMaps = new HashMap<String, Map<String, Long>>();
+		List<String> tempCFParams = new ArrayList<String>();
+		for (CustomFields cf : customFieldList) {
+			String keyword = "custom_" + cf.getId() + "." + cf.getFieldtype();
+			String fieldType = cf.getFieldtype();
+
+			namedAggs = cf.getId().toString() + "||" + fieldType;
+			if (!customParams.isEmpty()) {
+				tempCFParams = customParams.remove(keyword);
+
+				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+						customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+				getAggregateLatch(index, type,
+						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+						geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch, namedAggs, null);
+
+				customParams.put(keyword, tempCFParams);
+			}
+			if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
+				getAggregateLatch(index, type,
+						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+						geoAggregationField, mapSearchQuery, mapAggResponse, latch, namedAggs, null);
+
+			}
+		}
 //		custom Field Aggregation ENDS
 
 //		try {
@@ -491,29 +533,13 @@ public class ObservationListServiceImpl implements ObservationListService {
 			throw new RuntimeException("Aggregation interrupted", e);
 		}
 
-		Map<String, Long> groupSpecies = new HashMap<String, Long>();
-		Map<String, Long> speciesAggregation = mapAggResponse.get("group_name.keyword").getGroupAggregation();
-		if (speciesGroup != null) {
-			for (SpeciesGroup species : speciesGroup) {
-				groupSpecies.put(
-						species.getId().toString() + "|" + species.getName() + "|" + species.getOrder().toString(),
-						speciesAggregation.getOrDefault(species.getName(), (long) 0));
-			}
-		}
-		aggregationResponse.setGroupSpeciesName(groupSpecies);
+		aggregationResponse.setGroupSpeciesName(getAggregationValue(mapAggResponse.get("group_name.keyword")));
 		aggregationResponse
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
 		aggregationResponse.setGroupRank(
 				getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
-		Map<String, Long> groupState = new HashMap<String, Long>();
-		Map<String, Long> statesAggregation = mapAggResponse.get("location_information.state.keyword")
-				.getGroupAggregation();
-		if (states != null) {
-			for (String s : states) {
-				groupState.put(s, statesAggregation.getOrDefault(s, (long) 0));
-			}
-		}
-		aggregationResponse.setGroupState(groupState);
+		aggregationResponse
+				.setGroupState(mapAggResponse.get("location_information.state.keyword").getGroupAggregation());
 		aggregationResponse
 				.setGroupUserGroupName(getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
 		aggregationResponse.setGroupFlag(getAggregationValue(mapAggResponse.get("flag_count")));
@@ -531,39 +557,33 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		aggregationResponse.setGeoEntity(getAggregationValue(mapAggResponse.get("location_information.name.raw")));
 //		record traits aggregation
-		Map<String, Long> traitsAggregation = mapAggResponse.get("traits").getGroupAggregation();
 		for (Traits traits : traitList) {
-			HashMap<String, Long> traitValueAggregation = new LinkedHashMap<String, Long>();
-			for (TraitValue value : traits.getTraitValues()) {
-				traitValueAggregation.put(value.getValue(),
-						traitsAggregation.getOrDefault(
-								traits.getName() + "|" + traits.getId().toString() + "|"
-										+ value.getValue().split("_")[0] + "|" + value.getValue().split("_")[1],
-								(long) 0));
-			}
-			traitMaps.put(traits.getName() + "|" + traits.getId(), traitValueAggregation);
+			traitMaps.put(traits.getName(),
+					getTraitsAggregation(mapAggResponse.get(traits.getName()).getGroupAggregation(), traits.getName()));
 		}
 		aggregationResponse.setGroupTraits(traitMaps);
 
 //		record custom field aggreation
-		Map<String, Long> customFieldAggregation = mapAggResponse.get("customFields").getGroupAggregation();
 		for (CustomFields cf : customFieldList) {
 			String fieldType = cf.getFieldtype();
-			HashMap<String, Long> cfAgg = new LinkedHashMap<String, Long>();
+			namedAggs = cf.getId().toString() + "||" + fieldType;
 			if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
-				cfAgg.put("NO CONTENT", customFieldAggregation.getOrDefault(cf.getId().toString() + "|" + cf.getName()
-						+ "|" + cf.getFieldtype() + "|" + cf.getDataType() + "|" + "0", (long) 0));
-				cfAgg.put("HAS CONTENT", customFieldAggregation.getOrDefault(cf.getId().toString() + "|" + cf.getName()
-						+ "|" + cf.getFieldtype() + "|" + cf.getDataType() + "|" + "1", (long) 0));
+
+				cfMaps.put(cf.getName(), getCustomFieldAggregationFieldText(
+						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+
 			} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
 					|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
-				for (CustomFieldValues value: cf.getValues()) {
-					cfAgg.put(value.getValue(), customFieldAggregation.getOrDefault(cf.getId().toString() + "|" + cf.getName()
-					+ "|" + cf.getFieldtype() + "|" + cf.getDataType() + "|" + value.getValue(), (long) 0));
-				}
-			}
 
-			cfMaps.put(cf.getName()+"|"+cf.getId()+"|"+cf.getFieldtype(), cfAgg);
+				cfMaps.put(cf.getName(), getCustomFieldAggregationCategorical(
+						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+
+			} else {
+//				field type range
+				cfMaps.put(cf.getName(),
+						getCustomFieldAggregationRange(mapAggResponse.get(namedAggs).getGroupAggregation(),
+								cf.getDataType(), fieldType, cf.getId().toString()));
+			}
 		}
 		aggregationResponse.setGroupCustomField(cfMaps);
 
@@ -920,6 +940,25 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return result;
 	}
 
+	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {
+		Map<String, Long> traitsAgg = new HashMap<String, Long>();
+		try {
+			for (Entry<String, Long> entry : aggregation.entrySet()) {
+				if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
+					traitsAgg.put(entry.getKey().split("\\|").length > 3
+							? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
+							: entry.getKey().split("\\|")[2], entry.getValue());
+
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		
+		return traitsAgg;
+	}
+
 	private String toTitleCase(String input) {
 		StringBuilder titleCase = new StringBuilder(input.length());
 		boolean nextTitleCase = true;
@@ -936,6 +975,98 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 
 		return titleCase.toString();
+	}
+
+	private Map<String, Long> getCustomFieldAggregationFieldText(Map<String, Long> aggregation, String fieldType,
+			String cfId) {
+		Map<String, Long> cfAgg = new HashMap<String, Long>();
+		for (Entry<String, Long> entry : aggregation.entrySet()) {
+			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
+				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
+					if (entry.getKey().split("\\|")[4].equalsIgnoreCase("0"))
+						cfAgg.put("NO CONTENT", entry.getValue());
+					else
+						cfAgg.put("HAS CONTENT", entry.getValue());
+				}
+			}
+		}
+		return cfAgg;
+	}
+
+	private Map<String, Long> getCustomFieldAggregationCategorical(Map<String, Long> aggregation, String fieldType,
+			String cfId) {
+
+		Map<String, Long> cfAgg = new HashMap<String, Long>();
+		for (Entry<String, Long> entry : aggregation.entrySet()) {
+			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
+				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
+
+					cfAgg.put(entry.getKey().split("\\|")[4], entry.getValue());
+				}
+			}
+		}
+		return cfAgg;
+	}
+
+	private Map<String, Long> getCustomFieldAggregationRange(Map<String, Long> aggregation, String dataType,
+			String fieldType, String cfId) {
+
+		Map<String, Long> filterdAggregation = new HashMap<String, Long>();
+		Map<String, Long> cfAgg = new HashMap<String, Long>();
+		for (Entry<String, Long> entry : aggregation.entrySet()) {
+			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
+				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
+					filterdAggregation.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
+		cfAgg = getMinMax(filterdAggregation, dataType);
+		return cfAgg;
+
+	}
+
+	private Map<String, Long> getMinMax(Map<String, Long> filteredAggregation, String dataType) {
+		Map<String, Long> result = new HashMap<String, Long>();
+		String minFinal = "";
+		String maxFinal = "";
+		Long total = 0L;
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+		for (Entry<String, Long> entry : filteredAggregation.entrySet()) {
+
+			String value = entry.getKey().split("\\|")[4];
+			String minValue = value.split("-")[0];
+			String maxValue = value.split("-")[1];
+			if (dataType.equalsIgnoreCase("Integer")) {
+				if (Integer.parseInt(minFinal) > Integer.parseInt(minValue))
+					minFinal = minValue;
+				if (Integer.parseInt(maxFinal) < Integer.parseInt(maxValue))
+					maxFinal = maxValue;
+
+			} else if (dataType.equalsIgnoreCase("decimal")) {
+				if (Double.parseDouble(minFinal) > Double.parseDouble(minValue))
+					minFinal = minValue;
+				if (Double.parseDouble(maxFinal) < Double.parseDouble(maxValue))
+					maxFinal = maxValue;
+
+			} else {
+//				data type  = date
+				try {
+					if (df.parse(minFinal).compareTo(df.parse(minValue)) > 0)
+						minFinal = minValue;
+					if (df.parse(maxFinal).compareTo(df.parse(maxValue)) < 0)
+						maxFinal = maxValue;
+
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+			}
+
+		}
+		String key = minFinal + "-" + maxFinal;
+		result.put(key, total);
+		return result;
+
 	}
 
 	@Override
