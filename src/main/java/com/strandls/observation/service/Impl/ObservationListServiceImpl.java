@@ -250,7 +250,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			customFieldList = filterList.getCustomFields();
 		}
 
-		int totalLatch = 16 + customFieldList.size();
+		int totalLatch = 15 + traitList.size() + customFieldList.size();
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -458,8 +458,30 @@ public class ObservationListServiceImpl implements ObservationListService {
 //		new trait aggregation
 
 		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
-		getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField, mapSearchQuery,
-				mapAggResponse, latch, "traits", null);
+		for (Traits trait : traitList) {
+			String keyword = "trait_" + trait.getId() + "." + trait.getType();
+			if (!traitParams.isEmpty()) {
+				List<String> tempTraitParams = new ArrayList<String>();
+				if (traitParams.containsKey(keyword)) {
+					tempTraitParams = traitParams.remove(keyword);
+
+					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
+							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+					getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+							mapSearchQueryFilter, mapAggResponse, latch, trait.getName(), null);
+
+					traitParams.put(keyword, tempTraitParams);
+				}
+			}
+			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
+				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
+						mapSearchQuery, mapAggResponse, latch, trait.getName(), null);
+			}
+		}
 
 //		custom Field Aggregation Start
 		String namedAggs = "";
@@ -538,7 +560,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 //		record traits aggregation
 		for (Traits traits : traitList) {
 			traitMaps.put(traits.getName(),
-					getTraitsAggregation(mapAggResponse.get("traits").getGroupAggregation(), traits.getName()));
+					getTraitsAggregation(mapAggResponse.get(traits.getName()).getGroupAggregation(), traits.getName()));
 		}
 		aggregationResponse.setGroupTraits(traitMaps);
 
@@ -579,7 +601,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
 			Integer uploadersoffset, Integer identifiersoffset, String dataSetName, String dataTableName,
-			String geoEntity, String geoShapeFilterField, String dataTableId, String showData, String statsFilter) {
+			String geoEntity, String geoShapeFilterField, String dataTableId, String statsFilter) {
 
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
 				speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams, customParams,
@@ -594,111 +616,98 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		Map<String, AggregationResponse> mapAggStatsResponse = new ConcurrentHashMap<String, AggregationResponse>();
 
-		int totalLatch = ((showData.equals("false"))
-				? (statsFilter.equals("totals") ? 3 : statsFilter.split("\\|")[0].equals("taxon") ? 2 : 1)
-				: 2);
+		int totalLatch = (statsFilter.equals("totals") ? 3 : statsFilter.split("\\|")[0].equals("taxon") ? 2 : 1);
 
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
-		if (showData.equals("false")) {
+		if (statsFilter.equals("totals")) {
 
-			if (statsFilter.equals("totals")) {
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
 
-				getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
-						mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
+			// for top Uploaders
 
-				// for top Uploaders
+			if (user != null && !user.isEmpty()) {
+				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+						customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
 
-				if (user != null && !user.isEmpty()) {
-					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
-							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-					getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter,
-							mapAggStatsResponse, latch, null, geoShapeFilterField);
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
-							mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				} else {
-					getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery,
-							mapAggStatsResponse, latch, null, geoShapeFilterField);
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
-							mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				}
-
-			} else if (statsFilter.equals("uploaders")) {
-				// for top Uploaders
-
-				if (user != null && !user.isEmpty()) {
-					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
-							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-					getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter,
-							mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				} else {
-					getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery,
-							mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				}
-			} else if (statsFilter.equals("identifiers")) {
-				// for top Uploaders
-
-				if (user != null && !user.isEmpty()) {
-					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
-							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
-							mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				} else {
-					getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
-							mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-				}
-			} else if (statsFilter.equals("lifelist")) {
-
-				getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
-						mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
-
-			} else if (statsFilter.equals("countPerDay")) {
-				getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
-						latch, null, geoShapeFilterField);
-			} else if (statsFilter.split("\\|")[0].equals("min")) {
-				getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQuery, mapAggStatsResponse,
-						latch, null, geoShapeFilterField);
-			} else if (statsFilter.equals("observedOn")) {
-				getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery,
+				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
-			} else if (statsFilter.equals("traits")) {
-				getAggregateLatch(index, type, "group_by_traits", geoAggregationField, mapSearchQuery,
-						mapAggStatsResponse, latch, null, geoShapeFilterField);
+				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
+						mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
+
 			} else {
-				getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery,
+				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+						latch, null, geoShapeFilterField);
+				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
 
-				getAggregateLatch(index, type,
-						statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1]
-								: "taxon_path",
-						geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
 			}
-		} else {
 
+		} else if (statsFilter.equals("uploaders")) {
+			// for top Uploaders
+
+			if (user != null && !user.isEmpty()) {
+				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+						customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter,
+						mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+			} else {
+				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+						latch, null, geoShapeFilterField);
+
+			}
+		} else if (statsFilter.equals("identifiers")) {
+			// for top Uploaders
+
+			if (user != null && !user.isEmpty()) {
+				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, omiter, userGroupList, webaddress,
+						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
+						customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
+						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
+						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
+
+				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
+						mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+			} else {
+				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
+						mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+			}
+		} else if (statsFilter.equals("lifelist")) {
+
+			getAggregateLatch(index, type, "max_voted_reco.scientific_name.keyword", geoAggregationField,
+					mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
+
+		} else if (statsFilter.equals("countPerDay")) {
+			getAggregateLatch(index, type, "group_by_day", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+					latch, null, geoShapeFilterField);
+		} else if (statsFilter.split("\\|")[0].equals("min")) {
+			getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch,
+					null, geoShapeFilterField);
+		} else if (statsFilter.equals("observedOn")) {
 			getAggregateLatch(index, type, "group_by_observed", geoAggregationField, mapSearchQuery,
 					mapAggStatsResponse, latch, null, geoShapeFilterField);
-
+		} else if (statsFilter.equals("traits")) {
 			getAggregateLatch(index, type, "group_by_traits", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 					latch, null, geoShapeFilterField);
+		} else {
+			getAggregateLatch(index, type, "group_by_taxon", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+					latch, null, geoShapeFilterField);
+
+			getAggregateLatch(index, type,
+					statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1] : "taxon_path",
+					geoAggregationField, mapSearchQuery, mapAggStatsResponse, latch, null, geoShapeFilterField);
 		}
 
 		try {
@@ -712,227 +721,150 @@ public class ObservationListServiceImpl implements ObservationListService {
 			Thread.currentThread().interrupt();
 		}
 
-		if (showData.equals("false")) {
+		if (statsFilter.equals("totals")) {
+			int size = lifeListOffset + 10;
+			int count = 1;
 
-			if (statsFilter.equals("totals")) {
-				int size = lifeListOffset + 10;
-				int count = 1;
+			Map<String, Long> temp = getAggregationValue(
+					mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
 
-				Map<String, Long> temp = getAggregationValue(
-						mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
+			Map<String, Long> t = new LinkedHashMap<>();
 
-				Map<String, Long> t = new LinkedHashMap<>();
-
-				for (Map.Entry<String, Long> entry : temp.entrySet()) {
-					if (count <= (size - 10)) {
-						count++;
-					} else {
-						if (count > size) {
-							break;
-						}
-						t.put(entry.getKey(), entry.getValue());
-						count++;
-					}
-				}
-				aggregationStatsResponse.setGroupUniqueSpecies(t);
-
-				Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
-
-				List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
-				aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
-
-				Map<String, Long> identifiers = getAggregationValue(
-						mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
-				List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
-				aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
-
-				Long totalUploaders = Long.valueOf(0);
-				Long totalIdentifiers = Long.valueOf(0);
-				Long totalTaxa = Long.valueOf(temp.size());
-
-				if (user != null && !user.isEmpty()) {
-					totalUploaders = Long.valueOf(uploadersResult.size());
-					totalIdentifiers = Long.valueOf(identifiersResult.size());
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
+				if (count <= (size - 10)) {
+					count++;
 				} else {
-					totalUploaders = Long.valueOf(uploaders.size());
-					totalIdentifiers = Long.valueOf(identifiers.size());
-				}
-
-				Map<String, Long> totals = new HashMap<>();
-				totals.put("totalTaxa", totalTaxa);
-				totals.put("totalUploaders", totalUploaders);
-				totals.put("totalIdentifiers", totalIdentifiers);
-
-				aggregationStatsResponse.setTotalCounts(totals);
-			} else if (statsFilter.equals("uploaders")) {
-				Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
-
-				List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
-				aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
-			} else if (statsFilter.equals("identifiers")) {
-				Map<String, Long> identifiers = getAggregationValue(
-						mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
-				List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
-				aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
-			} else if (statsFilter.equals("lifelist")) {
-				int size = lifeListOffset + 10;
-				int count = 1;
-
-				Map<String, Long> temp = getAggregationValue(
-						mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
-
-				Map<String, Long> t = new LinkedHashMap<>();
-
-				for (Map.Entry<String, Long> entry : temp.entrySet()) {
-					if (count <= (size - 10)) {
-						count++;
-					} else {
-						if (count > size) {
-							break;
-						}
-						t.put(entry.getKey(), entry.getValue());
-						count++;
+					if (count > size) {
+						break;
 					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
 				}
-				aggregationStatsResponse.setGroupUniqueSpecies(t);
-			} else if (statsFilter.equals("countPerDay")) {
+			}
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
 
-				Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
+			Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
 
-				Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
+			List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
+			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
 
-				for (Map.Entry<String, Long> entry : agg.entrySet()) {
-					String year = entry.getKey().substring(0, 4);
-					List<Map<String, Object>> yeardata;
-					if (countPerDay.containsKey(year)) {
-						yeardata = countPerDay.get(year);
-					} else {
-						yeardata = new ArrayList<>();
-					}
+			Map<String, Long> identifiers = getAggregationValue(
+					mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
+			List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+			aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 
-					Map<String, Object> data = new HashMap<>();
-					data.put("date", entry.getKey());
-					data.put("value", entry.getValue());
-					yeardata.add(data);
-					countPerDay.put(year, yeardata);
-				}
+			Long totalUploaders = Long.valueOf(0);
+			Long totalIdentifiers = Long.valueOf(0);
+			Long totalTaxa = Long.valueOf(temp.size());
 
-				aggregationStatsResponse.setCountPerDay(countPerDay);
-			} else if (statsFilter.split("\\|")[0].equals("min")) {
-				Map<String, Long> min_agg = getAggregationValue(mapAggStatsResponse.get(statsFilter));
-				List<String> keyList = new ArrayList<>(min_agg.keySet());
-				aggregationStatsResponse.setMinDate(Collections.min(keyList));
-				aggregationStatsResponse.setmaxDate(Collections.max(keyList));
-			} else if (statsFilter.equals("observedOn")) {
-				Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
-
-				Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
-
-				List<String> years = new ArrayList<>(observedOnAgg.keySet());
-
-				if (years.size() > 0) {
-
-					String currentYear = years.get(years.size() - 1).substring(0, 4);
-
-					for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
-						String year = entry.getKey().substring(0, 4);
-						Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
-						Integer intervalId = intervaldiff / 50;
-						String intervalKey = String.format("%04d",
-								Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50) + 1, 0)) + "-"
-								+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
-						List<Map<String, Object>> intervaldata;
-						if (groupByMonth.containsKey(intervalKey)) {
-							intervaldata = groupByMonth.get(intervalKey);
-						} else {
-							intervaldata = new ArrayList<>();
-						}
-						Map<String, Object> data = new HashMap<>();
-						data.put("month", entry.getKey().substring(5, 8));
-						data.put("year", entry.getKey().substring(0, 4));
-						data.put("value", entry.getValue());
-						intervaldata.add(data);
-						groupByMonth.put(intervalKey, intervaldata);
-					}
-				}
-
-				aggregationStatsResponse.setGroupObservedOn(groupByMonth);
-			} else if (statsFilter.equals("traits")) {
-				Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
-				int traitsIndex = 0;
-				List<Map<String, Object>> groupByTraits = new ArrayList<>();
-				for (Map.Entry<String, Long> entry : traitsAgg.entrySet()) {
-					if (traitsIndex % 12 == 0) {
-						Map<String, Object> traits = new LinkedHashMap<>();
-						traits.put("name", entry.getKey().split("_")[0]);
-						List<Map<String, Object>> values = new ArrayList<>();
-						Map<String, Object> monthSum = new HashMap<>();
-						monthSum.put("name", entry.getKey().split("_")[1]);
-						monthSum.put("value", entry.getValue());
-						values.add(monthSum);
-						traits.put("values", values);
-						groupByTraits.add(traits);
-					} else {
-						Map<String, Object> monthSum = new HashMap<>();
-						monthSum.put("name", entry.getKey().split("_")[1]);
-						monthSum.put("value", entry.getValue());
-						Map<String, Object> series = groupByTraits.get(traitsIndex / 12);
-						List<Map<String, Object>> values = (List<Map<String, Object>>) series.get("values");
-						values.add(monthSum);
-						series.put("values", values);
-						groupByTraits.set(traitsIndex / 12, series);
-					}
-					traitsIndex++;
-				}
-
-				aggregationStatsResponse.setGroupTraits(groupByTraits);
-
+			if (user != null && !user.isEmpty()) {
+				totalUploaders = Long.valueOf(uploadersResult.size());
+				totalIdentifiers = Long.valueOf(identifiersResult.size());
 			} else {
-				Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
-				Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse
-						.get(statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1]
-								: "taxon_path"));
-				for (Map.Entry<String, Long> entry : taxonPath.entrySet()) {
-					String[] parts = entry.getKey().split("\\|")[1].split("\\.");
-					Long value = taxonAgg.get(parts[parts.length - 1]);
-					taxonPath.put(entry.getKey(), value != null ? value : 0);
-				}
-				aggregationStatsResponse.setGroupTaxon(taxonPath);
+				totalUploaders = Long.valueOf(uploaders.size());
+				totalIdentifiers = Long.valueOf(identifiers.size());
 			}
 
-		} else {
+			Map<String, Long> totals = new HashMap<>();
+			totals.put("totalTaxa", totalTaxa);
+			totals.put("totalUploaders", totalUploaders);
+			totals.put("totalIdentifiers", totalIdentifiers);
 
+			aggregationStatsResponse.setTotalCounts(totals);
+		} else if (statsFilter.equals("uploaders")) {
+			Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
+
+			List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
+			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
+		} else if (statsFilter.equals("identifiers")) {
+			Map<String, Long> identifiers = getAggregationValue(
+					mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
+			List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
+			aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
+		} else if (statsFilter.equals("lifelist")) {
+			int size = lifeListOffset + 10;
+			int count = 1;
+
+			Map<String, Long> temp = getAggregationValue(
+					mapAggStatsResponse.get("max_voted_reco.scientific_name.keyword"));
+
+			Map<String, Long> t = new LinkedHashMap<>();
+
+			for (Map.Entry<String, Long> entry : temp.entrySet()) {
+				if (count <= (size - 10)) {
+					count++;
+				} else {
+					if (count > size) {
+						break;
+					}
+					t.put(entry.getKey(), entry.getValue());
+					count++;
+				}
+			}
+			aggregationStatsResponse.setGroupUniqueSpecies(t);
+		} else if (statsFilter.equals("countPerDay")) {
+
+			Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
+
+			Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
+
+			for (Map.Entry<String, Long> entry : agg.entrySet()) {
+				String year = entry.getKey().substring(0, 4);
+				List<Map<String, Object>> yeardata;
+				if (countPerDay.containsKey(year)) {
+					yeardata = countPerDay.get(year);
+				} else {
+					yeardata = new ArrayList<>();
+				}
+
+				Map<String, Object> data = new HashMap<>();
+				data.put("date", entry.getKey());
+				data.put("value", entry.getValue());
+				yeardata.add(data);
+				countPerDay.put(year, yeardata);
+			}
+
+			aggregationStatsResponse.setCountPerDay(countPerDay);
+		} else if (statsFilter.split("\\|")[0].equals("min")) {
+			Map<String, Long> min_agg = getAggregationValue(mapAggStatsResponse.get(statsFilter));
+			List<String> keyList = new ArrayList<>(min_agg.keySet());
+			aggregationStatsResponse.setMinDate(Collections.min(keyList));
+			aggregationStatsResponse.setmaxDate(Collections.max(keyList));
+		} else if (statsFilter.equals("observedOn")) {
 			Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 
 			Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
 
 			List<String> years = new ArrayList<>(observedOnAgg.keySet());
 
-			String currentYear = years.get(years.size() - 1).substring(0, 4);
+			if (years.size() > 0) {
 
-			for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
-				String year = entry.getKey().substring(0, 4);
-				Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
-				Integer intervalId = intervaldiff / 50;
-				String intervalKey = String.format("%04d",
-						Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50), 0)) + "-"
-						+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
-				List<Map<String, Object>> intervaldata;
-				if (groupByMonth.containsKey(intervalKey)) {
-					intervaldata = groupByMonth.get(intervalKey);
-				} else {
-					intervaldata = new ArrayList<>();
+				String currentYear = years.get(years.size() - 1).substring(0, 4);
+
+				for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
+					String year = entry.getKey().substring(0, 4);
+					Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
+					Integer intervalId = intervaldiff / 50;
+					String intervalKey = String.format("%04d",
+							Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50) + 1, 0)) + "-"
+							+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
+					List<Map<String, Object>> intervaldata;
+					if (groupByMonth.containsKey(intervalKey)) {
+						intervaldata = groupByMonth.get(intervalKey);
+					} else {
+						intervaldata = new ArrayList<>();
+					}
+					Map<String, Object> data = new HashMap<>();
+					data.put("month", entry.getKey().substring(5, 8));
+					data.put("year", entry.getKey().substring(0, 4));
+					data.put("value", entry.getValue());
+					intervaldata.add(data);
+					groupByMonth.put(intervalKey, intervaldata);
 				}
-				Map<String, Object> data = new HashMap<>();
-				data.put("month", entry.getKey().substring(5, 8));
-				data.put("year", entry.getKey().substring(0, 4));
-				data.put("value", entry.getValue());
-				intervaldata.add(data);
-				groupByMonth.put(intervalKey, intervaldata);
 			}
 
 			aggregationStatsResponse.setGroupObservedOn(groupByMonth);
-
+		} else if (statsFilter.equals("traits")) {
 			Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
 			int traitsIndex = 0;
 			List<Map<String, Object>> groupByTraits = new ArrayList<>();
@@ -962,7 +894,18 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			aggregationStatsResponse.setGroupTraits(groupByTraits);
 
+		} else {
+			Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
+			Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse.get(
+					statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1] : "taxon_path"));
+			for (Map.Entry<String, Long> entry : taxonPath.entrySet()) {
+				String[] parts = entry.getKey().split("\\|")[1].split("\\.");
+				Long value = taxonAgg.get(parts[parts.length - 1]);
+				taxonPath.put(entry.getKey(), value != null ? value : 0);
+			}
+			aggregationStatsResponse.setGroupTaxon(taxonPath);
 		}
+
 		return aggregationStatsResponse;
 	}
 
@@ -1119,7 +1062,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		
+
 		return traitsAgg;
 	}
 

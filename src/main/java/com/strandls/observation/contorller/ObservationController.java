@@ -576,7 +576,7 @@ public class ObservationController {
 								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
 								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
 								lifeListOffset, uploadersoffset, identifiersoffset, dataSetName, dataTableName,
-								geoEntity, geoShapeFilterField, dataTableId, showData, statsFilter);
+								geoEntity, geoShapeFilterField, dataTableId, statsFilter);
 
 					}
 

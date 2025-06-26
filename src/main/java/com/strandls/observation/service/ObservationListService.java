@@ -45,7 +45,7 @@ public interface ObservationListService {
 			String taxonId, String recoName, String geoAggregationField, String rank, String tahsil, String district,
 			String state, String tags, String publicationGrade, String authorVoted, Integer lifeListOffset,
 			Integer uploadersoffset, Integer identifiersoffset, String dataSetName, String dataTableName,
-			String geoEntity, String geoShapeFilterField, String dataTableId, String showData, String statsFilter);
+			String geoEntity, String geoShapeFilterField, String dataTableId, String statsFilter);
 
 	public FilterPanelData getAllFilter();
 
