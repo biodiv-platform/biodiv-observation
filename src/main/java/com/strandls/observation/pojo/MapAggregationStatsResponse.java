@@ -13,6 +13,8 @@ public class MapAggregationStatsResponse {
 	private Map<String, List<Map<String, Object>>> groupObservedOn;
 	private List<Map<String, Object>> groupTraits;
 	private Map<String, Long> groupTaxon;
+	private String maxDate;
+	private String minDate;
 
 	public Map<String, Long> getTotalCounts() {
 		return totalCounts;
@@ -78,4 +80,19 @@ public class MapAggregationStatsResponse {
 		this.groupTaxon = taxonAgg;
 	}
 
+	public String getMaxDate() {
+		return maxDate;
+	}
+
+	public void setmaxDate(String maxDate) {
+		this.maxDate = maxDate;
+	}
+	
+	public String getMinDate() {
+		return minDate;
+	}
+
+	public void setMinDate(String minDate) {
+		this.minDate = minDate;
+	}
 }
