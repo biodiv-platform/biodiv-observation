@@ -76,7 +76,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	private final String simpleFormatForDate = "yyyy-MM-dd'T'HH:mm:ss";
 
-	private final ExecutorService executor = Executors.newFixedThreadPool(17);
+	private final ExecutorService executor = Executors.newFixedThreadPool(25);
 
 	@Override
 	public ObservationListData getObservationList(String index, String type, MapSearchQuery querys,
