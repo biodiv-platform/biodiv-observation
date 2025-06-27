@@ -16,7 +16,7 @@ public class MapAggregationResponse {
 	private Long groupImages;
 	private Long groupNoMedia;
 	private Map<String, Long> groupMonth;
-	private Map<String, Map<String, Long>> groupTraits;
+	private Map<String, Map<String, Map<String, Object>>> groupTraits;
 	private Map<String, Long> groupState;
 	private Map<String, Long> groupRank;
 	private Map<String, Long> geoEntity;
@@ -118,11 +118,11 @@ public class MapAggregationResponse {
 		this.groupMonth = groupMonth;
 	}
 
-	public Map<String, Map<String, Long>> getGroupTraits() {
+	public Map<String, Map<String, Map<String, Object>>> getGroupTraits() {
 		return groupTraits;
 	}
 
-	public void setGroupTraits(Map<String, Map<String, Long>> groupTraits) {
+	public void setGroupTraits(Map<String, Map<String, Map<String, Object>>> groupTraits) {
 		this.groupTraits = groupTraits;
 	}
 

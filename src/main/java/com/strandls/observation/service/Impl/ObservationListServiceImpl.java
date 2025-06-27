@@ -549,7 +549,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 							valueParts[1]);
 
 					Long count = traitsAggregationMap.getOrDefault(aggregationKey, 0L);
-					traitValueMap.put(value.getValue(), count);
+					Map<String, Object> traitValueDetails = new HashMap<>();
+					traitValueDetails.put("count", count);
+					traitValueDetails.put("valueIcon", value.getValueIcon());
+					traitValueMap.put(value.getValue(), traitValueDetails);
 				}
 			}
 
