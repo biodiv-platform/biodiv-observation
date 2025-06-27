@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
+import com.strandls.esmodule.pojo.CustomFieldValues;
 import com.strandls.esmodule.pojo.CustomFields;
 import com.strandls.esmodule.pojo.FilterPanelData;
 import com.strandls.esmodule.pojo.GeoHashAggregationData;
@@ -36,6 +37,8 @@ import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.esmodule.pojo.SpeciesGroup;
+import com.strandls.esmodule.pojo.TraitValue;
 import com.strandls.esmodule.pojo.Traits;
 import com.strandls.esmodule.pojo.UploadersInfo;
 import com.strandls.observation.es.util.ESUtility;
@@ -245,12 +248,16 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		List<Traits> traitList = null;
 		List<CustomFields> customFieldList = null;
+		List<SpeciesGroup> speciesGroup = null;
+		List<String> states = null;
 		if (filterList != null) {
 			traitList = filterList.getTraits();
 			customFieldList = filterList.getCustomFields();
+			speciesGroup = filterList.getSpeciesGroup();
+			states = filterList.getStates();
 		}
 
-		int totalLatch = 15 + traitList.size() + customFieldList.size();
+		int totalLatch = 17;
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -457,64 +464,15 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 //		new trait aggregation
 
-		Map<String, Map<String, Long>> traitMaps = new HashMap<String, Map<String, Long>>();
-		for (Traits trait : traitList) {
-			String keyword = "trait_" + trait.getId() + "." + trait.getType();
-			if (!traitParams.isEmpty()) {
-				List<String> tempTraitParams = new ArrayList<String>();
-				if (traitParams.containsKey(keyword)) {
-					tempTraitParams = traitParams.remove(keyword);
-
-					mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-							speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-							customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
-							createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-							publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-					getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-							mapSearchQueryFilter, mapAggResponse, latch, trait.getName(), null);
-
-					traitParams.put(keyword, tempTraitParams);
-				}
-			}
-			if (traitParams.isEmpty() || !(traitParams.containsKey(keyword))) {
-				getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField,
-						mapSearchQuery, mapAggResponse, latch, trait.getName(), null);
-			}
-		}
+		Map<String, Map<String, Map<String, Object>>> traitMaps = new LinkedHashMap<>();
+		getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField, mapSearchQuery,
+				mapAggResponse, latch, "traits", null);
 
 //		custom Field Aggregation Start
-		String namedAggs = "";
 
-		Map<String, Map<String, Long>> cfMaps = new HashMap<String, Map<String, Long>>();
-		List<String> tempCFParams = new ArrayList<String>();
-		for (CustomFields cf : customFieldList) {
-			String keyword = "custom_" + cf.getId() + "." + cf.getFieldtype();
-			String fieldType = cf.getFieldtype();
-
-			namedAggs = cf.getId().toString() + "||" + fieldType;
-			if (!customParams.isEmpty()) {
-				tempCFParams = customParams.remove(keyword);
-
-				mapSearchQueryFilter = esUtility.getMapSearchQuery(sGroup, taxon, user, userGroupList, webaddress,
-						speciesName, mediaFilter, months, isFlagged, minDate, maxDate, validate, traitParams,
-						customParams, classificationid, mapSearchParams, maxvotedrecoid, recoId, createdOnMaxDate,
-						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
-						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
-
-				getAggregateLatch(index, type,
-						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-						geoAggregationField, mapSearchQueryFilter, mapAggResponse, latch, namedAggs, null);
-
-				customParams.put(keyword, tempCFParams);
-			}
-			if (customParams.isEmpty() || !customParams.containsKey(keyword)) {
-				getAggregateLatch(index, type,
-						"custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
-						geoAggregationField, mapSearchQuery, mapAggResponse, latch, namedAggs, null);
-
-			}
-		}
+		Map<String, Map<String, Long>> cfMaps = new LinkedHashMap<String, Map<String, Long>>();
+		getAggregateLatch(index, type, "custom_fields.custom_field.custom_field_values.custom_field_aggregation.raw",
+				geoAggregationField, mapSearchQuery, mapAggResponse, latch, "customFields", null);
 //		custom Field Aggregation ENDS
 
 //		try {
@@ -534,13 +492,33 @@ public class ObservationListServiceImpl implements ObservationListService {
 			throw new RuntimeException("Aggregation interrupted", e);
 		}
 
-		aggregationResponse.setGroupSpeciesName(getAggregationValue(mapAggResponse.get("group_name.keyword")));
+		Map<String, Long> groupSpeciesMap = new HashMap<>();
+
+		Map<String, Long> speciesAggregationMap = mapAggResponse.get("group_name.keyword") // Use a default if needed
+				.getGroupAggregation();
+
+		if (speciesGroup != null && speciesAggregationMap != null) {
+			for (SpeciesGroup group : speciesGroup) {
+				String key = String.format("%s|%s|%s", group.getId(), group.getName(), group.getOrder());
+				Long count = speciesAggregationMap.getOrDefault(group.getName(), 0L);
+				groupSpeciesMap.put(key, count);
+			}
+		}
+
+		aggregationResponse.setGroupSpeciesName(groupSpeciesMap);
 		aggregationResponse
 				.setGroupStatus(mapAggResponse.get("max_voted_reco.taxonstatus.keyword").getGroupAggregation());
 		aggregationResponse.setGroupRank(
 				getRankAggregation(mapAggResponse.get("max_voted_reco.rank.keyword").getGroupAggregation()));
-		aggregationResponse
-				.setGroupState(mapAggResponse.get("location_information.state.keyword").getGroupAggregation());
+		Map<String, Long> groupState = new HashMap<String, Long>();
+		Map<String, Long> statesAggregation = mapAggResponse.get("location_information.state.keyword")
+				.getGroupAggregation();
+		if (states != null) {
+			for (String s : states) {
+				groupState.put(s, statesAggregation.getOrDefault(s, (long) 0));
+			}
+		}
+		aggregationResponse.setGroupState(groupState);
 		aggregationResponse
 				.setGroupUserGroupName(getAggregationValue(mapAggResponse.get("user_group_observations.name.keyword")));
 		aggregationResponse.setGroupFlag(getAggregationValue(mapAggResponse.get("flag_count")));
@@ -558,36 +536,64 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		aggregationResponse.setGeoEntity(getAggregationValue(mapAggResponse.get("location_information.name.raw")));
 //		record traits aggregation
-		for (Traits traits : traitList) {
-			traitMaps.put(traits.getName(),
-					getTraitsAggregation(mapAggResponse.get(traits.getName()).getGroupAggregation(), traits.getName()));
+		Map<String, Long> traitsAggregationMap = mapAggResponse.get("traits").getGroupAggregation();
+
+		for (Traits trait : traitList) {
+			Map<String, Map<String,Object>> traitValueMap = new LinkedHashMap<>();
+
+			for (TraitValue value : trait.getTraitValues()) {
+				String[] valueParts = value.getValue().split("_", 2);
+
+				if (valueParts.length > 1) {
+					String aggregationKey = String.format("%s|%s|%s|%s", trait.getName(), trait.getId(), valueParts[0],
+							valueParts[1]);
+
+					Long count = traitsAggregationMap.getOrDefault(aggregationKey, 0L);
+					Map<String, Object> traitValueDetails = new HashMap<>();
+					traitValueDetails.put("count", count);
+					traitValueDetails.put("valueIcon", value.getValueIcon());
+					traitValueMap.put(value.getValue(), traitValueDetails);
+				}
+			}
+
+			String traitKey = String.format("%s|%s", trait.getName(), trait.getId());
+			traitMaps.put(traitKey, traitValueMap);
 		}
+
 		aggregationResponse.setGroupTraits(traitMaps);
 
 //		record custom field aggreation
-		for (CustomFields cf : customFieldList) {
-			String fieldType = cf.getFieldtype();
-			namedAggs = cf.getId().toString() + "||" + fieldType;
-			if (fieldType.equalsIgnoreCase("FIELD TEXT")) {
+		Map<String, Long> customFieldAggregationMap = mapAggResponse.get("customFields").getGroupAggregation();
 
-				cfMaps.put(cf.getName(), getCustomFieldAggregationFieldText(
-						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+		for (CustomFields field : customFieldList) {
+			String fieldType = field.getFieldtype();
+			String dataType = field.getDataType();
+			String fieldId = field.getId().toString();
+			String fieldName = field.getName();
 
-			} else if (fieldType.equalsIgnoreCase("SINGLE CATEGORICAL")
-					|| fieldType.equalsIgnoreCase("MULTIPLE CATEGORICAL")) {
+			Map<String, Long> fieldAggMap = new LinkedHashMap<>();
 
-				cfMaps.put(cf.getName(), getCustomFieldAggregationCategorical(
-						mapAggResponse.get(namedAggs).getGroupAggregation(), fieldType, cf.getId().toString()));
+			if ("FIELD TEXT".equalsIgnoreCase(fieldType)) {
+				String noContentKey = String.format("%s|%s|%s|%s|0", fieldId, fieldName, fieldType, dataType);
+				String hasContentKey = String.format("%s|%s|%s|%s|1", fieldId, fieldName, fieldType, dataType);
 
-			} else {
-//				field type range
-				cfMaps.put(cf.getName(),
-						getCustomFieldAggregationRange(mapAggResponse.get(namedAggs).getGroupAggregation(),
-								cf.getDataType(), fieldType, cf.getId().toString()));
+				fieldAggMap.put("NO CONTENT", customFieldAggregationMap.getOrDefault(noContentKey, 0L));
+				fieldAggMap.put("HAS CONTENT", customFieldAggregationMap.getOrDefault(hasContentKey, 0L));
+
+			} else if ("SINGLE CATEGORICAL".equalsIgnoreCase(fieldType)
+					|| "MULTIPLE CATEGORICAL".equalsIgnoreCase(fieldType)) {
+				for (CustomFieldValues value : field.getValues()) {
+					String valueKey = String.format("%s|%s|%s|%s|%s", fieldId, fieldName, fieldType, dataType,
+							value.getValue());
+					fieldAggMap.put(value.getValue(), customFieldAggregationMap.getOrDefault(valueKey, 0L));
+				}
 			}
-		}
-		aggregationResponse.setGroupCustomField(cfMaps);
 
+			String mapKey = String.format("%s|%s|%s", fieldName, fieldId, fieldType);
+			cfMaps.put(mapKey, fieldAggMap);
+		}
+
+		aggregationResponse.setGroupCustomField(cfMaps);
 		return aggregationResponse;
 
 	}
@@ -805,23 +811,20 @@ public class ObservationListServiceImpl implements ObservationListService {
 		} else if (statsFilter.equals("countPerDay")) {
 
 			Map<String, Long> agg = getAggregationValue(mapAggStatsResponse.get("group_by_day"));
-
 			Map<String, List<Map<String, Object>>> countPerDay = new LinkedHashMap<>();
 
 			for (Map.Entry<String, Long> entry : agg.entrySet()) {
-				String year = entry.getKey().substring(0, 4);
-				List<Map<String, Object>> yeardata;
-				if (countPerDay.containsKey(year)) {
-					yeardata = countPerDay.get(year);
-				} else {
-					yeardata = new ArrayList<>();
-				}
+				String date = entry.getKey();
+				Long value = entry.getValue();
+				String year = date.substring(0, 4);
 
-				Map<String, Object> data = new HashMap<>();
-				data.put("date", entry.getKey());
-				data.put("value", entry.getValue());
-				yeardata.add(data);
-				countPerDay.put(year, yeardata);
+				List<Map<String, Object>> yearData = countPerDay.computeIfAbsent(year, k -> new ArrayList<>());
+
+				Map<String, Object> dailyData = new HashMap<>();
+				dailyData.put("date", date);
+				dailyData.put("value", value);
+
+				yearData.add(dailyData);
 			}
 
 			aggregationStatsResponse.setCountPerDay(countPerDay);
@@ -832,63 +835,77 @@ public class ObservationListServiceImpl implements ObservationListService {
 			aggregationStatsResponse.setmaxDate(Collections.max(keyList));
 		} else if (statsFilter.equals("observedOn")) {
 			Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
-
 			Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
 
-			List<String> years = new ArrayList<>(observedOnAgg.keySet());
+			List<String> observedDates = new ArrayList<>(observedOnAgg.keySet());
 
-			if (years.size() > 0) {
-
-				String currentYear = years.get(years.size() - 1).substring(0, 4);
+			if (!observedDates.isEmpty()) {
+				// Get the year of the latest observation
+				String currentYearStr = observedDates.get(observedDates.size() - 1).substring(0, 4);
+				int currentYear = Integer.parseInt(currentYearStr);
 
 				for (Map.Entry<String, Long> entry : observedOnAgg.entrySet()) {
-					String year = entry.getKey().substring(0, 4);
-					Integer intervaldiff = Integer.parseInt(currentYear) - Integer.parseInt(year);
-					Integer intervalId = intervaldiff / 50;
-					String intervalKey = String.format("%04d",
-							Math.max(Integer.parseInt(currentYear) - ((intervalId + 1) * 50) + 1, 0)) + "-"
-							+ String.format("%04d", Integer.parseInt(currentYear) - (intervalId * 50));
-					List<Map<String, Object>> intervaldata;
-					if (groupByMonth.containsKey(intervalKey)) {
-						intervaldata = groupByMonth.get(intervalKey);
-					} else {
-						intervaldata = new ArrayList<>();
-					}
+					String dateKey = entry.getKey();
+					Long value = entry.getValue();
+
+					// Extract year and month
+					int year = Integer.parseInt(dateKey.substring(0, 4));
+					String month = dateKey.substring(5, 8);
+
+					// Calculate 50-year interval
+					int intervalDiff = currentYear - year;
+					int intervalId = intervalDiff / 50;
+					int startYear = Math.max(currentYear - ((intervalId + 1) * 50) + 1, 0);
+					int endYear = currentYear - (intervalId * 50);
+					String intervalKey = String.format("%04d-%04d", startYear, endYear);
+
+					// Populate the interval map
+					List<Map<String, Object>> intervalData = groupByMonth.computeIfAbsent(intervalKey,
+							k -> new ArrayList<>());
+
 					Map<String, Object> data = new HashMap<>();
-					data.put("month", entry.getKey().substring(5, 8));
-					data.put("year", entry.getKey().substring(0, 4));
-					data.put("value", entry.getValue());
-					intervaldata.add(data);
-					groupByMonth.put(intervalKey, intervaldata);
+					data.put("month", month);
+					data.put("year", String.valueOf(year));
+					data.put("value", value);
+
+					intervalData.add(data);
 				}
 			}
 
 			aggregationStatsResponse.setGroupObservedOn(groupByMonth);
 		} else if (statsFilter.equals("traits")) {
 			Map<String, Long> traitsAgg = getAggregationValue(mapAggStatsResponse.get("group_by_traits"));
-			int traitsIndex = 0;
 			List<Map<String, Object>> groupByTraits = new ArrayList<>();
+
+			int traitsIndex = 0;
+
 			for (Map.Entry<String, Long> entry : traitsAgg.entrySet()) {
+				String[] parts = entry.getKey().split("_", 2); // split into at most 2 parts
+				String traitName = parts.length > 0 ? parts[0] : "Unknown";
+				String month = parts.length > 1 ? parts[1] : "Unknown";
+				Long value = entry.getValue();
+
+				Map<String, Object> monthSum = new HashMap<>();
+				monthSum.put("name", month);
+				monthSum.put("value", value);
+
+				int traitGroupIndex = traitsIndex / 12;
+
 				if (traitsIndex % 12 == 0) {
-					Map<String, Object> traits = new LinkedHashMap<>();
-					traits.put("name", entry.getKey().split("_")[0]);
+					// Start a new trait group
+					Map<String, Object> traitsGroup = new LinkedHashMap<>();
+					traitsGroup.put("name", traitName);
 					List<Map<String, Object>> values = new ArrayList<>();
-					Map<String, Object> monthSum = new HashMap<>();
-					monthSum.put("name", entry.getKey().split("_")[1]);
-					monthSum.put("value", entry.getValue());
 					values.add(monthSum);
-					traits.put("values", values);
-					groupByTraits.add(traits);
+					traitsGroup.put("values", values);
+					groupByTraits.add(traitsGroup);
 				} else {
-					Map<String, Object> monthSum = new HashMap<>();
-					monthSum.put("name", entry.getKey().split("_")[1]);
-					monthSum.put("value", entry.getValue());
-					Map<String, Object> series = groupByTraits.get(traitsIndex / 12);
-					List<Map<String, Object>> values = (List<Map<String, Object>>) series.get("values");
+					// Add to existing trait group
+					Map<String, Object> traitsGroup = groupByTraits.get(traitGroupIndex);
+					List<Map<String, Object>> values = (List<Map<String, Object>>) traitsGroup.get("values");
 					values.add(monthSum);
-					series.put("values", values);
-					groupByTraits.set(traitsIndex / 12, series);
 				}
+
 				traitsIndex++;
 			}
 
@@ -896,14 +913,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		} else {
 			Map<String, Long> taxonAgg = getAggregationValue(mapAggStatsResponse.get("group_by_taxon"));
-			Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse.get(
-					statsFilter.split("\\|").length > 1 ? "taxon_path|" + statsFilter.split("\\|")[1] : "taxon_path"));
+
+			String[] filterParts = statsFilter.split("\\|");
+			String taxonPathKey = filterParts.length > 1 ? "taxon_path|" + filterParts[1] : "taxon_path";
+			Map<String, Long> taxonPath = getAggregationValue(mapAggStatsResponse.get(taxonPathKey));
+
 			for (Map.Entry<String, Long> entry : taxonPath.entrySet()) {
-				String[] parts = entry.getKey().split("\\|")[1].split("\\.");
-				Long value = taxonAgg.get(parts[parts.length - 1]);
-				taxonPath.put(entry.getKey(), value != null ? value : 0);
+				String key = entry.getKey();
+				String[] pathParts = key.split("\\|");
+
+				if (pathParts.length < 2) {
+					// Skip malformed keys
+					continue;
+				}
+
+				String[] taxonIds = pathParts[1].split("\\.");
+				String lastTaxonId = taxonIds[taxonIds.length - 1];
+
+				Long count = taxonAgg.getOrDefault(lastTaxonId, 0L);
+				taxonPath.put(key, count);
 			}
+
 			aggregationStatsResponse.setGroupTaxon(taxonPath);
+
 		}
 
 		return aggregationStatsResponse;
@@ -1047,25 +1079,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return result;
 	}
 
-	private Map<String, Long> getTraitsAggregation(Map<String, Long> aggregation, String traitName) {
-		Map<String, Long> traitsAgg = new HashMap<String, Long>();
-		try {
-			for (Entry<String, Long> entry : aggregation.entrySet()) {
-				if (entry.getKey().split("\\|")[0].equalsIgnoreCase(traitName)) {
-					traitsAgg.put(entry.getKey().split("\\|").length > 3
-							? entry.getKey().split("\\|")[2] + "_" + entry.getKey().split("\\|")[3]
-							: entry.getKey().split("\\|")[2], entry.getValue());
-
-				}
-			}
-
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-
-		return traitsAgg;
-	}
-
 	private String toTitleCase(String input) {
 		StringBuilder titleCase = new StringBuilder(input.length());
 		boolean nextTitleCase = true;
@@ -1082,98 +1095,6 @@ public class ObservationListServiceImpl implements ObservationListService {
 		}
 
 		return titleCase.toString();
-	}
-
-	private Map<String, Long> getCustomFieldAggregationFieldText(Map<String, Long> aggregation, String fieldType,
-			String cfId) {
-		Map<String, Long> cfAgg = new HashMap<String, Long>();
-		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
-				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
-					if (entry.getKey().split("\\|")[4].equalsIgnoreCase("0"))
-						cfAgg.put("NO CONTENT", entry.getValue());
-					else
-						cfAgg.put("HAS CONTENT", entry.getValue());
-				}
-			}
-		}
-		return cfAgg;
-	}
-
-	private Map<String, Long> getCustomFieldAggregationCategorical(Map<String, Long> aggregation, String fieldType,
-			String cfId) {
-
-		Map<String, Long> cfAgg = new HashMap<String, Long>();
-		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
-				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
-
-					cfAgg.put(entry.getKey().split("\\|")[4], entry.getValue());
-				}
-			}
-		}
-		return cfAgg;
-	}
-
-	private Map<String, Long> getCustomFieldAggregationRange(Map<String, Long> aggregation, String dataType,
-			String fieldType, String cfId) {
-
-		Map<String, Long> filterdAggregation = new HashMap<String, Long>();
-		Map<String, Long> cfAgg = new HashMap<String, Long>();
-		for (Entry<String, Long> entry : aggregation.entrySet()) {
-			if (entry.getKey().split("\\|")[0].equalsIgnoreCase(cfId)) {
-				if (entry.getKey().split("\\|")[2].equalsIgnoreCase(fieldType)) {
-					filterdAggregation.put(entry.getKey(), entry.getValue());
-				}
-			}
-		}
-		cfAgg = getMinMax(filterdAggregation, dataType);
-		return cfAgg;
-
-	}
-
-	private Map<String, Long> getMinMax(Map<String, Long> filteredAggregation, String dataType) {
-		Map<String, Long> result = new HashMap<String, Long>();
-		String minFinal = "";
-		String maxFinal = "";
-		Long total = 0L;
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		for (Entry<String, Long> entry : filteredAggregation.entrySet()) {
-
-			String value = entry.getKey().split("\\|")[4];
-			String minValue = value.split("-")[0];
-			String maxValue = value.split("-")[1];
-			if (dataType.equalsIgnoreCase("Integer")) {
-				if (Integer.parseInt(minFinal) > Integer.parseInt(minValue))
-					minFinal = minValue;
-				if (Integer.parseInt(maxFinal) < Integer.parseInt(maxValue))
-					maxFinal = maxValue;
-
-			} else if (dataType.equalsIgnoreCase("decimal")) {
-				if (Double.parseDouble(minFinal) > Double.parseDouble(minValue))
-					minFinal = minValue;
-				if (Double.parseDouble(maxFinal) < Double.parseDouble(maxValue))
-					maxFinal = maxValue;
-
-			} else {
-//				data type  = date
-				try {
-					if (df.parse(minFinal).compareTo(df.parse(minValue)) > 0)
-						minFinal = minValue;
-					if (df.parse(maxFinal).compareTo(df.parse(maxValue)) < 0)
-						maxFinal = maxValue;
-
-				} catch (Exception e) {
-					logger.error(e.getMessage());
-				}
-
-			}
-
-		}
-		String key = minFinal + "-" + maxFinal;
-		result.put(key, total);
-		return result;
-
 	}
 
 	@Override
