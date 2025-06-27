@@ -464,7 +464,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 //		new trait aggregation
 
-		Map<String, Map<String, Long>> traitMaps = new LinkedHashMap<String, Map<String, Long>>();
+		Map<String, Map<String, Map<String, Object>>> traitMaps = new LinkedHashMap<>();
 		getAggregateLatch(index, type, "facts.trait_value.trait_aggregation.raw", geoAggregationField, mapSearchQuery,
 				mapAggResponse, latch, "traits", null);
 
@@ -539,7 +539,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> traitsAggregationMap = mapAggResponse.get("traits").getGroupAggregation();
 
 		for (Traits trait : traitList) {
-			Map<String, Long> traitValueMap = new LinkedHashMap<>();
+			Map<String, Map<String,Object>> traitValueMap = new LinkedHashMap<>();
 
 			for (TraitValue value : trait.getTraitValues()) {
 				String[] valueParts = value.getValue().split("_", 2);
