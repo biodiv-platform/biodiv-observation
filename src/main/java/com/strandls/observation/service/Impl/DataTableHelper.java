@@ -1,12 +1,10 @@
 package com.strandls.observation.service.Impl;
 
-
-import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.dataTable.pojo.BulkDTO;
+import com.strandls.observation.dto.ObservationBulkDTO;
 
 public class DataTableHelper {
 
-	
 	public BulkDTO createDataTableBulkDTO(ObservationBulkDTO observationBulkData) {
 		BulkDTO dataTableDto = new BulkDTO();
 		dataTableDto.setLicenseId(observationBulkData.getLicenseId());
@@ -24,7 +22,7 @@ public class DataTableHelper {
 		dataTableDto.setObservedAt(observationBulkData.getObservedAt());
 		dataTableDto.setWktString(observationBulkData.getWktString());
 		dataTableDto.setDataset(observationBulkData.getDataset());
-		
+
 		dataTableDto.setProject(observationBulkData.getProject());
 		dataTableDto.setSummary(observationBulkData.getSummary());
 		dataTableDto.setSpeciesGroup(observationBulkData.getSGroup());
@@ -39,5 +37,5 @@ public class DataTableHelper {
 		dataTableDto.setUserFileId(1L);
 		return dataTableDto;
 	}
-	
+
 }

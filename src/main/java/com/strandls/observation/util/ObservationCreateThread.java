@@ -3,15 +3,12 @@ package com.strandls.observation.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.activity.pojo.ActivityLoggingData;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
@@ -22,11 +19,14 @@ import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactsCreateData;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.TagsMapping;
 import com.strandls.utility.pojo.TagsMappingData;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 public class ObservationCreateThread implements Runnable {
 
@@ -41,17 +41,17 @@ public class ObservationCreateThread implements Runnable {
 
 	private TraitsServiceApi traitService;
 	private UtilityServiceApi utilityServices;
-	private UserGroupSerivceApi userGroupService;
-	private IntergratorServicesApi intergratorService;
+	private UserGroupServiceApi userGroupService;
+	private IntegratorServicesApi integratorService;
 	private final LogActivities logActivity;
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 	private final ObservationServiceImpl observationImpl;
 
 	public ObservationCreateThread(HttpServletRequest request, ESUpdate esUpdate, Observation observation,
 			ObservationCreate observationData, Headers headers, TraitsServiceApi traitService,
-			UtilityServiceApi utilityServices, UserGroupSerivceApi userGroupService, LogActivities logActivity,
-			ActivitySerivceApi activityService, ObservationServiceImpl observationImpl,
-			IntergratorServicesApi intergratorService, Boolean updateEs) {
+			UtilityServiceApi utilityServices, UserGroupServiceApi userGroupService, LogActivities logActivity,
+			ActivityServiceApi activityService, ObservationServiceImpl observationImpl,
+			IntegratorServicesApi integratorService, Boolean updateEs) {
 		super();
 
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -65,7 +65,7 @@ public class ObservationCreateThread implements Runnable {
 		this.logActivity = logActivity;
 		this.activityService = activityService;
 		this.observationImpl = observationImpl;
-		this.intergratorService = intergratorService;
+		this.integratorService = integratorService;
 		this.updateEs = updateEs;
 	}
 
@@ -97,8 +97,8 @@ public class ObservationCreateThread implements Runnable {
 				UserGroupObvRuleData UgObvFilterData = observationImpl.getUGObvRuleData(observation);
 				UgObvFilterData.setTraits(observationData.getFactValuePairs());
 				checkFilterRule.setUgObvFilterData(UgObvFilterData);
-				intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-				eligibleUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+				integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+				eligibleUgIds = integratorService.checkUserGroupEligiblity(checkFilterRule);
 
 				if (eligibleUgIds != null && !eligibleUgIds.isEmpty()) {
 					userGroupData.setUserGroups(eligibleUgIds);
@@ -143,8 +143,8 @@ public class ObservationCreateThread implements Runnable {
 //		---------------USER GROUP FILTER RULE----------
 			UserGroupObvRuleData UgObvFilterData = observationImpl.getUGObvRuleData(observation);
 			UgObvFilterData.setTraits(observationData.getFactValuePairs());
-			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-			intergratorService.getFilterRule(UgObvFilterData);
+			integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+			integratorService.getFilterRule(UgObvFilterData);
 
 //		----------------ES UPDATE---------------------
 			if (Boolean.TRUE.equals(updateEs)) {

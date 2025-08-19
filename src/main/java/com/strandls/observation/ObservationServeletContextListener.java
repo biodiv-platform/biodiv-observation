@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.observation;
 
@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
-import javax.servlet.ServletContextEvent;
-
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -39,14 +37,14 @@ import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.rabbitmq.client.Channel;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.LayerServiceApi;
-import com.strandls.observation.contorller.ObservationControllerModule;
+import com.strandls.observation.controller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
 import com.strandls.observation.es.util.ESUtilModule;
 import com.strandls.observation.es.util.RabbitMQConsumer;
@@ -59,8 +57,10 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
+
+import jakarta.servlet.ServletContextEvent;
 
 /**
  * @author Abhishek Rudra
@@ -105,7 +105,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					System.out.println("after channel binding");
 					RabbitMQProducer producer = new RabbitMQProducer(channel);
 					Map<String, String> props = new HashMap<String, String>();
-					props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+					props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
 					props.put("jersey.config.server.provider.packages", "com");
 					props.put("jersey.config.server.wadl.disableWadl", "true");
 
@@ -122,16 +122,16 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 					bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
 					bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);
-					bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+					bind(UserGroupServiceApi.class).in(Scopes.SINGLETON);
 					bind(CustomFieldServiceApi.class).in(Scopes.SINGLETON);
 					bind(LayerServiceApi.class).in(Scopes.SINGLETON);
 					bind(EsServicesApi.class).in(Scopes.SINGLETON);
 					bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 					bind(UserServiceApi.class).in(Scopes.SINGLETON);
-					bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+					bind(ActivityServiceApi.class).in(Scopes.SINGLETON);
 					bind(UploadApi.class).in(Scopes.SINGLETON);
 					bind(DataTableServiceApi.class).in(Scopes.SINGLETON);
-					bind(IntergratorServicesApi.class).in(Scopes.SINGLETON);
+					bind(IntegratorServicesApi.class).in(Scopes.SINGLETON);
 					bind(Headers.class).in(Scopes.SINGLETON);
 					bind(ServletContainer.class).in(Scopes.SINGLETON);
 					bind(TokenGenerator.class).in(Scopes.SINGLETON);
@@ -167,7 +167,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 			Annotation[] annotations = cls.getAnnotations();
 
 			for (Annotation annotation : annotations) {
-				if (annotation instanceof javax.persistence.Entity) {
+				if (annotation instanceof jakarta.persistence.Entity) {
 					System.out.println("Mapping entity :" + cls.getCanonicalName());
 					classes.add(cls);
 				}

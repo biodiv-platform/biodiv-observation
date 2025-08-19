@@ -6,9 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -18,6 +15,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.dataTable.controllers.DataTableServiceApi;
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.observation.Headers;
@@ -26,8 +27,6 @@ import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESBulkUploadThread;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationUtilityFunctions;
-import com.strandls.dataTable.controllers.DataTableServiceApi;
-import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.observation.pojo.ObservationBulkData;
 import com.strandls.observation.service.Impl.ObservationBulkMapperHelper;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -38,6 +37,9 @@ import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 public class ObservationBulkUploadThread implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkUploadThread.class);
@@ -170,7 +172,9 @@ public class ObservationBulkUploadThread implements Runnable {
 			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
 			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 
-			fileRes = fileUploadApi.moveFiles(filesDataTable);
+			String json = fileUploadApi.moveFiles(filesDataTable).getData().toString();
+			fileRes = new ObjectMapper().readValue(json, new TypeReference<>() {
+			});
 			List<UFileCreateData> createUfileList = new ArrayList<>();
 			fileRes.entrySet().forEach((item) -> {
 				@SuppressWarnings("unchecked")

@@ -10,25 +10,25 @@ import java.io.Serializable;
  *
  */
 
-public class PublicationGrade implements Serializable{
+public class PublicationGrade implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5474070852004845688L;
-	
+
 	Boolean hasMediaEvidence;
 	Boolean hasDateDefined;
 	Boolean isLocationDefined;
-	Boolean isIdValidated ;//or has 2 or more supporters
+	Boolean isIdValidated;// or has 2 or more supporters
 	Boolean hasTaxonName;
 	Boolean hasfamilyRankOrLower;
 	Boolean isNotFlagged;
 	Boolean isNativeObservation;
-	
+
 	public PublicationGrade() {
 		super();
 	};
-	
+
 	public PublicationGrade(Boolean hasMediaEvidence, Boolean hasDateDefined, Boolean isLocationDefined,
 			Boolean isIdValidated, Boolean hasTaxonName, Boolean hasfamilyRankOrLower, Boolean isNotFlagged,
 			Boolean isNativeObservation) {
@@ -107,7 +107,4 @@ public class PublicationGrade implements Serializable{
 		this.isNativeObservation = isNativeObservation;
 	}
 
-	
-	
-	
 }

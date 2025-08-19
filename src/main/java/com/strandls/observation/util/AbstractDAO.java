@@ -2,138 +2,132 @@ package com.strandls.observation.util;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 public abstract class AbstractDAO<T, K extends Serializable> {
 
-	protected SessionFactory sessionFactory;
-
-	protected Class<? extends T> daoType;
+	protected final SessionFactory sessionFactory;
+	protected final Class<T> daoType;
 
 	@SuppressWarnings("unchecked")
 	protected AbstractDAO(SessionFactory sessionFactory) {
-		daoType = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		this.sessionFactory = sessionFactory;
+		this.daoType = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 	}
 
 	public T save(T entity) {
-		Session session = sessionFactory.openSession();
-		Transaction tx = null;
-		try {
-			tx = session.beginTransaction();
+		return executeInTransaction(session -> {
 			session.save(entity);
-			tx.commit();
-		} catch (Exception e) {
-			if (tx != null)
-				tx.rollback();
-			throw e;
-		} finally {
-			session.close();
-		}
-		return entity;
+			return entity;
+		});
 	}
 
 	public T update(T entity) {
-		Session session = sessionFactory.openSession();
-		Transaction tx = null;
-		try {
-			tx = session.beginTransaction();
+		return executeInTransaction(session -> {
 			session.update(entity);
-			tx.commit();
-		} catch (Exception e) {
-			if (tx != null)
-				tx.rollback();
-			throw e;
-		} finally {
-			session.close();
-		}
-		return entity;
+			return entity;
+		});
 	}
 
 	public T delete(T entity) {
-		Session session = sessionFactory.openSession();
-		Transaction tx = null;
-		try {
-			tx = session.beginTransaction();
+		return executeInTransaction(session -> {
 			session.delete(entity);
-			tx.commit();
-		} catch (Exception e) {
-			if (tx != null)
-				tx.rollback();
-			throw e;
-		} finally {
-			session.close();
-		}
-		return entity;
+			return entity;
+		});
 	}
 
 	public abstract T findById(K id);
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll() {
-		List<T> entities = null;
-		Session session = sessionFactory.openSession();
-		try {
-			Criteria criteria = session.createCriteria(daoType);
-			entities = criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).list();
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			session.close();
+		try (Session session = sessionFactory.openSession()) {
+			String hql = "FROM " + daoType.getSimpleName();
+			return session.createQuery(hql, daoType).list();
 		}
-
-		return entities;
 	}
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll(int limit, int offset) {
-		List<T> entities = null;
-		Session session = sessionFactory.openSession();
-		try {
-			Criteria criteria = session.createCriteria(daoType)
-					.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
-			entities = criteria.setFirstResult(offset).setMaxResults(limit).list();
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			session.close();
+		try (Session session = sessionFactory.openSession()) {
+			String hql = "FROM " + daoType.getSimpleName();
+			return session.createQuery(hql, daoType).setFirstResult(offset).setMaxResults(limit).list();
 		}
-
-		return entities;
 	}
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> fetchFilteredRecordsWithCriteria(String attribute1, String attribute2, List<Long> value1,
 			Object value2, String orderBy, Integer offSet, Integer limit) {
 		Session session = sessionFactory.openSession();
+		List<T> resultList = null;
 		try {
-			Criteria criteria = session.createCriteria(daoType.getName());
-			if (attribute1 != null) {
-				criteria.add(Restrictions.in(attribute1, value1));
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<T> cq = cb.createQuery(daoType);
+			Root<T> root;
+			root = cq.from(daoType);
+			cq.select(root);
+
+			List<Predicate> predicates = new ArrayList<>();
+
+			if (attribute1 != null && value1 != null && !value1.isEmpty()) {
+				predicates.add(root.get(attribute1).in(value1));
 			}
-			if (attribute2 != null)
-				criteria.add(Restrictions.eq(attribute2, value2));
-			if (orderBy != null)
-				criteria.addOrder(Order.desc(orderBy));
-			if (offSet != -1)
-				criteria.setFirstResult(offSet);
-			if (limit != -1)
-				criteria.setMaxResults(limit);
-			List<T> resultList = criteria.list();
-			return resultList;
+
+			if (attribute2 != null && value2 != null) {
+				predicates.add(cb.equal(root.get(attribute2), value2));
+			}
+
+			if (!predicates.isEmpty()) {
+				cq.where(cb.and(predicates.toArray(new Predicate[0])));
+			}
+
+			if (orderBy != null) {
+				// Assuming descending order as in original code; use cb.asc() for ascending
+				cq.orderBy(cb.desc(root.get(orderBy)));
+			}
+
+			Query<T> query = session.createQuery(cq);
+
+			if (offSet != null && offSet != -1) {
+				query.setFirstResult(offSet);
+			}
+			if (limit != null && limit != -1) {
+				query.setMaxResults(limit);
+			}
+
+			resultList = query.getResultList();
+
 		} catch (Exception e) {
 		} finally {
 			session.close();
 		}
-		return null;
+		return resultList;
 	}
 
+	// Generic transaction execution wrapper
+	protected <R> R executeInTransaction(HibernateTransaction<R> action) {
+		Transaction tx = null;
+		try (Session session = sessionFactory.openSession()) {
+			tx = session.beginTransaction();
+			R result = action.execute(session);
+			tx.commit();
+			return result;
+		} catch (RuntimeException e) {
+			if (tx != null)
+				tx.rollback();
+			throw e;
+		}
+	}
+
+	@FunctionalInterface
+	public interface HibernateTransaction<R> {
+		R execute(Session session);
+	}
 }

@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.strandls.observation.es.util;
 
 import java.util.Date;
@@ -12,128 +9,97 @@ import com.strandls.user.pojo.UserIbp;
 
 /**
  * @author Abhishek Rudra
- *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListMinimalData {
 
+	@JsonProperty("observation_id")
 	private Long observationId;
+
+	@JsonProperty("group_id")
 	private Long speciesGroupId;
+
+	@JsonProperty("group_name")
 	private String speciesGroup;
+
+	@JsonProperty("repr_image_url")
 	private String thumbnail;
+
 	private RecoIbp recoIbp;
+
 	private UserIbp user;
+
 	private Double latitude;
 	private Double longitude;
-	private Date createdOn;
-	private Date observedOn;
-
-	@JsonProperty("observation_id")
-	private void unpackName(Long observation_id) {
-		observationId = observation_id;
-	}
-
-	@JsonProperty(value = "group_id")
-	private void unpackSGroupId(Long group_id) {
-		speciesGroupId = group_id;
-	}
-
-	@JsonProperty(value = "group_name")
-	private void unpacksGroup(String group_name) {
-		speciesGroup = group_name;
-	}
-
-	@JsonProperty(value = "location")
-	private void unpackLocation(Location location) {
-		latitude = location.getLat();
-		longitude = location.getLon();
-	}
-
-	@JsonProperty(value = "repr_image_url")
-	private void unpackReprImage(String reprImage) {
-		thumbnail = reprImage;
-	}
-
-	@JsonProperty(value = "from_date")
-	private void unpackObservedOnDate(Date observedDate) {
-		observedOn = observedDate;
-	}
 
 	@JsonProperty("created_on")
-	private void unpackDate(Date created_on) {
-		createdOn = created_on;
+	private Date createdOn;
+
+	@JsonProperty("from_date")
+	private Date observedOn;
+
+	@JsonProperty("location")
+	private void unpackLocation(Location location) {
+		if (location != null) {
+			this.latitude = location.getLat();
+			this.longitude = location.getLon();
+		}
 	}
 
-	@JsonProperty(value = "max_voted_reco")
-	private void unpackMaxName(Max_voted_reco maxVoted) {
+	@JsonProperty("max_voted_reco")
+	private void unpackMaxVoted(Max_voted_reco maxVoted) {
 		if (maxVoted != null) {
-			String commonName = "";
+			StringBuilder commonNameBuilder = new StringBuilder();
 			if (maxVoted.getCommon_names() != null) {
 				for (Common_names cn : maxVoted.getCommon_names()) {
-					commonName = commonName + cn.getCommon_name() + "||";
+					commonNameBuilder.append(cn.getCommon_name()).append("||");
 				}
-				commonName = commonName.substring(0, commonName.length() - 2);
+				if (commonNameBuilder.length() > 0)
+					commonNameBuilder.setLength(commonNameBuilder.length() - 2); // Remove last ||
 			}
 
-			RecoIbp recoIbp = new RecoIbp(commonName,
+			RecoIbp reco = new RecoIbp(commonNameBuilder.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
 					null, null, null, null, maxVoted.getTaxonstatus(), null);
+
 			Long taxonId = null;
-			if (maxVoted.getHierarchy() != null)
-				for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
-					taxonId = hierarchy.getTaxon_id();
+			if (maxVoted.getHierarchy() != null) {
+				for (Hierarchy h : maxVoted.getHierarchy()) {
+					taxonId = h.getTaxon_id(); // Last one wins
 				}
-			recoIbp.setTaxonId(taxonId);
-			this.recoIbp = recoIbp;
-
+			}
+			reco.setTaxonId(taxonId);
+			this.recoIbp = reco;
 		}
-
 	}
 
-//	---------USER IBP------------
-
-	@JsonProperty(value = "author_id")
-	private void unpackAuthorId(Long author_id) {
+	@JsonProperty("author_id")
+	private void setAuthorId(Long authorId) {
 		if (user == null)
 			user = new UserIbp();
-		user.setId(author_id);
+		user.setId(authorId);
 	}
 
-	@JsonProperty(value = "created_by")
-	private void unpackAuthorName(String created_by) {
+	@JsonProperty("created_by")
+	private void setAuthorName(String createdBy) {
 		if (user == null)
 			user = new UserIbp();
-		user.setName(created_by);
+		user.setName(createdBy);
 	}
 
-	@JsonProperty(value = "profile_pic")
-	private void unpackAuthorPic(String profile_pic) {
+	@JsonProperty("profile_pic")
+	private void setProfilePic(String profilePic) {
 		if (user == null)
 			user = new UserIbp();
-		user.setProfilePic(profile_pic);
+		user.setProfilePic(profilePic);
 	}
 
-	/**
-	 * 
-	 */
 	public ObservationListMinimalData() {
-		super();
 	}
 
-	/**
-	 * @param observationId
-	 * @param speciesGroupId
-	 * @param speciesGroup
-	 * @param thumbnail
-	 * @param recoIbp
-	 * @param user
-	 * @param latitude
-	 * @param longitude
-	 */
 	public ObservationListMinimalData(Long observationId, Long speciesGroupId, String speciesGroup, String thumbnail,
 			RecoIbp recoIbp, UserIbp user, Double latitude, Double longitude, Date createdOn, Date observedOn) {
-		super();
 		this.observationId = observationId;
 		this.speciesGroupId = speciesGroupId;
 		this.speciesGroup = speciesGroup;
@@ -225,5 +191,4 @@ public class ObservationListMinimalData {
 	public void setCreatedOn(Date createdOn) {
 		this.createdOn = createdOn;
 	}
-
 }

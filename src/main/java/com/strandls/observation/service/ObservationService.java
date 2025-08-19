@@ -6,8 +6,6 @@ package com.strandls.observation.service;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.activity.pojo.Activity;
@@ -43,6 +41,8 @@ import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Language;
 import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Abhishek Rudra

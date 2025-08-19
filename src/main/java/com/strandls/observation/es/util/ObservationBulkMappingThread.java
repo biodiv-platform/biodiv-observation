@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +15,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchQuery;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
@@ -29,10 +26,13 @@ import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.BulkGroupPostingData;
 import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
 import com.strandls.userGroup.pojo.UserGroupObvFilterData;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 public class ObservationBulkMappingThread implements Runnable {
 
@@ -57,7 +57,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private String bulkObservationIds;
 	private String bulkUsergroupIds;
 	private MapSearchQuery mapSearchQuery;
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 	private String index;
 	private String type;
 	private String geoAggregationField;
@@ -73,17 +73,17 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Headers headers;
 	private final String requestAuthHeader;
 	private final ESUpdate esUpdate;
-	private IntergratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 	private TraitsServiceApi traitService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupServiceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
 			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService) {
+			IntegratorServicesApi integratorService, ESUpdate esUpdate, TraitsServiceApi traitService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -105,7 +105,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.headers = headers;
 		this.objectMapper = objectMapper;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-		this.intergratorService = intergratorService;
+		this.integratorService = integratorService;
 		this.esUpdate = esUpdate;
 		this.traitService = traitService;
 	}
@@ -135,18 +135,17 @@ public class ObservationBulkMappingThread implements Runnable {
 				for (Observation obs : obsDataList) {
 					UserGroupObvRuleData data = observationMapperHelper.getUGObvRuleData(obs);
 					UserGroupObvRuleData ugObvFilterData = data;
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							data.getObservationId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					CheckFilterRule checkFilterRule = new CheckFilterRule();
 					checkFilterRule.setUserGroupId(ugIds);
 					checkFilterRule.setUgObvFilterData(ugObvFilterData);
-					intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-					List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+					integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+					List<Long> filterUGId = integratorService.checkUserGroupEligiblity(checkFilterRule);
 					if (filterUGId != null && !filterUGId.isEmpty()) {
 						list.add(observationMapperHelper.getUGFilterObvData(obs));
 					}
@@ -177,18 +176,17 @@ public class ObservationBulkMappingThread implements Runnable {
 					} else if (bulkAction.equalsIgnoreCase(BULK_ACTION.UG_BULK_POSTING.getAction())) {
 						UserGroupObvRuleData filterData = observationMapperHelper
 								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
-						List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+						List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+								data.getObservationId().toString());
 						Map<String, List<Long>> facts = traits.stream()
-					    .collect(Collectors.groupingBy(
-					    		trait -> trait.getNameId().toString(), 
-					            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-					        ));
+								.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+										Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 						filterData.setTraits(facts);
 						CheckFilterRule checkFilterRule = new CheckFilterRule();
 						checkFilterRule.setUserGroupId(ugIds);
 						checkFilterRule.setUgObvFilterData(filterData);
-						intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-						List<Long> filterUGId = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+						integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+						List<Long> filterUGId = integratorService.checkUserGroupEligiblity(checkFilterRule);
 						if (filterUGId != null && !filterUGId.isEmpty()) {
 							list.add(observationMapperHelper
 									.getUGFilterObvData(observationDao.findById(data.getObservationId())));

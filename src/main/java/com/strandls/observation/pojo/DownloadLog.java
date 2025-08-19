@@ -4,17 +4,17 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "download_log")
-public class DownloadLog implements Serializable{
-	
+public class DownloadLog implements Serializable {
+
 	/**
 	 * 
 	 */
@@ -24,37 +24,37 @@ public class DownloadLog implements Serializable{
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	@Column(name = "id", nullable = false)
 	private Long id;
-	
+
 	@Column(name = "version", columnDefinition = "integer default 2", nullable = false)
 	private Long version;
-	
+
 	@Column(name = "author_id", nullable = false)
 	private Long authorId;
-	
+
 	@Column(name = "created_on", nullable = false)
 	private Timestamp createdOn;
-	
+
 	@Column(name = "file_path")
 	private String filePath;
-	
+
 	@Column(name = "filter_url", nullable = false)
 	private String filterUrl;
-	
+
 	@Column(name = "notes")
 	private String notes;
-	
+
 	@Column(name = "params_map_as_text")
 	private String paramsMapAsText;
-	
+
 	@Column(name = "status", nullable = false)
 	private String status;
-	
-	@Column(name = "type",  nullable = false)
+
+	@Column(name = "type", nullable = false)
 	private String type;
-	
+
 	@Column(name = "source_type")
 	private String sourceType;
-	
+
 	@Column(name = "offset_param", nullable = false)
 	private Long offsetParam;
 
@@ -76,7 +76,7 @@ public class DownloadLog implements Serializable{
 	}
 
 	public DownloadLog() {
-		}
+	}
 
 	public Long getId() {
 		return id;

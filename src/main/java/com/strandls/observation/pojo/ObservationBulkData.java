@@ -1,16 +1,17 @@
 package com.strandls.observation.pojo;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Row;
+
+import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.resource.pojo.License;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.dataTable.pojo.DataTableWkt;
 
-import org.apache.poi.ss.usermodel.Row;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ObservationBulkData {
 	private final Map<String, Integer> fieldMapping;
@@ -24,7 +25,6 @@ public class ObservationBulkData {
 	private final List<License> licenses;
 	private final Boolean isVerified;
 	private final String basisOfRecord;
-	
 
 	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
 			DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,

@@ -3,9 +3,9 @@
  */
 package com.strandls.observation.service.Impl;
 
-import javax.inject.Inject;
-
 import com.strandls.observation.service.RecommendationService;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra

@@ -50,7 +50,7 @@ public class ShowData implements Serializable {
 	private List<AllRecoSugguestions> allRecoVotes;
 	private List<ObservationNearBy> observationNearBy;
 	private DataTableWkt dataTable;
-	private Map<String, Object> checkListAnnotation ;
+	private Map<String, Object> checkListAnnotation;
 	private Integer activityCount;
 
 	/**
@@ -82,7 +82,8 @@ public class ShowData implements Serializable {
 			List<UserGroupIbp> userGroups, List<CustomFieldObservationData> customField,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, List<FlagShow> flag,
 			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, Map<String, String> authorScore,
-			List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy,DataTableWkt dataTable, Map<String, Object> checkListAnnotation,Integer activityCount) {
+			List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy, DataTableWkt dataTable,
+			Map<String, Object> checkListAnnotation, Integer activityCount) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -103,7 +104,6 @@ public class ShowData implements Serializable {
 		this.checkListAnnotation = checkListAnnotation;
 		this.activityCount = activityCount;
 	}
-
 
 	public Observation getObservation() {
 		return observation;

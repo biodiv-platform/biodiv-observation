@@ -8,8 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -18,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.util.AbstractDAO;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -210,7 +210,6 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		return result;
 	}
 
-	
 	@SuppressWarnings("unchecked")
 	public List<RecommendationVote> findCommonNameMatchByRecoIdList(List<Long> recoIdList) {
 		String qry = "from RecommendationVote where commonNameRecoId in :recoIdList ";
@@ -227,5 +226,5 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		}
 		return result;
 	}
-	
+
 }

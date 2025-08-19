@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.observation.service.Impl;
 
@@ -14,9 +14,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -24,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
@@ -41,7 +38,7 @@ import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
 import com.strandls.esmodule.pojo.UserScore;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.naksha.controller.LayerServiceApi;
@@ -92,7 +89,7 @@ import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.CustomFieldDetails;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsertData;
@@ -117,6 +114,9 @@ import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
 import com.strandls.utility.pojo.TagsMappingData;
 
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 import net.minidev.json.JSONArray;
 
 /**
@@ -143,7 +143,7 @@ public class ObservationServiceImpl implements ObservationService {
 	private ResourceServicesApi resourceService;
 
 	@Inject
-	private UserGroupSerivceApi userGroupService;
+	private UserGroupServiceApi userGroupService;
 
 	@Inject
 	private CustomFieldServiceApi cfService;
@@ -176,7 +176,7 @@ public class ObservationServiceImpl implements ObservationService {
 	private MailMetaDataConverter converter;
 
 	@Inject
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 
 	@Inject
 	private Headers headers;
@@ -197,7 +197,7 @@ public class ObservationServiceImpl implements ObservationService {
 	private DataTableServiceApi dataTableService;
 
 	@Inject
-	private IntergratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 
 	@Inject
 	private ObservationCreateService observationCreateService;
@@ -497,15 +497,13 @@ public class ObservationServiceImpl implements ObservationService {
 		UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observationDao.findById(Long.parseLong(observationId)));
 		List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observationId);
 		Map<String, List<Long>> facts = traits.stream()
-	    .collect(Collectors.groupingBy(
-	    		trait -> trait.getNameId().toString(), 
-	            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-	        ));
+				.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+						Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 		ugObvFilterData.setTraits(facts);
 		checkFilterRule.setUgObvFilterData(ugObvFilterData);
-		intergratorService = headers.addIntergratorHeader(intergratorService,
+		integratorService = headers.addIntegratorHeader(integratorService,
 				request.getHeader(HttpHeaders.AUTHORIZATION));
-		List<Long> verifiedUgIds = intergratorService.checkUserGroupEligiblity(checkFilterRule);
+		List<Long> verifiedUgIds = integratorService.checkUserGroupEligiblity(checkFilterRule);
 
 		if (!userGroupList.isEmpty() && (verifiedUgIds == null || verifiedUgIds.isEmpty())) {
 
@@ -988,16 +986,15 @@ public class ObservationServiceImpl implements ObservationService {
 				updateGeoPrivacy(observationList);
 //				------------BG rules-----------------
 				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observationId.toString());
+				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+						observationId.toString());
 				Map<String, List<Long>> facts = traits.stream()
-			    .collect(Collectors.groupingBy(
-			    		trait -> trait.getNameId().toString(), 
-			            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-			        ));
+						.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+								Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 				ugObvFilterData.setTraits(facts);
-				intergratorService = headers.addIntergratorHeader(intergratorService,
+				integratorService = headers.addIntegratorHeader(integratorService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				intergratorService.getFilterRule(ugObvFilterData);
+				integratorService.getFilterRule(ugObvFilterData);
 
 				produceToRabbitMQ(observationId.toString(), "Observation Core-Resource");
 
@@ -1077,16 +1074,15 @@ public class ObservationServiceImpl implements ObservationService {
 				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
 					UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							observation.getId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					ugObvFilterDataList.add(ugObvFilterData);
 				}
-				intergratorService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
+				integratorService.bulkFilterRulePosting(userGroupIds, ugObvFilterDataList);
 			}
 
 			System.out.println("Filter Rule Process Completed");
@@ -1118,16 +1114,15 @@ public class ObservationServiceImpl implements ObservationService {
 				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
 					UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							observation.getId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					ugObvFilterDataList.add(ugObvFilterData);
 				}
-				intergratorService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
+				integratorService.bulkFilterRuleRemoving(userGroupId, ugObvFilterDataList);
 			}
 
 		} catch (Exception e) {
@@ -1380,7 +1375,8 @@ public class ObservationServiceImpl implements ObservationService {
 			observationData.setLocation(observation.getPlaceName() != null ? observation.getPlaceName()
 					: observation.getReverseGeocodedName());
 			observationData.setObservationId(observation.getId());
-			observationData.setObservedOn(observation.getFromDate());
+			Date dt = observation.getFromDate();
+			observationData.setObservedOn(dt);
 			observationData.setScientificName(reco.getScientificName());
 
 			return observationData;
@@ -1461,16 +1457,15 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(observationId);
 			UserGroupObvRuleData ugObvFilterData = new UserGroupObvRuleData();
 			ugObvFilterData = getUGObvRuleData(observation);
-			List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+			List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+					observation.getId().toString());
 			Map<String, List<Long>> facts = traits.stream()
-		    .collect(Collectors.groupingBy(
-		    		trait -> trait.getNameId().toString(), 
-		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-		        ));
+					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
-			intergratorService = headers.addIntergratorHeader(intergratorService,
+			integratorService = headers.addIntegratorHeader(integratorService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			intergratorService.getFilterRule(ugObvFilterData);
+			integratorService.getFilterRule(ugObvFilterData);
 			produceToRabbitMQ(observationId.toString(), "Recommendation");
 
 		} catch (Exception e) {

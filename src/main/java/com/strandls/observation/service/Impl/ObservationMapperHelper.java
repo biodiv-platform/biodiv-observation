@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.observation.service.Impl;
 
@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,13 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ExtendedTaxonDefinition;
 import com.strandls.file.api.UploadApi;
@@ -52,6 +51,10 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
+
 /**
  * @author Abhishek Rudra
  *
@@ -64,10 +67,10 @@ public class ObservationMapperHelper {
 	private RecommendationDao recoDao;
 
 	@Inject
-	private RecommendationService recoSerivce;
+	private RecommendationService recoService;
 
 	@Inject
-	private UtilityServiceApi utilitySerivce;
+	private UtilityServiceApi utilityService;
 
 	@Inject
 	private EsServicesApi esService;
@@ -277,9 +280,9 @@ public class ObservationMapperHelper {
 		try {
 			Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
 			if (recommendation == null) {
-				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
+				ParsedName parsedName = utilityService.getNameParsed(recoData.getTaxonScientificName());
 				String canonicalName = parsedName.getCanonicalName().getSimple();
-				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
+				recommendation = recoService.createRecommendation(recoData.getTaxonScientificName(),
 						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
 			}
 			Long taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
@@ -299,7 +302,7 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId);
+			resultCommonName = recoService.createRecommendation(commonName, null, null, false, languageId);
 
 		return resultCommonName.getId();
 
@@ -310,7 +313,7 @@ public class ObservationMapperHelper {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
 			String providedSciName = recoData.getTaxonScientificName();
-			ParsedName parsedName = utilitySerivce.getNameParsed(providedSciName);
+			ParsedName parsedName = utilityService.getNameParsed(providedSciName);
 
 			if (parsedName.getCanonicalName() == null)
 				throw new ObservationInputException("Scientific Name Cannot start with Small letter");
@@ -326,7 +329,7 @@ public class ObservationMapperHelper {
 				List<Recommendation> resultList = recoDao.findByCanonicalName(canonicalName);
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
-						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true,
+						resultList.add(recoService.createRecommendation(providedSciName, null, canonicalName, true,
 								recoData.getLanguageId()));
 					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
 							: resultList.get(0).getTaxonConceptId();
@@ -346,7 +349,7 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
-//	PRIORITY 1 : taxonId == accpetedNameId 
+//	PRIORITY 1 : taxonId == accpetedNameId
 	private Map<String, Long> taxonIdEqualsAccpetedNameId(List<Recommendation> recommendations,
 			String providedSciName) {
 
@@ -434,7 +437,9 @@ public class ObservationMapperHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
 				filesDTO.setModule("observation");
-				fileMap = fileUploadService.moveFiles(filesDTO);
+				String json = fileUploadService.moveFiles(filesDTO).getData().toString();
+				fileMap = new ObjectMapper().readValue(json, new TypeReference<>() {
+				});
 			}
 
 			for (ResourceDataObs resourceData : resourceDataList) {
@@ -470,7 +475,7 @@ public class ObservationMapperHelper {
 				}
 				resource.setUrl(resourceData.getUrl());
 				resource.setRating(resourceData.getRating());
-				resource.setUploadTime(new Date());
+				resource.setUploadTime(Date.from(ZonedDateTime.now().toInstant()));
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
 				if (resourceData.getLanguageId() != null)
@@ -545,7 +550,7 @@ public class ObservationMapperHelper {
 		UserGroupObvRuleData ugFilterData = new UserGroupObvRuleData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
-			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+			taxonomyId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 		ugFilterData.setObservationId(observation.getId());
 		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
 		ugFilterData.setLatitude(observation.getLatitude());
@@ -561,7 +566,7 @@ public class ObservationMapperHelper {
 		UserGroupObvFilterData ugFilterData = new UserGroupObvFilterData();
 		Long taxonomyId = null;
 		if (observation.getMaxVotedRecoId() != null)
-			taxonomyId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+			taxonomyId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 		ugFilterData.setObservationId(observation.getId());
 		ugFilterData.setCreatedOnDate(observation.getCreatedOn());
 		ugFilterData.setLatitude(observation.getLatitude());
@@ -627,7 +632,7 @@ public class ObservationMapperHelper {
 				System.out.println("---------END----------");
 
 				if (observation.getGeoPrivacy() == false && observation.getMaxVotedRecoId() != null) {
-					Long taxonId = recoSerivce.fetchTaxonId(observation.getMaxVotedRecoId());
+					Long taxonId = recoService.fetchTaxonId(observation.getMaxVotedRecoId());
 					if (taxonId != null) {
 
 						if (geoPrivateTaxonId.contains(taxonId)) {

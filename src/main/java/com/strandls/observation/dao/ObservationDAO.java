@@ -1,26 +1,24 @@
-/**
- * 
- */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import javax.inject.Inject;
-
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
-import org.hibernate.type.LongType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.util.AbstractDAO;
+
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 /**
  * @author Abhishek Rudra
@@ -56,7 +54,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "select count(id) from observation where is_deleted = false";
 		Long total = null;
 		try {
-			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", Long.class);
 			total = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -72,7 +70,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		Session session = sessionFactory.openSession();
 		String qry = "from Observation where isDeleted = false and geoPrivacy = false and maxVotedRecoId is not NULL  order by id";
 		try {
-			Query<Observation> query = session.createQuery(qry);
+			Query<Observation> query = session.createQuery(qry, Observation.class);
 			query.setMaxResults(20000);
 			query.setFirstResult(startPoint);
 			result = query.getResultList();
@@ -91,7 +89,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		Session session = sessionFactory.openSession();
 		List<Observation> result = null;
 		try {
-			Query<Observation> query = session.createQuery(qry);
+			Query<Observation> query = session.createQuery(qry, Observation.class);
 			query.setParameter("ids", observationList);
 			result = query.getResultList();
 		} catch (Exception e) {
@@ -109,7 +107,7 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		String qry = "select id from observation where is_deleted = false offset :startPoint limit 30000";
 		List<Long> result = null;
 		try {
-			Query<Long> query = session.createNativeQuery(qry).addScalar("id", LongType.INSTANCE);
+			Query<Long> query = session.createNativeQuery(qry).addScalar("id", Long.class);
 			query.setParameter("startPoint", startPoint);
 			result = query.getResultList();
 		} catch (Exception e) {
@@ -126,7 +124,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		Session session = sessionFactory.openSession();
 		String qry = "from Observation where isDeleted = false and noOfIdentifications = 0 and maxVotedRecoId is not NULL order by id";
 		try {
-			Query<Observation> query = session.createQuery(qry);
+			Query<Observation> query = session.createQuery(qry, Observation.class); // Specify result class for type
+																					// safety
 			query.setMaxResults(5000);
 			query.setFirstResult(startPoint);
 			result = query.getResultList();
@@ -139,18 +138,37 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return result;
 	}
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
+	// Refactored method using JPA Criteria API
 	public List<Object[]> getValuesOfColumnsBasedOnFilter(List<String> projectedColumns, Map<String, Object> filterOn) {
 		Session session = sessionFactory.openSession();
-		Criteria criteria = session.createCriteria(Observation.class);
-		ProjectionList projectionList = Projections.projectionList();
-		for (String projectedColumn : projectedColumns) {
-			projectionList.add(Projections.property(projectedColumn));
+		List<Object[]> queryData = null;
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
+			Root<Observation> root = cq.from(Observation.class);
+
+			// Projections
+			List<jakarta.persistence.criteria.Selection<?>> selections = new ArrayList<>();
+			for (String projectedColumn : projectedColumns) {
+				selections.add(root.get(projectedColumn));
+			}
+			cq.multiselect(selections.toArray(new jakarta.persistence.criteria.Selection[0]));
+
+			// Restrictions
+			List<Predicate> predicates = new ArrayList<>();
+			Set<Map.Entry<String, Object>> entrySet = filterOn.entrySet();
+			for (Map.Entry<String, Object> entry : entrySet) {
+				predicates.add(cb.equal(root.get(entry.getKey()), entry.getValue()));
+			}
+			cq.where(cb.and(predicates.toArray(new Predicate[0])));
+
+			// Execute query
+			queryData = session.createQuery(cq).getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
-		criteria.add(Restrictions.allEq(filterOn));
-		criteria.setProjection(projectionList);
-		List<Object[]> queryData = criteria.list();
-		session.close();
 		return queryData;
 	}
 
@@ -160,7 +178,8 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		Session session = sessionFactory.openSession();
 		List<Observation> result = null;
 		try {
-			Query<Observation> query = session.createQuery(qry);
+			Query<Observation> query = session.createQuery(qry, Observation.class); // Specify result class for type
+																					// safety
 			query.setParameter("ids", dataTableId);
 			query.setFirstResult(offset);
 			if (limit != null) {
@@ -180,11 +199,11 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 	public Long getObservationCountForDatatable(String datatableId) {
 
 		Session session = sessionFactory.openSession();
-		String qry = "select count(*) from observation where is_deleted = false and data_table_id = :datatableId";
+		String qry = "select count(*) as count from observation where is_deleted = false and data_table_id = :datatableId";
 		Long total = null;
 		try {
-			Query<Long> query = session.createNativeQuery(qry).addScalar("count", LongType.INSTANCE);
-			;
+			// In Hibernate 6, addScalar takes the alias and the class type
+			Query<Long> query = session.createNativeQuery(qry).addScalar("count", Long.class);
 			query.setParameter("datatableId", Integer.parseInt(datatableId));
 			total = query.getSingleResult();
 		} catch (Exception e) {

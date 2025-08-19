@@ -6,13 +6,13 @@ package com.strandls.observation.pojo;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Abhishek Rudra
@@ -58,7 +58,7 @@ public class RecommendationVote implements Serializable {
 	 * @param flag
 	 */
 	public RecommendationVote(Long id, Long authorId, Long observationId, Long recommendationId, Date votedOn,
-			Long commonNameRecoId, String givenCommonName, String givenSciName, Boolean flag,String source) {
+			Long commonNameRecoId, String givenCommonName, String givenSciName, Boolean flag, String source) {
 		super();
 		this.id = id;
 		this.authorId = authorId;
@@ -69,7 +69,7 @@ public class RecommendationVote implements Serializable {
 		this.givenCommonName = givenCommonName;
 		this.givenSciName = givenSciName;
 		this.flag = flag;
-		this.source=source;
+		this.source = source;
 	}
 
 	@Id

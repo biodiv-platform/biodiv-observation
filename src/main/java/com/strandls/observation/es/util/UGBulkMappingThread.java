@@ -2,7 +2,7 @@ package com.strandls.observation.es.util;
 
 import com.strandls.observation.Headers;
 import com.strandls.userGroup.ApiException;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.BulkGroupPostingData;
 import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
 
@@ -10,12 +10,12 @@ public class UGBulkMappingThread implements Runnable {
 
 	private BulkGroupPostingData bulkPostingData;
 
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 	private BulkGroupUnPostingData bulkUnPostingData;
 	private Headers headers;
 	private String requestAuthHeader;
 
-	public UGBulkMappingThread(BulkGroupPostingData bulkPostingData, UserGroupSerivceApi ugService,
+	public UGBulkMappingThread(BulkGroupPostingData bulkPostingData, UserGroupServiceApi ugService,
 			BulkGroupUnPostingData bulkUnPostingData, Headers headers, String requestAuthHeader) {
 		super();
 		this.bulkPostingData = bulkPostingData;

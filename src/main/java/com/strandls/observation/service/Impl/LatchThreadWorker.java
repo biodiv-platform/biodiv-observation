@@ -6,14 +6,14 @@ package com.strandls.observation.service.Impl;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra

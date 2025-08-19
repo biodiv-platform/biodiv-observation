@@ -3,6 +3,7 @@
  */
 package com.strandls.observation.util;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +24,7 @@ public class TokenGenerator {
 		u1.setAboutMe(user.getAboutMe());
 		u1.setAccountExpired(user.getAccountExpired());
 		u1.setAccountLocked(user.getAccountLocked());
-		u1.setDateCreated(user.getDateCreated());
+		u1.setDateCreated(user.getDateCreated() == null ? null : Date.from(user.getDateCreated().toInstant()));
 		u1.setEmail(user.getEmail());
 		u1.setEmailValidation(user.getEmailValidation());
 		u1.setEnabled(user.getEnabled());
@@ -33,7 +34,7 @@ public class TokenGenerator {
 		u1.setIdentificationMail(user.getIdentificationMail());
 		u1.setInstitution(user.getInstitution());
 		u1.setLanguageId(user.getLanguageId());
-		u1.setLastLoginDate(user.getLastLoginDate());
+		u1.setLastLoginDate(user.getLastLoginDate() == null ? null : Date.from(user.getLastLoginDate().toInstant()));
 		u1.setLatitude(user.getLatitude());
 		u1.setLocation(user.getLocation());
 		u1.setLongitude(user.getLongitude());

@@ -3,12 +3,11 @@ package com.strandls.observation.service;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.servlet.http.HttpServletRequest;
-
-import com.strandls.dataTable.pojo.UserGroupIbp;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.ShowObervationDataTable;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface ObservationDataTableService {
 
@@ -22,7 +21,7 @@ public interface ObservationDataTableService {
 
 	public String removeObservationByDataTableId(HttpServletRequest request, Long dataTableId);
 
-	public List<com.strandls.dataTable.pojo.UserGroupIbp> updateDatatableUsergroup(HttpServletRequest request, Long dataTableId,
-			List<Long> userGroupList, String bulkAction);
+	public List<com.strandls.dataTable.pojo.UserGroupIbp> updateDatatableUsergroup(HttpServletRequest request,
+			Long dataTableId, List<Long> userGroupList, String bulkAction);
 
 }

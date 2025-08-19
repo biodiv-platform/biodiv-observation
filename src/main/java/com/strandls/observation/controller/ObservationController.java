@@ -1,33 +1,10 @@
-/**
- * 
- */
-package com.strandls.observation.contorller;
+package com.strandls.observation.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
 
 import org.pac4j.core.profile.CommonProfile;
 
@@ -44,7 +21,7 @@ import com.strandls.esmodule.pojo.MapGeoPoint;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.observation.ApiConstants;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
@@ -97,7 +74,7 @@ import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldValues;
@@ -115,11 +92,31 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.io.WKTReader;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 import net.minidev.json.JSONArray;
 
 /**
@@ -127,7 +124,7 @@ import net.minidev.json.JSONArray;
  *
  */
 
-@Api("Observation Service")
+@Tag(name = "Observation Service")
 @Path(ApiConstants.V1 + ApiConstants.OBSERVATION)
 public class ObservationController {
 
@@ -177,19 +174,20 @@ public class ObservationController {
 	private EsServicesApi esService;
 
 	@Inject
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 
 	@Inject
-	private IntergratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 
 	@Inject
 	private ESUpdate esUpdate;
-	
+
 	@Inject
 	private TraitsServiceApi traitService;
 
 	@GET
-	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
+	@Operation(summary = "Dummy API Ping", description = "Checks validity of war file at deployment", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))) })
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
@@ -199,8 +197,9 @@ public class ObservationController {
 	@GET
 	@Path(ApiConstants.USERTEMPORALAGGREGATION + "/{userId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Find Aggregation by day by user", notes = "Returns observations grouped by day and month", response = ObservationDataByUser.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+	@Operation(summary = "Find Aggregation by day by user", description = "Returns observations grouped by day and month", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationDataByUser.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public ObservationDataByUser getObservationPerDay(@PathParam("userId") String userId) {
 
 		return observationListService.getCountPerDay(userId);
@@ -211,12 +210,12 @@ public class ObservationController {
 	@Path(ApiConstants.SHOW + "/{observationId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Find Observation by ID", notes = "Returns the complete Observation with all the specificaiton", response = ShowData.class)
-	@ApiResponses(value = { @ApiResponse(code = 404, message = "Observation not found", response = String.class),
-			@ApiResponse(code = 400, message = "Invalid ID", response = String.class) })
+	@Operation(summary = "Find Observation by ID", description = "Returns the complete Observation with all the specification", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ShowData.class))),
+			@ApiResponse(responseCode = "404", description = "Observation not found", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid ID", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response show(
-			@ApiParam(value = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {
+			@Parameter(description = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {
 
 		Long obvId;
 		try {
@@ -238,14 +237,13 @@ public class ObservationController {
 	@Path(ApiConstants.CREATE)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-	@ApiOperation(value = "Create a Observation", notes = "Returns the show Page of Observation", response = Long.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "observation Cannot be created", response = String.class) })
+	@Operation(summary = "Create an Observation", description = "Returns the show Page of Observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Long.class))),
+			@ApiResponse(responseCode = "404", description = "Observation Cannot be created", content = @Content(schema = @Schema(implementation = String.class))) })
 
 	public Response createObservation(@Context HttpServletRequest request,
-			@ApiParam(name = "observationData") ObservationCreate observationData) {
+			@Parameter(description = "observationData", required = true) ObservationCreate observationData) {
 		try {
 			if (observationData.getObservedOn() == null)
 				throw new ObservationInputException("Observation Date Cannot be BLANK");
@@ -285,13 +283,10 @@ public class ObservationController {
 	@Path(ApiConstants.EDIT + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Get the data for  Observation core part Update ", notes = "Returns the user the update page data", response = ObservationUpdateData.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to edit the observation", response = String.class) })
-
+	@Operation(summary = "Get the data for Observation core part Update", description = "Returns the user the update page data", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationUpdateData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to edit the observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getEditPageData(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId) {
 		try {
@@ -309,16 +304,13 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Update the Observation core part", notes = "Returns the user the complete show page", response = ShowData.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to edit the observation", response = String.class) })
-
+	@Operation(summary = "Update the Observation core part", description = "Returns the user the complete show page", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ShowData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to edit the observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateObservation(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam(name = "observationUpdateData") ObservationUpdateData observationUpdate) {
+			@Parameter(description = "observationUpdateData", required = true) ObservationUpdateData observationUpdate) {
 		try {
 
 			if (observationUpdate.getDataTableId() == null && observationUpdate.getObservedOn() == null)
@@ -345,12 +337,10 @@ public class ObservationController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ValidateUser
-
-	@ApiOperation(value = "Delete the Observaiton", notes = "Return the Success or Failure Message", response = String.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Observation Cannot be Deleted", response = String.class),
-			@ApiResponse(code = 406, message = "User not allowed to delete the Observation", response = String.class) })
-
+	@Operation(summary = "Delete the Observation", description = "Return the Success or Failure Message", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Observation Cannot be Deleted", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "406", description = "User not allowed to delete the Observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response deleteObservation(@Context HttpServletRequest request,
 			@PathParam("observationId") String observaitonId) {
 		try {
@@ -373,11 +363,9 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + ApiConstants.LASTREVISED + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Updates the last revised of Observation", notes = "Updates the last revised of observation", response = Boolean.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to update the Obsevation", response = String.class) })
-
+	@Operation(summary = "Updates the last revised of Observation", description = "Updates the last revised of observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Boolean.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to update the Observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateLastRevised(@PathParam("observationId") String observationId) {
 		try {
 			Long obvId = Long.parseLong(observationId);
@@ -392,10 +380,9 @@ public class ObservationController {
 	@Path(ApiConstants.LIST + ApiConstants.ALL)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Get all the dynamic filters", notes = "Return all the filter", response = FilterPanelData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
-
+	@Operation(summary = "Get all the dynamic filters", description = "Return all the filter", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = FilterPanelData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getAllFilters() {
 		try {
 			FilterPanelData result = observationListService.getAllFilter();
@@ -409,10 +396,9 @@ public class ObservationController {
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = ObservationListData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Fetch observations based on filter", description = "Returns a list of observations based on the filters", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationListData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response observationList(@PathParam("index") String index, @PathParam("type") String type,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup, @DefaultValue("") @QueryParam("taxon") String taxon,
 			@DefaultValue("") @QueryParam("user") String user,
@@ -442,7 +428,7 @@ public class ObservationController {
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity,
-			@QueryParam("tags") String tags, @ApiParam(name = "location") EsLocationListParams location,
+			@QueryParam("tags") String tags, @Parameter(description = "location") EsLocationListParams location,
 			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
 			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
@@ -547,7 +533,7 @@ public class ObservationController {
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper, intergratorService, esUpdate, traitService);
+						request, headers, objectMapper, integratorService, esUpdate, traitService);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
@@ -561,12 +547,12 @@ public class ObservationController {
 
 				if (offset == 0) {
 					if (showData.equals("false") && statsFilter.isEmpty()) {
-					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
-							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
-							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-							dataTableName, geoEntity, dataTableId);
+						aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
+								userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
+								maxDate, validate, traitParams, customParams, classificationid, mapSearchParams,
+								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
+								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
+								dataSetName, dataTableName, geoEntity, dataTableId);
 					}
 
 					if (view.equalsIgnoreCase("stats") && !statsFilter.isEmpty()) {
@@ -601,12 +587,10 @@ public class ObservationController {
 	@Path(ApiConstants.SPECIESGROUP + "/{observationId}/{sGroupId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-	@ApiOperation(value = "Update the Species group of the observation", notes = "Returns the updated Species group id", response = Long.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to update the Species Group", response = String.class) })
-
+	@Operation(summary = "Update the Species group of the observation", description = "Returns the updated Species group id", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Long.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to update the Species Group", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateSGroup(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@PathParam("sGroupId") String sGroupId) {
 		try {
@@ -624,14 +608,12 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + ApiConstants.TAGS)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "update tags for the observation", notes = "Returns Tags list", response = Tags.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to update the tags", response = String.class) })
-
+	@Operation(summary = "Update tags for the observation", description = "Returns Tags list", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Tags.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to update the tags", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateTags(@Context HttpServletRequest request,
-			@ApiParam(name = "tagsMapping") TagsMapping tagsMapping) {
+			@Parameter(description = "tagsMapping", required = true) TagsMapping tagsMapping) {
 		try {
 			List<Tags> result = observationService.updateTags(request, tagsMapping);
 			return Response.status(Status.OK).entity(result).build();
@@ -644,15 +626,13 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + ApiConstants.TRAITS + "/{observationId}/{traitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Update the specific Trait with values", notes = "Returns all facts", response = FactValuePair.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to Update the Traits", response = String.class) })
-
+	@Operation(summary = "Update the specific Trait with values", description = "Returns all facts", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = FactValuePair.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to Update the Traits", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateTraits(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@PathParam("traitId") String traitId, @ApiParam(name = "updateData") FactsUpdateData updateData) {
+			@PathParam("traitId") String traitId,
+			@Parameter(description = "updateData", required = true) FactsUpdateData updateData) {
 		try {
 			List<FactValuePair> result = observationService.updateTraits(request, observationId, traitId, updateData);
 
@@ -666,16 +646,13 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + ApiConstants.USERGROUP + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Update the UserGroup linked with a observation", notes = "Returns all the current userGroup Linked", response = UserGroupIbp.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to updated the userGroup of Observaiton", response = String.class) })
-
+	@Operation(summary = "Update the UserGroup linked with an observation", description = "Returns all the current userGroup Linked", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = UserGroupIbp.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to updated the userGroup of Observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateUserGroup(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
+			@Parameter(description = "userGroupList", required = true) List<Long> userGroupList) {
 		try {
 			List<UserGroupIbp> result = observationService.updateUserGroup(request, observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
@@ -687,11 +664,9 @@ public class ObservationController {
 	@GET
 	@Path(ApiConstants.SPECIES + ApiConstants.ALL)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Get all the Specie Group", notes = "Returns all the Species Group", response = SpeciesGroup.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to fetch the UserGroup", response = String.class) })
-
+	@Operation(summary = "Get all the Species Group", description = "Returns all the Species Group", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = SpeciesGroup.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the UserGroup", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getAllSpecies() {
 		try {
 
@@ -707,10 +682,9 @@ public class ObservationController {
 	@Path(ApiConstants.LANGUAGE)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Find all the Languages based on IsDirty field", notes = "Returns all the Languages Details", response = Language.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Languages Not Found", response = String.class) })
-
+	@Operation(summary = "Find all the Languages based on IsDirty field", description = "Returns all the Languages Details", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Language.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Languages Not Found", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getLanguaes(@QueryParam("isDirty") Boolean isDirty) {
 		try {
 			List<Language> result = observationService.getLanguages(isDirty);
@@ -725,13 +699,11 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Posting of Featured to a Group", notes = "Returns the Details of Featured", response = Featured.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "Unable to Feature in a Group", response = String.class) })
-
+	@Operation(summary = "Posting of Featured to a Group", description = "Returns the Details of Featured", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Featured.class, type = "array"))),
+			@ApiResponse(responseCode = "404", description = "Unable to Feature in a Group", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response createFeatured(@Context HttpServletRequest request,
-			@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
+			@Parameter(description = "featuredCreate", required = true) FeaturedCreate featuredCreate) {
 		try {
 			List<Featured> result = observationService.createFeatured(request, featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
@@ -744,13 +716,12 @@ public class ObservationController {
 	@Path(ApiConstants.UNFEATURED + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-	@ApiOperation(value = "UnFeatures a Object from a UserGroup", notes = "Returns the Current Featured", response = Featured.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 404, message = "Unable to Unfeature", response = String.class) })
-
+	@Operation(summary = "Unfeatures an Object from a UserGroup", description = "Returns the Current Featured", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Featured.class, type = "array"))),
+			@ApiResponse(responseCode = "404", description = "Unable to Unfeature", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
+			@Parameter(description = "userGroupList", required = true) List<Long> userGroupList) {
 		try {
 			List<Featured> result = observationService.unFeatured(request, observationId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
@@ -763,12 +734,10 @@ public class ObservationController {
 	@Path(ApiConstants.TRAITS + "/{traitId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Find the value of Traits", notes = "Returns the values of traits based on trait's ID", response = TraitsValue.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the values", response = String.class) })
-
+	@Operation(summary = "Find the value of Traits", description = "Returns the values of traits based on trait's ID", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = TraitsValue.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the values", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getValuesOfTraits(@Context HttpServletRequest request, @PathParam("traitId") String traitId) {
 		try {
 			List<TraitsValue> result = observationService.getTraitsValue(request, traitId);
@@ -782,10 +751,11 @@ public class ObservationController {
 	@Path(ApiConstants.SPECIES + "/{speciesGroupId}/{languageId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
-
-	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId, @PathParam("languageId") String languageId) {
+	@Operation(summary = "Find all Trait Values pair for Specific SpeciesId", description = "Return the Key value pairs of Traits", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = TraitsValuePair.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Species Not Found", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId,
+			@PathParam("languageId") String languageId) {
 		try {
 			List<TraitsValuePair> result = observationService.getTraitList(speciesGroupId, languageId);
 			return Response.status(Status.OK).entity(result).build();
@@ -799,14 +769,12 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Find all the user Permission for current observation", notes = "Returns list of permission for validate post and feature in a group", response = ObservationUserPermission.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to fetch the permission", response = String.class) })
-
+	@Operation(summary = "Find all the user Permission for current observation", description = "Returns list of permission for validate post and feature in a group", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationUserPermission.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the permission", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getUserPermissions(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam("taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
+			@Parameter(description = "taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -825,10 +793,9 @@ public class ObservationController {
 	@Path(ApiConstants.TAGS + ApiConstants.AUTOCOMPLETE)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Find the Sugguestion for tags", notes = "Return list of Top 10 tags matching the phrase", response = Tags.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the tags", response = String.class) })
-
+	@Operation(summary = "Find the Suggestion for tags", description = "Return list of Top 10 tags matching the phrase", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Tags.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the tags", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getTagsSuggetion(@QueryParam("phrase") String phrase) {
 		try {
 			List<Tags> result = observationService.getTagsSugguestions(phrase);
@@ -842,10 +809,9 @@ public class ObservationController {
 	@Path(ApiConstants.USERGROUP)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Find all the userGroup Associated with a user", notes = "Returns a List of UserGroup", response = UserGroupIbp.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to get the userGroup", response = String.class) })
+	@Operation(summary = "Find all the userGroup Associated with a user", description = "Returns a List of UserGroup", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = UserGroupIbp.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the userGroup", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getUsersGroupList(@Context HttpServletRequest request) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
@@ -861,13 +827,12 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Flag a Observaiton", notes = "Return a list of flag to the Observaiton", response = FlagShow.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to flag a Observation", response = String.class),
-			@ApiResponse(code = 406, message = "User has already flagged", response = String.class) })
-
+	@Operation(summary = "Flag an Observation", description = "Return a list of flag to the Observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = FlagShow.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to flag an Observation", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "406", description = "User has already flagged", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response createFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
-			@ApiParam(name = "flagIbp") FlagIbp flagIbp) {
+			@Parameter(description = "flagIbp", required = true) FlagIbp flagIbp) {
 		try {
 			Long obsId = Long.parseLong(observationId);
 			List<FlagShow> result = observationService.createFlag(request, obsId, flagIbp);
@@ -885,12 +850,10 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Unflag a Observation", notes = "Return a list of flag to the Observation", response = FlagShow.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to unflag a Observation", response = String.class),
-			@ApiResponse(code = 406, message = "User is not allowed to unflag", response = String.class) })
-
+	@Operation(summary = "Unflag an Observation", description = "Return a list of flag to the Observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = FlagShow.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to unflag an Observation", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "406", description = "User is not allowed to unflag", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response unFlag(@Context HttpServletRequest request, @PathParam("observationId") String observationId,
 			@PathParam("flagId") String flagId) {
 		try {
@@ -909,10 +872,9 @@ public class ObservationController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Marks follow for a User", notes = "Returnt the follow details", response = Follow.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to mark follow", response = String.class) })
-
+	@Operation(summary = "Marks follow for a User", description = "Returns the follow details", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Follow.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to mark follow", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response followObservation(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId) {
 		try {
@@ -930,10 +892,9 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-
-	@ApiOperation(value = "Marks unfollow for a User", notes = "Returnt the unfollow details", response = Follow.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to mark unfollow", response = String.class) })
-
+	@Operation(summary = "Marks unfollow for a User", description = "Returns the unfollow details", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Follow.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to mark unfollow", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response unfollow(@Context HttpServletRequest request, @PathParam("observationId") String observationId) {
 
 		try {
@@ -949,11 +910,9 @@ public class ObservationController {
 	@Path(ApiConstants.AUTHOR + "/{observationId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
-
-	@ApiOperation(value = "Finds the authorId of the observation", notes = "Returns the authorid of a observation", response = String.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to fetch the authorid", response = String.class) })
-
+	@Operation(summary = "Finds the authorId of the observation", description = "Returns the authorid of an observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the authorid", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationAuthor(@PathParam("observationId") String observationId) {
 		try {
 			Long obvId = Long.parseLong(observationId);
@@ -968,12 +927,10 @@ public class ObservationController {
 	@Path(ApiConstants.APPLYFILTER + ApiConstants.POSTING)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
-
 	@ValidateUser
-	@ApiOperation(value = "Apply the new Filter Rule to post the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to start the process", response = String.class) })
-
+	@Operation(summary = "Apply the new Filter Rule to post the Observation Existings", description = "Starts the process to apply the Rule", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to start the process", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response applyNewFilterPosting(@Context HttpServletRequest request,
 			@QueryParam("groupIds") String groupIds) {
 		try {
@@ -998,12 +955,10 @@ public class ObservationController {
 	@Path(ApiConstants.APPLYFILTER + ApiConstants.REMOVING)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
-
 	@ValidateUser
-	@ApiOperation(value = "Apply the new Filter Rule to unpost the Observation Existings", notes = "Starts the process to apply the Rule", response = String.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to start the process", response = String.class) })
-
+	@Operation(summary = "Apply the new Filter Rule to unpost existing Observations", description = "Starts the process to apply the Rule", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to start the process", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response applyNewFilterRemoving(@Context HttpServletRequest request, @QueryParam("groupId") String groupId) {
 		try {
 
@@ -1027,13 +982,11 @@ public class ObservationController {
 	@POST
 	@Path(ApiConstants.APPLYGEOPRIVACY)
 	@Produces(MediaType.TEXT_PLAIN)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Bulk update the geoPrivate traits in all observation", notes = "Starts a process to update the geoPrivacy Field", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to start the process", response = String.class),
-			@ApiResponse(code = 406, message = "User not allowed to perform the task", response = String.class) })
-
+	@Operation(summary = "Bulk update the geoPrivate traits in all observation", description = "Starts a process to update the geoPrivacy Field", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to start the process", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "406", description = "User not allowed to perform the task", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response applyGeoPrivacy(@Context HttpServletRequest request) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
@@ -1054,13 +1007,10 @@ public class ObservationController {
 	@Path(ApiConstants.CUSTOMFIELD + ApiConstants.OPTIONS + "/{observationId}/{userGroupId}/{cfId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Finds the set of Values for a Custom Field", notes = "Returns the Set of Values of Custom Field", response = CustomFieldValues.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to get the value list", response = String.class) })
-
+	@Operation(summary = "Finds the set of Values for a Custom Field", description = "Returns the Set of Values of Custom Field", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = CustomFieldValues.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the value list", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getCustomFieldOptions(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId, @PathParam("userGroupId") String userGroupId,
 			@PathParam("cfId") String cfId) {
@@ -1078,15 +1028,12 @@ public class ObservationController {
 	@Path(ApiConstants.CUSTOMFIELD + ApiConstants.INSERT)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Insert/Update custom field Data", notes = "Return a complete customField Data for the Observaiton", response = CustomFieldObservationData.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to add/Update the data", response = String.class) })
-
+	@Operation(summary = "Insert/Update custom field Data", description = "Return a complete customField Data for the Observation", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = CustomFieldObservationData.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to add/Update the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response addUpdateCustomFieldData(@Context HttpServletRequest request,
-			@ApiParam(name = "factsCreateData") CustomFieldFactsInsert factsCreateData) {
+			@Parameter(description = "factsCreateData", required = true) CustomFieldFactsInsert factsCreateData) {
 		try {
 			List<CustomFieldObservationData> result = observationService.addUpdateCustomFieldData(request,
 					factsCreateData);
@@ -1101,10 +1048,9 @@ public class ObservationController {
 	@Path(ApiConstants.PRODUCE + "/{updateType}/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Publish the observationId to RabbitMQ", notes = "Return the result", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to push to rabbitMQ", response = String.class) })
-
+	@Operation(summary = "Publish the observationId to RabbitMQ", description = "Return the result", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to push to RabbitMQ", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response pushToRabbitMQ(@PathParam("updateType") String updateType,
 			@PathParam("observationId") String observationId) {
 		try {
@@ -1120,9 +1066,9 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-	@ApiOperation(value = "Get the observation create page data for ug context", notes = "Returns the create page data", response = ObservationUGContextCreatePageData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
-
+	@Operation(summary = "Get the observation create page data for UG context", description = "Returns the create page data", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationUGContextCreatePageData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getUGContextObservaitonCreate(@Context HttpServletRequest request,
 			@PathParam("userGroupId") String userGroupId) {
 		try {
@@ -1144,15 +1090,12 @@ public class ObservationController {
 	@Path(ApiConstants.CREATE + ApiConstants.UGCONTEXT)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "create observation on UG context", notes = "Returns the user observation id", response = Long.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to create the observation", response = String.class) })
-
+	@Operation(summary = "Create observation on UG context", description = "Returns the user observation id", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Long.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to create the observation", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response createObservationUGContext(@Context HttpServletRequest request,
-			@ApiParam(name = "observationUGContext") ObservationCreateUGContext observationUGContext) {
+			@Parameter(description = "observationUGContext", required = true) ObservationCreateUGContext observationUGContext) {
 		try {
 			if (observationUGContext.getObservationData().getObservedOn() == null)
 				throw new ObservationInputException("Observation Date Cannot be BLANK");
@@ -1190,14 +1133,12 @@ public class ObservationController {
 	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + ApiConstants.MAXVOTEDRECO)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "find the the maxvoted reco permission for list page", notes = "Return list of observationId with boolean value for permission", response = MaxVotedRecoPermission.class, responseContainer = "list")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the result", response = String.class) })
-
+	@Operation(summary = "Find the maxvoted reco permission for list page", description = "Return list of observationId with boolean value for permission", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = MaxVotedRecoPermission.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the result", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getPermissionListMaxVotedRecos(@Context HttpServletRequest request,
-			@ApiParam(name = "observationTaxonId") Map<Long, Long> observationTaxonId) {
+			@Parameter(description = "observationTaxonId", required = true) Map<Long, Long> observationTaxonId) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			List<MaxVotedRecoPermission> result = observationService.listMaxRecoVotePermissions(request, profile,
@@ -1212,15 +1153,13 @@ public class ObservationController {
 	@Path(ApiConstants.LIST + ApiConstants.PERMISSIONS + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "search for the permission in list page for a user", notes = "Returns the permission details for the user", response = ListPagePermissions.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "Unable to fetch the details", response = String.class) })
+	@Operation(summary = "Search for the permission in list page for a user", description = "Returns the permission details for the user", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ListPagePermissions.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the details", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getLisPagePermissions(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam("taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
+			@Parameter(description = "taxonList") @DefaultValue("") @QueryParam("taxonList") String taxonList) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long obvId = Long.parseLong(observationId);
@@ -1235,14 +1174,12 @@ public class ObservationController {
 	@Path(ApiConstants.ADD)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Adds a comment", notes = "Return the current activity", response = Activity.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to log a comment", response = String.class) })
-
+	@Operation(summary = "Adds a comment", description = "Returns the current activity", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Activity.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to log a comment", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response addCommnet(@Context HttpServletRequest request,
-			@ApiParam(name = "commentData") CommentLoggingData commentDatas) {
+			@Parameter(description = "commentData", required = true) CommentLoggingData commentDatas) {
 		try {
 			Activity result = observationService.addObservationComment(request, commentDatas);
 			return Response.status(Status.OK).entity(result).build();
@@ -1256,14 +1193,13 @@ public class ObservationController {
 	@Path(ApiConstants.DELETE + ApiConstants.COMMENT + "/{commentId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Deletes a comment", notes = "Return the current activity", response = Activity.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to log a comment", response = String.class) })
-
+	@Operation(summary = "Deletes a comment", description = "Returns the current activity", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Activity.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to log a comment", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response deleteCommnet(@Context HttpServletRequest request,
-			@ApiParam(name = "commentData") CommentLoggingData commentDatas, @PathParam("commentId") String commentId) {
+			@Parameter(description = "commentData", required = true) CommentLoggingData commentDatas,
+			@PathParam("commentId") String commentId) {
 		try {
 			Activity result = observationService.removeObservationComment(request, commentDatas, commentId);
 			return Response.status(Status.OK).entity(result).build();
@@ -1277,10 +1213,10 @@ public class ObservationController {
 	@Path(ApiConstants.FIND)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "finds observation data on basis of resourceURl", notes = "returns the observation data", response = ObservationHomePage.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-	public Response getObservation(@ApiParam("resourcesURLs") String resourcesUrl) {
+	@Operation(summary = "Finds observation data on basis of resourceURl", description = "Returns the observation data", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationHomePage.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response getObservation(@Parameter(description = "resourcesURLs", required = true) String resourcesUrl) {
 		try {
 			List<ObservationHomePage> result = observationListService.getObservation(resourcesUrl);
 			return Response.status(Status.OK).entity(result).build();
@@ -1293,10 +1229,9 @@ public class ObservationController {
 	@Path(ApiConstants.MINIMAL + "/{observationId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Gets the observationData", notes = "Returns the observation Data", response = ObservationListMinimalData.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Gets the observationData", description = "Returns the observation Data", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationListMinimalData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationMinimal(@PathParam("observationId") String observationId) {
 		try {
 			ObservationListMinimalData result = observationListService.getObservationMinimal(observationId);
@@ -1310,15 +1245,13 @@ public class ObservationController {
 	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + ApiConstants.RATING + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "update the rating for gallery resource", notes = "Returns the success or failuer", response = String.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "unable to update the rating", response = String.class) })
+	@Operation(summary = "Update the rating for gallery resource", description = "Returns the success or failure", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Unable to update the rating", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response gallaryRatingUpdate(@Context HttpServletRequest request,
 			@PathParam("observationId") String observationId,
-			@ApiParam(name = "resourceRating") ResourceRating resourceRating) {
+			@Parameter(description = "resourceRating", required = true) ResourceRating resourceRating) {
 		try {
 			Long obvId = Long.parseLong(observationId);
 			Boolean result = observationService.updateGalleryResourceRating(request, obvId, resourceRating);
@@ -1335,8 +1268,9 @@ public class ObservationController {
 	@Path(ApiConstants.PUBLICATIONGRADE + "/{index}/{type}/{documentId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Fetch the observation based on the filter", notes = "Returns the observation list based on the the filters", response = PublicationGrade.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+	@Operation(summary = "Fetch the observation based on the filter", description = "Returns the observation list based on the filters", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = PublicationGrade.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationPublicationGrade(@PathParam("index") String index, @PathParam("type") String type,
 			@PathParam("documentId") String documentId) {
 		ObservationListElasticMapping obervation = observationService.getObservationPublicationGrade(index, type,
@@ -1352,8 +1286,9 @@ public class ObservationController {
 	@Path(ApiConstants.LISTDOWNLOAD)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "fetch the download log table based on filter", notes = "Returns list of download log based on filter", response = DownloadLog.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+	@Operation(summary = "Fetch the download log table based on filter", description = "Returns list of download log based on filter", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = DownloadLog.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response fetchDownloadLog(@DefaultValue("") @QueryParam("authorid") String authorId,
 			@DefaultValue("") @QueryParam("filetype") String fileType,
 			@DefaultValue("-1") @QueryParam("offset") String offSet,
@@ -1371,10 +1306,9 @@ public class ObservationController {
 	@Path(ApiConstants.USERINFO + ApiConstants.UPLOADED + "/{userId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "search for the unique species uploaded by user", notes = "returns the total and unique species list", response = ObservationUserPageInfo.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Search for the unique species uploaded by user", description = "Returns the total and unique species list", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationUserPageInfo.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationUploadedUserInfo(@PathParam("userId") String userId,
 			@QueryParam("sGroupId") String sGroupIds, @DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia,
 			@DefaultValue("0") @QueryParam("offset") String offset) {
@@ -1398,10 +1332,9 @@ public class ObservationController {
 	@Path(ApiConstants.USERINFO + ApiConstants.IDENTIFIED + "/{userId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "search for the unique species identified by user", notes = "returns the total and unique species list", response = ObservationUserPageInfo.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Search for the unique species identified by user", description = "Returns the total and unique species list", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationUserPageInfo.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationIdentifiedUserInfo(@PathParam("userId") String userId,
 			@QueryParam("sGroupId") String sGroupIds, @DefaultValue("true") @QueryParam("hasMedia") Boolean hasMedia,
 			@DefaultValue("0") @QueryParam("offset") String offset) {
@@ -1424,12 +1357,12 @@ public class ObservationController {
 	@Path(ApiConstants.BULK + ApiConstants.OBSERVATION)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-	@ApiOperation(value = "Perform Bulk Upload of Observations", notes = "empty response")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "unable to perform bulk upload", response = String.class) })
-	public Response bulkObservationUpload(@Context HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+	@Operation(summary = "Perform Bulk Upload of Observations", description = "Empty response", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Long.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to perform bulk upload", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response bulkObservationUpload(@Context HttpServletRequest request,
+			@Parameter(description = "observationBulkData", required = true) ObservationBulkDTO observationBulkData) {
 		try {
 
 			if (!observationBulkData.getWktString().isEmpty()) {
@@ -1460,10 +1393,9 @@ public class ObservationController {
 	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Return showDataTableObservation by datatable id", notes = "returns list of  observations", response = ShowObervationDataTable.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Return showDataTableObservation by datatable id", description = "Returns list of observations", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ShowObervationDataTable.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getObservationDatatableId(@Context HttpServletRequest request,
 			@PathParam("dataTableId") String dataTableId, @DefaultValue("0") @QueryParam("offset") String Offset,
 			@DefaultValue("12") @QueryParam("limit") String Limit) {
@@ -1485,13 +1417,12 @@ public class ObservationController {
 	@Path("/update/userGroup/datatable/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "", notes = "", response = com.strandls.dataTable.pojo.UserGroupIbp.class, responseContainer = "List")
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "", response = String.class) })
-
+	@Operation(summary = "Update user groups for a datatable", description = "Updates the user groups associated with a datatable", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = com.strandls.dataTable.pojo.UserGroupIbp.class, type = "array"))),
+			@ApiResponse(responseCode = "400", description = "Unable to update user groups", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updateDatatableUserGroups(@Context HttpServletRequest request,
 			@PathParam("dataTableId") Long dataTableId,
-			@ApiParam("DatatableUserGroupUpdateData") DatatableUserGroupUpdateData datatableUgUpdateData) {
+			@Parameter(description = "DatatableUserGroupUpdateData", required = true) DatatableUserGroupUpdateData datatableUgUpdateData) {
 
 		try {
 
@@ -1509,11 +1440,10 @@ public class ObservationController {
 	@Path(ApiConstants.DATATABLEOBSERVATION + ApiConstants.LIST + "/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
-	@ApiOperation(value = "Return Observation list by datatable id", notes = "returns list of  observations", response = ObservationDatatableList.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
-	public Response getObservationDatatableId(@PathParam("dataTableId") String dataTableId,
+	@Operation(summary = "Return Observation list by datatable id", description = "Returns list of observations", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationDatatableList.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch the data", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response getObservationDatatableList(@PathParam("dataTableId") String dataTableId,
 			@DefaultValue("0") @QueryParam("offset") String Offset,
 			@DefaultValue("10") @QueryParam("limit") String Limit) {
 
@@ -1536,12 +1466,11 @@ public class ObservationController {
 	@Path(ApiConstants.DATATABLEOBSERVATION + "/{dataTableId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ValidateUser
-
-	@ApiOperation(value = "Return observations by datatable id", notes = "returns list of  observations", response = String.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
-
+	@Operation(summary = "Delete observations by datatable id", description = "Deletes observations associated with a given datatable ID", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to delete observations", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Datatable not found", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response deleteObservaionByDatatableId(@Context HttpServletRequest request,
 			@PathParam("dataTableId") String dataTableId) {
 
@@ -1562,12 +1491,12 @@ public class ObservationController {
 
 	@POST
 	@Path(ApiConstants.SPECIES + ApiConstants.PULL + "/{taxonId}")
-	@ApiOperation(value = "validate the observation pulled to speciesPage", notes = "returns Boolean Values", response = Boolean.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "unable to validate the Observations", response = String.class) })
-
+	@Operation(summary = "Validate the observation pulled to speciesPage", description = "Returns Boolean Values", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Boolean.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to validate the Observations", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response speciesPullObservationValidation(@Context HttpServletRequest request,
-			@PathParam("taxonId") String taxonId, @ApiParam(name = "observationList") List<Long> observationIds) {
+			@PathParam("taxonId") String taxonId,
+			@Parameter(description = "observationList", required = true) List<Long> observationIds) {
 		try {
 			Long taxId = Long.parseLong(taxonId);
 			Boolean result = observationService.speciesObservationValidate(request, taxId, observationIds);
@@ -1582,6 +1511,9 @@ public class ObservationController {
 	@Path(ApiConstants.CROPIMAGERESOURCES + "/{observationId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(summary = "Get image crop resources for an observation", description = "Returns the resources associated with an observation for image cropping", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Resources.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to fetch resources", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response getImageCropResources(@PathParam("observationId") Long observationId) {
 		try {
 			Resources result = observationService.getObservationResources(observationId);
@@ -1597,8 +1529,12 @@ public class ObservationController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
+	@Operation(summary = "Update image crop resources for an observation", description = "Updates the resources associated with an observation for image cropping", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = Resources.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to update resources", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response updatedImageCropResources(@Context HttpServletRequest request,
-			@PathParam("observationId") Long observationId, Resources resourcesUpdateData) {
+			@PathParam("observationId") Long observationId,
+			@Parameter(description = "resourcesUpdateData", required = true) Resources resourcesUpdateData) {
 
 		try {
 
@@ -1611,5 +1547,4 @@ public class ObservationController {
 		}
 
 	}
-
 }

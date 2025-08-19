@@ -16,8 +16,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +35,8 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.Traits;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -414,7 +414,8 @@ public class ESUtility {
 									List<Object> listOfIds = cSTSOT(Ids);
 									List<Object> traitValueList = new ArrayList<Object>();
 									for (Object o : listOfIds) {
-										String valueList = trait.getName() + "|" + key.split("_")[1].toString() + "|" + o.toString();
+										String valueList = trait.getName() + "|" + key.split("_")[1].toString() + "|"
+												+ o.toString();
 										traitValueList.add(valueList);
 									}
 									boolAndLists.add(assignBoolAndQuery(ObservationIndex.TRAITSAGGREGATION.getValue(),

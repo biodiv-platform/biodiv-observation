@@ -19,8 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,13 +47,15 @@ import com.strandls.observation.es.util.ObservationListPageMapper;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
+import com.strandls.observation.pojo.ObservationDataByUser;
 import com.strandls.observation.pojo.ObservationHomePage;
 import com.strandls.observation.pojo.ObservationListData;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.TopUploadersInfo;
 import com.strandls.observation.service.ObservationListService;
-import com.strandls.observation.pojo.ObservationDataByUser;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -539,7 +539,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> traitsAggregationMap = mapAggResponse.get("traits").getGroupAggregation();
 
 		for (Traits trait : traitList) {
-			Map<String, Map<String,Object>> traitValueMap = new LinkedHashMap<>();
+			Map<String, Map<String, Object>> traitValueMap = new LinkedHashMap<>();
 
 			for (TraitValue value : trait.getTraitValues()) {
 				String[] valueParts = value.getValue().split("_", 2);

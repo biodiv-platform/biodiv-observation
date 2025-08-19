@@ -2,6 +2,7 @@ package com.strandls.observation.service.Impl;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,9 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -22,11 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
@@ -47,7 +46,7 @@ import com.strandls.traits.pojo.FactsCreateData;
 import com.strandls.traits.pojo.TraitsValue;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.userGroup.controller.CustomFieldServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.CustomFieldDetails;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsert;
 import com.strandls.userGroup.pojo.CustomFieldFactsInsertData;
@@ -62,6 +61,9 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ObservationBulkMapperHelper {
 
@@ -83,13 +85,10 @@ public class ObservationBulkMapperHelper {
 	ResourceServicesApi resourceServicesApi;
 
 	@Inject
-	UserGroupSerivceApi userGroupServiceApi;
+	UserGroupServiceApi userGroupServiceApi;
 
 	@Inject
 	CustomFieldServiceApi cfServiceApi;
-
-	@Inject
-	UserGroupSerivceApi userGroupSerivceApi;
 
 	@Inject
 	LogActivities logActivities;
@@ -107,7 +106,7 @@ public class ObservationBulkMapperHelper {
 	private ObservationDAO observationDAO;
 
 	@Inject
-	private IntergratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 	@Inject
 	private Headers headers;
 
@@ -543,7 +542,9 @@ public class ObservationBulkMapperHelper {
 			files.setModule("observation");
 
 			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
-			Map<String, Object> fileResponse = fileUploadApi.moveFiles(files);
+			String json = fileUploadApi.moveFiles(files).getData().toString();
+			Map<String, Object> fileResponse = new ObjectMapper().readValue(json, new TypeReference<>() {
+			});
 			if (fileResponse != null && !fileResponse.isEmpty()) {
 				List<Resource> resources = mapFileResponseToResource(fieldMapping, dataRow, licenses, fileResponse,
 						userId);
@@ -612,7 +613,7 @@ public class ObservationBulkMapperHelper {
 				resource.setFileName(values.get("name"));
 				resource.setUrl(null);
 				resource.setRating(null);
-				resource.setUploadTime(new Date());
+				resource.setUploadTime(Date.from(ZonedDateTime.now().toInstant()));
 				resource.setUploaderId(userId);
 				resource.setContext("OBSERVATION");
 				resource.setLanguageId(defaultLanguageId);
@@ -776,15 +777,14 @@ public class ObservationBulkMapperHelper {
 	public void updateUserGroupFilter(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
-			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation", observation.getId().toString());
+			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation",
+					observation.getId().toString());
 			Map<String, List<Long>> facts = traits.stream()
-		    .collect(Collectors.groupingBy(
-		    		trait -> trait.getNameId().toString(), 
-		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-		        ));
+					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
-			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-			intergratorService.getFilterRule(ugObvFilterData);
+			integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+			integratorService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
@@ -794,15 +794,14 @@ public class ObservationBulkMapperHelper {
 	public void updateUserGroupFilterForDatatable(String requestAuthHeader, Observation observation) {
 		try {
 			UserGroupObvRuleData ugObvFilterData = observationMapperHelper.getUGObvRuleData(observation);
-			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation", observation.getId().toString());
+			List<FactValuePair> traits = traitServiceApi.getFacts("species.participation.Observation",
+					observation.getId().toString());
 			Map<String, List<Long>> facts = traits.stream()
-		    .collect(Collectors.groupingBy(
-		    		trait -> trait.getNameId().toString(), 
-		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-		        ));
+					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
-			intergratorService = headers.addIntergratorHeader(intergratorService, requestAuthHeader);
-			intergratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
+			integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+			integratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());

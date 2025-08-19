@@ -87,7 +87,7 @@ public class MapAggregationStatsResponse {
 	public void setmaxDate(String maxDate) {
 		this.maxDate = maxDate;
 	}
-	
+
 	public String getMinDate() {
 		return minDate;
 	}

@@ -2,14 +2,14 @@ package com.strandls.observation.util;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.esmodule.ApiException;
 import com.strandls.observation.pojo.Observation;
 import com.strandls.observation.service.Impl.ObservationServiceImpl;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Used for delete bulk observation by datatable id api, will be modified once

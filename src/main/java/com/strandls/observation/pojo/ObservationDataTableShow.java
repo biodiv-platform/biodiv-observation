@@ -15,7 +15,7 @@ public class ObservationDataTableShow {
 	private Long sGroup;
 
 	private String fromDate;
-	
+
 	private String toDate;
 
 	private String observedAt;
@@ -33,7 +33,7 @@ public class ObservationDataTableShow {
 	private Boolean geoPrivacy;
 
 	private Map<String, Object> checklistAnnotation;
-	
+
 	private UserIbp userInfo;
 
 	public ObservationDataTableShow() {
@@ -159,6 +159,5 @@ public class ObservationDataTableShow {
 	public void setToDate(String toDate) {
 		this.toDate = toDate;
 	}
-
 
 }

@@ -6,8 +6,6 @@ package com.strandls.observation.service;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.RecoCreate;
@@ -16,6 +14,8 @@ import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.UniqueSpeciesInfo;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Abhishek Rudra

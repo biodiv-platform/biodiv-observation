@@ -158,5 +158,4 @@ public class MapAggregationResponse {
 		this.geoEntity = geoEntity;
 	}
 
-
 }

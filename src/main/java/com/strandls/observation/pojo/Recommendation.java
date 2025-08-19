@@ -6,14 +6,14 @@ package com.strandls.observation.pojo;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 /**
  * @author Abhishek Rudra
@@ -170,8 +170,7 @@ public class Recommendation implements Serializable {
 	public void setAcceptedNameId(Long acceptedNameId) {
 		this.acceptedNameId = acceptedNameId;
 	}
-	
-	
+
 	@Column(name = "canonical_name")
 	public String getCanonicalName() {
 		return canonicalName;

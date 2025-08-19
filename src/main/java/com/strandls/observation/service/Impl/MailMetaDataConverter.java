@@ -1,6 +1,7 @@
 package com.strandls.observation.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.strandls.activity.pojo.UserGroupMailData;
@@ -17,7 +18,8 @@ public class MailMetaDataConverter {
 		observationMeta.setIconURl(mailData.getObservationData().getIconURl());
 		observationMeta.setLocation(mailData.getObservationData().getLocation());
 		observationMeta.setObservationId(mailData.getObservationData().getObservationId());
-		observationMeta.setObservedOn(mailData.getObservationData().getObservedOn());
+		Date odt = mailData.getObservationData().getObservedOn();
+		observationMeta.setObservedOn(odt == null ? null : Date.from(odt.toInstant()));
 		observationMeta.setScientificName(mailData.getObservationData().getScientificName());
 		List<com.strandls.traits.pojo.UserGroupMailData> userGroupMeta = new ArrayList<com.strandls.traits.pojo.UserGroupMailData>();
 		for (UserGroupMailData userGroupData : mailData.getUserGroupData()) {
@@ -41,7 +43,8 @@ public class MailMetaDataConverter {
 		observationMeta.setIconURl(mailData.getObservationData().getIconURl());
 		observationMeta.setLocation(mailData.getObservationData().getLocation());
 		observationMeta.setObservationId(mailData.getObservationData().getObservationId());
-		observationMeta.setObservedOn(mailData.getObservationData().getObservedOn());
+		Date odt = mailData.getObservationData().getObservedOn();
+		observationMeta.setObservedOn(odt == null ? null : Date.from(odt.toInstant()));
 		observationMeta.setScientificName(mailData.getObservationData().getScientificName());
 		List<com.strandls.userGroup.pojo.UserGroupMailData> userGroupMeta = new ArrayList<com.strandls.userGroup.pojo.UserGroupMailData>();
 		for (UserGroupMailData userGroupData : mailData.getUserGroupData()) {
@@ -66,7 +69,8 @@ public class MailMetaDataConverter {
 		observationMeta.setIconURl(mailData.getObservationData().getIconURl());
 		observationMeta.setLocation(mailData.getObservationData().getLocation());
 		observationMeta.setObservationId(mailData.getObservationData().getObservationId());
-		observationMeta.setObservedOn(mailData.getObservationData().getObservedOn());
+		Date odt = mailData.getObservationData().getObservedOn();
+		observationMeta.setObservedOn(odt == null ? null : Date.from(odt.toInstant()));
 		observationMeta.setScientificName(mailData.getObservationData().getScientificName());
 		List<com.strandls.utility.pojo.UserGroupMailData> userGroupMeta = new ArrayList<com.strandls.utility.pojo.UserGroupMailData>();
 		for (UserGroupMailData userGroupData : mailData.getUserGroupData()) {

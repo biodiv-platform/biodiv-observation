@@ -2,17 +2,14 @@ package com.strandls.observation.service.Impl;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.net.HttpHeaders;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
-import com.strandls.integrator.controllers.IntergratorServicesApi;
+import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.es.util.ESUpdate;
@@ -24,8 +21,11 @@ import com.strandls.observation.util.ObservationCreateThread;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.traits.controller.TraitsServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.utility.controller.UtilityServiceApi;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ObservationCreateServiceImpl implements ObservationCreateService {
 
@@ -44,7 +44,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	private ResourceServicesApi resourceService;
 
 	@Inject
-	private UserGroupSerivceApi userGroupService;
+	private UserGroupServiceApi userGroupService;
 
 	@Inject
 	private RecommendationServiceImpl recoService;
@@ -59,7 +59,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	private ESUpdate esUpdate;
 
 	@Inject
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 
 	@Inject
 	private Headers headers;
@@ -68,7 +68,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 	private ObservationServiceImpl observationImpl;
 
 	@Inject
-	private IntergratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 
 	@Override
 	public Long createObservation(HttpServletRequest request, ObservationCreate observationData, Boolean updateEs) {
@@ -108,7 +108,7 @@ public class ObservationCreateServiceImpl implements ObservationCreateService {
 
 			ObservationCreateThread createThread = new ObservationCreateThread(request, esUpdate, observation,
 					observationData, headers, traitService, utilityServices, userGroupService, logActivity,
-					activityService, observationImpl, intergratorService, updateEs);
+					activityService, observationImpl, integratorService, updateEs);
 			Thread thread = new Thread(createThread);
 			thread.start();
 

@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +46,10 @@ import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.utility.controller.UtilityServiceApi;
 import com.strandls.utility.pojo.ParsedName;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 /**
  * @author Abhishek Rudra

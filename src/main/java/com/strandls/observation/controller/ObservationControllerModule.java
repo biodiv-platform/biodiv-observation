@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.strandls.observation.contorller;
+package com.strandls.observation.controller;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

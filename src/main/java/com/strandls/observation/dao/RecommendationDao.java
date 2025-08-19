@@ -11,10 +11,10 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.util.AbstractDAO;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra

@@ -6,20 +6,18 @@ package com.strandls.observation.es.util;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.Id;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
-
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 
 /**
  * @author Abhishek Rudra
@@ -69,7 +67,6 @@ import com.vladmihalcea.hibernate.type.json.JsonStringType;
 				@FieldResult(name = "facts", column = "facts") }) }) })
 
 @Entity
-@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class) })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationESDocument {
 
@@ -82,10 +79,10 @@ public class ObservationESDocument {
 	private Long group_id;
 	private String group_name;
 	private String sgroup_filter;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private Location location;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private LocationInformation location_information;
 	private Integer reco_vote_count;
@@ -119,31 +116,31 @@ public class ObservationESDocument {
 	private Integer no_of_identifications;
 	private Long data_table_id;
 	private String date_accuracy;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private Max_voted_reco max_voted_reco;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<All_reco_vote> all_reco_vote;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Observation_resource> observation_resource;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Custom_fields> custom_fields;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<User_group_observations> user_group_observations;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Tags> tags;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Flags> flags;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Featured> featured;
-	@Type(type = "json")
+	@Type(JsonStringType.class)
 	@Column(columnDefinition = "json")
 	private List<Facts> facts;
 	private Boolean is_publication_grade;
