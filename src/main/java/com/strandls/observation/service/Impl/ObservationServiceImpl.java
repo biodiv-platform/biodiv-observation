@@ -712,7 +712,7 @@ public class ObservationServiceImpl implements ObservationService {
 					}
 				}
 
-				allowedUserGroup = userGroupService.getAllUserGroup();
+				allowedUserGroup = userGroupService.getAllUserGroup("");
 				for (UserGroupIbp ug : allowedUserGroup) {
 					userGroupFeatureRole.add(ug.getId());
 				}
@@ -797,7 +797,7 @@ public class ObservationServiceImpl implements ObservationService {
 			List<UserGroupIbp> allowedUserGroup = null;
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
-				allowedUserGroup = userGroupService.getAllUserGroup();
+				allowedUserGroup = userGroupService.getAllUserGroup("");
 			} else {
 
 				userGroupService = headers.addUserGroupHeader(userGroupService,
