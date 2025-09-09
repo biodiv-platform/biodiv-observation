@@ -394,7 +394,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				if (parsedName == null)
 					errorList.add(recommendation.getId());
 				else {
-					recommendation.setCanonicalName(parsedName.getCanonicalName().getSimple());
+					recommendation.setCanonicalName(parsedName.getCanonical().getSimple());
 					recoDao.update(recommendation);
 					counter++;
 					System.out.println("COUNTER :" + counter);
