@@ -477,7 +477,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
 					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
 
@@ -485,7 +485,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
 					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
 

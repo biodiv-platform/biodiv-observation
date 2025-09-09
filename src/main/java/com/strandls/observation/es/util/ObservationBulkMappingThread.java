@@ -2,6 +2,7 @@ package com.strandls.observation.es.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +40,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkMappingThread.class);
 
 	private enum BULK_ACTION {
-		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting");
+		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting");
 
 		private String action;
 
@@ -56,6 +57,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private String bulkAction;
 	private String bulkObservationIds;
 	private String bulkUsergroupIds;
+	private String bulkSpeciesGroupId;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -77,7 +79,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private TraitsServiceApi traitService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
@@ -89,6 +91,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.bulkAction = bulkAction;
 		this.bulkObservationIds = bulkObservationIds;
 		this.bulkUsergroupIds = bulkUsergroupIds;
+		this.bulkSpeciesGroupId = bulkSpeciesGroupId;
 		this.mapSearchQuery = mapSearchQuery;
 		this.ugService = ugService;
 		this.index = index;
@@ -129,7 +132,9 @@ public class ObservationBulkMappingThread implements Runnable {
 						Arrays.stream(bulkUsergroupIds.split(",")).map(Long::valueOf).collect(Collectors.toList()));
 			}
 
-			if (!oservationIds.isEmpty()) {
+			if (!oservationIds.isEmpty() && !bulkAction.isEmpty()
+					&& (bulkAction.contains(BULK_ACTION.UG_BULK_POSTING.getAction())
+							|| bulkAction.contains(BULK_ACTION.UG_BULK_UNPOSTING.getAction()))) {
 				List<Observation> obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
 				for (Observation obs : obsDataList) {
@@ -155,7 +160,9 @@ public class ObservationBulkMappingThread implements Runnable {
 
 			}
 
-			if (Boolean.TRUE.equals(selectAll)) {
+			if (Boolean.TRUE.equals(selectAll) && !bulkAction.isEmpty()
+					&& (bulkAction.contains(BULK_ACTION.UG_BULK_POSTING.getAction())
+							|| bulkAction.contains(BULK_ACTION.UG_BULK_UNPOSTING.getAction()))) {
 
 				MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
 						onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
@@ -221,6 +228,43 @@ public class ObservationBulkMappingThread implements Runnable {
 				bulkGroupAction(ugObsList, ugIds);
 				ugObsList.clear();
 			}
+			
+			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.SPECIES_BULK_POSTING.getAction()))) {
+				List<Observation> obsDataList = new ArrayList<Observation>();
+				if (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty()) {
+					Long sGroupId = Long.parseLong(bulkSpeciesGroupId);
+					if (!oservationIds.isEmpty()) {
+						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+					}
+					if (Boolean.TRUE.equals(selectAll)) {
+						MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+						List<MapDocument> documents = result.getDocuments();
+						for (MapDocument document : documents) {
+							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									Observation.class);
+							obsDataList.add(data);
+						}
+					}
+					List<Observation> ObsList = new ArrayList<Observation>();
+					;
+					Integer count = 0;
+
+					while (count < obsDataList.size()) {
+						ObsList.add(obsDataList.get(count));
+
+						if (ObsList.size() >= 200) {
+							bulkSpeciesGroupAction(ObsList, sGroupId);
+							ObsList.clear();
+						}
+						count++;
+					}
+
+					bulkSpeciesGroupAction(ObsList, sGroupId);
+					ObsList.clear();
+				}
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -265,6 +309,19 @@ public class ObservationBulkMappingThread implements Runnable {
 			esThreadUpdate.start();
 
 		}
+	}
+	
+	private void bulkSpeciesGroupAction(List<Observation> obsList, Long sGroupId) {
+		for (Observation observation : obsList) {
+			observation.setGroupId(sGroupId);
+			observation.setLastRevised(new Date());
+			observation = observationDao.update(observation);
+		}
+		List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
+		String observationList = StringUtils.join(obsIds, ',');
+		ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+		Thread esThreadUpdate = new Thread(updateThread);
+		esThreadUpdate.start();
 	}
 
 }

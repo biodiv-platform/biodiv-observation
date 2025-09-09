@@ -184,7 +184,7 @@ public class ObservationController {
 
 	@Inject
 	private ESUpdate esUpdate;
-	
+
 	@Inject
 	private TraitsServiceApi traitService;
 
@@ -456,6 +456,7 @@ public class ObservationController {
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkSpeciesGroupId") String bulkSpeciesGroupId,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
 			@DefaultValue("false") @QueryParam("showData") String showData,
 			@DefaultValue("") @QueryParam("statsFilter") String statsFilter,
@@ -537,14 +538,18 @@ public class ObservationController {
 			}
 
 			else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
-					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					&& !bulkObservationIds.isEmpty()
+					&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
+							|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty()))
 					&& view.equalsIgnoreCase("bulkMapping"))
-					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					|| (Boolean.TRUE.equals(selectAll)
+							&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
+									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty()))
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
-						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
+						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
 						request, headers, objectMapper, intergratorService, esUpdate, traitService);
@@ -561,12 +566,12 @@ public class ObservationController {
 
 				if (offset == 0) {
 					if (showData.equals("false") && statsFilter.isEmpty()) {
-					aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
-							userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate, maxDate,
-							validate, traitParams, customParams, classificationid, mapSearchParams, maxVotedReco,
-							recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName, geoAggregationField,
-							rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
-							dataTableName, geoEntity, dataTableId);
+						aggregationResult = observationListService.mapAggregate(index, type, sGroup, taxon, user,
+								userGroupList, webaddress, speciesName, mediaFilter, months, isFlagged, minDate,
+								maxDate, validate, traitParams, customParams, classificationid, mapSearchParams,
+								maxVotedReco, recoId, createdOnMaxDate, createdOnMinDate, status, taxonId, recoName,
+								geoAggregationField, rank, tahsil, district, state, tags, publicationGrade, authorVoted,
+								dataSetName, dataTableName, geoEntity, dataTableId);
 					}
 
 					if (view.equalsIgnoreCase("stats") && !statsFilter.isEmpty()) {
@@ -785,7 +790,8 @@ public class ObservationController {
 	@ApiOperation(value = "Find all Trait Values pair for Specific SpeciesId", notes = "Return the Key value pairs of Traits", response = TraitsValuePair.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Species Not Found", response = String.class) })
 
-	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId, @PathParam("languageId") String languageId) {
+	public Response getTraitList(@PathParam("speciesGroupId") String speciesGroupId,
+			@PathParam("languageId") String languageId) {
 		try {
 			List<TraitsValuePair> result = observationService.getTraitList(speciesGroupId, languageId);
 			return Response.status(Status.OK).entity(result).build();
