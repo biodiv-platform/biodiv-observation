@@ -11,10 +11,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.commons.lang3.StringUtils;
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -27,6 +29,9 @@ import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.RecoCreate;
+import com.strandls.observation.pojo.RecoData;
+import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
@@ -40,7 +45,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkMappingThread.class);
 
 	private enum BULK_ACTION {
-		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting");
+		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting"), RECO_BULK_POSTING("recoBulkPosting");
 
 		private String action;
 
@@ -58,6 +63,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private String bulkObservationIds;
 	private String bulkUsergroupIds;
 	private String bulkSpeciesGroupId;
+	private RecoData bulkRecoSuggestion;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -77,21 +83,23 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final ESUpdate esUpdate;
 	private IntergratorServicesApi intergratorService;
 	private TraitsServiceApi traitService;
+	private RecommendationService recoService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, String bulkSpeciesGroupId, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, RecoData bulkRecoSuggestion, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
 			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
 		this.bulkObservationIds = bulkObservationIds;
 		this.bulkUsergroupIds = bulkUsergroupIds;
 		this.bulkSpeciesGroupId = bulkSpeciesGroupId;
+		this.bulkRecoSuggestion = bulkRecoSuggestion;
 		this.mapSearchQuery = mapSearchQuery;
 		this.ugService = ugService;
 		this.index = index;
@@ -111,6 +119,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.intergratorService = intergratorService;
 		this.esUpdate = esUpdate;
 		this.traitService = traitService;
+		this.recoService = recoService;
 	}
 
 	@Override
@@ -265,6 +274,43 @@ public class ObservationBulkMappingThread implements Runnable {
 					ObsList.clear();
 				}
 			}
+			
+			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.RECO_BULK_POSTING.getAction()))) {
+				List<Observation> obsDataList = new ArrayList<Observation>();
+				if (bulkRecoSuggestion != null) {
+					if (!oservationIds.isEmpty()) {
+						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+					}
+					if (Boolean.TRUE.equals(selectAll)) {
+						MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+						List<MapDocument> documents = result.getDocuments();
+						for (MapDocument document : documents) {
+							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									Observation.class);
+							obsDataList.add(data);
+						}
+					}
+					List<Observation> ObsList = new ArrayList<Observation>();
+					;
+					Integer count = 0;
+
+					while (count < obsDataList.size()) {
+						ObsList.add(obsDataList.get(count));
+
+						if (ObsList.size() >= 200) {
+							bulkRecoSuggestionAction(ObsList, bulkRecoSuggestion);
+							ObsList.clear();
+						}
+						count++;
+					}
+
+					bulkRecoSuggestionAction(ObsList, bulkRecoSuggestion);
+					ObsList.clear();
+				}
+			}
+
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -322,6 +368,20 @@ public class ObservationBulkMappingThread implements Runnable {
 		ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 		Thread esThreadUpdate = new Thread(updateThread);
 		esThreadUpdate.start();
+	}
+	
+	private void bulkRecoSuggestionAction(List<Observation> obsList, RecoData recoData) {
+		for (Observation observation : obsList) {
+			try {
+				CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+				Long userId = Long.parseLong(profile.getId());
+				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
+				recoService.createRecoVote(request, userId, observation.getId(),
+						recoData.getScientificNameTaxonId(), recoCreate, false);
+				
+			} catch (Exception e) {
+			}
+		}
 	}
 
 }
