@@ -49,6 +49,7 @@ import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
+import com.strandls.observation.util.PropertyFileUtil;
 import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -129,6 +130,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private IntergratorServicesApi intergratorService;
+	
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -477,17 +481,17 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
+					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
+					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

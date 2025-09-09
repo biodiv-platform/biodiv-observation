@@ -75,6 +75,7 @@ import com.strandls.observation.pojo.ObservationUGContextCreatePageData;
 import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
+import com.strandls.observation.pojo.RecoData;
 import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
 import com.strandls.observation.pojo.ShowObervationDataTable;
@@ -83,6 +84,7 @@ import com.strandls.observation.service.ObservationCreateService;
 import com.strandls.observation.service.ObservationDataTableService;
 import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
+import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.UserGroupPostingFilterThread;
@@ -130,6 +132,9 @@ import net.minidev.json.JSONArray;
 @Api("Observation Service")
 @Path(ApiConstants.V1 + ApiConstants.OBSERVATION)
 public class ObservationController {
+	
+	@Inject
+	private RecommendationService recoService;
 
 	@Inject
 	private ObservationService observationService;
@@ -456,7 +461,9 @@ public class ObservationController {
 			@QueryParam("temporal") List<String> temporal, @QueryParam("misc") List<String> misc,
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkSpeciesGroupId") String bulkSpeciesGroupId,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
+			@QueryParam("bulkRecoSuggestion") RecoData bulkRecoSuggestion,
 			@DefaultValue("false") @QueryParam("showData") String showData,
 			@DefaultValue("") @QueryParam("statsFilter") String statsFilter,
 
@@ -537,17 +544,17 @@ public class ObservationController {
 			}
 
 			else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
-					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					&& !bulkObservationIds.isEmpty() && ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())||(bulkSpeciesGroupId !=null && !bulkSpeciesGroupId.isEmpty()))
 					&& view.equalsIgnoreCase("bulkMapping"))
-					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					|| (Boolean.TRUE.equals(selectAll) && ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())||(bulkSpeciesGroupId !=null && !bulkSpeciesGroupId.isEmpty())||bulkRecoSuggestion!=null)
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
-						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type,
+						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, bulkRecoSuggestion, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper, intergratorService, esUpdate, traitService);
+						request, headers, objectMapper, intergratorService, esUpdate, traitService, recoService);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
