@@ -63,7 +63,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private String bulkObservationIds;
 	private String bulkUsergroupIds;
 	private String bulkSpeciesGroupId;
-	private RecoData bulkRecoSuggestion;
+	private String bulkRecoSuggestion;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -86,7 +86,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private RecommendationService recoService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, String bulkSpeciesGroupId, RecoData bulkRecoSuggestion, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion2, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
@@ -277,7 +277,9 @@ public class ObservationBulkMappingThread implements Runnable {
 			
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.RECO_BULK_POSTING.getAction()))) {
 				List<Observation> obsDataList = new ArrayList<Observation>();
-				if (bulkRecoSuggestion != null) {
+				if (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()) {
+					RecoData recoData = objectMapper.readValue(bulkRecoSuggestion,
+							RecoData.class);
 					if (!oservationIds.isEmpty()) {
 						obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
@@ -300,13 +302,13 @@ public class ObservationBulkMappingThread implements Runnable {
 						ObsList.add(obsDataList.get(count));
 
 						if (ObsList.size() >= 200) {
-							bulkRecoSuggestionAction(ObsList, bulkRecoSuggestion);
+							bulkRecoSuggestionAction(ObsList, recoData);
 							ObsList.clear();
 						}
 						count++;
 					}
 
-					bulkRecoSuggestionAction(ObsList, bulkRecoSuggestion);
+					bulkRecoSuggestionAction(ObsList, recoData);
 					ObsList.clear();
 				}
 			}

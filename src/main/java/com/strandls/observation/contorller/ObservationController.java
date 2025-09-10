@@ -462,7 +462,7 @@ public class ObservationController {
 			@QueryParam("bulkAction") String bulkAction, @QueryParam("selectAll") Boolean selectAll,
 			@QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkSpeciesGroupId") String bulkSpeciesGroupId,
-			@QueryParam("bulkRecoSuggestion") RecoData bulkRecoSuggestion,
+			@QueryParam("bulkRecoSuggestion") String bulkRecoSuggestion,
 			@QueryParam("bulkObservationIds") String bulkObservationIds,
 			@DefaultValue("false") @QueryParam("showData") String showData,
 			@DefaultValue("") @QueryParam("statsFilter") String statsFilter,
@@ -546,16 +546,16 @@ public class ObservationController {
 			else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
 					&& !bulkObservationIds.isEmpty()
 					&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
-							|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())||bulkRecoSuggestion!=null)
+							|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty()) || (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()))
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll)
 							&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
-									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())||bulkRecoSuggestion!=null)
+									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()))
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
-						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId,bulkRecoSuggestion, mapSearchQuery, ugService, index, type,
+						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, bulkRecoSuggestion, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
 						request, headers, objectMapper, intergratorService, esUpdate, traitService, recoService);
