@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -84,6 +83,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private IntergratorServicesApi intergratorService;
 	private TraitsServiceApi traitService;
 	private RecommendationService recoService;
+	private CommonProfile profile;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -92,7 +92,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
 			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -120,6 +120,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.esUpdate = esUpdate;
 		this.traitService = traitService;
 		this.recoService = recoService;
+		this.profile = profile;
 	}
 
 	@Override
@@ -375,10 +376,9 @@ public class ObservationBulkMappingThread implements Runnable {
 	private void bulkRecoSuggestionAction(List<Observation> obsList, RecoData recoData) {
 		for (Observation observation : obsList) {
 			try {
-				/*CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-				Long userId = Long.parseLong(profile.getId());*/
+				Long userId = Long.parseLong(profile.getId());
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
-				recoService.createRecoVote(request, (long) 1, observation.getId(),
+				recoService.createRecoVote(request, userId, observation.getId(),
 						recoData.getScientificNameTaxonId(), recoCreate, false);
 				
 			} catch (Exception e) {

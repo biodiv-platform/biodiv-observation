@@ -428,6 +428,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			Long dataTableId, List<Long> userGroupList, String bulkAction) {
 
 		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			UserGroupCreateDatatable usergroups = new UserGroupCreateDatatable();
 			usergroups.setUserGroupIds(userGroupList);
 			List<Long> list = new ArrayList<>();
@@ -479,7 +480,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService);
+					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
@@ -487,7 +488,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService);
+					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

@@ -554,11 +554,12 @@ public class ObservationController {
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
+				CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, bulkRecoSuggestion, mapSearchQuery, ugService, index, type,
 						geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation, termsAggregationField,
 						geoShapeFilterField, null, null, view, esService, observationMapperHelper, observationDao,
-						request, headers, objectMapper, intergratorService, esUpdate, traitService, recoService);
+						request, headers, objectMapper, intergratorService, esUpdate, traitService, recoService, profile);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
