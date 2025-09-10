@@ -375,8 +375,8 @@ public class ObservationBulkMappingThread implements Runnable {
 	private void bulkRecoSuggestionAction(List<Observation> obsList, RecoData recoData) {
 		for (Observation observation : obsList) {
 			try {
-				CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-				Long userId = Long.parseLong(profile.getId());
+				/*CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+				Long userId = Long.parseLong(profile.getId());*/
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
 				recoService.createRecoVote(request, (long) 1, observation.getId(),
 						recoData.getScientificNameTaxonId(), recoCreate, false);
