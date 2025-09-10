@@ -378,7 +378,7 @@ public class ObservationBulkMappingThread implements Runnable {
 				CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 				Long userId = Long.parseLong(profile.getId());
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
-				recoService.createRecoVote(request, userId, observation.getId(),
+				recoService.createRecoVote(request, (long) 1, observation.getId(),
 						recoData.getScientificNameTaxonId(), recoCreate, false);
 				
 			} catch (Exception e) {
