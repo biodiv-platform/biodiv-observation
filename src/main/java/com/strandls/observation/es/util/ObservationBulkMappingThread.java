@@ -86,7 +86,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private RecommendationService recoService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion2, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
@@ -274,7 +274,7 @@ public class ObservationBulkMappingThread implements Runnable {
 					ObsList.clear();
 				}
 			}
-			
+
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.RECO_BULK_POSTING.getAction()))) {
 				List<Observation> obsDataList = new ArrayList<Observation>();
 				if (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()) {
