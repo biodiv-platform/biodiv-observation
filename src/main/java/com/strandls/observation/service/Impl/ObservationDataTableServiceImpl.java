@@ -37,6 +37,8 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationBulkMappingThread;
@@ -46,6 +48,7 @@ import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
@@ -71,6 +74,15 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private ObservationDAO observationDao;
+	
+	@Inject
+	private ObservationService observationService;
+	
+	@Inject
+	private RecommendationDao recoDao;
+	
+	@Inject
+	private RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	private TraitsServiceApi traitService;
@@ -478,17 +490,17 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, userGroupService, null, null, null,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile);
+					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, userGroupService, null, null,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile);
+					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

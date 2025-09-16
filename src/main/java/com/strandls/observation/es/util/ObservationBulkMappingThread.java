@@ -3,6 +3,7 @@ package com.strandls.observation.es.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,15 +26,25 @@ import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
 import com.strandls.observation.pojo.Observation;
+import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoData;
+import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoSet;
+import com.strandls.observation.pojo.Recommendation;
+import com.strandls.observation.pojo.RecommendationVote;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
+import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsCreateData;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.BulkGroupPostingData;
 import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
@@ -44,7 +55,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkMappingThread.class);
 
 	private enum BULK_ACTION {
-		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting"), RECO_BULK_POSTING("recoBulkPosting");
+		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting"), RECO_BULK_POSTING("recoBulkPosting"), TRAITS_BULK_POSTING("traitsBulkPosting"), VALIDATE_BULK_POSTING("validateBulkObservations");
 
 		private String action;
 
@@ -63,6 +74,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private String bulkUsergroupIds;
 	private String bulkSpeciesGroupId;
 	private String bulkRecoSuggestion;
+	private String bulkTraits;
 	private MapSearchQuery mapSearchQuery;
 	private UserGroupSerivceApi ugService;
 	private String index;
@@ -75,6 +87,8 @@ public class ObservationBulkMappingThread implements Runnable {
 	private EsServicesApi esService;
 	private ObservationMapperHelper observationMapperHelper;
 	private ObservationDAO observationDao;
+	private RecommendationDao recoDao;
+	private RecommendationVoteDao recoVoteDao;
 	private ObjectMapper objectMapper;
 	private final HttpServletRequest request;
 	private final Headers headers;
@@ -84,15 +98,16 @@ public class ObservationBulkMappingThread implements Runnable {
 	private TraitsServiceApi traitService;
 	private RecommendationService recoService;
 	private CommonProfile profile;
+	private ObservationService observationService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
-			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
-			HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile) {
+			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao, RecommendationDao recoDao,
+			RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -100,6 +115,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.bulkUsergroupIds = bulkUsergroupIds;
 		this.bulkSpeciesGroupId = bulkSpeciesGroupId;
 		this.bulkRecoSuggestion = bulkRecoSuggestion;
+		this.bulkTraits = bulkTraits;
 		this.mapSearchQuery = mapSearchQuery;
 		this.ugService = ugService;
 		this.index = index;
@@ -112,6 +128,8 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.esService = esService;
 		this.observationMapperHelper = observationMapperHelper;
 		this.observationDao = observationDao;
+		this.recoDao = recoDao;
+		this.recoVoteDao = recoVoteDao;
 		this.request = request;
 		this.headers = headers;
 		this.objectMapper = objectMapper;
@@ -121,6 +139,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.traitService = traitService;
 		this.recoService = recoService;
 		this.profile = profile;
+		this.observationService = observationService;
 	}
 
 	@Override
@@ -313,6 +332,89 @@ public class ObservationBulkMappingThread implements Runnable {
 					ObsList.clear();
 				}
 			}
+			
+			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.VALIDATE_BULK_POSTING.getAction()))) {
+				List<Observation> obsDataList = new ArrayList<Observation>();
+					if (!oservationIds.isEmpty()) {
+						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+					}
+					if (Boolean.TRUE.equals(selectAll)) {
+						MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+						List<MapDocument> documents = result.getDocuments();
+						for (MapDocument document : documents) {
+							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									Observation.class);
+							obsDataList.add(data);
+						}
+					}
+					List<Observation> ObsList = new ArrayList<Observation>();
+					;
+					Integer count = 0;
+
+					while (count < obsDataList.size()) {
+						ObsList.add(obsDataList.get(count));
+
+						if (ObsList.size() >= 200) {
+							bulkValidateAction(ObsList);
+							ObsList.clear();
+						}
+						count++;
+					}
+
+					bulkValidateAction(ObsList);
+					ObsList.clear();
+			}
+			
+			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.TRAITS_BULK_POSTING.getAction()))) {
+				List<Observation> obsDataList = new ArrayList<Observation>();
+				Map<String, List<Long>> map = new HashMap<>();
+				if (bulkTraits != null && !bulkTraits.isEmpty()) {
+					String[] factPairs = bulkTraits.split("\\|");
+					for (String pair : factPairs) {
+			            String[] keyValue = pair.split(":", 2);
+			            if (keyValue.length == 2) {
+			                String key = keyValue[0];
+			                List<Long> values = new ArrayList<>();
+			                values.addAll(
+									Arrays.stream(keyValue[1].split(",")).map(Long::valueOf).collect(Collectors.toList()));
+			                map.put(key, values);
+			            }
+			        }
+					if (!oservationIds.isEmpty()) {
+						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+					}
+					if (Boolean.TRUE.equals(selectAll)) {
+						MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+						List<MapDocument> documents = result.getDocuments();
+						for (MapDocument document : documents) {
+							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									Observation.class);
+							obsDataList.add(data);
+						}
+					}
+					List<Observation> ObsList = new ArrayList<Observation>();
+					;
+					Integer count = 0;
+
+					while (count < obsDataList.size()) {
+						ObsList.add(obsDataList.get(count));
+
+						if (ObsList.size() >= 200) {
+							bulkTraitsAction(ObsList, map);
+							ObsList.clear();
+						}
+						count++;
+					}
+
+					bulkTraitsAction(ObsList, map);
+					ObsList.clear();
+				}
+			}
+
 
 
 		} catch (Exception e) {
@@ -380,6 +482,130 @@ public class ObservationBulkMappingThread implements Runnable {
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
 				recoService.createRecoVote(request, userId, observation.getId(),
 						recoData.getScientificNameTaxonId(), recoCreate, false);
+				
+			} catch (Exception e) {
+			}
+		}
+	}
+	
+	private void bulkTraitsAction(List<Observation> obsList, Map<String, List<Long>> traits) {
+		for (Observation observation : obsList) {
+			try {
+				//Long userId = Long.parseLong(profile.getId());
+				FactsCreateData factsCreateData = new FactsCreateData();
+				factsCreateData.setFactValuePairs(traits);
+				factsCreateData.setFactValueString(new HashMap<>());
+				factsCreateData.setMailData(null);
+				traitService = headers.addTraitsHeaders(traitService, requestAuthHeader);
+				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
+						factsCreateData);
+				List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
+				String observationList = StringUtils.join(obsIds, ',');
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+				Thread esThreadUpdate = new Thread(updateThread);
+				esThreadUpdate.start();
+				
+			} catch (Exception e) {
+			}
+		}
+	}
+	
+	private void bulkValidateAction(List<Observation> obsList) {
+		for (Observation observation : obsList) {
+			try {
+				Long userId = Long.parseLong(profile.getId());
+				List<RecoIbp> allRecoVotes = recoService.allRecoVote(observation.getId());
+				for (RecoIbp recoVoteData: allRecoVotes) {
+					RecoSet recoSet = new RecoSet();
+					recoSet.setScientificName(recoVoteData.getScientificName());
+					recoSet.setTaxonId(recoVoteData.getTaxonId());
+					recoSet.setCommonName(recoVoteData.getCommonName());
+					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader, profile,
+							observation.getId().toString(), userId, recoSet.getTaxonId().toString());
+					List<Long> permissionList = new ArrayList<Long>();
+					if (permission.getValidatePermissionTaxon() != null)
+						permissionList = permission.getValidatePermissionTaxon();
+					if (permissionList.contains(recoSet.getTaxonId())) {
+						if (!(observation.getIsLocked())) {
+							Recommendation scientificNameReco = new Recommendation();
+							List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
+							List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
+							if (recoSet.getTaxonId() != null) {
+								scientificNameReco = recoDao.findRecoByTaxonId(recoSet.getTaxonId(), true);
+								scientificNameRecoList.add(scientificNameReco);
+							}
+							if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
+									&& scientificNameReco.getId() == null)
+								scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
+							
+							if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
+								commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
+							
+							List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observation.getId());
+							List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
+							for (RecommendationVote recoVote : recoVoteList) {
+								if (scientificNameRecoList.isEmpty()) {
+									for (Recommendation reco : commonNameRecoList) {
+										if (recoVote.getRecommendationId().equals(reco.getId())) {
+											filteredList.add(recoVote);
+										}
+									}
+								} else {
+									for (Recommendation reco : scientificNameRecoList) {
+										if (recoVote.getRecommendationId().equals(reco.getId())) {
+											filteredList.add(recoVote);
+										}
+									}
+								}
+
+							}
+							RecommendationVote recoVote = new RecommendationVote();
+							if (filteredList.size() == 1) {
+								recoVote = filteredList.get(0);
+							} else {
+								List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
+								for (RecommendationVote rVote : filteredList) {
+									for (Recommendation reco : commonNameRecoList) {
+										if (rVote.getCommonNameRecoId() != null && rVote.getCommonNameRecoId().equals(reco.getId()))
+											finalFilteredList.add(rVote);
+									}
+								}
+								if (finalFilteredList.isEmpty())
+									recoVote = filteredList.get(0);
+								else
+									recoVote = finalFilteredList.get(0);
+							}
+
+							if (recoVote != null) {
+								RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observation.getId(), userId, null, null);
+
+								if (previousVote == null
+										|| !(previousVote.getRecommendationId().equals(recoVote.getRecommendationId()))) {
+									if (previousVote != null)
+										recoVoteDao.delete(previousVote);
+
+									recoVote.setId(null);
+									recoVote.setAuthorId(userId);
+									recoVote = recoVoteDao.save(recoVote);
+									
+								}
+								Long maxVotedReco = recoVote.getRecommendationId();
+								observation.setIsLocked(true);
+								observation.setMaxVotedRecoId(maxVotedReco);
+								observation.setLastRevised(new Date());
+								observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
+								observationDao.update(observation);
+							}
+							
+						}
+					}
+					
+				}
+				List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
+				String observationList = StringUtils.join(obsIds, ',');
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+				Thread esThreadUpdate = new Thread(updateThread);
+				esThreadUpdate.start();
 				
 			} catch (Exception e) {
 			}
