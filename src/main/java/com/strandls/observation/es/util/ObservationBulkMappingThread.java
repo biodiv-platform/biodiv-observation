@@ -335,6 +335,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.VALIDATE_BULK_POSTING.getAction()))) {
 				List<Observation> obsDataList = new ArrayList<Observation>();
+				List<Long> obIds = new ArrayList<Long>();
 					if (!oservationIds.isEmpty()) {
 						obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
@@ -344,31 +345,49 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									Observation.class);
-							obsDataList.add(data);
+							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									ObservationListMinimalData.class);
+							obIds.add(data.getObservationId());
 						}
 					}
 					List<Observation> ObsList = new ArrayList<Observation>();
+					List <Long> ObsIdList = new ArrayList<Long>();
 					;
 					Integer count = 0;
 
 					while (count < obsDataList.size()) {
+						if (Boolean.FALSE.equals(selectAll)) {
 						ObsList.add(obsDataList.get(count));
+						}
+						else {
+						ObsIdList.add(obIds.get(count));
+						}
 
-						if (ObsList.size() >= 200) {
+						if (ObsList.size() >= 200 || ObsIdList.size()>=200) {
+							if (Boolean.FALSE.equals(selectAll)) {
 							bulkValidateAction(ObsList);
 							ObsList.clear();
+							}
+							else {
+								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+								ObsIdList.clear();
+							}
 						}
 						count++;
 					}
 
-					bulkValidateAction(ObsList);
-					ObsList.clear();
+					if (Boolean.FALSE.equals(selectAll)) {
+						bulkValidateAction(ObsList);
+						ObsList.clear();
+						}
+						else {
+							bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+							ObsIdList.clear();
+						}
 			}
 			
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.TRAITS_BULK_POSTING.getAction()))) {
-				List<Observation> obsDataList = new ArrayList<Observation>();
+				List<Long> obsIdList = new ArrayList<Long>();
 				Map<String, List<Long>> map = new HashMap<>();
 				if (bulkTraits != null && !bulkTraits.isEmpty()) {
 					String[] factPairs = bulkTraits.split("\\|");
@@ -383,7 +402,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			            }
 			        }
 					if (!oservationIds.isEmpty()) {
-						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+						obsIdList = oservationIds;
 
 					}
 					if (Boolean.TRUE.equals(selectAll)) {
@@ -391,27 +410,27 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									Observation.class);
-							obsDataList.add(data);
+							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									ObservationListMinimalData.class);
+							obsIdList.add(data.getObservationId());
 						}
 					}
-					List<Observation> ObsList = new ArrayList<Observation>();
+					List<Long> ObsBatchList = new ArrayList<Long>();
 					;
 					Integer count = 0;
 
-					while (count < obsDataList.size()) {
-						ObsList.add(obsDataList.get(count));
+					while (count < obsIdList.size()) {
+						ObsBatchList.add(obsIdList.get(count));
 
-						if (ObsList.size() >= 200) {
-							bulkTraitsAction(ObsList, map);
-							ObsList.clear();
+						if (ObsBatchList.size() >= 200) {
+							bulkTraitsAction(ObsBatchList, map);
+							ObsBatchList.clear();
 						}
 						count++;
 					}
 
-					bulkTraitsAction(ObsList, map);
-					ObsList.clear();
+					bulkTraitsAction(ObsBatchList, map);
+					ObsBatchList.clear();
 				}
 			}
 
@@ -488,8 +507,8 @@ public class ObservationBulkMappingThread implements Runnable {
 		}
 	}
 	
-	private void bulkTraitsAction(List<Observation> obsList, Map<String, List<Long>> traits) {
-		for (Observation observation : obsList) {
+	private void bulkTraitsAction(List<Long> obsListIds, Map<String, List<Long>> traits) {
+		for (Long obId : obsListIds) {
 			try {
 				//Long userId = Long.parseLong(profile.getId());
 				FactsCreateData factsCreateData = new FactsCreateData();
@@ -497,10 +516,9 @@ public class ObservationBulkMappingThread implements Runnable {
 				factsCreateData.setFactValueString(new HashMap<>());
 				factsCreateData.setMailData(null);
 				traitService = headers.addTraitsHeaders(traitService, requestAuthHeader);
-				traitService.createFacts("species.participation.Observation", String.valueOf(observation.getId()),
+				traitService.createFacts("species.participation.Observation", String.valueOf(obId),
 						factsCreateData);
-				List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
-				String observationList = StringUtils.join(obsIds, ',');
+				String observationList = StringUtils.join(obsListIds, ',');
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread esThreadUpdate = new Thread(updateThread);
 				esThreadUpdate.start();
