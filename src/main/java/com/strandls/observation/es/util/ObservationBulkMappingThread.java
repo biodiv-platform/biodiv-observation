@@ -300,12 +300,12 @@ public class ObservationBulkMappingThread implements Runnable {
 							ObsIdList.add(obIds.get(count));
 							if (ObsIdList.size()>=200) {
 								System.out.println(ObsIdList);
-								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+								bulkSpeciesGroupAction(observationDao.fecthByListOfIds(ObsIdList), sGroupId);
 								ObsIdList.clear();
 							}
 							count++;
 						}
-						bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+						bulkSpeciesGroupAction(observationDao.fecthByListOfIds(ObsIdList), sGroupId);
 						ObsIdList.clear();
 					}
 				}
