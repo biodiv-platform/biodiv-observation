@@ -354,36 +354,51 @@ public class ObservationBulkMappingThread implements Runnable {
 					List <Long> ObsIdList = new ArrayList<Long>();
 					;
 					Integer count = 0;
-
+					if (Boolean.FALSE.equals(selectAll)) {
 					while (count < obsDataList.size()) {
-						if (Boolean.FALSE.equals(selectAll)) {
+						//if (Boolean.FALSE.equals(selectAll)) {
 						ObsList.add(obsDataList.get(count));
-						}
+						/*}
 						else {
 						ObsIdList.add(obIds.get(count));
-						}
+						}*/
 
-						if (ObsList.size() >= 200 || ObsIdList.size()>=200) {
-							if (Boolean.FALSE.equals(selectAll)) {
+						if (ObsList.size() >= 200) {
+							//if (Boolean.FALSE.equals(selectAll)) {
 							bulkValidateAction(ObsList);
 							ObsList.clear();
-							}
+							/*}
 							else {
+								System.out.println(ObsIdList);
 								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
 								ObsIdList.clear();
-							}
+							}*/
 						}
 						count++;
 					}
 
-					if (Boolean.FALSE.equals(selectAll)) {
+					//if (Boolean.FALSE.equals(selectAll)) {
 						bulkValidateAction(ObsList);
 						ObsList.clear();
-						}
+						/*}
 						else {
 							bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
 							ObsIdList.clear();
+						}*/
+					} else {
+						while (count < obIds.size()) {
+							ObsIdList.add(obIds.get(count));
+							if (ObsIdList.size()>=200) {
+								System.out.println(ObsIdList);
+								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+								ObsIdList.clear();
+							}
+							count++;
 						}
+						bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+						ObsIdList.clear();
+					}
+						
 			}
 			
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.TRAITS_BULK_POSTING.getAction()))) {

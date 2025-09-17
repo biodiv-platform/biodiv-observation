@@ -562,7 +562,7 @@ public class ObservationController {
 							&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
 									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())
 									|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty())
-									|| (bulkTraits != null && bulkTraits.isEmpty())||bulkAction.equals("validateBulkObservations"))
+									|| (bulkTraits != null && !bulkTraits.isEmpty())||bulkAction.equals("validateBulkObservations"))
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
