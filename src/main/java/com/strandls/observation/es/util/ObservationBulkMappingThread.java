@@ -296,12 +296,12 @@ public class ObservationBulkMappingThread implements Runnable {
 			}
 
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.RECO_BULK_POSTING.getAction()))) {
-				List<Observation> obsDataList = new ArrayList<Observation>();
+				List<Long> obsIdList = new ArrayList<Long>();
 				if (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()) {
 					RecoData recoData = objectMapper.readValue(bulkRecoSuggestion,
 							RecoData.class);
 					if (!oservationIds.isEmpty()) {
-						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+						obsIdList = oservationIds;
 
 					}
 					if (Boolean.TRUE.equals(selectAll)) {
@@ -309,27 +309,27 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							Observation data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									Observation.class);
-							obsDataList.add(data);
+							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
+									ObservationListMinimalData.class);
+							obsIdList.add(data.getObservationId());
 						}
 					}
-					List<Observation> ObsList = new ArrayList<Observation>();
+					List<Long> ObsBatchList = new ArrayList<Long>();
 					;
 					Integer count = 0;
 
-					while (count < obsDataList.size()) {
-						ObsList.add(obsDataList.get(count));
+					while (count < obsIdList.size()) {
+						ObsBatchList.add(obsIdList.get(count));
 
-						if (ObsList.size() >= 200) {
-							bulkRecoSuggestionAction(ObsList, recoData);
-							ObsList.clear();
+						if (ObsBatchList.size() >= 200) {
+							bulkRecoSuggestionAction(ObsBatchList, recoData);
+							ObsBatchList.clear();
 						}
 						count++;
 					}
 
-					bulkRecoSuggestionAction(ObsList, recoData);
-					ObsList.clear();
+					bulkRecoSuggestionAction(ObsBatchList, recoData);
+					ObsBatchList.clear();
 				}
 			}
 			
@@ -475,12 +475,12 @@ public class ObservationBulkMappingThread implements Runnable {
 		esThreadUpdate.start();
 	}
 	
-	private void bulkRecoSuggestionAction(List<Observation> obsList, RecoData recoData) {
-		for (Observation observation : obsList) {
+	private void bulkRecoSuggestionAction(List<Long> obsListIds, RecoData recoData) {
+		for (Long obId : obsListIds) {
 			try {
 				Long userId = Long.parseLong(profile.getId());
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
-				recoService.createRecoVote(request, userId, observation.getId(),
+				recoService.createRecoVote(request, userId, obId,
 						recoData.getScientificNameTaxonId(), recoCreate, false);
 				
 			} catch (Exception e) {
