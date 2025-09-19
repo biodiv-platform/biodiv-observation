@@ -48,6 +48,7 @@ import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -108,6 +109,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private CommonProfile profile;
 	private ObservationService observationService;
 	private ActivitySerivceApi activityService;
+	private TaxonomyServicesApi taxonomyService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -116,7 +118,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao, RecommendationDao recoDao,
 			RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, ActivitySerivceApi activityService) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, ActivitySerivceApi activityService, TaxonomyServicesApi taxonomyService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -150,6 +152,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.profile = profile;
 		this.observationService = observationService;
 		this.activityService = activityService;
+		this.taxonomyService = taxonomyService;
 	}
 
 	@Override
@@ -677,11 +680,13 @@ public class ObservationBulkMappingThread implements Runnable {
 								RecoVoteActivity rvActivity = new RecoVoteActivity();
 
 								if (recoSet.getTaxonId() != null) {
-									
-									/*TaxonomyDefinition taxonomyDef = taxonomyService
-											.getTaxonomyConceptName(recoSet.getTaxonId().toString());*/
+									taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
+									TaxonomyDefinition taxonomyDef = taxonomyService
+											.getTaxonomyConceptName(recoSet.getTaxonId().toString());
 									rvActivity.setScientificName(
-											"demo");
+											(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+											? taxonomyDef.getItalicisedForm()
+											: taxonomyDef.getNormalizedForm());
 
 								}
 								if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)

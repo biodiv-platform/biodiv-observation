@@ -57,6 +57,7 @@ import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValuePair;
@@ -145,6 +146,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	
 	@Inject
 	private ActivitySerivceApi activityService;
+	
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -496,7 +500,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService);
+					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
@@ -504,7 +508,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService);
+					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();
