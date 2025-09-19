@@ -18,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.ApiException;
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.pojo.ActivityLoggingData;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -102,7 +105,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private RecommendationService recoService;
 	private CommonProfile profile;
 	private ObservationService observationService;
-	private LogActivities logActivity;
+	private ActivitySerivceApi activityService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -111,7 +114,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao, RecommendationDao recoDao,
 			RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, LogActivities logActivity) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, ActivitySerivceApi activityService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -144,7 +147,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.recoService = recoService;
 		this.profile = profile;
 		this.observationService = observationService;
-		this.logActivity = logActivity;
+		this.activityService = activityService;
 	}
 
 	@Override
@@ -529,8 +532,19 @@ public class ObservationBulkMappingThread implements Runnable {
 			observation.setLastRevised(new Date());
 			observation = observationDao.update(observation);
 			String description = speciesNameMapping.get(previousGroupId) + " to " + speciesNameMapping.get(sGroupId);
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observation.getId(), observation.getId(),
-					"observation", observation.getId(), "Observation species group updated", observationService.generateMailData(observation.getId()));
+			ActivityLoggingData activityLogging = new ActivityLoggingData();
+			activityLogging.setActivityDescription(description);
+			activityLogging.setActivityId(observation.getId());
+			activityLogging.setActivityType("Observation species group updated");
+			activityLogging.setRootObjectId(observation.getId());
+			activityLogging.setRootObjectType("observation");
+			activityLogging.setSubRootObjectId(observation.getId());
+			activityLogging.setMailData(observationService.generateMailData(observation.getId()));
+			activityService = headers.addActivityHeaders(activityService, requestAuthHeader);
+			try {
+				activityService.logActivity(activityLogging);
+			} catch (ApiException e) {
+			}
 		}
 		List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
 		String observationList = StringUtils.join(obsIds, ',');

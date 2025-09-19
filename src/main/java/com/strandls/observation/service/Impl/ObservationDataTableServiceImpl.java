@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.dataTable.ApiException;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
@@ -143,7 +144,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	private IntergratorServicesApi intergratorService;
 	
 	@Inject
-	private LogActivities logActivity;
+	private ActivitySerivceApi activityService;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -495,7 +496,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, logActivity);
+					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
@@ -503,7 +504,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, logActivity);
+					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

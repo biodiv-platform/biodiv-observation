@@ -32,6 +32,7 @@ import javax.ws.rs.core.UriInfo;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
@@ -203,7 +204,7 @@ public class ObservationController {
 	private TraitsServiceApi traitService;
 	
 	@Inject
-	private LogActivities logActivity;
+	private ActivitySerivceApi activityService;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -576,7 +577,7 @@ public class ObservationController {
 						ugService, index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 						termsAggregationField, geoShapeFilterField, null, null, view, esService,
 						observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, objectMapper, intergratorService,
-						esUpdate, traitService, recoService, profile, observationService, logActivity);
+						esUpdate, traitService, recoService, profile, observationService, activityService);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
