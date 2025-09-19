@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.ApiException;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.ActivityLoggingData;
+import com.strandls.activity.pojo.RecoVoteActivity;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -48,6 +49,7 @@ import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
+import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsCreateData;
@@ -672,6 +674,35 @@ public class ObservationBulkMappingThread implements Runnable {
 								observation.setLastRevised(new Date());
 								observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
 								observationDao.update(observation);
+								RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+								if (recoSet.getTaxonId() != null) {
+									
+									/*TaxonomyDefinition taxonomyDef = taxonomyService
+											.getTaxonomyConceptName(recoSet.getTaxonId().toString());*/
+									rvActivity.setScientificName(
+											"demo");
+
+								}
+								if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
+									rvActivity.setCommonName(recoSet.getCommonName());
+								if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
+									rvActivity.setGivenName(recoSet.getScientificName());
+
+								String description = objectMapper.writeValueAsString(rvActivity);
+								ActivityLoggingData activityLogging = new ActivityLoggingData();
+								activityLogging.setActivityDescription(description);
+								activityLogging.setActivityId(recoVote.getId());
+								activityLogging.setActivityType("obv locked");
+								activityLogging.setRootObjectId(observation.getId());
+								activityLogging.setRootObjectType("observation");
+								activityLogging.setSubRootObjectId(observation.getId());
+								activityLogging.setMailData(observationService.generateMailData(observation.getId()));
+								activityService = headers.addActivityHeaders(activityService, requestAuthHeader);
+								try {
+									activityService.logActivity(activityLogging);
+								} catch (ApiException e) {
+								}
 							}
 							
 						}
