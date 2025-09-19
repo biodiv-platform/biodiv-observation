@@ -141,6 +141,9 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private IntergratorServicesApi intergratorService;
+	
+	@Inject
+	private LogActivities logActivity;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -492,7 +495,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService);
+					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, logActivity);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
@@ -500,7 +503,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService);
+					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, logActivity);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

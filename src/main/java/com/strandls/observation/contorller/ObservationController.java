@@ -88,6 +88,7 @@ import com.strandls.observation.service.ObservationListService;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.GeoPrivacyBulkThread;
+import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 import com.strandls.observation.service.Impl.UserGroupPostingFilterThread;
@@ -200,6 +201,9 @@ public class ObservationController {
 
 	@Inject
 	private TraitsServiceApi traitService;
+	
+	@Inject
+	private LogActivities logActivity;
 
 	@GET
 	@ApiOperation(value = "Dummy API Ping", notes = "Checks validity of war file at deployment", response = String.class)
@@ -572,7 +576,7 @@ public class ObservationController {
 						ugService, index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 						termsAggregationField, geoShapeFilterField, null, null, view, esService,
 						observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, objectMapper, intergratorService,
-						esUpdate, traitService, recoService, profile, observationService);
+						esUpdate, traitService, recoService, profile, observationService, logActivity);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();

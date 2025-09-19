@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -40,8 +41,10 @@ import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
+import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsCreateData;
@@ -99,6 +102,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private RecommendationService recoService;
 	private CommonProfile profile;
 	private ObservationService observationService;
+	private LogActivities logActivity;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
@@ -107,7 +111,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao, RecommendationDao recoDao,
 			RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService) {
+			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, LogActivities logActivity) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -140,6 +144,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.recoService = recoService;
 		this.profile = profile;
 		this.observationService = observationService;
+		this.logActivity = logActivity;
 	}
 
 	@Override
@@ -513,10 +518,19 @@ public class ObservationBulkMappingThread implements Runnable {
 	}
 	
 	private void bulkSpeciesGroupAction(List<Observation> obsList, Long sGroupId) {
+		List<SpeciesGroup> SpeciesGroupList = observationService.getAllSpeciesGroup();
+		Map<Long, String> speciesNameMapping = new HashMap<>();
+		for (SpeciesGroup speciesGroup: SpeciesGroupList) {
+			speciesNameMapping.put(speciesGroup.getId(), speciesGroup.getName());
+		}
 		for (Observation observation : obsList) {
+			Long previousGroupId = observation.getGroupId();
 			observation.setGroupId(sGroupId);
 			observation.setLastRevised(new Date());
 			observation = observationDao.update(observation);
+			String description = speciesNameMapping.get(previousGroupId) + " to " + speciesNameMapping.get(sGroupId);
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observation.getId(), observation.getId(),
+					"observation", observation.getId(), "Observation species group updated", observationService.generateMailData(observation.getId()));
 		}
 		List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
 		String observationList = StringUtils.join(obsIds, ',');
