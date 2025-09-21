@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -43,6 +44,7 @@ import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.Recommendation;
 import com.strandls.observation.pojo.RecommendationVote;
+import com.strandls.observation.pojo.UniqueRecoVote;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.LogActivities;
@@ -64,7 +66,10 @@ public class ObservationBulkMappingThread implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(ObservationBulkMappingThread.class);
 
 	private enum BULK_ACTION {
-		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),SPECIES_BULK_POSTING("speciesBulkPosting"), RECO_BULK_POSTING("recoBulkPosting"), TRAITS_BULK_POSTING("traitsBulkPosting"), VALIDATE_BULK_POSTING("validateBulkObservations");
+		UG_BULK_POSTING("ugBulkPosting"), UG_BULK_UNPOSTING("ugBulkUnPosting"),
+		SPECIES_BULK_POSTING("speciesBulkPosting"), RECO_BULK_POSTING("recoBulkPosting"),
+		TRAITS_BULK_POSTING("traitsBulkPosting"), VALIDATE_BULK_POSTING("validateBulkObservations"),
+		UNLOCK_BULK_POSTING("unlockBulkObservations");
 
 		private String action;
 
@@ -112,13 +117,17 @@ public class ObservationBulkMappingThread implements Runnable {
 	private TaxonomyServicesApi taxonomyService;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
-			String type, String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
+			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits,
+			MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index, String type,
+			String geoAggregationField, Integer geoAggegationPrecision, Boolean onlyFilteredAggregation,
 			String termsAggregationField, String geoShapeFilterField,
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
-			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao, RecommendationDao recoDao,
-			RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers, ObjectMapper objectMapper,
-			IntergratorServicesApi intergratorService, ESUpdate esUpdate, TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile, ObservationService observationService, ActivitySerivceApi activityService, TaxonomyServicesApi taxonomyService) {
+			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
+			RecommendationDao recoDao, RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers,
+			ObjectMapper objectMapper, IntergratorServicesApi intergratorService, ESUpdate esUpdate,
+			TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile,
+			ObservationService observationService, ActivitySerivceApi activityService,
+			TaxonomyServicesApi taxonomyService) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -182,12 +191,11 @@ public class ObservationBulkMappingThread implements Runnable {
 				for (Observation obs : obsDataList) {
 					UserGroupObvRuleData data = observationMapperHelper.getUGObvRuleData(obs);
 					UserGroupObvRuleData ugObvFilterData = data;
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							data.getObservationId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					CheckFilterRule checkFilterRule = new CheckFilterRule();
 					checkFilterRule.setUserGroupId(ugIds);
@@ -226,12 +234,11 @@ public class ObservationBulkMappingThread implements Runnable {
 					} else if (bulkAction.equalsIgnoreCase(BULK_ACTION.UG_BULK_POSTING.getAction())) {
 						UserGroupObvRuleData filterData = observationMapperHelper
 								.getUGObvRuleData(observationDao.findById(data.getObservationId()));
-						List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", data.getObservationId().toString());
+						List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+								data.getObservationId().toString());
 						Map<String, List<Long>> facts = traits.stream()
-					    .collect(Collectors.groupingBy(
-					    		trait -> trait.getNameId().toString(), 
-					            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-					        ));
+								.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+										Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 						filterData.setTraits(facts);
 						CheckFilterRule checkFilterRule = new CheckFilterRule();
 						checkFilterRule.setUserGroupId(ugIds);
@@ -270,7 +277,7 @@ public class ObservationBulkMappingThread implements Runnable {
 				bulkGroupAction(ugObsList, ugIds);
 				ugObsList.clear();
 			}
-			
+
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.SPECIES_BULK_POSTING.getAction()))) {
 				List<Observation> obsDataList = new ArrayList<Observation>();
 				List<Long> obIds = new ArrayList<Long>();
@@ -285,33 +292,33 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									ObservationListMinimalData.class);
+							ObservationListMinimalData data = objectMapper.readValue(
+									String.valueOf(document.getDocument()), ObservationListMinimalData.class);
 							obIds.add(data.getObservationId());
 						}
 					}
 					List<Observation> ObsList = new ArrayList<Observation>();
-					List <Long> ObsIdList = new ArrayList<Long>();
+					List<Long> ObsIdList = new ArrayList<Long>();
 					;
 					Integer count = 0;
 
 					if (Boolean.FALSE.equals(selectAll)) {
-					while (count < obsDataList.size()) {
-						ObsList.add(obsDataList.get(count));
+						while (count < obsDataList.size()) {
+							ObsList.add(obsDataList.get(count));
 
-						if (ObsList.size() >= 200) {
-							bulkSpeciesGroupAction(ObsList, sGroupId);
-							ObsList.clear();
+							if (ObsList.size() >= 200) {
+								bulkSpeciesGroupAction(ObsList, sGroupId);
+								ObsList.clear();
+							}
+							count++;
 						}
-						count++;
-					}
 
-					bulkSpeciesGroupAction(ObsList, sGroupId);
-					ObsList.clear();
+						bulkSpeciesGroupAction(ObsList, sGroupId);
+						ObsList.clear();
 					} else {
 						while (count < obIds.size()) {
 							ObsIdList.add(obIds.get(count));
-							if (ObsIdList.size()>=200) {
+							if (ObsIdList.size() >= 200) {
 								System.out.println(ObsIdList);
 								bulkSpeciesGroupAction(observationDao.fecthByListOfIds(ObsIdList), sGroupId);
 								ObsIdList.clear();
@@ -327,8 +334,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.RECO_BULK_POSTING.getAction()))) {
 				List<Long> obsIdList = new ArrayList<Long>();
 				if (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty()) {
-					RecoData recoData = objectMapper.readValue(bulkRecoSuggestion,
-							RecoData.class);
+					RecoData recoData = objectMapper.readValue(bulkRecoSuggestion, RecoData.class);
 					if (!oservationIds.isEmpty()) {
 						obsIdList = oservationIds;
 
@@ -338,8 +344,8 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									ObservationListMinimalData.class);
+							ObservationListMinimalData data = objectMapper.readValue(
+									String.valueOf(document.getDocument()), ObservationListMinimalData.class);
 							obsIdList.add(data.getObservationId());
 						}
 					}
@@ -361,90 +367,137 @@ public class ObservationBulkMappingThread implements Runnable {
 					ObsBatchList.clear();
 				}
 			}
-			
+
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.VALIDATE_BULK_POSTING.getAction()))) {
 				List<Observation> obsDataList = new ArrayList<Observation>();
 				List<Long> obIds = new ArrayList<Long>();
-					if (!oservationIds.isEmpty()) {
-						obsDataList = observationDao.fecthByListOfIds(oservationIds);
+				if (!oservationIds.isEmpty()) {
+					obsDataList = observationDao.fecthByListOfIds(oservationIds);
 
+				}
+				if (Boolean.TRUE.equals(selectAll)) {
+					MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+							onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+					List<MapDocument> documents = result.getDocuments();
+					for (MapDocument document : documents) {
+						ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
+								ObservationListMinimalData.class);
+						obIds.add(data.getObservationId());
 					}
-					if (Boolean.TRUE.equals(selectAll)) {
-						MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
-								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
-						List<MapDocument> documents = result.getDocuments();
-						for (MapDocument document : documents) {
-							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									ObservationListMinimalData.class);
-							obIds.add(data.getObservationId());
-						}
-					}
-					List<Observation> ObsList = new ArrayList<Observation>();
-					List <Long> ObsIdList = new ArrayList<Long>();
-					;
-					Integer count = 0;
-					if (Boolean.FALSE.equals(selectAll)) {
+				}
+				List<Observation> ObsList = new ArrayList<Observation>();
+				List<Long> ObsIdList = new ArrayList<Long>();
+				;
+				Integer count = 0;
+				if (Boolean.FALSE.equals(selectAll)) {
 					while (count < obsDataList.size()) {
-						//if (Boolean.FALSE.equals(selectAll)) {
+						// if (Boolean.FALSE.equals(selectAll)) {
 						ObsList.add(obsDataList.get(count));
-						/*}
-						else {
-						ObsIdList.add(obIds.get(count));
-						}*/
+						/*
+						 * } else { ObsIdList.add(obIds.get(count)); }
+						 */
 
 						if (ObsList.size() >= 200) {
-							//if (Boolean.FALSE.equals(selectAll)) {
+							// if (Boolean.FALSE.equals(selectAll)) {
 							bulkValidateAction(ObsList);
 							ObsList.clear();
-							/*}
-							else {
-								System.out.println(ObsIdList);
-								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
-								ObsIdList.clear();
-							}*/
+							/*
+							 * } else { System.out.println(ObsIdList);
+							 * bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+							 * ObsIdList.clear(); }
+							 */
 						}
 						count++;
 					}
 
-					//if (Boolean.FALSE.equals(selectAll)) {
-						bulkValidateAction(ObsList);
-						ObsList.clear();
-						/*}
-						else {
+					// if (Boolean.FALSE.equals(selectAll)) {
+					bulkValidateAction(ObsList);
+					ObsList.clear();
+					/*
+					 * } else { bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+					 * ObsIdList.clear(); }
+					 */
+				} else {
+					while (count < obIds.size()) {
+						ObsIdList.add(obIds.get(count));
+						if (ObsIdList.size() >= 200) {
+							System.out.println(ObsIdList);
 							bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
 							ObsIdList.clear();
-						}*/
-					} else {
-						while (count < obIds.size()) {
-							ObsIdList.add(obIds.get(count));
-							if (ObsIdList.size()>=200) {
-								System.out.println(ObsIdList);
-								bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
-								ObsIdList.clear();
-							}
-							count++;
 						}
-						bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
-						ObsIdList.clear();
+						count++;
 					}
-						
+					bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
+					ObsIdList.clear();
+				}
+
 			}
-			
+
+			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.UNLOCK_BULK_POSTING.getAction()))) {
+				List<Observation> obsDataList = new ArrayList<Observation>();
+				List<Long> obIds = new ArrayList<Long>();
+				if (!oservationIds.isEmpty()) {
+					obsDataList = observationDao.fecthByListOfIds(oservationIds);
+
+				}
+				if (Boolean.TRUE.equals(selectAll)) {
+					MapResponse result = esService.search(index, type, geoAggregationField, geoAggegationPrecision,
+							onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
+					List<MapDocument> documents = result.getDocuments();
+					for (MapDocument document : documents) {
+						ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
+								ObservationListMinimalData.class);
+						obIds.add(data.getObservationId());
+					}
+				}
+				List<Observation> ObsList = new ArrayList<Observation>();
+				List<Long> ObsIdList = new ArrayList<Long>();
+				;
+				Integer count = 0;
+				if (Boolean.FALSE.equals(selectAll)) {
+					while (count < obsDataList.size()) {
+						ObsList.add(obsDataList.get(count));
+
+						if (ObsList.size() >= 200) {
+							bulkUnlockAction(ObsList);
+							ObsList.clear();
+						}
+						count++;
+					}
+
+					bulkUnlockAction(ObsList);
+					ObsList.clear();
+				} else {
+					while (count < obIds.size()) {
+						ObsIdList.add(obIds.get(count));
+						if (ObsIdList.size() >= 200) {
+							System.out.println(ObsIdList);
+							bulkUnlockAction(observationDao.fecthByListOfIds(ObsIdList));
+							ObsIdList.clear();
+						}
+						count++;
+					}
+					bulkUnlockAction(observationDao.fecthByListOfIds(ObsIdList));
+					ObsIdList.clear();
+				}
+
+			}
+
 			if (!bulkAction.isEmpty() && (bulkAction.contains(BULK_ACTION.TRAITS_BULK_POSTING.getAction()))) {
 				List<Long> obsIdList = new ArrayList<Long>();
 				Map<String, List<Long>> map = new HashMap<>();
 				if (bulkTraits != null && !bulkTraits.isEmpty()) {
 					String[] factPairs = bulkTraits.split("\\|");
 					for (String pair : factPairs) {
-			            String[] keyValue = pair.split(":", 2);
-			            if (keyValue.length == 2) {
-			                String key = keyValue[0];
-			                List<Long> values = new ArrayList<>();
-			                values.addAll(
-									Arrays.stream(keyValue[1].split(",")).map(Long::valueOf).collect(Collectors.toList()));
-			                map.put(key, values);
-			            }
-			        }
+						String[] keyValue = pair.split(":", 2);
+						if (keyValue.length == 2) {
+							String key = keyValue[0];
+							List<Long> values = new ArrayList<>();
+							values.addAll(Arrays.stream(keyValue[1].split(",")).map(Long::valueOf)
+									.collect(Collectors.toList()));
+							map.put(key, values);
+						}
+					}
 					if (!oservationIds.isEmpty()) {
 						obsIdList = oservationIds;
 
@@ -454,8 +507,8 @@ public class ObservationBulkMappingThread implements Runnable {
 								onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, mapSearchQuery);
 						List<MapDocument> documents = result.getDocuments();
 						for (MapDocument document : documents) {
-							ObservationListMinimalData data = objectMapper.readValue(String.valueOf(document.getDocument()),
-									ObservationListMinimalData.class);
+							ObservationListMinimalData data = objectMapper.readValue(
+									String.valueOf(document.getDocument()), ObservationListMinimalData.class);
 							obsIdList.add(data.getObservationId());
 						}
 					}
@@ -477,8 +530,6 @@ public class ObservationBulkMappingThread implements Runnable {
 					ObsBatchList.clear();
 				}
 			}
-
-
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -524,11 +575,11 @@ public class ObservationBulkMappingThread implements Runnable {
 
 		}
 	}
-	
+
 	private void bulkSpeciesGroupAction(List<Observation> obsList, Long sGroupId) {
 		List<SpeciesGroup> SpeciesGroupList = observationService.getAllSpeciesGroup();
 		Map<Long, String> speciesNameMapping = new HashMap<>();
-		for (SpeciesGroup speciesGroup: SpeciesGroupList) {
+		for (SpeciesGroup speciesGroup : SpeciesGroupList) {
 			speciesNameMapping.put(speciesGroup.getId(), speciesGroup.getName());
 		}
 		for (Observation observation : obsList) {
@@ -557,53 +608,52 @@ public class ObservationBulkMappingThread implements Runnable {
 		Thread esThreadUpdate = new Thread(updateThread);
 		esThreadUpdate.start();
 	}
-	
+
 	private void bulkRecoSuggestionAction(List<Long> obsListIds, RecoData recoData) {
 		for (Long obId : obsListIds) {
 			try {
 				Long userId = Long.parseLong(profile.getId());
 				RecoCreate recoCreate = observationMapperHelper.createRecoMapping(recoData);
-				recoService.createRecoVote(request, userId, obId,
-						recoData.getScientificNameTaxonId(), recoCreate, false);
-				
+				recoService.createRecoVote(request, userId, obId, recoData.getScientificNameTaxonId(), recoCreate,
+						false);
+
 			} catch (Exception e) {
 			}
 		}
 	}
-	
+
 	private void bulkTraitsAction(List<Long> obsListIds, Map<String, List<Long>> traits) {
 		for (Long obId : obsListIds) {
 			try {
-				//Long userId = Long.parseLong(profile.getId());
+				// Long userId = Long.parseLong(profile.getId());
 				FactsCreateData factsCreateData = new FactsCreateData();
 				factsCreateData.setFactValuePairs(traits);
 				factsCreateData.setFactValueString(new HashMap<>());
 				factsCreateData.setMailData(null);
 				traitService = headers.addTraitsHeaders(traitService, requestAuthHeader);
-				traitService.createFacts("species.participation.Observation", String.valueOf(obId),
-						factsCreateData);
+				traitService.createFacts("species.participation.Observation", String.valueOf(obId), factsCreateData);
 				String observationList = StringUtils.join(obsListIds, ',');
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread esThreadUpdate = new Thread(updateThread);
 				esThreadUpdate.start();
-				
+
 			} catch (Exception e) {
 			}
 		}
 	}
-	
+
 	private void bulkValidateAction(List<Observation> obsList) {
 		for (Observation observation : obsList) {
 			try {
 				Long userId = Long.parseLong(profile.getId());
 				List<RecoIbp> allRecoVotes = recoService.allRecoVote(observation.getId());
-				for (RecoIbp recoVoteData: allRecoVotes) {
+				for (RecoIbp recoVoteData : allRecoVotes) {
 					RecoSet recoSet = new RecoSet();
 					recoSet.setScientificName(recoVoteData.getScientificName());
 					recoSet.setTaxonId(recoVoteData.getTaxonId());
 					recoSet.setCommonName(recoVoteData.getCommonName());
-					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader, profile,
-							observation.getId().toString(), userId, recoSet.getTaxonId().toString());
+					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader,
+							profile, observation.getId().toString(), userId, recoSet.getTaxonId().toString());
 					List<Long> permissionList = new ArrayList<Long>();
 					if (permission.getValidatePermissionTaxon() != null)
 						permissionList = permission.getValidatePermissionTaxon();
@@ -619,11 +669,12 @@ public class ObservationBulkMappingThread implements Runnable {
 							if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() != 0
 									&& scientificNameReco.getId() == null)
 								scientificNameRecoList = recoDao.findByRecoName(recoSet.getScientificName(), true);
-							
+
 							if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() != 0)
 								commonNameRecoList = recoDao.findByRecoName(recoSet.getCommonName(), false);
-							
-							List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observation.getId());
+
+							List<RecommendationVote> recoVoteList = recoVoteDao
+									.findRecoVoteOnObservation(observation.getId());
 							List<RecommendationVote> filteredList = new ArrayList<RecommendationVote>();
 							for (RecommendationVote recoVote : recoVoteList) {
 								if (scientificNameRecoList.isEmpty()) {
@@ -648,7 +699,8 @@ public class ObservationBulkMappingThread implements Runnable {
 								List<RecommendationVote> finalFilteredList = new ArrayList<RecommendationVote>();
 								for (RecommendationVote rVote : filteredList) {
 									for (Recommendation reco : commonNameRecoList) {
-										if (rVote.getCommonNameRecoId() != null && rVote.getCommonNameRecoId().equals(reco.getId()))
+										if (rVote.getCommonNameRecoId() != null
+												&& rVote.getCommonNameRecoId().equals(reco.getId()))
 											finalFilteredList.add(rVote);
 									}
 								}
@@ -659,17 +711,18 @@ public class ObservationBulkMappingThread implements Runnable {
 							}
 
 							if (recoVote != null) {
-								RecommendationVote previousVote = recoVoteDao.findRecoVoteIdByRecoId(observation.getId(), userId, null, null);
+								RecommendationVote previousVote = recoVoteDao
+										.findRecoVoteIdByRecoId(observation.getId(), userId, null, null);
 
-								if (previousVote == null
-										|| !(previousVote.getRecommendationId().equals(recoVote.getRecommendationId()))) {
+								if (previousVote == null || !(previousVote.getRecommendationId()
+										.equals(recoVote.getRecommendationId()))) {
 									if (previousVote != null)
 										recoVoteDao.delete(previousVote);
 
 									recoVote.setId(null);
 									recoVote.setAuthorId(userId);
 									recoVote = recoVoteDao.save(recoVote);
-									
+
 								}
 								Long maxVotedReco = recoVote.getRecommendationId();
 								observation.setIsLocked(true);
@@ -683,15 +736,16 @@ public class ObservationBulkMappingThread implements Runnable {
 									taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 									TaxonomyDefinition taxonomyDef = taxonomyService
 											.getTaxonomyConceptName(recoSet.getTaxonId().toString());
-									rvActivity.setScientificName(
-											(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
-											? taxonomyDef.getItalicisedForm()
-											: taxonomyDef.getNormalizedForm());
+									rvActivity.setScientificName((taxonomyDef.getItalicisedForm() != null
+											&& !taxonomyDef.getItalicisedForm().isEmpty())
+													? taxonomyDef.getItalicisedForm()
+													: taxonomyDef.getNormalizedForm());
 
 								}
 								if (recoSet.getCommonName() != null && recoSet.getCommonName().trim().length() > 0)
 									rvActivity.setCommonName(recoSet.getCommonName());
-								if (recoSet.getScientificName() != null && recoSet.getScientificName().trim().length() > 0)
+								if (recoSet.getScientificName() != null
+										&& recoSet.getScientificName().trim().length() > 0)
 									rvActivity.setGivenName(recoSet.getScientificName());
 
 								String description = objectMapper.writeValueAsString(rvActivity);
@@ -709,20 +763,135 @@ public class ObservationBulkMappingThread implements Runnable {
 								} catch (ApiException e) {
 								}
 							}
-							
+
 						}
 					}
-					
+
 				}
 				List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
 				String observationList = StringUtils.join(obsIds, ',');
 				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 				Thread esThreadUpdate = new Thread(updateThread);
 				esThreadUpdate.start();
-				
+
 			} catch (Exception e) {
 			}
 		}
+	}
+	
+	private UniqueRecoVote mapToUniqueRecoVote(RecommendationVote recommendationVote, Recommendation reco) {
+
+		UniqueRecoVote uniqueRecoVote = new UniqueRecoVote();
+		Long recoId = recommendationVote.getRecommendationId();
+		Long cnId = recommendationVote.getCommonNameRecoId();
+		if (cnId == null) {
+			uniqueRecoVote.setIsScientificName(true);
+			uniqueRecoVote.setIsCommonName(false);
+		} else if (recoId.equals(cnId)) {
+			uniqueRecoVote.setIsScientificName(false);
+			uniqueRecoVote.setIsCommonName(true);
+		} else {
+			uniqueRecoVote.setIsScientificName(true);
+			uniqueRecoVote.setIsCommonName(true);
+		}
+		if (reco.getTaxonConceptId() != null)
+			uniqueRecoVote.setIsTaxon(true);
+		else
+			uniqueRecoVote.setIsTaxon(false);
+		uniqueRecoVote.setIsAccepted(reco.isAcceptedName());
+		uniqueRecoVote.setVoteCount(1);
+		uniqueRecoVote.setLastestDate(recommendationVote.getVotedOn());
+		uniqueRecoVote.setRecoId(recoId);
+
+		return uniqueRecoVote;
+	}
+	
+	private UniqueRecoVote updateToUniqueRecoVote(UniqueRecoVote originalRecoVote, UniqueRecoVote uniqueRecoVote) {
+		if (uniqueRecoVote.getIsCommonName())
+			originalRecoVote.setIsCommonName(true);
+		if (uniqueRecoVote.getIsScientificName())
+			originalRecoVote.setIsScientificName(true);
+		if (uniqueRecoVote.getIsTaxon())
+			originalRecoVote.setIsTaxon(true);
+		if (uniqueRecoVote.getLastestDate().getTime() > originalRecoVote.getLastestDate().getTime())
+			originalRecoVote.setLastestDate(uniqueRecoVote.getLastestDate());
+		if (uniqueRecoVote.getIsAccepted())
+			originalRecoVote.setIsAccepted(true);
+		originalRecoVote.setVoteCount(originalRecoVote.getVoteCount() + 1);
+		return originalRecoVote;
+	}
+
+	private void bulkUnlockAction(List<Observation> obsList) {
+		Long userId = Long.parseLong(profile.getId());
+		for (Observation observation : obsList) {
+			try {
+				if (observation.getIsLocked()) {
+					Recommendation recoSet = recoDao.findById(observation.getMaxVotedRecoId());
+					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader, profile,
+							observation.getId().toString(), userId, recoSet.getTaxonConceptId().toString());
+					List<Long> permissionList = new ArrayList<Long>();
+					if (permission.getValidatePermissionTaxon() != null)
+						permissionList = permission.getValidatePermissionTaxon();
+					if (permissionList.contains(recoSet.getTaxonConceptId())) {
+						List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observation.getId());
+						if (!(recoVoteList.isEmpty())) {
+							Map<Long, UniqueRecoVote> uniqueRecoVotes = new HashMap<Long, UniqueRecoVote>();
+
+							for (RecommendationVote recommendationVote : recoVoteList) {
+								Long recoId = recommendationVote.getRecommendationId();
+								Recommendation reco = recoDao.findById(recoId);
+
+								UniqueRecoVote uniqueRecoVote = mapToUniqueRecoVote(recommendationVote, reco);
+								if (uniqueRecoVotes.containsKey(recoId)) {
+									UniqueRecoVote originalRecoVote = uniqueRecoVotes.get(recoId);
+									originalRecoVote = updateToUniqueRecoVote(originalRecoVote, uniqueRecoVote);
+								} else {
+									uniqueRecoVotes.put(recoId, uniqueRecoVote);
+								}
+							}
+							UniqueRecoVote maxRecoVote = null;
+							for (Entry<Long, UniqueRecoVote> entry : uniqueRecoVotes.entrySet()) {
+								int value = entry.getValue().compareTo(maxRecoVote);
+								if (value > 0) {
+									maxRecoVote = entry.getValue();
+								}
+							}
+							if (maxRecoVote != null) {
+							observation.setIsLocked(false);	
+							observation.setMaxVotedRecoId(maxRecoVote.getRecoId());
+							observation.setLastRevised(new Date());
+							observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
+							observationDao.update(observation);
+							}
+						}
+						
+						/*String description = "";
+
+						RecoVoteActivity rvActivity = new RecoVoteActivity();
+
+						if (recoSet.getTaxonConceptId() != null) {
+							TaxonomyDefinition taxonomyDef = taxonomyService
+									.getTaxonomyConceptName(recoSet.getTaxonConceptId().toString());
+							rvActivity.setScientificName(
+									(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
+											? taxonomyDef.getItalicisedForm()
+											: taxonomyDef.getNormalizedForm());
+
+						}
+						if (recoSet.getCommonName().trim().length() > 0)
+							rvActivity.setCommonName(recoSet.getCommonName());
+						if (recoSet.getScientificName().trim().length() > 0)
+							rvActivity.setGivenName(recoSet.getScientificName());
+
+						description = objectMapper.writeValueAsString(rvActivity);
+						logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
+								observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
+								observaitonService.generateMailData(observationId));*/
+					}
+				}
+			} catch(Exception e) {
+				}
+			}
 	}
 
 }
