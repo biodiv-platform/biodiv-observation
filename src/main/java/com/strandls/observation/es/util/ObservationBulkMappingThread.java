@@ -887,6 +887,10 @@ public class ObservationBulkMappingThread implements Runnable {
 						logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
 								observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
 								observaitonService.generateMailData(observationId));*/
+						List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
+						String observationList = StringUtils.join(obsIds, ',');
+						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+						Thread esThreadUpdate = new Thread(updateThread);
 					}
 				}
 			} catch(Exception e) {
