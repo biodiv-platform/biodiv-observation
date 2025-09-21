@@ -891,6 +891,7 @@ public class ObservationBulkMappingThread implements Runnable {
 						String observationList = StringUtils.join(obsIds, ',');
 						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
 						Thread esThreadUpdate = new Thread(updateThread);
+						esThreadUpdate.start();
 					}
 				}
 			} catch(Exception e) {
