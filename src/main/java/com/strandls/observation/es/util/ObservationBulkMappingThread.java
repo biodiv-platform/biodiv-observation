@@ -865,28 +865,57 @@ public class ObservationBulkMappingThread implements Runnable {
 							}
 						}
 						
-						/*String description = "";
+						String description = "";
 
 						RecoVoteActivity rvActivity = new RecoVoteActivity();
+						String scientificName = "";
+						String commonName = "";
+						Long taxon = null;
 
 						if (recoSet.getTaxonConceptId() != null) {
-							TaxonomyDefinition taxonomyDef = taxonomyService
+							taxon = recoSet.getTaxonConceptId();
+							TaxonomyDefinition taxonomyDefinition = taxonomyService
 									.getTaxonomyConceptName(recoSet.getTaxonConceptId().toString());
-							rvActivity.setScientificName(
-									(taxonomyDef.getItalicisedForm() != null && !taxonomyDef.getItalicisedForm().isEmpty())
-											? taxonomyDef.getItalicisedForm()
-											: taxonomyDef.getNormalizedForm());
+							scientificName = (taxonomyDefinition.getItalicisedForm() != null
+									&& !taxonomyDefinition.getItalicisedForm().isEmpty())
+											? taxonomyDefinition.getItalicisedForm()
+											: taxonomyDefinition.getNormalizedForm();
 
 						}
-						if (recoSet.getCommonName().trim().length() > 0)
-							rvActivity.setCommonName(recoSet.getCommonName());
-						if (recoSet.getScientificName().trim().length() > 0)
-							rvActivity.setGivenName(recoSet.getScientificName());
+						else {
+							scientificName = recoSet.getName();
+						}
+						List<RecommendationVote> recoVotes = recoVoteDao.findByRecommendationId(observation.getId(), observation.getMaxVotedRecoId());
+						
+						for (RecommendationVote recoVote : recoVotes) {
+							if (recoVote.getCommonNameRecoId() != null) {
+								String tempName = recoDao.findById(recoVote.getCommonNameRecoId()).getName();
+								if (!commonName.contains(tempName))
+									commonName = commonName + tempName + "||";
+							}
+						}
+						if (!(commonName.isEmpty()))
+							commonName = commonName.substring(0, commonName.length() - 2);
+						
+						rvActivity.setScientificName(scientificName);
+						rvActivity.setCommonName(commonName);
+						rvActivity.setGivenName(scientificName);
 
 						description = objectMapper.writeValueAsString(rvActivity);
-						logActivities.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, observationId,
-								observationId, "observation", observation.getMaxVotedRecoId(), "obv unlocked",
-								observaitonService.generateMailData(observationId));*/
+						ActivityLoggingData activityLogging = new ActivityLoggingData();
+						activityLogging.setActivityDescription(description);
+						activityLogging.setActivityId(observation.getMaxVotedRecoId());
+						activityLogging.setActivityType("obv unlocked");
+						activityLogging.setRootObjectId(observation.getId());
+						activityLogging.setRootObjectType("observation");
+						activityLogging.setSubRootObjectId(observation.getId());
+						activityLogging.setMailData(observationService.generateMailData(observation.getId()));
+						activityService = headers.addActivityHeaders(activityService, requestAuthHeader);
+						try {
+							activityService.logActivity(activityLogging);
+						} catch (ApiException e) {
+						}
+						
 						List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
 						String observationList = StringUtils.join(obsIds, ',');
 						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
