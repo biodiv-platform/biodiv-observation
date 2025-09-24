@@ -999,7 +999,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 	}
 
 	private List<TopUploadersInfo> extractUploaders(Integer uploadersoffset, String user, Map<String, Long> uploaders) {
-		int uploadersSize = (2*uploadersoffset) + 20;
+		int uploadersSize = uploadersoffset + 10;
 		int uploadersCount = 1;
 		String authorIds = "";
 		List<Long> counts = new ArrayList<>();
@@ -1013,25 +1013,29 @@ public class ObservationListServiceImpl implements ObservationListService {
 					speciesCounts.put(l.get(i),uploaders.get(l.get(i)+"|species"));
 				} else {
 					counts.add(Long.valueOf(0));
+					speciesCounts.put(l.get(i), 0L);
 				}
 
 			}
 
 		} else {
 			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
-				if (uploadersCount <= (uploadersSize - 20)) {
+				if (!entry.getKey().endsWith("|observation")) {
+	                continue;
+	            }
+				if (uploadersCount <= (uploadersSize - 10)) {
 					uploadersCount++;
 				} else {
 					if (uploadersCount > uploadersSize) {
 						break;
 					}
-					entry.getValue();
-					if (entry.getKey().split("\\|")[1].equals("observation")) {
-						authorIds = authorIds + entry.getKey().split("\\|")[0] + ",";
-						counts.add(entry.getValue());
-					} else {
-						speciesCounts.put(entry.getKey().split("\\|")[0], entry.getValue());
-					}
+					String userId = entry.getKey().split("\\|")[0];
+	                authorIds = authorIds + userId + ",";
+	                counts.add(entry.getValue());
+	                
+	                Long speciesCount = uploaders.get(userId + "|species");
+	                speciesCounts.put(userId, speciesCount != null ? speciesCount : 0L);
+	                
 					uploadersCount++;
 				}
 			}
