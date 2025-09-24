@@ -943,7 +943,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 	private List<TopUploadersInfo> extractIdentifiers(Integer identifierssoffset, String user,
 			Map<String, Long> identifiers) {
-		int identifiersSize = (2*identifierssoffset) + 20;
+		int identifiersSize = identifierssoffset + 10;
 		int identifiersCount = 1;
 		String authorIds = "";
 		List<Long> counts = new ArrayList<>();
@@ -955,26 +955,33 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (identifiers.containsKey(l.get(i)+"|observation")) {
 					counts.add(identifiers.get(l.get(i)+"|observation"));
 					speciesCounts.put(l.get(i),identifiers.get(l.get(i)+"|species"));
+				} else if (identifiers.containsKey(l.get(i))) {
+					counts.add(identifiers.get(l.get(i)));
+					speciesCounts.put(l.get(i), 0L);
 				} else {
 					counts.add(Long.valueOf(0));
+					speciesCounts.put(l.get(i), 0L);
 				}
 			}
 
 		} else {
 			for (Map.Entry<String, Long> entry : identifiers.entrySet()) {
-				if (identifiersCount <= (identifiersSize - 20)) {
+				if (!entry.getKey().endsWith("|observation") && (entry.getKey().split("\\|").length>1)) {
+	                continue;
+	            }
+				if (identifiersCount <= (identifiersSize - 10)) {
 					identifiersCount++;
 				} else {
 					if (identifiersCount > identifiersSize) {
 						break;
 					}
 					entry.getValue();
-					if (entry.getKey().split("\\|")[1].equals("observation")) {
-						authorIds = authorIds + entry.getKey().split("\\|")[0] + ",";
-						counts.add(entry.getValue());
-					} else {
-						speciesCounts.put(entry.getKey().split("\\|")[0], entry.getValue());
-					}
+					String userId = entry.getKey().split("\\|")[0];
+	                authorIds = authorIds + userId + ",";
+	                counts.add(entry.getValue());
+	                
+	                Long speciesCount = identifiers.get(userId + "|species");
+	                speciesCounts.put(userId, speciesCount != null ? speciesCount : 0L);
 					identifiersCount++;
 				}
 			}
@@ -1011,7 +1018,10 @@ public class ObservationListServiceImpl implements ObservationListService {
 				if (uploaders.containsKey(l.get(i)+"|observation")) {
 					counts.add(uploaders.get(l.get(i)+"|observation"));
 					speciesCounts.put(l.get(i),uploaders.get(l.get(i)+"|species"));
-				} else {
+				} else if (uploaders.containsKey(l.get(i))) {
+					counts.add(uploaders.get(l.get(i)));
+					speciesCounts.put(l.get(i), 0L);
+				}else {
 					counts.add(Long.valueOf(0));
 					speciesCounts.put(l.get(i), 0L);
 				}
@@ -1020,7 +1030,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 		} else {
 			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
-				if (!entry.getKey().endsWith("|observation")) {
+				if (!entry.getKey().endsWith("|observation") && (entry.getKey().split("\\|").length>1)) {
 	                continue;
 	            }
 				if (uploadersCount <= (uploadersSize - 10)) {
