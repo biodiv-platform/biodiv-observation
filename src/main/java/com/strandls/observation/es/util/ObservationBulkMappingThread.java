@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -47,9 +46,7 @@ import com.strandls.observation.pojo.RecommendationVote;
 import com.strandls.observation.pojo.UniqueRecoVote;
 import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.service.RecommendationService;
-import com.strandls.observation.service.Impl.LogActivities;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
-import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -319,7 +316,6 @@ public class ObservationBulkMappingThread implements Runnable {
 						while (count < obIds.size()) {
 							ObsIdList.add(obIds.get(count));
 							if (ObsIdList.size() >= 200) {
-								System.out.println(ObsIdList);
 								bulkSpeciesGroupAction(observationDao.fecthByListOfIds(ObsIdList), sGroupId);
 								ObsIdList.clear();
 							}
@@ -391,32 +387,17 @@ public class ObservationBulkMappingThread implements Runnable {
 				Integer count = 0;
 				if (Boolean.FALSE.equals(selectAll)) {
 					while (count < obsDataList.size()) {
-						// if (Boolean.FALSE.equals(selectAll)) {
 						ObsList.add(obsDataList.get(count));
-						/*
-						 * } else { ObsIdList.add(obIds.get(count)); }
-						 */
 
 						if (ObsList.size() >= 200) {
-							// if (Boolean.FALSE.equals(selectAll)) {
 							bulkValidateAction(ObsList);
 							ObsList.clear();
-							/*
-							 * } else { System.out.println(ObsIdList);
-							 * bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
-							 * ObsIdList.clear(); }
-							 */
 						}
 						count++;
 					}
 
-					// if (Boolean.FALSE.equals(selectAll)) {
 					bulkValidateAction(ObsList);
 					ObsList.clear();
-					/*
-					 * } else { bulkValidateAction(observationDao.fecthByListOfIds(ObsIdList));
-					 * ObsIdList.clear(); }
-					 */
 				} else {
 					while (count < obIds.size()) {
 						ObsIdList.add(obIds.get(count));
@@ -625,7 +606,6 @@ public class ObservationBulkMappingThread implements Runnable {
 	private void bulkTraitsAction(List<Long> obsListIds, Map<String, List<Long>> traits) {
 		for (Long obId : obsListIds) {
 			try {
-				// Long userId = Long.parseLong(profile.getId());
 				FactsCreateData factsCreateData = new FactsCreateData();
 				factsCreateData.setFactValuePairs(traits);
 				factsCreateData.setFactValueString(new HashMap<>());
@@ -644,6 +624,7 @@ public class ObservationBulkMappingThread implements Runnable {
 
 	private void bulkValidateAction(List<Observation> obsList) {
 		for (Observation observation : obsList) {
+			Integer count = 0;
 			try {
 				Long userId = Long.parseLong(profile.getId());
 				List<RecoIbp> allRecoVotes = recoService.allRecoVote(observation.getId());
@@ -658,7 +639,7 @@ public class ObservationBulkMappingThread implements Runnable {
 					if (permission.getValidatePermissionTaxon() != null)
 						permissionList = permission.getValidatePermissionTaxon();
 					if (permissionList.contains(recoSet.getTaxonId())) {
-						if (!(observation.getIsLocked())) {
+						if (!(observation.getIsLocked()) && count==0) {
 							Recommendation scientificNameReco = new Recommendation();
 							List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
 							List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
@@ -730,6 +711,7 @@ public class ObservationBulkMappingThread implements Runnable {
 								observation.setLastRevised(new Date());
 								observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
 								observationDao.update(observation);
+								count = count+1;
 								RecoVoteActivity rvActivity = new RecoVoteActivity();
 
 								if (recoSet.getTaxonId() != null) {
@@ -870,10 +852,8 @@ public class ObservationBulkMappingThread implements Runnable {
 						RecoVoteActivity rvActivity = new RecoVoteActivity();
 						String scientificName = "";
 						String commonName = "";
-						Long taxon = null;
 
 						if (recoSet.getTaxonConceptId() != null) {
-							taxon = recoSet.getTaxonConceptId();
 							TaxonomyDefinition taxonomyDefinition = taxonomyService
 									.getTaxonomyConceptName(recoSet.getTaxonConceptId().toString());
 							scientificName = (taxonomyDefinition.getItalicisedForm() != null
