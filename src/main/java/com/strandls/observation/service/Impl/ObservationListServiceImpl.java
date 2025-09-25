@@ -539,7 +539,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 		Map<String, Long> traitsAggregationMap = mapAggResponse.get("traits").getGroupAggregation();
 
 		for (Traits trait : traitList) {
-			Map<String, Map<String,Object>> traitValueMap = new LinkedHashMap<>();
+			Map<String, Map<String, Object>> traitValueMap = new LinkedHashMap<>();
 
 			for (TraitValue value : trait.getTraitValues()) {
 				String[] valueParts = value.getValue().split("_", 2);
@@ -654,7 +654,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			}
 
-		} else if (statsFilter.equals("uploaders")) {
+		} else if (statsFilter.split("\\|")[0].equals("uploaders")) {
 			// for top Uploaders
 
 			if (user != null && !user.isEmpty()) {
@@ -664,15 +664,15 @@ public class ObservationListServiceImpl implements ObservationListService {
 						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
 						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
 
-				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQueryFilter,
+				getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQueryFilter,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
 
 			} else {
-				getAggregateLatch(index, type, "author_id", geoAggregationField, mapSearchQuery, mapAggStatsResponse,
+				getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQuery, mapAggStatsResponse,
 						latch, null, geoShapeFilterField);
 
 			}
-		} else if (statsFilter.equals("identifiers")) {
+		} else if (statsFilter.split("\\|")[0].equals("identifiers")) {
 			// for top Uploaders
 
 			if (user != null && !user.isEmpty()) {
@@ -682,11 +682,11 @@ public class ObservationListServiceImpl implements ObservationListService {
 						createdOnMinDate, status, taxonId, recoName, rank, tahsil, district, state, tags,
 						publicationGrade, authorVoted, dataSetName, dataTableName, geoEntity, dataTableId);
 
-				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField,
+				getAggregateLatch(index, type, statsFilter, geoAggregationField,
 						mapSearchQueryFilter, mapAggStatsResponse, latch, null, geoShapeFilterField);
 
 			} else {
-				getAggregateLatch(index, type, "all_reco_vote.authors_voted.id", geoAggregationField, mapSearchQuery,
+				getAggregateLatch(index, type, statsFilter, geoAggregationField, mapSearchQuery,
 						mapAggStatsResponse, latch, null, geoShapeFilterField);
 
 			}
@@ -777,14 +777,14 @@ public class ObservationListServiceImpl implements ObservationListService {
 			totals.put("totalIdentifiers", totalIdentifiers);
 
 			aggregationStatsResponse.setTotalCounts(totals);
-		} else if (statsFilter.equals("uploaders")) {
-			Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get("author_id"));
+		} else if (statsFilter.split("\\|")[0].equals("uploaders")) {
+			Map<String, Long> uploaders = getAggregationValue(mapAggStatsResponse.get(statsFilter));
 
 			List<TopUploadersInfo> uploadersResult = extractUploaders(uploadersoffset, user, uploaders);
 			aggregationStatsResponse.setGroupTopUploaders(uploadersResult);
-		} else if (statsFilter.equals("identifiers")) {
+		} else if (statsFilter.split("\\|")[0].equals("identifiers")) {
 			Map<String, Long> identifiers = getAggregationValue(
-					mapAggStatsResponse.get("all_reco_vote.authors_voted.id"));
+					mapAggStatsResponse.get(statsFilter));
 			List<TopUploadersInfo> identifiersResult = extractIdentifiers(identifiersoffset, user, identifiers);
 			aggregationStatsResponse.setGroupTopIdentifiers(identifiersResult);
 		} else if (statsFilter.equals("lifelist")) {
@@ -947,19 +947,28 @@ public class ObservationListServiceImpl implements ObservationListService {
 		int identifiersCount = 1;
 		String authorIds = "";
 		List<Long> counts = new ArrayList<>();
+		Map<String, Long> speciesCounts = new HashMap<>();
 		if (user != null && !user.isEmpty()) {
 			List<String> l = Arrays.asList(user.split(","));
 			for (int i = 0; i < l.size(); i++) {
 				authorIds = authorIds + l.get(i) + ",";
-				if (identifiers.containsKey(l.get(i))) {
+				if (identifiers.containsKey(l.get(i)+"|observation")) {
+					counts.add(identifiers.get(l.get(i)+"|observation"));
+					speciesCounts.put(l.get(i),identifiers.get(l.get(i)+"|species"));
+				} else if (identifiers.containsKey(l.get(i))) {
 					counts.add(identifiers.get(l.get(i)));
+					speciesCounts.put(l.get(i), 0L);
 				} else {
 					counts.add(Long.valueOf(0));
+					speciesCounts.put(l.get(i), 0L);
 				}
 			}
 
 		} else {
 			for (Map.Entry<String, Long> entry : identifiers.entrySet()) {
+				if (!entry.getKey().endsWith("|observation") && (entry.getKey().split("\\|").length>1)) {
+	                continue;
+	            }
 				if (identifiersCount <= (identifiersSize - 10)) {
 					identifiersCount++;
 				} else {
@@ -967,8 +976,12 @@ public class ObservationListServiceImpl implements ObservationListService {
 						break;
 					}
 					entry.getValue();
-					authorIds = authorIds + entry.getKey() + ",";
-					counts.add(entry.getValue());
+					String userId = entry.getKey().split("\\|")[0];
+	                authorIds = authorIds + userId + ",";
+	                counts.add(entry.getValue());
+	                
+	                Long speciesCount = identifiers.get(userId + "|species");
+	                speciesCounts.put(userId, speciesCount != null ? speciesCount : 0L);
 					identifiersCount++;
 				}
 			}
@@ -981,7 +994,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 				String name = allIdentifiersInfo.get(k).getName();
 				String pic = allIdentifiersInfo.get(k).getPic();
 				Long authorId = allIdentifiersInfo.get(k).getAuthorId();
-				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k), speciesCounts.get(authorId.toString()));
 				identifiersResult.add(tempUploader);
 			}
 
@@ -997,29 +1010,42 @@ public class ObservationListServiceImpl implements ObservationListService {
 		int uploadersCount = 1;
 		String authorIds = "";
 		List<Long> counts = new ArrayList<>();
+		Map<String, Long> speciesCounts = new HashMap<>();
 		if (user != null && !user.isEmpty()) {
 			List<String> l = Arrays.asList(user.split(","));
 			for (int i = 0; i < l.size(); i++) {
 				authorIds = authorIds + l.get(i) + ",";
-				if (uploaders.containsKey(l.get(i))) {
+				if (uploaders.containsKey(l.get(i)+"|observation")) {
+					counts.add(uploaders.get(l.get(i)+"|observation"));
+					speciesCounts.put(l.get(i),uploaders.get(l.get(i)+"|species"));
+				} else if (uploaders.containsKey(l.get(i))) {
 					counts.add(uploaders.get(l.get(i)));
-				} else {
+					speciesCounts.put(l.get(i), 0L);
+				}else {
 					counts.add(Long.valueOf(0));
+					speciesCounts.put(l.get(i), 0L);
 				}
 
 			}
 
 		} else {
 			for (Map.Entry<String, Long> entry : uploaders.entrySet()) {
+				if (!entry.getKey().endsWith("|observation") && (entry.getKey().split("\\|").length>1)) {
+	                continue;
+	            }
 				if (uploadersCount <= (uploadersSize - 10)) {
 					uploadersCount++;
 				} else {
 					if (uploadersCount > uploadersSize) {
 						break;
 					}
-					entry.getValue();
-					authorIds = authorIds + entry.getKey() + ",";
-					counts.add(entry.getValue());
+					String userId = entry.getKey().split("\\|")[0];
+	                authorIds = authorIds + userId + ",";
+	                counts.add(entry.getValue());
+	                
+	                Long speciesCount = uploaders.get(userId + "|species");
+	                speciesCounts.put(userId, speciesCount != null ? speciesCount : 0L);
+	                
 					uploadersCount++;
 				}
 			}
@@ -1032,7 +1058,7 @@ public class ObservationListServiceImpl implements ObservationListService {
 				String name = allUploadersInfo.get(k).getName();
 				String pic = allUploadersInfo.get(k).getPic();
 				Long authorId = allUploadersInfo.get(k).getAuthorId();
-				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k));
+				TopUploadersInfo tempUploader = new TopUploadersInfo(name, pic, authorId, counts.get(k), speciesCounts.get(authorId.toString()));
 				uploadersResult.add(tempUploader);
 			}
 
