@@ -281,7 +281,7 @@ public class ObservationMapperHelper {
 			Recommendation recommendation = recoDao.findRecoByTaxonId(recoData.getScientificNameTaxonId(), true);
 			if (recommendation == null) {
 				ParsedName parsedName = utilityService.getNameParsed(recoData.getTaxonScientificName());
-				String canonicalName = parsedName.getCanonicalName().getSimple();
+				String canonicalName = parsedName.getCanonical().getSimple();
 				recommendation = recoService.createRecommendation(recoData.getTaxonScientificName(),
 						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
 			}
@@ -315,10 +315,10 @@ public class ObservationMapperHelper {
 			String providedSciName = recoData.getTaxonScientificName();
 			ParsedName parsedName = utilityService.getNameParsed(providedSciName);
 
-			if (parsedName.getCanonicalName() == null)
+			if (parsedName.getCanonical() == null)
 				throw new ObservationInputException("Scientific Name Cannot start with Small letter");
 
-			String canonicalName = parsedName.getCanonicalName().getSimple();
+			String canonicalName = parsedName.getCanonical().getSimple();
 			ExtendedTaxonDefinition esResult = esService.matchPhrase("etd", "er", "name", providedSciName,
 					"canonical_form", canonicalName);
 			if (esResult != null) {

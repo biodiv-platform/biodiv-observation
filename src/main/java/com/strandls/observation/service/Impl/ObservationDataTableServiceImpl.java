@@ -165,7 +165,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
-				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup();
+				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup("");
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
 
 				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
