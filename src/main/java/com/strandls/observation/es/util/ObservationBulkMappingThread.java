@@ -581,6 +581,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			try {
 				activityService.logActivity(activityLogging);
 			} catch (ApiException e) {
+				logger.error(e.getMessage());
 			}
 		}
 		List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
@@ -599,6 +600,7 @@ public class ObservationBulkMappingThread implements Runnable {
 						false);
 
 			} catch (Exception e) {
+				logger.error(e.getMessage());
 			}
 		}
 	}
@@ -618,6 +620,7 @@ public class ObservationBulkMappingThread implements Runnable {
 				esThreadUpdate.start();
 
 			} catch (Exception e) {
+				logger.error(e.getMessage());
 			}
 		}
 	}
@@ -743,6 +746,7 @@ public class ObservationBulkMappingThread implements Runnable {
 								try {
 									activityService.logActivity(activityLogging);
 								} catch (ApiException e) {
+									logger.error(e.getMessage());
 								}
 							}
 
@@ -757,6 +761,7 @@ public class ObservationBulkMappingThread implements Runnable {
 				esThreadUpdate.start();
 
 			} catch (Exception e) {
+				logger.error(e.getMessage());
 			}
 		}
 	}
@@ -894,6 +899,7 @@ public class ObservationBulkMappingThread implements Runnable {
 						try {
 							activityService.logActivity(activityLogging);
 						} catch (ApiException e) {
+							logger.error(e.getMessage());
 						}
 						
 						List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
@@ -904,6 +910,7 @@ public class ObservationBulkMappingThread implements Runnable {
 					}
 				}
 			} catch(Exception e) {
+				logger.error(e.getMessage());
 				}
 			}
 	}
