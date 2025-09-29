@@ -3,8 +3,8 @@ package com.strandls.observation.pojo;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.bedatadriven.jackson.datatype.jts.serialization.GeometryDeserializer;
-import com.bedatadriven.jackson.datatype.jts.serialization.GeometrySerializer;
+import org.n52.jackson.datatype.jts.GeometryDeserializer;
+import org.n52.jackson.datatype.jts.GeometrySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -282,7 +282,7 @@ public class Observation implements Serializable {
 
 	@Column(name = "topology", columnDefinition = "Geometry", nullable = false)
 	@JsonSerialize(using = GeometrySerializer.class)
-	@JsonDeserialize(contentUsing = GeometryDeserializer.class)
+	@JsonDeserialize(using = GeometryDeserializer.class)
 	public Geometry getTopology() {
 		return this.topology;
 	}
