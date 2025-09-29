@@ -245,7 +245,7 @@ public class ObservationListPageMapper {
 				}
 				AllRecoSugguestions sug = new AllRecoSugguestions(cn.toString(), sciName, taxonId, null, ul);
 				list.add(sug);
-				if ("SYNONYM".equalsIgnoreCase(recoShow.getRecoIbp().getStatus())) {
+				if (recoShow.getRecoIbp() != null && "SYNONYM".equalsIgnoreCase(recoShow.getRecoIbp().getStatus())) {
 					recoShow.getRecoIbp().setTaxonId(taxonId);
 				}
 			}
