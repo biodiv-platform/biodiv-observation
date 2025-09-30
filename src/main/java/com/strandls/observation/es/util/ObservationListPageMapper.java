@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.observation.es.util;
 
@@ -21,28 +21,46 @@ import com.strandls.userGroup.pojo.CustomFieldObservationData;
 import com.strandls.userGroup.pojo.CustomFieldValues;
 import com.strandls.userGroup.pojo.CustomFieldValuesData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-import com.strandls.utility.pojo.Flag;
 import com.strandls.utility.pojo.FlagShow;
 import com.strandls.utility.pojo.Tags;
 
-/**
- * @author Abhishek Rudra
- *
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListPageMapper {
 
+	@JsonProperty("observation_id")
 	private Long observationId;
+
+	@JsonProperty("created_on")
 	private Date createdOn;
+
+	@JsonProperty("last_revised")
 	private Date lastRevised;
+
+	@JsonProperty("from_date")
 	private Date observedOn;
+
+	@JsonProperty("place_name")
 	private String placeName;
+
+	@JsonProperty("reverse_geocoded_name")
 	private String reverseGeocodedName;
+
+	@JsonProperty("group_id")
 	private Long speciesGroupId;
+
+	@JsonProperty("group_name")
 	private String speciesGroup;
+
+	@JsonProperty("no_of_images")
 	private Long noOfImages;
+
+	@JsonProperty("no_of_audio")
 	private Long noOfAudios;
+
+	@JsonProperty("no_of_videos")
 	private Long noOfVideos;
+
+	@JsonProperty("repr_image_url")
 	private String reprImageUrl;
 
 	private UserIbp user;
@@ -54,96 +72,33 @@ public class ObservationListPageMapper {
 	private List<Tags> tags;
 	private String observationNotes;
 
-	@JsonProperty("observation_id")
-	private void unpackObservationId(Long observation_id) {
-		observationId = observation_id;
-	}
+	// custom unpacking logic without @JsonProperty on methods
 
-	@JsonProperty("created_on")
-	private void unpackDate(Date created_on) {
-		createdOn = created_on;
-	}
-
-	@JsonProperty(value = "last_revised")
-	private void unpackLastRevised(Date lastModified) {
-		lastRevised = lastModified;
-	}
-
-	@JsonProperty(value = "from_date")
-	private void unpackObservedOnDate(Date observedDate) {
-		observedOn = observedDate;
-	}
-
-	@JsonProperty(value = "place_name")
-	private void unPackPlaceName(String place_name) {
-		placeName = place_name;
-	}
-
-	@JsonProperty(value = "reverse_geocoded_name")
-	private void unpackAddress(String reverse_geocoded_name) {
-		reverseGeocodedName = reverse_geocoded_name;
-	}
-
-	@JsonProperty(value = "group_id")
-	private void unpackSGroupId(Long group_id) {
-		speciesGroupId = group_id;
-	}
-
-	@JsonProperty(value = "group_name")
-	private void unpacksGroup(String group_name) {
-		speciesGroup = group_name;
-	}
-
-	@JsonProperty(value = "no_of_images")
-	private void unpackImages(Long images) {
-		noOfImages = images;
-	}
-
-	@JsonProperty(value = "no_of_audio")
-	private void unpackAudio(Long audio) {
-		noOfAudios = audio;
-	}
-
-	@JsonProperty(value = "no_of_videos")
-	private void unpackVideo(Long videos) {
-		noOfVideos = videos;
-	}
-
-	@JsonProperty(value = "repr_image_url")
-	private void unpackReprImage(String reprImage) {
-		reprImageUrl = reprImage;
-	}
-
-//	---------USER IBP------------
-
-	@JsonProperty(value = "author_id")
+	@JsonProperty("author_id")
 	private void unpackAuthorId(Long author_id) {
 		if (user == null)
 			user = new UserIbp();
 		user.setId(author_id);
 	}
 
-	@JsonProperty(value = "created_by")
+	@JsonProperty("created_by")
 	private void unpackAuthorName(String created_by) {
 		if (user == null)
 			user = new UserIbp();
 		user.setName(created_by);
 	}
 
-	@JsonProperty(value = "profile_pic")
+	@JsonProperty("profile_pic")
 	private void unpackAuthorPic(String profile_pic) {
 		if (user == null)
 			user = new UserIbp();
 		user.setProfilePic(profile_pic);
 	}
 
-//	---------FACT VALUE PAIR-----------
-
-	@JsonProperty(value = "facts")
+	@JsonProperty("facts")
 	private void unpackFacts(List<Facts> facts) throws ParseException {
-		factValuePair = new ArrayList<FactValuePair>();
-		String pattern = "EEE MMM dd HH:mm:ss z yyyy";
-		SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+		factValuePair = new ArrayList<>();
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
 		if (facts != null) {
 			for (Facts fact : facts) {
 				FactValuePair fvp = new FactValuePair();
@@ -152,298 +107,240 @@ public class ObservationListPageMapper {
 				fvp.setType(fact.getTrait_types());
 				fvp.setIsParticipatry(fact.getIs_participatory());
 				if (fact.getTrait_value() != null) {
-					for (Trait_value value : fact.getTrait_value()) {
-
-						if (value.getTrait_value_id() != null) {
-							fvp.setValue(toTitleCase(value.getValue()));
-							fvp.setValueId(value.getTrait_value_id());
-						} else if (value.getFrom_value() != null) {
-							if (value.getTo_value() != null)
-								fvp.setValue(value.getFrom_value() + " : " + value.getTo_value());
-							else
-								fvp.setValue(value.getFrom_value());
+					for (Trait_value v : fact.getTrait_value()) {
+						if (v.getTrait_value_id() != null) {
+							fvp.setValue(toTitleCase(v.getValue()));
+							fvp.setValueId(v.getTrait_value_id());
+						} else if (v.getFrom_value() != null) {
+							fvp.setValue(v.getFrom_value() + (v.getTo_value() != null ? " : " + v.getTo_value() : ""));
 						} else {
-
-							if (value.getFrom_date() != null)
-								fvp.setFromDate(sdf.parse(value.getFrom_date().toString()));
-							if (value.getTo_date() != null)
-								fvp.setFromDate(sdf.parse(value.getTo_date().toString()));
+							if (v.getFrom_date() != null)
+								fvp.setFromDate(sdf.parse(v.getFrom_date().toString()));
+							if (v.getTo_date() != null)
+								fvp.setFromDate(sdf.parse(v.getTo_date().toString()));
 						}
-
 						factValuePair.add(fvp);
 						fvp = new FactValuePair();
 						fvp.setNameId(fact.getTrait_id());
 						fvp.setName(fact.getName());
 						fvp.setType(fact.getTrait_types());
 						fvp.setIsParticipatry(fact.getIs_participatory());
-
 					}
 				}
-
 			}
 		}
-
 	}
 
 	private String toTitleCase(String input) {
-		StringBuilder titleCase = new StringBuilder(input.length());
-		boolean nextTitleCase = true;
-
+		StringBuilder sb = new StringBuilder(input.length());
+		boolean next = true;
 		for (char c : input.toCharArray()) {
 			if (Character.isSpaceChar(c)) {
-				nextTitleCase = true;
-			} else if (nextTitleCase) {
+				next = true;
+			} else if (next) {
 				c = Character.toTitleCase(c);
-				nextTitleCase = false;
+				next = false;
 			}
-
-			titleCase.append(c);
+			sb.append(c);
 		}
-
-		return titleCase.toString();
+		return sb.toString();
 	}
 
-//	------------FLAG SHOW--------------
-
-	@JsonProperty(value = "flags")
+	@JsonProperty("flags")
 	private void unpackFlags(List<Flags> flags) {
-		flagShow = new ArrayList<FlagShow>();
+		flagShow = new ArrayList<>();
 		if (flags != null) {
 			for (Flags flag : flags) {
 				FlagShow fs = new FlagShow();
-				Flag flagIbp = new Flag();
-				com.strandls.utility.pojo.UserIbp useribp = new com.strandls.utility.pojo.UserIbp();
-
-				useribp.setId(flag.getAuthor_id());
-				useribp.setName(flag.getAuthor_name());
-				useribp.setProfilePic(flag.getProfile_pic());
-
-				flagIbp.setId(flag.getId());
-				flagIbp.setCreatedOn(flag.getCreated_on());
-				flagIbp.setNotes(flag.getNotes());
-				flagIbp.setFlag(flag.getFlag());
-
-				fs.setFlag(flagIbp);
-				fs.setUser(useribp);
+				com.strandls.utility.pojo.Flag fIbp = new com.strandls.utility.pojo.Flag();
+				com.strandls.utility.pojo.UserIbp u = new com.strandls.utility.pojo.UserIbp();
+				u.setId(flag.getAuthor_id());
+				u.setName(flag.getAuthor_name());
+				u.setProfilePic(flag.getProfile_pic());
+				fIbp.setId(flag.getId());
+				fIbp.setCreatedOn(flag.getCreated_on());
+				fIbp.setNotes(flag.getNotes());
+				fIbp.setFlag(flag.getFlag());
+				fs.setFlag(fIbp);
+				fs.setUser(u);
 				flagShow.add(fs);
-
 			}
 		}
-
 	}
 
-//	---------RECO IBP----ALL RECO VOTE ----IS LOCKED-------
-
-//	---------------IS LOCKED------------------
-	@JsonProperty(value = "is_locked")
+	@JsonProperty("is_locked")
 	private void unpackIsLocked(Boolean isLocked) {
 		if (recoShow == null)
 			recoShow = new RecoShow();
 		recoShow.setIsLocked(isLocked);
 	}
 
-//	----------------RECO IBP------------------
-	@JsonProperty(value = "max_voted_reco")
-	private void unpackMaxName(Max_voted_reco maxVoted) {
+	@JsonProperty("max_voted_reco")
+	private void unpackMaxVoted(Max_voted_reco maxVoted) {
+		if (recoShow == null)
+			recoShow = new RecoShow();
 		if (maxVoted != null) {
-			String commonName = "";
+			StringBuilder cn = new StringBuilder();
 			if (maxVoted.getCommon_names() != null) {
-				for (Common_names cn : maxVoted.getCommon_names()) {
-					commonName = commonName + cn.getCommon_name() + "||";
+				for (Common_names c : maxVoted.getCommon_names()) {
+					cn.append(c.getCommon_name()).append("||");
 				}
-				commonName = commonName.substring(0, commonName.length() - 2);
+				if (cn.length() > 2)
+					cn.setLength(cn.length() - 2);
 			}
-
-			RecoIbp recoIbp = new RecoIbp(commonName,
+			RecoIbp ri = new RecoIbp(cn.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
 					null, null, null, null, maxVoted.getTaxonstatus(), null);
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {
-				for (Hierarchy hierarchy : maxVoted.getHierarchy()) {
-					taxonId = hierarchy.getTaxon_id();
+				for (Hierarchy h : maxVoted.getHierarchy()) {
+					taxonId = h.getTaxon_id();
 				}
 			}
-
-			if (maxVoted.getTaxonstatus() != null && maxVoted.getTaxonstatus().equalsIgnoreCase("SYNONYM")) {
-				if (recoShow != null && recoShow.getAllRecoVotes() != null) {
-					List<AllRecoSugguestions> allrecoVote = recoShow.getAllRecoVotes();
-					for (AllRecoSugguestions allreco : allrecoVote) {
-						if (allreco.getScientificName() != null
-								&& allreco.getScientificName().equalsIgnoreCase(maxVoted.getScientific_name()))
-							taxonId = allreco.getTaxonId();
+			// handle synonym logic
+			if ("SYNONYM".equalsIgnoreCase(maxVoted.getTaxonstatus()) && recoShow.getAllRecoVotes() != null) {
+				for (AllRecoSugguestions ar : recoShow.getAllRecoVotes()) {
+					if (ar.getScientificName() != null
+							&& ar.getScientificName().equalsIgnoreCase(maxVoted.getScientific_name())) {
+						taxonId = ar.getTaxonId();
 					}
 				}
 			}
-			recoIbp.setTaxonId(taxonId);
-			if (recoShow == null)
-				recoShow = new RecoShow();
-			recoShow.setRecoIbp(recoIbp);
+			ri.setTaxonId(taxonId);
+			recoShow.setRecoIbp(ri);
 		}
-
 	}
 
-//	------------ALL RECO VOTE SUGGESTIONS--------------------
-	@JsonProperty(value = "all_reco_vote")
+	@JsonProperty("all_reco_vote")
 	private void unpackAllReco(List<All_reco_vote> allRecoVote) {
-
-		List<AllRecoSugguestions> allRecoList = new ArrayList<AllRecoSugguestions>();
-		AllRecoSugguestions allRecoSuggeSugguestions = new AllRecoSugguestions();
+		List<AllRecoSugguestions> list = new ArrayList<>();
 		if (allRecoVote != null) {
-			for (All_reco_vote allreco : allRecoVote) {
-				String commonName = "";
-				if (allreco.getCommon_names() != null) {
-					for (Common_names cn : allreco.getCommon_names()) {
-						commonName = commonName + cn.getCommon_name() + "||";
+			for (All_reco_vote ar : allRecoVote) {
+				StringBuilder cn = new StringBuilder();
+				if (ar.getCommon_names() != null) {
+					for (Common_names c : ar.getCommon_names()) {
+						cn.append(c.getCommon_name()).append("||");
 					}
-					commonName = commonName.substring(0, commonName.length() - 2);
+					if (cn.length() > 2)
+						cn.setLength(cn.length() - 2);
 				}
-				List<UserIbp> userList = new ArrayList<UserIbp>();
-				UserIbp useribp;
-				if (allreco.getAuthors_voted() != null) {
-					for (Authors_voted author : allreco.getAuthors_voted()) {
-						useribp = new UserIbp();
-						useribp.setId(author.getId());
-						useribp.setName(author.getName());
-						useribp.setProfilePic(author.getProfile_pic());
-						userList.add(useribp);
+				List<UserIbp> ul = new ArrayList<>();
+				if (ar.getAuthors_voted() != null) {
+					for (Authors_voted av : ar.getAuthors_voted()) {
+						UserIbp u = new UserIbp();
+						u.setId(av.getId());
+						u.setName(av.getName());
+						u.setProfilePic(av.getProfile_pic());
+						ul.add(u);
 					}
 				}
-				String scientificName = null;
 				Long taxonId = null;
-				Long speciesId = null;
-				if (allreco.getScientific_name() != null) {
-					scientificName = allreco.getScientific_name().getName();
-					if (allreco.getScientific_name().getTaxon_detail() != null) {
-						taxonId = allreco.getScientific_name().getTaxon_detail().getId();
-						scientificName = allreco.getScientific_name().getTaxon_detail().getItalicised_form() != null
-								? allreco.getScientific_name().getTaxon_detail().getItalicised_form()
-								: allreco.getScientific_name().getTaxon_detail().getScientific_name();
-//						if (allreco.getScientific_name().getTaxon_detail().getSpecies_id() != null) {
-//							speciesId = Long.parseLong(allreco.getScientific_name().getTaxon_detail().getSpecies_id());
-//						}
-					}
+				String sciName = null;
+				if (ar.getScientific_name() != null && ar.getScientific_name().getTaxon_detail() != null) {
+					sciName = ar.getScientific_name().getTaxon_detail().getItalicised_form() != null
+							? ar.getScientific_name().getTaxon_detail().getItalicised_form()
+							: ar.getScientific_name().getTaxon_detail().getScientific_name();
+					taxonId = ar.getScientific_name().getTaxon_detail().getId();
 				}
-				allRecoSuggeSugguestions = new AllRecoSugguestions(commonName, scientificName, taxonId, speciesId,
-						userList);
-				allRecoList.add(allRecoSuggeSugguestions);
-				if (recoShow != null && recoShow.getRecoIbp() != null && recoShow.getRecoIbp().getStatus() != null)
-					if (recoShow.getRecoIbp().getStatus().equalsIgnoreCase("SYNONYM")) {
-						recoShow.getRecoIbp().setTaxonId(taxonId);
-					}
-
+				AllRecoSugguestions sug = new AllRecoSugguestions(cn.toString(), sciName, taxonId, null, ul);
+				list.add(sug);
+				if (recoShow.getRecoIbp() != null && "SYNONYM".equalsIgnoreCase(recoShow.getRecoIbp().getStatus())) {
+					recoShow.getRecoIbp().setTaxonId(taxonId);
+				}
 			}
 		}
-
 		if (recoShow == null)
 			recoShow = new RecoShow();
-		recoShow.setAllRecoVotes(allRecoList);
+		recoShow.setAllRecoVotes(list);
 	}
 
-//	---------------USER GROUP FOR OBSERVATION----------------
-
-	@JsonProperty(value = "user_group_observations")
-	private void unpackUserGroup(List<User_group_observations> ugObservation) {
-		userGroup = new ArrayList<UserGroupIbp>();
-		UserGroupIbp ugIbp;
-		if (ugObservation != null) {
-			for (User_group_observations ug : ugObservation) {
-				ugIbp = new UserGroupIbp();
-				ugIbp.setId(ug.getId());
-				ugIbp.setName(ug.getName());
-				ugIbp.setIcon(ug.getIcon());
-				if (ug.getDomain_name() != null)
-					ugIbp.setWebAddress(ug.getDomain_name());
-				else
-					ugIbp.setWebAddress("/group/" + ug.getWebaddress());
-				userGroup.add(ugIbp);
+	@JsonProperty("user_group_observations")
+	private void unpackUserGroup(List<User_group_observations> ugObs) {
+		userGroup = new ArrayList<>();
+		if (ugObs != null) {
+			for (User_group_observations ug : ugObs) {
+				UserGroupIbp ugI = new UserGroupIbp();
+				ugI.setId(ug.getId());
+				ugI.setName(ug.getName());
+				ugI.setIcon(ug.getIcon());
+				ugI.setWebAddress(ug.getDomain_name() != null ? ug.getDomain_name() : ("/group/" + ug.getWebaddress()));
+				userGroup.add(ugI);
 			}
 		}
-
 	}
 
-//	--------------------CUSTOM FIELDS--------------
-	@JsonProperty(value = "custom_fields")
-	private void unpackCustomField(List<Custom_fields> custom_fields) {
-		customField = new ArrayList<CustomFieldObservationData>();
-		if (custom_fields != null) {
-			for (Custom_fields cfs : custom_fields) {
-				CustomFieldObservationData cfObservationData = new CustomFieldObservationData();
-				cfObservationData.setUserGroupId(cfs.getUser_group_id());
-
-				List<CustomFieldData> customFieldlist = new ArrayList<CustomFieldData>();
-				if (cfs.getCustom_field() != null) {
-					for (Custom_field cf : cfs.getCustom_field()) {
-						CustomFieldData cfData = new CustomFieldData();
-						CustomFieldValuesData cfValueData = new CustomFieldValuesData();
-						cfData.setAllowedParticipation(cf.getAllowed_participation());
-						cfData.setCfIconUrl(cf.getCf_icon_url());
-						cfData.setCfId(cf.getCustom_field_id());
-						cfData.setCfName(cf.getCf_name());
-						cfData.setCfNotes(cf.getCf_notes());
-
-						Custom_field_values cfValue = cf.getCustom_field_values();
-						cfValueData.setFieldTextData(cfValue.getField_text_data());
-						cfValueData.setMaxRange(cfValue.getMax_range());
-						cfValueData.setMinRange(cfValue.getMin_range());
-						CustomFieldValues singleCategorical = new CustomFieldValues();
-						singleCategorical.setValues(cfValue.getSingle_categorical_data());
-						cfValueData.setSingleCategoricalData(singleCategorical);
-						List<CustomFieldValues> multipleCategorical = new ArrayList<CustomFieldValues>();
-						if (cfValue.getMultiple_categorical_data() != null) {
-							for (String multi : cfValue.getMultiple_categorical_data()) {
-								CustomFieldValues mutliCat = new CustomFieldValues();
-								mutliCat.setValues(multi);
-								multipleCategorical.add(mutliCat);
+	@JsonProperty("custom_fields")
+	private void unpackCustomField(List<Custom_fields> cfList) {
+		customField = new ArrayList<>();
+		if (cfList != null) {
+			for (Custom_fields c : cfList) {
+				CustomFieldObservationData cfod = new CustomFieldObservationData();
+				cfod.setUserGroupId(c.getUser_group_id());
+				List<CustomFieldData> cfdList = new ArrayList<>();
+				if (c.getCustom_field() != null) {
+					for (Custom_field cf : c.getCustom_field()) {
+						CustomFieldData cd = new CustomFieldData();
+						cd.setAllowedParticipation(cf.getAllowed_participation());
+						cd.setCfIconUrl(cf.getCf_icon_url());
+						cd.setCfId(cf.getCustom_field_id());
+						cd.setCfName(cf.getCf_name());
+						cd.setCfNotes(cf.getCf_notes());
+						Custom_field_values v = cf.getCustom_field_values();
+						CustomFieldValuesData vd = new CustomFieldValuesData();
+						vd.setFieldTextData(v.getField_text_data());
+						vd.setMaxRange(v.getMax_range());
+						vd.setMinRange(v.getMin_range());
+						CustomFieldValues sc = new CustomFieldValues();
+						sc.setValues(v.getSingle_categorical_data());
+						vd.setSingleCategoricalData(sc);
+						List<CustomFieldValues> mc = new ArrayList<>();
+						if (v.getMultiple_categorical_data() != null) {
+							for (String m : v.getMultiple_categorical_data()) {
+								CustomFieldValues mcv = new CustomFieldValues();
+								mcv.setValues(m);
+								mc.add(mcv);
 							}
 						}
+						vd.setMultipleCategoricalData(mc);
+						cd.setCustomFieldValues(vd);
+						cd.setDataType(cf.getData_type());
+						cd.setDefaultValue(cf.getDefault_value());
+						if (cf.getDisplay_order() != null) {
+							cd.setDisplayOrder(Integer.parseInt(cf.getDisplay_order().toString()));
+						}
+						cd.setFieldType(cf.getField_type());
+						cd.setUnits(cf.getUnits());
 
-						cfValueData.setMultipleCategoricalData(multipleCategorical);
-
-						cfData.setCustomFieldValues(cfValueData);
-						cfData.setDataType(cf.getData_type());
-						cfData.setDefaultValue(cf.getDefault_value());
-						if (cf.getDisplay_order() != null)
-							cfData.setDisplayOrder(Integer.parseInt(cf.getDisplay_order().toString()));
-						cfData.setFieldType(cf.getField_type());
-						cfData.setUnits(cf.getUnits());
-
-						customFieldlist.add(cfData);
+						cfdList.add(cd);
 					}
 				}
-
-				cfObservationData.setCustomField(customFieldlist);
-
-				customField.add(cfObservationData);
+				cfod.setCustomField(cfdList);
+				customField.add(cfod);
 			}
 		}
-
 	}
 
-//	---------------TAGS-------------------------
-
-	@JsonProperty(value = "tags")
-	private void unpacktags(List<com.strandls.observation.es.util.Tags> tagsES) {
-		tags = new ArrayList<Tags>();
-		Tags tagIbp;
+	@JsonProperty("tags")
+	private void unpackTags(List<com.strandls.observation.es.util.Tags> tagsES) {
+		tags = new ArrayList<>();
 		if (tagsES != null) {
-			for (com.strandls.observation.es.util.Tags tag : tagsES) {
-				tagIbp = new Tags();
-				tagIbp.setName(tag.getName());
-				tagIbp.setId(tag.getId());
-				tags.add(tagIbp);
+			for (com.strandls.observation.es.util.Tags t : tagsES) {
+				Tags ti = new Tags();
+				ti.setId(t.getId());
+				ti.setName(t.getName());
+				tags.add(ti);
 			}
 		}
-
 	}
 
-	@JsonProperty(value = "notes")
+	@JsonProperty("notes")
 	private void unpackNotes(String notes) {
 		observationNotes = notes;
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public ObservationListPageMapper() {
 		super();
