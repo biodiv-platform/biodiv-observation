@@ -9,8 +9,5 @@
 	"dateLibrary": "legacy",
 	"library": "jersey3",
 	"developerName": "Abhishek Kumar Rudra",
-	"developerEmail": "abhishek.rudra@strandls.com",
-	"java8": false,
-	"modelPropertyNaming": "camelCase",
-	"skipIfSpecIsUnchanged": true
+	"developerEmail": "abhishek.rudra@strandls.com"
 }
