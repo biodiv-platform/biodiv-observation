@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.dataTable.ApiException;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
@@ -37,6 +38,8 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationBulkMappingThread;
@@ -46,6 +49,7 @@ import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
@@ -53,6 +57,7 @@ import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValuePair;
@@ -71,6 +76,15 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private ObservationDAO observationDao;
+	
+	@Inject
+	private ObservationService observationService;
+	
+	@Inject
+	private RecommendationDao recoDao;
+	
+	@Inject
+	private RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	private TraitsServiceApi traitService;
@@ -129,6 +143,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private IntergratorServicesApi intergratorService;
+	
+	@Inject
+	private ActivitySerivceApi activityService;
+	
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
@@ -428,6 +448,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			Long dataTableId, List<Long> userGroupList, String bulkAction) {
 
 		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			UserGroupCreateDatatable usergroups = new UserGroupCreateDatatable();
 			usergroups.setUserGroupIds(userGroupList);
 			List<Long> list = new ArrayList<>();
@@ -477,17 +498,17 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
+					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, intergratorService, esUpdate, traitService);
+					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

@@ -595,7 +595,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			if (observation.getIsLocked())
 				return null;
 
-			ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
+			ObservationUserPermission permission = observaitonService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile,
 					observationId.toString(), userId, recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
 			if (permission.getValidatePermissionTaxon() != null)
@@ -705,7 +705,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked()) {
 
-				ObservationUserPermission permission = observaitonService.getUserPermissions(request, profile,
+				ObservationUserPermission permission = observaitonService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile,
 						observationId.toString(), userId, recoSet.getTaxonId().toString());
 				List<Long> permissionList = new ArrayList<Long>();
 				if (permission.getValidatePermissionTaxon() != null)

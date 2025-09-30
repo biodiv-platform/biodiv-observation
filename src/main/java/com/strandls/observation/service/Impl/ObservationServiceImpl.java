@@ -688,20 +688,20 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUserPermission getUserPermissions(HttpServletRequest request, CommonProfile profile,
+	public ObservationUserPermission getUserPermissions(String requestAuthHeader, CommonProfile profile,
 			String observationId, Long userId, String taxonList) throws Exception {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
 			List<Long> validateAllowed = new ArrayList<Long>();
 			List<UserGroupIbp> allowedUserGroup = new ArrayList<UserGroupIbp>();
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
-			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			userService = headers.addUserHeaders(userService, requestAuthHeader);
 			Follow follow = userService.getFollowByObject("observation", observationId);
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
 			userGroupService = headers.addUserGroupHeader(userGroupService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
+					requestAuthHeader);
 			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -720,7 +720,7 @@ public class ObservationServiceImpl implements ObservationService {
 			} else {
 				if (taxonList.trim().length() != 0) {
 					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
-							request.getHeader(HttpHeaders.AUTHORIZATION));
+							requestAuthHeader);
 					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
@@ -749,7 +749,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			}
 
-			cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			cfService = headers.addCFHeaders(cfService, requestAuthHeader);
 			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId);
 
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
