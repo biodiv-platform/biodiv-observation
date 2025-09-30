@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.strandls.observation.pojo.AllRecoSugguestions;
@@ -27,40 +28,40 @@ import com.strandls.utility.pojo.Tags;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListPageMapper {
 
-	@JsonProperty(value = "observation_id", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("observation_id")
 	private Long observationId;
 
-	@JsonProperty(value = "created_on", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("created_on")
 	private Date createdOn;
 
-	@JsonProperty(value = "last_revised", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("last_revised")
 	private Date lastRevised;
 
-	@JsonProperty(value = "from_date", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("from_date")
 	private Date observedOn;
 
-	@JsonProperty(value = "place_name", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("place_name")
 	private String placeName;
 
-	@JsonProperty(value = "reverse_geocoded_name", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("reverse_geocoded_name")
 	private String reverseGeocodedName;
 
-	@JsonProperty(value = "group_id", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("group_id")
 	private Long speciesGroupId;
 
-	@JsonProperty(value = "group_name", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("group_name")
 	private String speciesGroup;
 
-	@JsonProperty(value = "no_of_images", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("no_of_images")
 	private Long noOfImages;
 
-	@JsonProperty(value = "no_of_audio", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("no_of_audio")
 	private Long noOfAudios;
 
-	@JsonProperty(value = "no_of_videos", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("no_of_videos")
 	private Long noOfVideos;
 
-	@JsonProperty(value = "repr_image_url", access = JsonProperty.Access.WRITE_ONLY)
+	@JsonAlias("repr_image_url")
 	private String reprImageUrl;
 
 	private UserIbp user;
