@@ -27,40 +27,40 @@ import com.strandls.utility.pojo.Tags;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListPageMapper {
 
-	@JsonProperty("observation_id")
+	@JsonProperty(value = "observation_id", access = JsonProperty.Access.WRITE_ONLY)
 	private Long observationId;
 
-	@JsonProperty("created_on")
+	@JsonProperty(value = "created_on", access = JsonProperty.Access.WRITE_ONLY)
 	private Date createdOn;
 
-	@JsonProperty("last_revised")
+	@JsonProperty(value = "last_revised", access = JsonProperty.Access.WRITE_ONLY)
 	private Date lastRevised;
 
-	@JsonProperty("from_date")
+	@JsonProperty(value = "from_date", access = JsonProperty.Access.WRITE_ONLY)
 	private Date observedOn;
 
-	@JsonProperty("place_name")
+	@JsonProperty(value = "place_name", access = JsonProperty.Access.WRITE_ONLY)
 	private String placeName;
 
-	@JsonProperty("reverse_geocoded_name")
+	@JsonProperty(value = "reverse_geocoded_name", access = JsonProperty.Access.WRITE_ONLY)
 	private String reverseGeocodedName;
 
-	@JsonProperty("group_id")
+	@JsonProperty(value = "group_id", access = JsonProperty.Access.WRITE_ONLY)
 	private Long speciesGroupId;
 
-	@JsonProperty("group_name")
+	@JsonProperty(value = "group_name", access = JsonProperty.Access.WRITE_ONLY)
 	private String speciesGroup;
 
-	@JsonProperty("no_of_images")
+	@JsonProperty(value = "no_of_images", access = JsonProperty.Access.WRITE_ONLY)
 	private Long noOfImages;
 
-	@JsonProperty("no_of_audio")
+	@JsonProperty(value = "no_of_audio", access = JsonProperty.Access.WRITE_ONLY)
 	private Long noOfAudios;
 
-	@JsonProperty("no_of_videos")
+	@JsonProperty(value = "no_of_videos", access = JsonProperty.Access.WRITE_ONLY)
 	private Long noOfVideos;
 
-	@JsonProperty("repr_image_url")
+	@JsonProperty(value = "repr_image_url", access = JsonProperty.Access.WRITE_ONLY)
 	private String reprImageUrl;
 
 	private UserIbp user;
