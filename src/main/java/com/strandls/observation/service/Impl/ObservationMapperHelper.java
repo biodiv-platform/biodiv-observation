@@ -437,8 +437,10 @@ public class ObservationMapperHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("observations");
 				filesDTO.setModule("observation");
-				String json = fileUploadService.moveFiles(filesDTO).getData().toString();
-				fileMap = new ObjectMapper().readValue(json, new TypeReference<>() {
+				Object data = fileUploadService.moveFiles(filesDTO).getData();
+				ObjectMapper mapper = new ObjectMapper();
+				String json = mapper.writeValueAsString(data);
+				fileMap = mapper.readValue(json, new TypeReference<>() {
 				});
 			}
 

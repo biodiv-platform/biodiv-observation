@@ -542,8 +542,10 @@ public class ObservationBulkMapperHelper {
 			files.setModule("observation");
 
 			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
-			String json = fileUploadApi.moveFiles(files).getData().toString();
-			Map<String, Object> fileResponse = new ObjectMapper().readValue(json, new TypeReference<>() {
+			Object data = fileUploadApi.moveFiles(files).getData();
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString(data);
+			Map<String, Object> fileResponse = mapper.readValue(json, new TypeReference<>() {
 			});
 			if (fileResponse != null && !fileResponse.isEmpty()) {
 				List<Resource> resources = mapFileResponseToResource(fieldMapping, dataRow, licenses, fileResponse,

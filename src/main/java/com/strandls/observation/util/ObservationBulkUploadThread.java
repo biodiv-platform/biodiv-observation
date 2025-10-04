@@ -172,8 +172,10 @@ public class ObservationBulkUploadThread implements Runnable {
 			fileUploadApi = headers.addFileUploadHeader(fileUploadApi, requestAuthHeader);
 			resourceService = headers.addResourceHeaders(resourceService, requestAuthHeader);
 
-			String json = fileUploadApi.moveFiles(filesDataTable).getData().toString();
-			fileRes = new ObjectMapper().readValue(json, new TypeReference<>() {
+			Object data = fileUploadApi.moveFiles(filesDataTable).getData();
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString(data);
+			fileRes = mapper.readValue(json, new TypeReference<>() {
 			});
 			List<UFileCreateData> createUfileList = new ArrayList<>();
 			fileRes.entrySet().forEach((item) -> {
