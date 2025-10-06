@@ -438,10 +438,15 @@ public class ObservationMapperHelper {
 				filesDTO.setFolder("observations");
 				filesDTO.setModule("observation");
 				Object data = fileUploadService.moveFiles(filesDTO).getData();
-				ObjectMapper mapper = new ObjectMapper();
-				String json = mapper.writeValueAsString(data);
-				fileMap = mapper.readValue(json, new TypeReference<>() {
-				});
+
+				if (data instanceof Map) {
+					fileMap = (Map<String, Object>) data;
+				} else {
+					ObjectMapper mapper = new ObjectMapper();
+					String json = mapper.writeValueAsString(data);
+					fileMap = mapper.readValue(json, new TypeReference<>() {
+					});
+				}
 			}
 
 			for (ResourceDataObs resourceData : resourceDataList) {
@@ -492,9 +497,9 @@ public class ObservationMapperHelper {
 			return resources;
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("Error in createResourceMapping: ", e);
+			throw new RuntimeException("Failed to create resource mapping", e);
 		}
-		return null;
 
 	}
 
