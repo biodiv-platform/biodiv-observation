@@ -54,7 +54,7 @@ public class ConstructESDocument {
 				+ "(facts)\\:\\:text facts, "
 				+ "CASE WHEN    (is_verified = true) OR (no_of_images != 0 OR no_of_videos != 0 OR no_of_audio != 0 ) AND "
 				+ "        from_date IS NOT NULL AND latitude IS NOT NULL AND "
-				+ "        longitude IS NOT NULL AND  (is_locked = true OR reco_vote_count >= 2)  AND "
+				+ "        longitude IS NOT NULL AND  (is_locked_obs = true OR reco_vote_count >= 2)  AND "
 				+ "        flag_count = 0 AND"
 				+ "        (dataset_id != 1 OR dataset_id IS NULL)   THEN true   ELSE false "
 				+ "END AS is_publication_grade FROM "
