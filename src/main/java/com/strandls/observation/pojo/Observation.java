@@ -74,8 +74,7 @@ public class Observation implements Serializable {
 
 	@Id
 	@Column(name = "id", nullable = false)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "observation_id_generator")
-	@SequenceGenerator(name = "observation_id_generator", sequenceName = "observation_id_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId() {
 		return this.id;
 	}
