@@ -38,10 +38,10 @@ public class ConstructESDocument {
 				+ "TRIM(to_char(from_date,'Month')) observed_in_month, "
 				+ "place_name, reverse_geocoded_name, flag_count, geo_privacy, last_revised,  "
 				+ "visit_count, is_checklist, to_date,  " + "checklist_annotations, "
-				+ "is_locked, language_id, location_scale,  "
+				+ "is_locked is_locked_obs, language_id, location_scale,  "
 				+ "dataset_id, dataset_title,repr_image_id, repr_image_url, protocol, no_of_images, no_of_videos, no_of_audio, "
 				+ "CASE  " + "	WHEN no_of_images = 0 AND no_of_videos = 0 AND no_of_audio = 0 THEN 1 " + "	ELSE 0 "
-				+ "END AS no_media, " + "CASE  " + " WHEN is_locked = true  OR  is_verified = true THEN true "
+				+ "END AS no_media, " + "CASE  " + " WHEN is_locked_obs = true  OR  is_verified = true THEN true "
 				+ " ELSE false " + "END AS is_locked, "
 
 				+ "no_of_identifications, data_table_id,data_table_title,basis_of_record,basis_of_data,date_accuracy, "
