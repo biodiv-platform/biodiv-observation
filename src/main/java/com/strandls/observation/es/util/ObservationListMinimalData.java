@@ -2,6 +2,7 @@ package com.strandls.observation.es.util;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.strandls.observation.pojo.RecoIbp;
@@ -13,16 +14,16 @@ import com.strandls.user.pojo.UserIbp;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationListMinimalData {
 
-	@JsonProperty("observation_id")
+	@JsonAlias("observation_id")
 	private Long observationId;
 
-	@JsonProperty("group_id")
+	@JsonAlias("group_id")
 	private Long speciesGroupId;
 
-	@JsonProperty("group_name")
+	@JsonAlias("group_name")
 	private String speciesGroup;
 
-	@JsonProperty("repr_image_url")
+	@JsonAlias("repr_image_url")
 	private String thumbnail;
 
 	private RecoIbp recoIbp;
@@ -32,10 +33,10 @@ public class ObservationListMinimalData {
 	private Double latitude;
 	private Double longitude;
 
-	@JsonProperty("created_on")
+	@JsonAlias("created_on")
 	private Date createdOn;
 
-	@JsonProperty("from_date")
+	@JsonAlias("from_date")
 	private Date observedOn;
 
 	@JsonProperty("location")
