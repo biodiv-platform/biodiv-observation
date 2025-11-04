@@ -17,6 +17,7 @@ public class RecoData {
 	private String taxonScientificName;
 	private Long languageId;
 	private String source;
+	private Long acceptedNameId;
 
 	public RecoData() {
 		super();
@@ -28,16 +29,18 @@ public class RecoData {
 	 * @param scientificNameTaxonId
 	 * @param taxonScientificName
 	 * @param languageId
+	 * @param acceptedNameId
 	 */
 
 	public RecoData(String taxonCommonName, Long scientificNameTaxonId, String taxonScientificName, Long languageId,
-			String source) {
+			String source, Long acceptedNameId) {
 		super();
 		this.taxonCommonName = taxonCommonName;
 		this.scientificNameTaxonId = scientificNameTaxonId;
 		this.taxonScientificName = taxonScientificName;
 		this.languageId = languageId;
 		this.source = source;
+		this.acceptedNameId = acceptedNameId;
 	}
 
 	public String getTaxonCommonName() {
@@ -78,6 +81,14 @@ public class RecoData {
 
 	public void setSource(String source) {
 		this.source = source;
+	}
+
+	public Long getAcceptedNameId() {
+		return acceptedNameId;
+	}
+
+	public void setAcceptedNameId(Long acceptedNameId) {
+		this.acceptedNameId = acceptedNameId;
 	}
 
 }

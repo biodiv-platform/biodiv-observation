@@ -280,7 +280,8 @@ public class ObservationMapperHelper {
 				ParsedName parsedName = utilitySerivce.getNameParsed(recoData.getTaxonScientificName());
 				String canonicalName = parsedName.getCanonical().getSimple();
 				recommendation = recoSerivce.createRecommendation(recoData.getTaxonScientificName(),
-						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId());
+						recoData.getScientificNameTaxonId(), canonicalName, true, recoData.getLanguageId(),
+						recoData.getAcceptedNameId());
 			}
 			Long taxonId = recommendation.getAcceptedNameId() != null ? recommendation.getAcceptedNameId()
 					: recommendation.getTaxonConceptId();
@@ -299,7 +300,7 @@ public class ObservationMapperHelper {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
 		if (resultCommonName == null)
-			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId);
+			resultCommonName = recoSerivce.createRecommendation(commonName, null, null, false, languageId, null);
 
 		return resultCommonName.getId();
 
@@ -320,6 +321,11 @@ public class ObservationMapperHelper {
 					"canonical_form", canonicalName);
 			if (esResult != null) {
 				recoData.setScientificNameTaxonId((long) esResult.getId());
+				if (esResult.getAcceptedIds() != null && !esResult.getAcceptedIds().isEmpty()) {
+					recoData.setAcceptedNameId(esResult.getAcceptedIds().get(0).longValue());
+				} else {
+					recoData.setAcceptedNameId((long) esResult.getId());
+				}
 				result = scientificNameExists(recoData);
 			} else {
 
@@ -327,7 +333,7 @@ public class ObservationMapperHelper {
 				if (resultList.isEmpty() || resultList.size() == 1) {
 					if (resultList.isEmpty())
 						resultList.add(recoSerivce.createRecommendation(providedSciName, null, canonicalName, true,
-								recoData.getLanguageId()));
+								recoData.getLanguageId(), null));
 					Long taxonId = resultList.get(0).getAcceptedNameId() != null ? resultList.get(0).getAcceptedNameId()
 							: resultList.get(0).getTaxonConceptId();
 					result.put("taxonId", taxonId);

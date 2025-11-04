@@ -372,9 +372,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific,
-			Long languageId) {
+			Long languageId, Long accepedNameId) {
 		Recommendation reco = new Recommendation(null, new Date(), name, taxonId, isScientific,
-				languageId != null ? languageId : defaultLanguageId, name.toLowerCase(), null, false, null,
+				languageId != null ? languageId : defaultLanguageId, name.toLowerCase(), null, false, accepedNameId,
 				canonicalName);
 
 		Recommendation result = recoDao.save(reco);
@@ -595,8 +595,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 			if (observation.getIsLocked())
 				return null;
 
-			ObservationUserPermission permission = observaitonService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile,
-					observationId.toString(), userId, recoSet.getTaxonId().toString());
+			ObservationUserPermission permission = observaitonService.getUserPermissions(
+					request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId.toString(), userId,
+					recoSet.getTaxonId().toString());
 			List<Long> permissionList = new ArrayList<Long>();
 			if (permission.getValidatePermissionTaxon() != null)
 				permissionList = permission.getValidatePermissionTaxon();
@@ -705,8 +706,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getIsLocked()) {
 
-				ObservationUserPermission permission = observaitonService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile,
-						observationId.toString(), userId, recoSet.getTaxonId().toString());
+				ObservationUserPermission permission = observaitonService.getUserPermissions(
+						request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId.toString(), userId,
+						recoSet.getTaxonId().toString());
 				List<Long> permissionList = new ArrayList<Long>();
 				if (permission.getValidatePermissionTaxon() != null)
 					permissionList = permission.getValidatePermissionTaxon();
