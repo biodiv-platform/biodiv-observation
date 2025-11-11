@@ -132,80 +132,112 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
+		System.out.println("DEBUG: Starting observationBulkUpload");
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		System.out.println("DEBUG: Got profile: " + profile);
 		Long userId = Long.parseLong(profile.getId());
+		System.out.println("DEBUG: Got userId: " + userId);
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+		System.out.println("DEBUG: Got config properties stream: " + in);
 		Properties properties = new Properties();
+		System.out.println("DEBUG: Created Properties object");
 
 		try {
 			properties.load(in);
+			System.out.println("DEBUG: Loaded properties successfully");
 		} catch (IOException e) {
+			System.out.println("DEBUG: Error loading properties: " + e.getMessage());
 			logger.error(e.getMessage());
 		}
 
 		try {
+			System.out.println("DEBUG: Entering main try block");
 
 			if (observationBulkData.getFilename() == null || observationBulkData.getFilename().length() <= 0) {
+				System.out.println("DEBUG: Filename is null or empty");
 				throw new NullPointerException("Sheet Filename nout found");
 			}
+			System.out.println("DEBUG: Filename validation passed: " + observationBulkData.getFilename());
 
 			String storageBasePath = properties.getProperty("storage_dir", "/apps/biodiv-image");
+			System.out.println("DEBUG: Storage base path: " + storageBasePath);
 			String sheetDirectory = storageBasePath + File.separatorChar + "myUploads" + File.separatorChar + userId
 					+ observationBulkData.getFilename();
+			System.out.println("DEBUG: Sheet directory: " + sheetDirectory);
 
 			BulkDTO dataTableDTO = dataTableHelper.createDataTableBulkDTO(observationBulkData);
+			System.out.println("DEBUG: Created dataTableDTO");
 
 			dataTableService = headers.addDataTableHeaders(dataTableService,
 					tokenGenerator.generate(userService.getUser(userId.toString())));
+			System.out.println("DEBUG: Added dataTable headers");
 			DataTableWkt dataTable = dataTableService.createDataTable(dataTableDTO);
+			System.out.println("DEBUG: Created dataTable: " + dataTable);
 
 			if (dataTable == null) {
+				System.out.println("DEBUG: DataTable is null");
 				throw new NullPointerException("Unable to create DataTable, Unresolved Constrain");
 			}
 
 			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
+				System.out.println("DEBUG: Opened workbook");
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
+				System.out.println("DEBUG: Got traits list, size: " + (traitsList != null ? traitsList.size() : "null"));
 				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup("");
+				System.out.println("DEBUG: Got userGroup list, size: " + (userGroupIbpList != null ? userGroupIbpList.size() : "null"));
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
+				System.out.println("DEBUG: Got license list, size: " + (licenseList != null ? licenseList.size() : "null"));
 
 				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
 						.collect(Collectors.toList());
+				System.out.println("DEBUG: Created accepted list");
 
 				List<Long> userGroupIds = observationBulkData.getUserGroup().isEmpty() ? new ArrayList<Long>()
 						: Arrays.asList(observationBulkData.getUserGroup().split(",")).stream()
 								.map(s -> Long.parseLong(s.trim())).filter(s -> accpectedList.contains(s))
 								.collect(Collectors.toList());
+				System.out.println("DEBUG: Got userGroupIds, size: " + userGroupIds.size());
 
 				if (!userGroupIds.isEmpty()) {
+					System.out.println("DEBUG: Updating datatable usergroup mapping");
 					userGroupService = headers.addUserGroupHeader(userGroupService,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					UserGroupCreateDatatable ugMapping = new UserGroupCreateDatatable();
 					ugMapping.setUserGroupIds(userGroupIds);
 					dataTableService.updateDatatableUserGroupMapping(dataTable.getId().toString(), ugMapping);
+					System.out.println("DEBUG: Updated datatable usergroup mapping");
 				}
 
 				FilesDTO filesDto = new FilesDTO();
 				filesDto.setFolder("observations");
 				filesDto.setModule("observation");
+				System.out.println("DEBUG: Created FilesDTO");
 				Map<String, String> myImageUpload = headers
 						.addFileUploadHeader(fileUploadApi, request.getHeader(HttpHeaders.AUTHORIZATION))
 						.getAllFilePathsByUser(filesDto).getData().entrySet().stream()
 						.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
+				System.out.println("DEBUG: Got myImageUpload map, size: " + myImageUpload.size());
 
 				ObservationBulkUploadThread uploadThread = new ObservationBulkUploadThread(observationBulkData, request,
 						observationDao, observationBulkMapperHelper, esUpdate, userService, dataTable,
 						observationBulkData.getContributors(), observationImpl.getAllSpeciesGroup(), traitsList,
 						userGroupIbpList, licenseList, workbook, myImageUpload, resourceService, fileUploadApi,
 						dataTableService, tokenGenerator, observationBulkData.getUserGroup(), headers);
+				System.out.println("DEBUG: Created ObservationBulkUploadThread");
 				Thread thread = new Thread(uploadThread);
 				thread.start();
+				System.out.println("DEBUG: Started upload thread");
 			}
+			System.out.println("DEBUG: Returning dataTable.getId(): " + dataTable.getId());
 			return dataTable.getId();
 
 		} catch (Exception ex) {
+			System.out.println("DEBUG: Exception caught: " + ex.getClass().getName() + " - " + ex.getMessage());
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		}
 
+		System.out.println("DEBUG: Returning null");
 		return null;
 	}
 
