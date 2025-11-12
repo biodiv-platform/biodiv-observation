@@ -631,6 +631,21 @@ public class ObservationMapperHelper {
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
 
+			// Skip geo-privacy processing if value is NA, null, or empty
+			if (geoPrivacyTraitsValue == null || geoPrivacyTraitsValue.trim().isEmpty()
+					|| geoPrivacyTraitsValue.trim().equalsIgnoreCase("NA")) {
+				logger.info("Skipping geo-privacy update: geoPrivacyValues is not configured (value: {})", geoPrivacyTraitsValue);
+				return;
+			}
+
+			// Validate that the value is numeric before calling API
+			try {
+				Long.parseLong(geoPrivacyTraitsValue.trim());
+			} catch (NumberFormatException e) {
+				logger.error("Invalid geoPrivacyValues configuration: '{}' is not a valid number. Skipping geo-privacy update.", geoPrivacyTraitsValue);
+				return;
+			}
+
 			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
 
 			for (Observation observation : observationList) {

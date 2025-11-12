@@ -786,11 +786,9 @@ public class ObservationBulkMapperHelper {
 							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
 
-			// Synchronize to prevent race condition when multiple threads access shared singleton
-			synchronized (integratorService) {
-				integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
-				integratorService.getFilterRule(ugObvFilterData);
-			}
+			// Create thread-safe copy with auth header to prevent race condition
+			IntegratorServicesApi threadSafeService = headers.createThreadSafeIntegratorService(integratorService, requestAuthHeader);
+			threadSafeService.getFilterRule(ugObvFilterData);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
@@ -807,11 +805,9 @@ public class ObservationBulkMapperHelper {
 							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
 
-			// Synchronize to prevent race condition when multiple threads access shared singleton
-			synchronized (integratorService) {
-				integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
-				integratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
-			}
+			// Create thread-safe copy with auth header to prevent race condition
+			IntegratorServicesApi threadSafeService = headers.createThreadSafeIntegratorService(integratorService, requestAuthHeader);
+			threadSafeService.getFilterRuleForDatatableUpload(ugObvFilterData);
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
