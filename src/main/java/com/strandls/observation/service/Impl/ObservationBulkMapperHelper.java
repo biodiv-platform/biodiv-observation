@@ -785,8 +785,12 @@ public class ObservationBulkMapperHelper {
 					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
 							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
-			integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
-			integratorService.getFilterRule(ugObvFilterData);
+
+			// Synchronize to prevent race condition when multiple threads access shared singleton
+			synchronized (integratorService) {
+				integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+				integratorService.getFilterRule(ugObvFilterData);
+			}
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
@@ -802,8 +806,12 @@ public class ObservationBulkMapperHelper {
 					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
 							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
-			integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
-			integratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
+
+			// Synchronize to prevent race condition when multiple threads access shared singleton
+			synchronized (integratorService) {
+				integratorService = headers.addIntegratorHeader(integratorService, requestAuthHeader);
+				integratorService.getFilterRuleForDatatableUpload(ugObvFilterData);
+			}
 		} catch (Exception ex) {
 
 			logger.error(ex.getMessage());
