@@ -4,6 +4,7 @@
 package com.strandls.observation.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -899,8 +900,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		while (hasMore) {
 			// 🔹 STEP 1: Fetch a batch of scientific name recommendations
-			List<Recommendation> batch = recoDao.fetchFilteredRecordsWithCriteria(null, "isScientificName", null, true,
-					"lastModified", offset, batchSize);
+			Map<String, Object> filters = new HashMap<>();
+			filters.put("isScientificName", true);
+
+			List<String> notNullFields = Arrays.asList("taxonConceptId");
+
+			List<Recommendation> batch = recoDao.fetchFilteredRecords(filters, notNullFields, "lastModified", offset,
+					batchSize);
 
 			if (batch == null || batch.isEmpty()) {
 				hasMore = false;

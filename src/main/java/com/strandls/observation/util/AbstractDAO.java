@@ -3,6 +3,7 @@ package com.strandls.observation.util;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -130,6 +131,45 @@ public abstract class AbstractDAO<T, K extends Serializable> {
 			List<T> resultList = criteria.list();
 			return resultList;
 		} catch (Exception e) {
+		} finally {
+			session.close();
+		}
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	public List<T> fetchFilteredRecords(Map<String, Object> equalsFilters, List<String> notNullFields, String orderBy,
+			Integer offset, Integer limit) {
+		Session session = sessionFactory.openSession();
+		try {
+			Criteria criteria = session.createCriteria(daoType.getName());
+
+			// Add equality filters
+			if (equalsFilters != null) {
+				for (Map.Entry<String, Object> entry : equalsFilters.entrySet()) {
+					criteria.add(Restrictions.eq(entry.getKey(), entry.getValue()));
+				}
+			}
+
+			// Add IS NOT NULL filters
+			if (notNullFields != null) {
+				for (String field : notNullFields) {
+					criteria.add(Restrictions.isNotNull(field));
+				}
+			}
+
+			// Ordering, pagination
+			if (orderBy != null)
+				criteria.addOrder(Order.desc(orderBy));
+			if (offset != -1)
+				criteria.setFirstResult(offset);
+			if (limit != -1)
+				criteria.setMaxResults(limit);
+
+			return criteria.list();
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			session.close();
 		}
