@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -892,63 +893,81 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public void recoCleanUp() {
-		List<Recommendation> allRecos = recoDao.findAll();
-		Map<Long, List<Recommendation>> taxonRecoMap = new HashMap<>();
+		int batchSize = 1000;
+		int offset = 0;
+		boolean hasMore = true;
 
-		// STEP 1: Group recommendations by taxonConceptId
-		for (Recommendation reco : allRecos) {
-			if (reco.getTaxonConceptId() == null)
-				continue;
-			taxonRecoMap.computeIfAbsent(reco.getTaxonConceptId(), k -> new ArrayList<>()).add(reco);
-		}
+		while (hasMore) {
+			// 🔹 STEP 1: Fetch a batch of scientific name recommendations
+			List<Recommendation> batch = recoDao.fetchFilteredRecordsWithCriteria(null, "isScientificName", null, true,
+					"lastModified", offset, batchSize);
 
-		// STEP 2: Process each taxonId group
-		for (Map.Entry<Long, List<Recommendation>> entry : taxonRecoMap.entrySet()) {
-			Long taxonId = entry.getKey();
-			List<Recommendation> recos = entry.getValue();
+			if (batch == null || batch.isEmpty()) {
+				hasMore = false;
+				System.out.println("✅ No more records found. Cleanup complete.");
+				break;
+			}
 
-			// Find the latest modified recommendation
-			Long latestRecoId = findLatestReco(recos);
-			Recommendation latestReco = recoDao.findById(latestRecoId);
+			System.out.println("🔄 Processing batch: offset " + offset + ", size " + batch.size());
 
-			if (latestReco == null)
-				continue;
+			// 🔹 STEP 2: Group by taxonConceptId
+			Map<Long, List<Recommendation>> taxonRecoMap = new HashMap<>();
+			for (Recommendation reco : batch) {
+				if (reco.getTaxonConceptId() == null)
+					continue;
+				taxonRecoMap.computeIfAbsent(reco.getTaxonConceptId(), k -> new ArrayList<>()).add(reco);
+			}
 
-			// STEP 3: Update acceptedNameId consistency before merging
-			try {
-				TaxonomyDefinitionShow taxonomyInfo = taxonomyService.getTaxonomyDetails(taxonId.toString());
+			// 🔹 STEP 3: Process each taxonId group
+			for (Map.Entry<Long, List<Recommendation>> entry : taxonRecoMap.entrySet()) {
+				Long taxonId = entry.getKey();
+				List<Recommendation> recos = entry.getValue();
 
-				if (taxonomyInfo != null && taxonomyInfo.getTaxonomyDefinition() != null) {
-					String status = taxonomyInfo.getTaxonomyDefinition().getStatus();
+				Long latestRecoId = findLatestReco(recos);
+				Recommendation latestReco = recoDao.findById(latestRecoId);
 
-					if ("ACCEPTED".equalsIgnoreCase(status)) {
-						latestReco.setAcceptedNameId(taxonId);
-					} else if ("SYNONYM".equalsIgnoreCase(status)) {
-						if (taxonomyInfo.getAcceptedNames() != null && !taxonomyInfo.getAcceptedNames().isEmpty()) {
-							Long acceptedId = taxonomyInfo.getAcceptedNames().get(0).getId();
-							if (acceptedId != null) {
-								latestReco.setAcceptedNameId(acceptedId);
+				if (latestReco == null)
+					continue;
+
+				// 🔹 STEP 4: Ensure acceptedNameId consistency
+				try {
+					TaxonomyDefinitionShow taxonomyInfo = taxonomyService.getTaxonomyDetails(taxonId.toString());
+
+					if (taxonomyInfo != null && taxonomyInfo.getTaxonomyDefinition() != null) {
+						String status = taxonomyInfo.getTaxonomyDefinition().getStatus();
+
+						if ("ACCEPTED".equalsIgnoreCase(status)) {
+							latestReco.setAcceptedNameId(taxonId);
+						} else if ("SYNONYM".equalsIgnoreCase(status)) {
+							if (taxonomyInfo.getAcceptedNames() != null && !taxonomyInfo.getAcceptedNames().isEmpty()) {
+								Long acceptedId = taxonomyInfo.getAcceptedNames().get(0).getId();
+								if (acceptedId != null) {
+									latestReco.setAcceptedNameId(acceptedId);
+								}
 							}
 						}
-					}
 
-					try {
-						recoDao.update(latestReco);
-					} catch (Exception e) {
-						System.err.println(
-								"Duplicate update conflict for recoId " + latestRecoId + ": " + e.getMessage());
-						handleDuplicateReco(latestReco, recos);
-						continue; // move to next taxon after handling
+						try {
+							recoDao.update(latestReco);
+						} catch (Exception e) {
+							System.err.println(
+									"⚠️ Duplicate update conflict for recoId " + latestRecoId + ": " + e.getMessage());
+							handleDuplicateReco(latestReco, recos);
+							continue;
+						}
 					}
+				} catch (Exception e) {
+					System.err.println("❌ Error setting acceptedNameId for taxonId " + taxonId + ": " + e.getMessage());
 				}
-			} catch (Exception e) {
-				System.err.println("Error setting acceptedNameId for taxonId " + taxonId + ": " + e.getMessage());
+
+				// 🔹 STEP 5: Clean duplicates and merge recoVotes if multiple recos exist
+				if (recos.size() > 1) {
+					cleanRecoVote(latestRecoId, recos);
+				}
 			}
 
-			// STEP 4: Clean duplicates → merge recoVotes, update obs, delete old recos
-			if (recos.size() > 1) {
-				cleanRecoVote(latestRecoId, recos);
-			}
+			offset += batchSize; // move to next batch
+			System.out.println("✅ Finished processing batch at offset: " + offset);
 		}
 	}
 
@@ -966,8 +985,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	/**
-	 * Handles duplicates by keeping the latest reco, deleting older ones, retrying
-	 * update, and reassigning reco votes + observation updates.
+	 * Handles duplicates — deletes older entries, retries update, merges recoVotes,
+	 * and updates observations.
 	 */
 	private void handleDuplicateReco(Recommendation latestReco, List<Recommendation> recos) {
 		// Sort by lastModified ascending → older first
@@ -980,22 +999,22 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 		}
 
-		// Delete older duplicates
+		// Delete duplicates
 		for (Recommendation dup : toDelete) {
 			try {
 				recoDao.delete(dup);
-				System.out.println("Deleted duplicate recoId " + dup.getId());
+				System.out.println("🗑️ Deleted duplicate recoId " + dup.getId());
 			} catch (Exception e) {
-				System.err.println("Failed to delete duplicate recoId " + dup.getId() + ": " + e.getMessage());
+				System.err.println("⚠️ Failed to delete duplicate recoId " + dup.getId() + ": " + e.getMessage());
 			}
 		}
 
-		// Retry updating latest reco
+		// Retry updating latest reco after cleanup
 		try {
 			recoDao.update(latestReco);
-			System.out.println("Successfully updated latest reco after duplicate cleanup: " + latestReco.getId());
+			System.out.println("✅ Updated latest reco after duplicate cleanup: " + latestReco.getId());
 		} catch (Exception ex) {
-			System.err.println("Retry update failed for recoId " + latestReco.getId() + ": " + ex.getMessage());
+			System.err.println("❌ Retry update failed for recoId " + latestReco.getId() + ": " + ex.getMessage());
 		}
 
 		// Merge recoVotes and update observation info
@@ -1003,20 +1022,14 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	/**
-	 * Updates recoVotes and observations to point to the latest reco. Deletes older
-	 * reco entries after merging.
+	 * Merges recoVotes, updates observation references, and deletes old recos.
 	 */
 	private void cleanRecoVote(Long latestRecoId, List<Recommendation> recoList) {
 		Set<Long> observationIdSet = new HashSet<>();
-		List<Long> recoIdList = new ArrayList<>();
+		List<Long> recoIdList = recoList.stream().filter(r -> !r.getId().equals(latestRecoId))
+				.map(Recommendation::getId).collect(Collectors.toList());
 
-		for (Recommendation reco : recoList) {
-			if (!reco.getId().equals(latestRecoId)) {
-				recoIdList.add(reco.getId());
-			}
-		}
-
-//		scientific name
+		// 🔹 Move scientific name votes to latest reco
 		List<RecommendationVote> recoVoteList = recoVoteDao.findByRecoIdList(recoIdList);
 		for (RecommendationVote recoVote : recoVoteList) {
 			observationIdSet.add(recoVote.getObservationId());
@@ -1024,7 +1037,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			recoVoteDao.update(recoVote);
 		}
 
-//		common name
+		// 🔹 Clear common name associations
 		List<RecommendationVote> recoCommonNameVoteList = recoVoteDao.findCommonNameMatchByRecoIdList(recoIdList);
 		for (RecommendationVote recoVote : recoCommonNameVoteList) {
 			observationIdSet.add(recoVote.getObservationId());
@@ -1032,19 +1045,19 @@ public class RecommendationServiceImpl implements RecommendationService {
 			recoVoteDao.update(recoVote);
 		}
 
+		// 🔹 Update observation’s max voted reco
 		for (Long obvId : observationIdSet) {
 			Long maxRecoVote = maxRecoVote(obvId);
 			observaitonService.updateMaxVotedReco(obvId, maxRecoVote);
 		}
 
+		// 🔹 Delete older recos and ensure latestReco has isScientificName = true
 		for (Recommendation reco : recoList) {
 			if (!reco.getId().equals(latestRecoId)) {
 				recoDao.delete(reco);
-			} else {
-				if (!reco.getIsScientificName()) {
-					reco.setIsScientificName(true);
-					recoDao.update(reco);
-				}
+			} else if (!Boolean.TRUE.equals(reco.getIsScientificName())) {
+				reco.setIsScientificName(true);
+				recoDao.update(reco);
 			}
 		}
 	}
