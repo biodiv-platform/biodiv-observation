@@ -58,20 +58,6 @@ public class Headers {
 		return integratorService;
 	}
 
-	/**
-	 * Creates a thread-safe copy of IntegratorServicesApi with authorization header
-	 * This prevents race conditions in concurrent API calls by using a fresh API client
-	 * @param integratorService The base service to copy configuration from
-	 * @param authHeader Authorization header value
-	 * @return New IntegratorServicesApi instance with auth header
-	 */
-	public IntegratorServicesApi createThreadSafeIntegratorService(IntegratorServicesApi integratorService, String authHeader) {
-		com.strandls.integrator.ApiClient newClient = new com.strandls.integrator.ApiClient();
-		newClient.setBasePath(integratorService.getApiClient().getBasePath());
-		newClient.addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
-		return new IntegratorServicesApi(newClient);
-	}
-
 	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, String authHeader) {
 		utilityServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return utilityServices;
