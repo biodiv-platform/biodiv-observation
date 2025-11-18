@@ -897,20 +897,23 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		Boolean hasDuplicates = recoDao.hasAnyDuplicateScientificReco();
 		if (hasDuplicates) {
-			duplicateRecoCleanUp();
+			System.out.println("Duplicate recos found! cleanup process terminated");
+			return;
 		}
 
 		int offset = 0;
 		int batch = 1000;
 
-		System.out.println("Unique reco cleanup started");
+		System.out.println("Unique reco cleanup started...");
 
 		while (true) {
 			List<Long> updatedRecoIds = new ArrayList<>();
 
-			List<Recommendation> recoList = recoDao.fetchUniqueTaxonConceptBatch(offset, batch);
-			if (recoList.isEmpty())
+			List<Recommendation> recoList = recoDao.fetchRecoBatch(offset, batch);
+			if (recoList.isEmpty()) {
+				System.out.println("Unique reco cleanup process ended...");
 				break;
+			}
 
 			for (Recommendation reco : recoList) {
 				Long taxonId = reco.getTaxonConceptId();
@@ -923,9 +926,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 						updatedRecoIds.add(reco.getId());
 						reco.setAcceptedNameId(newAccepted);
 						recoDao.update(reco);
-
 						System.out.println("Updated reco = " + reco.getId() + " with accepted id  =   " + reco.getId());
-
 					}
 				}
 			}
@@ -952,15 +953,47 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	}
 
+	private Long getAcceptedNameId(Long taxonId) {
+		try {
+			TaxonomyDefinitionShow taxonomyInfo = taxonomyService.getTaxonomyDetails(taxonId.toString());
+
+			if (taxonomyInfo != null && taxonomyInfo.getTaxonomyDefinition() != null) {
+				String status = taxonomyInfo.getTaxonomyDefinition().getStatus();
+
+				if ("ACCEPTED".equalsIgnoreCase(status)) {
+					return taxonId;
+				} else if ("SYNONYM".equalsIgnoreCase(status)) {
+					if (taxonomyInfo.getAcceptedNames() != null && !taxonomyInfo.getAcceptedNames().isEmpty()) {
+						return taxonomyInfo.getAcceptedNames().get(0).getId();
+
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Error setting acceptedNameId " + ": " + e.getMessage());
+		}
+		return taxonId;
+	}
+
+	private Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
+		Observation observation = observationDao.findById(observationId);
+		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
+			observation.setMaxVotedRecoId(maxVotedReco);
+			observation.setLastRevised(new Date());
+			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
+			observationDao.update(observation);
+			return maxVotedReco;
+		}
+		return observation.getMaxVotedRecoId();
+	}
+
 	@Override
-	public void duplicateRecoCleanUp() {
-
-		System.out.println("Duplicate reco cleanup started");
-
-		List<Recommendation> recoList = recoDao.getDuplicateScientificRecos();
+	@Deprecated
+	public void legacyRecoCleanUp() {
+		List<Recommendation> recoList = recoDao.findAll();
 		Map<Long, List<Recommendation>> taxonRecoListMap = new HashMap<Long, List<Recommendation>>();
 		List<Recommendation> duplicateRecoList = null;
-		// grouping reco on basis of taxonId
+//		grouping reco on basis of taxonId
 		for (Recommendation reco : recoList) {
 			if (reco.getTaxonConceptId() != null) {
 				if (taxonRecoListMap.containsKey(reco.getTaxonConceptId())) {
@@ -974,7 +1007,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				}
 			}
 		}
-		// filtering out taxon having multiple reco
+//		filtering out taxon having multiple reco
 		for (Entry<Long, List<Recommendation>> entry : taxonRecoListMap.entrySet()) {
 			if (entry.getValue().size() > 1) {
 				Long latestRecoId = findLatestReco(entry.getValue());
@@ -1044,41 +1077,6 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 			}
 		}
-	}
-
-	private Long getAcceptedNameId(Long taxonId) {
-
-		try {
-			TaxonomyDefinitionShow taxonomyInfo = taxonomyService.getTaxonomyDetails(taxonId.toString());
-
-			if (taxonomyInfo != null && taxonomyInfo.getTaxonomyDefinition() != null) {
-				String status = taxonomyInfo.getTaxonomyDefinition().getStatus();
-
-				if ("ACCEPTED".equalsIgnoreCase(status)) {
-					return taxonId;
-				} else if ("SYNONYM".equalsIgnoreCase(status)) {
-					if (taxonomyInfo.getAcceptedNames() != null && !taxonomyInfo.getAcceptedNames().isEmpty()) {
-						return taxonomyInfo.getAcceptedNames().get(0).getId();
-
-					}
-				}
-			}
-		} catch (Exception e) {
-			System.err.println("Error setting acceptedNameId " + ": " + e.getMessage());
-		}
-		return taxonId;
-	}
-
-	private Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
-		Observation observation = observationDao.findById(observationId);
-		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
-			observation.setMaxVotedRecoId(maxVotedReco);
-			observation.setLastRevised(new Date());
-			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
-			observationDao.update(observation);
-			return maxVotedReco;
-		}
-		return observation.getMaxVotedRecoId();
 	}
 
 }

@@ -32,6 +32,7 @@ import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.service.RecommendationService;
 import com.strandls.observation.service.Impl.ObservationMapperHelper;
+import com.strandls.observation.service.Impl.RecoCleanupThread;
 import com.strandls.observation.service.Impl.RecoRecalcThread;
 
 import io.swagger.annotations.Api;
@@ -58,6 +59,9 @@ public class RecommedationController {
 
 	@Inject
 	private RecoRecalcThread recoRecalcThread;
+
+	@Inject
+	private RecoCleanupThread recoCleanupThread;
 
 	@GET
 	@Path(ApiConstants.RECOVOTE + ApiConstants.IBP + "/{recoVoteId}")
@@ -256,8 +260,9 @@ public class RecommedationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			if (userRole.contains("ROLE_ADMIN")) {
-				recoService.recoCleanUp();
-				return Response.status(Status.OK).entity("started").build();
+				Thread thread = new Thread(recoCleanupThread);
+				thread.start();
+				return Response.status(Status.OK).entity("Recocleanup has started").build();
 			}
 			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
 

@@ -138,33 +138,14 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<Recommendation> fetchUniqueTaxonConceptBatch(int offset, int limit) {
-
-		String qry = "SELECT r FROM Recommendation r "
-				+ "WHERE r.isScientificName = true AND r.taxonConceptId IS NOT NULL "
-				+ "GROUP BY r.taxonConceptId ORDER BY MAX(r.lastModified) DESC";
-
-		Session session = sessionFactory.openSession();
-		try {
-
-			Query<Recommendation> query = session.createQuery(qry);
-			query.setFirstResult(offset);
-			query.setMaxResults(limit);
-			return query.list();
-		} finally {
-			session.close();
-		}
-	}
-
 	public boolean hasAnyDuplicateScientificReco() {
 
-		String hql = "SELECT 1 FROM Recommendation r " + "WHERE r.taxonConceptId IS NOT NULL "
+		String qry = "SELECT 1 FROM Recommendation r " + "WHERE r.taxonConceptId IS NOT NULL "
 				+ "AND r.isScientificName = true " + "GROUP BY r.taxonConceptId " + "HAVING COUNT(r.id) > 1";
 
 		Session session = sessionFactory.openSession();
 		try {
-			Query<?> query = session.createQuery(hql);
+			Query<?> query = session.createQuery(qry);
 			query.setMaxResults(1);
 
 			return !query.list().isEmpty();
@@ -173,20 +154,22 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		}
 	}
 
-	public List<Recommendation> getDuplicateScientificRecos() {
-
-		String hql = "FROM Recommendation r " + "WHERE r.taxonConceptId IN ("
-				+ "   SELECT r2.taxonConceptId FROM Recommendation r2 " + "   WHERE r2.taxonConceptId IS NOT NULL "
-				+ "   AND r2.isScientificName = true " + "   GROUP BY r2.taxonConceptId " + "   HAVING COUNT(r2.id) > 1"
-				+ ") " + "AND r.isScientificName = true";
-
+	@SuppressWarnings("unchecked")
+	public List<Recommendation> fetchRecoBatch(int offset, int limit) {
+		String qry = "FROM Recommendation WHERE isScientificName = true AND taxonConceptId IS NOT NULL ORDER BY lastModified DESC";
 		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
 		try {
-			Query<Recommendation> query = session.createQuery(hql, Recommendation.class);
-			return query.list();
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setFirstResult(offset);
+			query.setMaxResults(limit);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}
+		return result;
 	}
 
 }

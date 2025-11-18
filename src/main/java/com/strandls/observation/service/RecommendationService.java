@@ -60,5 +60,5 @@ public interface RecommendationService {
 
 	public void recoCleanUp();
 
-	void duplicateRecoCleanUp();
+	void legacyRecoCleanUp();
 }
