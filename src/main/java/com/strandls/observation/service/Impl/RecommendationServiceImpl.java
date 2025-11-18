@@ -943,7 +943,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 				for (Long obvId : affectedObservationIds) {
 					Long maxReco = maxRecoVote(obvId);
-					observaitonService.updateMaxVotedReco(obvId, maxReco);
+					updateMaxVotedReco(obvId, maxReco);
 					System.out.println("Updated observation = " + obvId + " with maxReco  =   " + maxReco);
 
 				}
@@ -1027,7 +1027,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		for (Long obvId : observationIdSet) {
 			Long maxRecoVote = maxRecoVote(obvId);
-			observaitonService.updateMaxVotedReco(obvId, maxRecoVote);
+			updateMaxVotedReco(obvId, maxRecoVote);
 		}
 
 		for (Recommendation reco : recoList) {
@@ -1067,6 +1067,18 @@ public class RecommendationServiceImpl implements RecommendationService {
 			System.err.println("Error setting acceptedNameId " + ": " + e.getMessage());
 		}
 		return taxonId;
+	}
+
+	private Long updateMaxVotedReco(Long observationId, Long maxVotedReco) {
+		Observation observation = observationDao.findById(observationId);
+		if (observation.getMaxVotedRecoId() == null || !observation.getMaxVotedRecoId().equals(maxVotedReco)) {
+			observation.setMaxVotedRecoId(maxVotedReco);
+			observation.setLastRevised(new Date());
+			observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observationId));
+			observationDao.update(observation);
+			return maxVotedReco;
+		}
+		return observation.getMaxVotedRecoId();
 	}
 
 }

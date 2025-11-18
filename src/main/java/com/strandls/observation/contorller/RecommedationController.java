@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
@@ -225,13 +226,21 @@ public class RecommedationController {
 	}
 
 	@GET
+	@ValidateUser
+
 	@Path(ApiConstants.RECALCULATE + ApiConstants.RECOVOTE)
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response reCalculateRecoVoteCount() {
+	public Response reCalculateRecoVoteCount(@Context HttpServletRequest request) {
 		try {
-			Thread thread = new Thread(recoRecalcThread);
-			thread.start();
-			return Response.status(Status.OK).entity("ReCalculation has started").build();
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				Thread thread = new Thread(recoRecalcThread);
+				thread.start();
+				return Response.status(Status.OK).entity("ReCalculation has started").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
@@ -242,10 +251,16 @@ public class RecommedationController {
 	@Path(ApiConstants.RECOVOTE + ApiConstants.CLEANUP)
 	@Produces(MediaType.TEXT_PLAIN)
 
-	public Response cleanRecoVote() {
+	public Response cleanRecoVote(@Context HttpServletRequest request) {
 		try {
-			recoService.recoCleanUp();
-			return Response.status(Status.OK).entity("started").build();
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				recoService.recoCleanUp();
+				return Response.status(Status.OK).entity("started").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
