@@ -35,7 +35,7 @@ public interface RecommendationService {
 	public Long fetchTaxonId(Long maxRecoVoteId);
 
 	public Recommendation createRecommendation(String name, Long taxonId, String canonicalName, Boolean isScientific,
-			Long languageId);
+			Long languageId, Long accepedNameId);
 
 	public List<Long> updateCanonicalName();
 
@@ -59,4 +59,5 @@ public interface RecommendationService {
 			Long offset);
 
 	public void recoCleanUp();
+
 }
