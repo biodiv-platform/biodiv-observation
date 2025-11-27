@@ -324,12 +324,6 @@
 		<version>5.5.0</version>
 	</dependency>
 
-	<!-- json-smart for JSONArray (required for role checking) -->
-	<dependency>
-		<groupId>net.minidev</groupId>
-		<artifactId>json-smart</artifactId>
-		<version>2.5.1</version>
-	</dependency>
 
     </dependencies>
 
