@@ -63,6 +63,11 @@ public class ESUpdate {
 			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 			if (!ESObservationList.isEmpty()) {
 
+				// DEBUG: Log all observation IDs to check for duplicates
+				logger.info("DEBUG: All observation IDs in list (total {}): {}",
+					ESObservationList.size(),
+					ESObservationList.stream().map(d -> d.getObservation_id()).collect(Collectors.toList()));
+
 				// DEBUG: Log first document before conversion
 				logger.info("DEBUG: First ObservationESDocument before Map conversion:");
 				ObservationESDocument firstDoc = ESObservationList.get(0);
