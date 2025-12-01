@@ -360,8 +360,7 @@ public class ObservationUtilityFunctions {
 				mapper.createUserGroupMapping(requestAuthHeader, fieldMapping, dataRow,
 						observationData.getUserGroupsList(), userGroup, observation.getId());
 				mapper.updateGeoPrivacy(observation);
-				// COMMENTED OUT FOR TESTING - disables background posting to user groups via integrator
-				// mapper.updateUserGroupFilterForDatatable(requestAuthHeader, observation);
+				mapper.updateUserGroupFilterForDatatable(requestAuthHeader, observation);
 				return observation.getId();
 			}
 
