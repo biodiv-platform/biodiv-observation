@@ -63,6 +63,15 @@ public class ESUpdate {
 			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 			if (!ESObservationList.isEmpty()) {
 
+				// DEBUG: Log first document before conversion
+				logger.info("DEBUG: First ObservationESDocument before Map conversion:");
+				ObservationESDocument firstDoc = ESObservationList.get(0);
+				logger.info("  observation_id: {}", firstDoc.getObservation_id());
+				logger.info("  location field type: {}", firstDoc.getLocation() != null ? firstDoc.getLocation().getClass().getName() : "null");
+				logger.info("  location value: {}", firstDoc.getLocation());
+				logger.info("  max_voted_reco field type: {}", firstDoc.getMax_voted_reco() != null ? firstDoc.getMax_voted_reco().getClass().getName() : "null");
+				logger.info("  user_group_observations field type: {}", firstDoc.getUser_group_observations() != null ? firstDoc.getUser_group_observations().getClass().getName() : "null");
+
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 					om.setDateFormat(df);
@@ -71,7 +80,21 @@ public class ESUpdate {
 					doc.putIfAbsent("id", s.getObservation_id());
 					return doc;
 				}).collect(Collectors.toList());
+
+				// DEBUG: Log first Map after conversion
+				logger.info("DEBUG: First Map after conversion:");
+				Map<String, Object> firstMap = bulkEsDoc.get(0);
+				logger.info("  id: {}", firstMap.get("id"));
+				logger.info("  observation_id: {}", firstMap.get("observation_id"));
+				logger.info("  location field type: {}", firstMap.get("location") != null ? firstMap.get("location").getClass().getName() : "null");
+				logger.info("  location value: {}", firstMap.get("location"));
+
 				String json = om.writeValueAsString(bulkEsDoc);
+
+				// DEBUG: Log JSON sample (first 2000 chars to avoid huge logs)
+				logger.info("DEBUG: Final JSON being sent to ES (first 2000 chars):");
+				logger.info(json.length() > 2000 ? json.substring(0, 2000) + "..." : json);
+
 				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						json.toString());
 				System.out.println("--------------completed-------------observationId");
@@ -79,7 +102,7 @@ public class ESUpdate {
 			}
 
 		} catch (ApiException | JsonProcessingException e) {
-			logger.error(e.getMessage());
+			logger.error("ERROR in esBulkUpload: ", e);
 		}
 	}
 

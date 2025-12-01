@@ -386,8 +386,22 @@ public class ConstructESDocument {
 			System.out.println();
 			System.out.println("-------------QUERY COMPLETED---------OBSERVATION ID :" + observationId);
 
+			// DEBUG: Log what the query returned
+			if (result != null && !result.isEmpty()) {
+				ObservationESDocument firstResult = result.get(0);
+				logger.info("DEBUG: Query returned {} documents", result.size());
+				logger.info("DEBUG: First document from query:");
+				logger.info("  observation_id: {}", firstResult.getObservation_id());
+				Object locationObj = firstResult.getLocation();
+				logger.info("  location object type: {}", locationObj != null ? locationObj.getClass().getName() : "null");
+				if (locationObj != null) {
+					logger.info("  location toString: {}", locationObj.toString());
+					logger.info("  location instanceof String: {}", locationObj instanceof String);
+				}
+			}
+
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("ERROR in getESDocumentStub: ", e);
 		} finally {
 			session.close();
 		}
