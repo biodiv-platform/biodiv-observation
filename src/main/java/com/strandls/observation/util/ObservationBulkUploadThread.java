@@ -145,6 +145,7 @@ public class ObservationBulkUploadThread implements Runnable {
 					Map<String, Object> sheetResult = moveSheet(observationBulkData, requestAuthHeader);
 					Long uFileId = Long.parseLong(sheetResult.get("uFileId").toString());
 					dataTable.setUfileId(uFileId);
+					dataTableService = headers.addDataTableHeaders(dataTableService, requestAuthHeader);
 					dataTableService.updateDataTable(dataTable);
 				} catch (Exception e) {
 					logger.error(e.getMessage());
