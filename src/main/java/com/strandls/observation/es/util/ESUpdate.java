@@ -110,7 +110,7 @@ public class ESUpdate {
 				logger.info(json.length() > 2000 ? json.substring(0, 2000) + "..." : json);
 
 				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
-						json.toString());
+						json);
 				System.out.println("--------------completed-------------observationId");
 
 			}
