@@ -68,6 +68,15 @@ public class ESUpdate {
 					ESObservationList.size(),
 					ESObservationList.stream().map(d -> d.getObservation_id()).collect(Collectors.toList()));
 
+				// CRITICAL FIX: Remove duplicates - SQL query returns multiple rows per observation
+				// Use LinkedHashMap to preserve order and keep first occurrence
+				Map<Long, ObservationESDocument> uniqueObservations = new java.util.LinkedHashMap<>();
+				for (ObservationESDocument doc : ESObservationList) {
+					uniqueObservations.putIfAbsent(doc.getObservation_id(), doc);
+				}
+				ESObservationList = new java.util.ArrayList<>(uniqueObservations.values());
+				logger.info("DEBUG: After deduplication, unique documents: {}", ESObservationList.size());
+
 				// DEBUG: Log first document before conversion
 				logger.info("DEBUG: First ObservationESDocument before Map conversion:");
 				ObservationESDocument firstDoc = ESObservationList.get(0);
