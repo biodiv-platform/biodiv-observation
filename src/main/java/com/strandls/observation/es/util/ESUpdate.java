@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
@@ -103,19 +102,14 @@ public class ESUpdate {
 				logger.info("  location field type: {}", firstMap.get("location") != null ? firstMap.get("location").getClass().getName() : "null");
 				logger.info("  location value: {}", firstMap.get("location"));
 
-				String json = om.writeValueAsString(bulkEsDoc);
-
-				// DEBUG: Log JSON sample (first 2000 chars to avoid huge logs)
-				logger.info("DEBUG: Final JSON being sent to ES (first 2000 chars):");
-				logger.info(json.length() > 2000 ? json.substring(0, 2000) + "..." : json);
-
+				// Pass the List<Map> directly to bulkUpload - no need to serialize to JSON string
 				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
-						json.toString());
+						bulkEsDoc);
 				System.out.println("--------------completed-------------observationId");
 
 			}
 
-		} catch (ApiException | JsonProcessingException e) {
+		} catch (ApiException e) {
 			logger.error("ERROR in esBulkUpload: ", e);
 		}
 	}
