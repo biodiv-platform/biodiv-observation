@@ -6,13 +6,15 @@ public class TopUploadersInfo {
 	private String pic;
 	private Long authorId;
 	private Long count;
+	private Long speciesCount;
 
-	public TopUploadersInfo(String name, String pic, Long authorId, Long count) {
+	public TopUploadersInfo(String name, String pic, Long authorId, Long count, Long speciesCount) {
 		super();
 		this.name = name;
 		this.pic = pic;
 		this.authorId = authorId;
 		this.count = count;
+		this.speciesCount = speciesCount;
 	}
 
 	public TopUploadersInfo() {
@@ -49,6 +51,14 @@ public class TopUploadersInfo {
 
 	public void setCount(Long count) {
 		this.count = count;
+	}
+	
+	public Long getSpeciesCount() {
+		return speciesCount;
+	}
+	
+	public void setSpeciesCount(Long speciesCount) {
+		this.speciesCount = speciesCount;
 	}
 
 }

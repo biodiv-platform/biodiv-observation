@@ -83,7 +83,7 @@ public interface ObservationService {
 
 	public List<TraitsValuePair> getTraitList(String speciesGroupId, String languageId);
 
-	public ObservationUserPermission getUserPermissions(HttpServletRequest request, CommonProfile profile,
+	public ObservationUserPermission getUserPermissions(String requestAuthHeader, CommonProfile profile,
 			String observationId, Long userId, String taxonList) throws Exception;
 
 	public List<Tags> getTagsSugguestions(String phrase);

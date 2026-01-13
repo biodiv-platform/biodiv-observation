@@ -35,6 +35,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
@@ -221,11 +222,16 @@ public class RecommedationController {
 	@Operation(summary = "Recalculate Reco Vote Count", description = "Starts a process to recalculate recommendation vote counts", responses = {
 			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "400", description = "Unable to start recalculation", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response reCalculateRecoVoteCount() {
+	public Response reCalculateRecoVoteCount(@Context HttpServletRequest request) {
 		try {
-			Thread thread = new Thread(recoRecalcThread);
-			thread.start();
-			return Response.status(Status.OK).entity("ReCalculation has started").build();
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+				Thread thread = new Thread(recoRecalcThread);
+				thread.start();
+				return Response.status(Status.OK).entity("ReCalculation has started").build();
+			}
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
@@ -238,10 +244,18 @@ public class RecommedationController {
 	@Operation(summary = "Clean up Reco Vote data", description = "Initiates a cleanup process for recommendation votes", responses = {
 			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "400", description = "Unable to start cleanup", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response cleanRecoVote() {
+	public Response cleanRecoVote(@Context HttpServletRequest request) {
 		try {
-			recoService.recoCleanUp();
-			return Response.status(Status.OK).entity("started").build();
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN")) {
+
+				recoService.recoCleanUp();
+				return Response.status(Status.OK).entity("started").build();
+			}
+
+			return Response.status(Status.NOT_ACCEPTABLE).entity("USER NOT ALLOWED TO PERFORM THE TASK").build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
