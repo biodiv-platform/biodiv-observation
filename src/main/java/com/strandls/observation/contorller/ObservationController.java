@@ -1138,7 +1138,7 @@ public class ObservationController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to push to rabbitMQ", response = String.class) })
 
 	public Response pushToRabbitMQ(@PathParam("updateType") String updateType,
-			@PathParam("observationId") String observationId) {
+			@QueryParam("observationId") String observationId) {
 		try {
 			observationService.produceToRabbitMQ(observationId, updateType);
 			return Response.status(Status.OK).entity("Published to RabbitMQ").build();
