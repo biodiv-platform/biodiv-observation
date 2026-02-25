@@ -208,8 +208,9 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			cq.select(root);
 			// Apply authorId filter if present
 			if (authorId != null && !authorId.isEmpty()) {
-				cq.where(cb.equal(root.get("author").get("id"), Long.parseLong(authorId)));
+				cq.where(cb.equal(root.get("authorId"), Long.parseLong(authorId)));
 			}
+			cq.orderBy(cb.desc(root.get("createdOn")));
 			Query<Observation> query = session.createQuery(cq);
 			if (offset != null) {
 				query.setFirstResult(offset);
