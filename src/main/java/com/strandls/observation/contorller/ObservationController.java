@@ -1155,7 +1155,7 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.PRODUCE + "/{updateType}/{observationId}")
+	@Path(ApiConstants.PRODUCE + "/{updateType}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
