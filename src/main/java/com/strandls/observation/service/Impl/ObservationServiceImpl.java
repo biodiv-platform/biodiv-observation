@@ -205,13 +205,18 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public ShowData findById(Long id) {
 
+		System.out.println("==== findById START id=" + id + " ====");
+
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
 
 		Properties properties = new Properties();
 		try {
+			System.out.println("Loading config.properties...");
 			properties.load(in);
+			System.out.println("config.properties loaded");
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			System.out.println("ERROR loading config.properties");
+			e.printStackTrace();
 		}
 
 		List<FactValuePair> facts;
@@ -231,40 +236,93 @@ public class ObservationServiceImpl implements ObservationService {
 		Observation observation = observationDao.findById(id);
 		DataTableWkt dataTable = null;
 		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
+
+		System.out.println("Observation from DB = " + observation);
+
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
+
 				in.close();
+
+				System.out.println("Calling getUserScore...");
 				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
+				System.out.println("getUserScore DONE");
+
 				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
 					authorScore = score.getRecord().get(0).get("details");
 				}
-				if (observation.getDataTableId() != null) {
-					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
-				}
-				facts = traitService.getFacts("species.participation.Observation", id.toString());
-				observationResource = resourceService.getImageResource("observation", id.toString());
-				userGroups = userGroupService.getObservationUserGroup(id.toString());
-				customField = cfService.getObservationCustomFields(id.toString());
 
+				if (observation.getDataTableId() != null) {
+					System.out.println("Calling showDataTable...");
+					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
+					System.out.println("showDataTable DONE");
+				}
+
+				System.out.println("Calling getFacts...");
+				facts = traitService.getFacts("species.participation.Observation", id.toString());
+				System.out.println("getFacts DONE");
+
+				System.out.println("Calling getImageResource...");
+				observationResource = resourceService.getImageResource("observation", id.toString());
+				System.out.println("getImageResource DONE");
+
+				System.out.println("Calling getObservationUserGroup...");
+				userGroups = userGroupService.getObservationUserGroup(id.toString());
+				System.out.println("getObservationUserGroup DONE");
+
+				System.out.println("Calling getObservationCustomFields...");
+				customField = cfService.getObservationCustomFields(id.toString());
+				System.out.println("getObservationCustomFields DONE");
+
+				System.out.println("Calling getLayerInfo...");
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
-				if (observation.getFlagCount() > 0)
+				System.out.println("getLayerInfo DONE");
+
+				if (observation.getFlagCount() > 0) {
+					System.out.println("Calling getFlagByObjectType...");
 					flag = utilityServices.getFlagByObjectType("observation", id.toString());
+					System.out.println("getFlagByObjectType DONE");
+				}
+
+				System.out.println("Calling getTags...");
 				tags = utilityServices.getTags("observation", id.toString());
+				System.out.println("getTags DONE");
+
+				System.out.println("Calling getUserIbp...");
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
+				System.out.println("getUserIbp DONE");
+
+				System.out.println("Calling getAllFeatured...");
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
+				System.out.println("getAllFeatured DONE");
+
 				if (observation.getMaxVotedRecoId() != null) {
+
+					System.out.println("Calling fetchRecoName...");
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
+					System.out.println("fetchRecoName DONE");
+
+					System.out.println("Calling getObservationInfo recoId=" + observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
 							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
+					System.out.println("getObservationInfo DONE");
+
+					System.out.println("Calling allRecoVote...");
 					allRecoVotes = recoService.allRecoVote(id);
+					System.out.println("allRecoVote DONE");
+
+					System.out.println("Calling aggregateAllRecoSuggestions...");
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
+					System.out.println("aggregateAllRecoSuggestions DONE");
 				}
 
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
+				System.out.println("Visit count updated");
 
 				if (observation.getGeoPrivacy()) {
+					System.out.println("Applying geoPrivacy randomization...");
 					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
 							observation.getLongitude());
 					observation.setLatitude(latlon.get("lat"));
@@ -272,23 +330,35 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 
 				if (observation.getChecklistAnnotations() != null && !observation.getChecklistAnnotations().isEmpty()) {
+					System.out.println("Parsing checklist annotations...");
 					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
 							new TypeReference<Map<String, Object>>() {
 							});
 				}
 
+				System.out.println("Calling getNearByObservation...");
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
+				System.out.println("getNearByObservation DONE");
 
+				System.out.println("Calling getActivityCount...");
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
+				System.out.println("getActivityCount DONE");
+
+				System.out.println("==== findById SUCCESS ====");
+
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, dataTable, checkListAnnotation, activityCount);
+
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				System.out.println("ERROR inside findById:");
+				e.printStackTrace();
 			}
 		}
+
+		System.out.println("==== findById RETURNING NULL ====");
 		return null;
 	}
 
@@ -497,10 +567,8 @@ public class ObservationServiceImpl implements ObservationService {
 		UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observationDao.findById(Long.parseLong(observationId)));
 		List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observationId);
 		Map<String, List<Long>> facts = traits.stream()
-	    .collect(Collectors.groupingBy(
-	    		trait -> trait.getNameId().toString(), 
-	            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-	        ));
+				.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+						Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 		ugObvFilterData.setTraits(facts);
 		checkFilterRule.setUgObvFilterData(ugObvFilterData);
 		intergratorService = headers.addIntergratorHeader(intergratorService,
@@ -700,8 +768,7 @@ public class ObservationServiceImpl implements ObservationService {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
-			userGroupService = headers.addUserGroupHeader(userGroupService,
-					requestAuthHeader);
+			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
 			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -719,8 +786,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			} else {
 				if (taxonList.trim().length() != 0) {
-					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
-							requestAuthHeader);
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
@@ -988,12 +1054,11 @@ public class ObservationServiceImpl implements ObservationService {
 				updateGeoPrivacy(observationList);
 //				------------BG rules-----------------
 				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observationId.toString());
+				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+						observationId.toString());
 				Map<String, List<Long>> facts = traits.stream()
-			    .collect(Collectors.groupingBy(
-			    		trait -> trait.getNameId().toString(), 
-			            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-			        ));
+						.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+								Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 				ugObvFilterData.setTraits(facts);
 				intergratorService = headers.addIntergratorHeader(intergratorService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -1077,12 +1142,11 @@ public class ObservationServiceImpl implements ObservationService {
 				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
 					UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							observation.getId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					ugObvFilterDataList.add(ugObvFilterData);
 				}
@@ -1118,12 +1182,11 @@ public class ObservationServiceImpl implements ObservationService {
 				List<UserGroupObvRuleData> ugObvFilterDataList = new ArrayList<UserGroupObvRuleData>();
 				for (Observation observation : observationList) {
 					UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
-					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+					List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+							observation.getId().toString());
 					Map<String, List<Long>> facts = traits.stream()
-				    .collect(Collectors.groupingBy(
-				    		trait -> trait.getNameId().toString(), 
-				            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-				        ));
+							.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+									Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 					ugObvFilterData.setTraits(facts);
 					ugObvFilterDataList.add(ugObvFilterData);
 				}
@@ -1461,12 +1524,11 @@ public class ObservationServiceImpl implements ObservationService {
 			Observation observation = observationDao.findById(observationId);
 			UserGroupObvRuleData ugObvFilterData = new UserGroupObvRuleData();
 			ugObvFilterData = getUGObvRuleData(observation);
-			List<FactValuePair> traits = traitService.getFacts("species.participation.Observation", observation.getId().toString());
+			List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
+					observation.getId().toString());
 			Map<String, List<Long>> facts = traits.stream()
-		    .collect(Collectors.groupingBy(
-		    		trait -> trait.getNameId().toString(), 
-		            Collectors.mapping(FactValuePair::getValueId, Collectors.toList())
-		        ));
+					.collect(Collectors.groupingBy(trait -> trait.getNameId().toString(),
+							Collectors.mapping(FactValuePair::getValueId, Collectors.toList())));
 			ugObvFilterData.setTraits(facts);
 			intergratorService = headers.addIntergratorHeader(intergratorService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
