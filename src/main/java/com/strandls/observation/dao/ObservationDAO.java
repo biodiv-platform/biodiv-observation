@@ -206,7 +206,6 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			CriteriaQuery<Observation> cq = cb.createQuery(Observation.class);
 			Root<Observation> root = cq.from(Observation.class);
 			cq.select(root);
-			// Apply authorId filter if present
 			if (authorId != null && !authorId.isEmpty()) {
 				cq.where(cb.equal(root.get("authorId"), Long.parseLong(authorId)));
 			}
@@ -225,17 +224,19 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 		return observationList;
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public Long findTotalObservationByauthorID(String authorId) {
+	@SuppressWarnings("unchecked")
+	public Long findTotalObservationByAuthorID(String authorId) {
 
 		try (Session session = sessionFactory.openSession()) {
 			String qry = "SELECT COUNT(id) FROM observation";
+			Query<Number> query;
+
 			if (authorId != null && !authorId.isEmpty()) {
 				qry += " WHERE author_id = :authorId";
-			}
-			Query<Number> query = session.createNativeQuery(qry);
-			if (authorId != null && !authorId.isEmpty()) {
-				query.setParameter("authorId", authorId);
+				query = session.createNativeQuery(qry);
+				query.setParameter("authorId", Long.parseLong(authorId));
+			} else {
+				query = session.createNativeQuery(qry);
 			}
 			return query.getSingleResult().longValue();
 		}

@@ -1143,8 +1143,8 @@ public class ObservationListServiceImpl implements ObservationListService {
 	@Override
 	public Map<String, Object> getObservationList(Integer offset, Integer max, String authorId) {
 		Map<String, Object> response = new HashMap<>();
-		response.put("files", observationDAO.getObservationList(offset, max, authorId));
-		response.put("total", observationDAO.findTotalObservationByauthorID(authorId));
+		response.put("data", observationDAO.getObservationList(offset, max, authorId));
+		response.put("total", observationDAO.findTotalObservationByAuthorID(authorId));
 
 		return response;
 	}
