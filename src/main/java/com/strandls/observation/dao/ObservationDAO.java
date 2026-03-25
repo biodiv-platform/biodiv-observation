@@ -3,10 +3,14 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -193,6 +197,49 @@ public class ObservationDAO extends AbstractDAO<Observation, Long> {
 			session.close();
 		}
 		return total;
+	}
+
+	public List<Observation> getObservationList(Integer offset, Integer max, String authorId) {
+		List<Observation> observationList = new ArrayList<>();
+		try (Session session = sessionFactory.openSession()) {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Observation> cq = cb.createQuery(Observation.class);
+			Root<Observation> root = cq.from(Observation.class);
+			cq.select(root);
+			if (authorId != null && !authorId.isEmpty()) {
+				cq.where(cb.equal(root.get("authorId"), Long.parseLong(authorId)));
+			}
+			cq.orderBy(cb.desc(root.get("createdOn")));
+			Query<Observation> query = session.createQuery(cq);
+			if (offset != null) {
+				query.setFirstResult(offset);
+			}
+			if (max != null) {
+				query.setMaxResults(max);
+			}
+			observationList = query.getResultList();
+		} catch (Exception ex) {
+			logger.error("Error fetching observation list", ex);
+		}
+		return observationList;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Long findTotalObservationByAuthorID(String authorId) {
+
+		try (Session session = sessionFactory.openSession()) {
+			String qry = "SELECT COUNT(id) FROM observation";
+			Query<Number> query;
+
+			if (authorId != null && !authorId.isEmpty()) {
+				qry += " WHERE author_id = :authorId";
+				query = session.createNativeQuery(qry);
+				query.setParameter("authorId", Long.parseLong(authorId));
+			} else {
+				query = session.createNativeQuery(qry);
+			}
+			return query.getSingleResult().longValue();
+		}
 	}
 
 }

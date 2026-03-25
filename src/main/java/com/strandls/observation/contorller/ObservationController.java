@@ -177,11 +177,12 @@ public class ObservationController {
 
 	@Inject
 	private ObservationDAO observationDao;
-	
+
 	@Inject
 	private RecommendationDao recoDao;
-	
-	@Inject RecommendationVoteDao recoVoteDao;
+
+	@Inject
+	RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	private ObservationMapperHelper observationMapperHelper;
@@ -200,10 +201,10 @@ public class ObservationController {
 
 	@Inject
 	private TraitsServiceApi traitService;
-	
+
 	@Inject
 	private ActivitySerivceApi activityService;
-	
+
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
 
@@ -424,6 +425,25 @@ public class ObservationController {
 		}
 	}
 
+	@GET
+	@Path(ApiConstants.LIST)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Get observations based on the filter from postgres", notes = "Returns the observation list based on the the filter from postgres", response = FilterPanelData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to get the data", response = String.class) })
+
+	public Response getObservation(@DefaultValue("15") @QueryParam("max") Integer max,
+			@DefaultValue("0") @QueryParam("offset") Integer offset,
+			@DefaultValue("") @QueryParam("authorId") String authorId) {
+		try {
+			Map<String, Object> result = observationListService.getObservationList(offset, max, authorId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -562,23 +582,28 @@ public class ObservationController {
 					&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
 							|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())
 							|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty())
-							|| (bulkTraits != null && !bulkTraits.isEmpty()) || bulkAction.equals("validateBulkObservations")||bulkAction.equals("unlockBulkObservations"))
+							|| (bulkTraits != null && !bulkTraits.isEmpty())
+							|| bulkAction.equals("validateBulkObservations")
+							|| bulkAction.equals("unlockBulkObservations"))
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll)
 							&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
 									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())
 									|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty())
-									|| (bulkTraits != null && !bulkTraits.isEmpty())||bulkAction.equals("validateBulkObservations")||bulkAction.equals("unlockBulkObservations"))
+									|| (bulkTraits != null && !bulkTraits.isEmpty())
+									|| bulkAction.equals("validateBulkObservations")
+									|| bulkAction.equals("unlockBulkObservations"))
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
 				CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 				ObservationBulkMappingThread bulkMappingThread = new ObservationBulkMappingThread(selectAll, bulkAction,
-						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, bulkRecoSuggestion,bulkTraits, mapSearchQuery,
-						ugService, index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
-						termsAggregationField, geoShapeFilterField, null, null, view, esService,
-						observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, objectMapper, intergratorService,
-						esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+						bulkObservationIds, bulkUsergroupIds, bulkSpeciesGroupId, bulkRecoSuggestion, bulkTraits,
+						mapSearchQuery, ugService, index, type, geoAggregationField, geoAggegationPrecision,
+						onlyFilteredAggregation, termsAggregationField, geoShapeFilterField, null, null, view,
+						esService, observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers,
+						objectMapper, intergratorService, esUpdate, traitService, recoService, profile,
+						observationService, activityService, taxonomyService);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
@@ -843,8 +868,8 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			ObservationUserPermission result = observationService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId,
-					userId, taxonList);
+			ObservationUserPermission result = observationService.getUserPermissions(
+					request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId, userId, taxonList);
 
 			return Response.status(Status.OK).entity(result).build();
 
@@ -1130,7 +1155,7 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.PRODUCE + "/{updateType}/{observationId}")
+	@Path(ApiConstants.PRODUCE + "/{updateType}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -1138,7 +1163,7 @@ public class ObservationController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to push to rabbitMQ", response = String.class) })
 
 	public Response pushToRabbitMQ(@PathParam("updateType") String updateType,
-			@PathParam("observationId") String observationId) {
+			@QueryParam("observationId") String observationId) {
 		try {
 			observationService.produceToRabbitMQ(observationId, updateType);
 			return Response.status(Status.OK).entity("Published to RabbitMQ").build();
