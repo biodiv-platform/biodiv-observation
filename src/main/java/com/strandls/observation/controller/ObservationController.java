@@ -174,11 +174,12 @@ public class ObservationController {
 
 	@Inject
 	private ObservationDAO observationDao;
-	
+
 	@Inject
 	private RecommendationDao recoDao;
-	
-	@Inject RecommendationVoteDao recoVoteDao;
+
+	@Inject
+	RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	private ObservationMapperHelper observationMapperHelper;
@@ -197,7 +198,7 @@ public class ObservationController {
 
 	@Inject
 	private TraitsServiceApi traitService;
-	
+
 	@Inject
 	private ActivityServiceApi activityService;
 	
@@ -411,6 +412,24 @@ public class ObservationController {
 		}
 	}
 
+	@GET
+	@Path(ApiConstants.LIST)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(summary = "Get observations based on the filter from postgres", description = "Returns the observation list based on the filter from postgres", responses = {
+			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = FilterPanelData.class))),
+			@ApiResponse(responseCode = "400", description = "Unable to get the data", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response getObservation(@DefaultValue("15") @QueryParam("max") Integer max,
+			@DefaultValue("0") @QueryParam("offset") Integer offset,
+			@DefaultValue("") @QueryParam("authorId") String authorId) {
+		try {
+			Map<String, Object> result = observationListService.getObservationList(offset, max, authorId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -548,13 +567,17 @@ public class ObservationController {
 					&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
 							|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())
 							|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty())
-							|| (bulkTraits != null && !bulkTraits.isEmpty()) || bulkAction.equals("validateBulkObservations")||bulkAction.equals("unlockBulkObservations"))
+							|| (bulkTraits != null && !bulkTraits.isEmpty())
+							|| bulkAction.equals("validateBulkObservations")
+							|| bulkAction.equals("unlockBulkObservations"))
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll)
 							&& ((bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty())
 									|| (bulkSpeciesGroupId != null && !bulkSpeciesGroupId.isEmpty())
 									|| (bulkRecoSuggestion != null && !bulkRecoSuggestion.isEmpty())
-									|| (bulkTraits != null && !bulkTraits.isEmpty())||bulkAction.equals("validateBulkObservations")||bulkAction.equals("unlockBulkObservations"))
+									|| (bulkTraits != null && !bulkTraits.isEmpty())
+									|| bulkAction.equals("validateBulkObservations")
+									|| bulkAction.equals("unlockBulkObservations"))
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
@@ -810,8 +833,8 @@ public class ObservationController {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			ObservationUserPermission result = observationService.getUserPermissions(request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId,
-					userId, taxonList);
+			ObservationUserPermission result = observationService.getUserPermissions(
+					request.getHeader(HttpHeaders.AUTHORIZATION), profile, observationId, userId, taxonList);
 
 			return Response.status(Status.OK).entity(result).build();
 
@@ -1076,14 +1099,14 @@ public class ObservationController {
 	}
 
 	@POST
-	@Path(ApiConstants.PRODUCE + "/{updateType}/{observationId}")
+	@Path(ApiConstants.PRODUCE + "/{updateType}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(summary = "Publish the observationId to RabbitMQ", description = "Return the result", responses = {
 			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = String.class))),
 			@ApiResponse(responseCode = "400", description = "Unable to push to RabbitMQ", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response pushToRabbitMQ(@PathParam("updateType") String updateType,
-			@PathParam("observationId") String observationId) {
+			@QueryParam("observationId") String observationId) {
 		try {
 			observationService.produceToRabbitMQ(observationId, updateType);
 			return Response.status(Status.OK).entity("Published to RabbitMQ").build();
