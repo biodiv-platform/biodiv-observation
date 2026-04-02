@@ -142,7 +142,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	private ObservationMapperHelper observationMapperHelper;
 
 	@Inject
-	private IntegratorServicesApi intergratorService;
+	private IntegratorServicesApi integratorService;
 	
 	@Inject
 	private ActivityServiceApi activityService;
@@ -532,7 +532,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
 					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao,recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+					observationDao,recoDao,recoVoteDao, request, headers, om, integratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
@@ -540,7 +540,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
 					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
 					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao, recoVoteDao, request, headers, om, intergratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+					observationDao,recoDao, recoVoteDao, request, headers, om, integratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

@@ -121,7 +121,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			MapAggregationStatsResponse aggregationStatsResult, MapAggregationResponse aggregationResult, String view,
 			EsServicesApi esService, ObservationMapperHelper observationMapperHelper, ObservationDAO observationDao,
 			RecommendationDao recoDao, RecommendationVoteDao recoVoteDao, HttpServletRequest request, Headers headers,
-			ObjectMapper objectMapper, IntegratorServicesApi intergratorService, ESUpdate esUpdate,
+			ObjectMapper objectMapper, IntegratorServicesApi integratorService, ESUpdate esUpdate,
 			TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile,
 			ObservationService observationService, ActivityServiceApi activityService,
 			TaxonomyServicesApi taxonomyService) {
