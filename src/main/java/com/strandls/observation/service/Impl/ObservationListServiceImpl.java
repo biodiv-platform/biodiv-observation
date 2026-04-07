@@ -140,39 +140,41 @@ public class ObservationListServiceImpl implements ObservationListService {
 								RecoShow recoShow = observationMapper.getRecoShow();
 								RecoIbp recoIbp = recoShow.getRecoIbp();
 								List<AllRecoSugguestions> allRecoVote = recoShow.getAllRecoVotes();
-								for (AllRecoSugguestions allrecoSuggestion : allRecoVote) {
-									if (recoIbp.getTaxonId() != null && allrecoSuggestion.getTaxonId() != null
-											&& recoIbp.getTaxonId().equals(allrecoSuggestion.getTaxonId())) {
-										flag = 1;
-										break;
+								if (allRecoVote != null) {
+									for (AllRecoSugguestions allrecoSuggestion : allRecoVote) {
+										if (recoIbp.getTaxonId() != null && allrecoSuggestion.getTaxonId() != null
+												&& recoIbp.getTaxonId().equals(allrecoSuggestion.getTaxonId())) {
+											flag = 1;
+											break;
+										}
+
+										if (recoIbp.getScientificName() != null
+												&& allrecoSuggestion.getScientificName() != null
+												&& !recoIbp.getScientificName().isEmpty()
+												&& !allrecoSuggestion.getScientificName().isEmpty()
+												&& recoIbp.getScientificName()
+														.equalsIgnoreCase(allrecoSuggestion.getScientificName())) {
+											flag = 1;
+											break;
+										}
+
+										if (recoIbp.getCommonName() != null && allrecoSuggestion.getCommonName() != null
+												&& !recoIbp.getCommonName().isEmpty()
+												&& !allrecoSuggestion.getCommonName().isEmpty() && recoIbp.getCommonName()
+														.equalsIgnoreCase(allrecoSuggestion.getCommonName())) {
+											flag = 1;
+											break;
+										}
+
+										targetIndex++;
+
 									}
 
-									if (recoIbp.getScientificName() != null
-											&& allrecoSuggestion.getScientificName() != null
-											&& !recoIbp.getScientificName().isEmpty()
-											&& !allrecoSuggestion.getScientificName().isEmpty()
-											&& recoIbp.getScientificName()
-													.equalsIgnoreCase(allrecoSuggestion.getScientificName())) {
-										flag = 1;
-										break;
+									if (targetIndex != 0 && flag == 1) {
+										Collections.swap(allRecoVote, 0, targetIndex);
+										recoShow.setAllRecoVotes(allRecoVote);
+										observationMapper.setRecoShow(recoShow);
 									}
-
-									if (recoIbp.getCommonName() != null && allrecoSuggestion.getCommonName() != null
-											&& !recoIbp.getCommonName().isEmpty()
-											&& !allrecoSuggestion.getCommonName().isEmpty() && recoIbp.getCommonName()
-													.equalsIgnoreCase(allrecoSuggestion.getCommonName())) {
-										flag = 1;
-										break;
-									}
-
-									targetIndex++;
-
-								}
-
-								if (targetIndex != 0 && flag == 1) {
-									Collections.swap(allRecoVote, 0, targetIndex);
-									recoShow.setAllRecoVotes(allRecoVote);
-									observationMapper.setRecoShow(recoShow);
 								}
 
 							}
