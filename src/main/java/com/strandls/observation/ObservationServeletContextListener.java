@@ -30,6 +30,8 @@ import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -110,6 +112,8 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					props.put("jersey.config.server.wadl.disableWadl", "true");
 
 					ObjectMapper objectMapper = new ObjectMapper();
+					// Configure to always call setter methods, even for null values
+					objectMapper.setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.SET));
 					bind(ObjectMapper.class).toInstance(objectMapper);
 
 					SecureRandom random = new SecureRandom();
