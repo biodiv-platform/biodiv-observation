@@ -113,7 +113,9 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 					ObjectMapper objectMapper = new ObjectMapper();
 					// Configure to always call setter methods, even for null values
-					objectMapper.setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.SET));
+					objectMapper.setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+					// Configure to include null values during serialization (for ES bulk upload)
+					objectMapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS);
 					bind(ObjectMapper.class).toInstance(objectMapper);
 
 					SecureRandom random = new SecureRandom();
