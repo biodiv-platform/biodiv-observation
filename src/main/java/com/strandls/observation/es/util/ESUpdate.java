@@ -92,9 +92,30 @@ public class ESUpdate {
 						// Serialize to JSON string first (respects serialization inclusion settings)
 						// Then deserialize to Map (preserves all fields including nulls)
 						String jsonString = om.writeValueAsString(s);
+
+						// DEBUG: Check if null fields are in the JSON string
+						if (s.getObservation_id().equals(ESObservationList.get(0).getObservation_id())) {
+							logger.info("DEBUG: JSON string contains 'max_voted_reco': {}", jsonString.contains("max_voted_reco"));
+							logger.info("DEBUG: JSON string contains 'all_reco_vote': {}", jsonString.contains("all_reco_vote"));
+							logger.info("DEBUG: JSON string contains 'profile_pic': {}", jsonString.contains("profile_pic"));
+							int startIdx = jsonString.indexOf("\"max_voted_reco\"");
+							if (startIdx >= 0) {
+								logger.info("DEBUG: max_voted_reco in JSON: {}", jsonString.substring(startIdx, Math.min(startIdx + 50, jsonString.length())));
+							}
+						}
+
 						@SuppressWarnings("unchecked")
 						Map<String, Object> doc = om.readValue(jsonString, Map.class);
 						doc.putIfAbsent("id", s.getObservation_id());
+
+						// DEBUG: Check if null fields are in the Map
+						if (s.getObservation_id().equals(ESObservationList.get(0).getObservation_id())) {
+							logger.info("DEBUG: Map contains 'max_voted_reco' key: {}", doc.containsKey("max_voted_reco"));
+							logger.info("DEBUG: Map contains 'all_reco_vote' key: {}", doc.containsKey("all_reco_vote"));
+							logger.info("DEBUG: Map contains 'profile_pic' key: {}", doc.containsKey("profile_pic"));
+							logger.info("DEBUG: Map max_voted_reco value: {}", doc.get("max_voted_reco"));
+						}
+
 						return doc;
 					} catch (Exception e) {
 						logger.error("Error converting ObservationESDocument to Map: {}", e.getMessage());
