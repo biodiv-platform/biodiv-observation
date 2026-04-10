@@ -85,6 +85,9 @@ public class ESUpdate {
 				logger.info("  max_voted_reco field type: {}", firstDoc.getMax_voted_reco() != null ? firstDoc.getMax_voted_reco().getClass().getName() : "null");
 				logger.info("  user_group_observations field type: {}", firstDoc.getUser_group_observations() != null ? firstDoc.getUser_group_observations().getClass().getName() : "null");
 
+				// Get first observation ID for debug logging (must be final for lambda)
+				final Long firstObsId = ESObservationList.isEmpty() ? null : ESObservationList.get(0).getObservation_id();
+
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 					om.setDateFormat(df);
@@ -94,7 +97,7 @@ public class ESUpdate {
 						String jsonString = om.writeValueAsString(s);
 
 						// DEBUG: Check if null fields are in the JSON string
-						if (s.getObservation_id().equals(ESObservationList.get(0).getObservation_id())) {
+						if (firstObsId != null && s.getObservation_id().equals(firstObsId)) {
 							logger.info("DEBUG: JSON string contains 'max_voted_reco': {}", jsonString.contains("max_voted_reco"));
 							logger.info("DEBUG: JSON string contains 'all_reco_vote': {}", jsonString.contains("all_reco_vote"));
 							logger.info("DEBUG: JSON string contains 'profile_pic': {}", jsonString.contains("profile_pic"));
@@ -109,7 +112,7 @@ public class ESUpdate {
 						doc.putIfAbsent("id", s.getObservation_id());
 
 						// DEBUG: Check if null fields are in the Map
-						if (s.getObservation_id().equals(ESObservationList.get(0).getObservation_id())) {
+						if (firstObsId != null && s.getObservation_id().equals(firstObsId)) {
 							logger.info("DEBUG: Map contains 'max_voted_reco' key: {}", doc.containsKey("max_voted_reco"));
 							logger.info("DEBUG: Map contains 'all_reco_vote' key: {}", doc.containsKey("all_reco_vote"));
 							logger.info("DEBUG: Map contains 'profile_pic' key: {}", doc.containsKey("profile_pic"));
