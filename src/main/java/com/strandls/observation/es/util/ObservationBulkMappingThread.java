@@ -112,6 +112,7 @@ public class ObservationBulkMappingThread implements Runnable {
 	private ObservationService observationService;
 	private ActivityServiceApi activityService;
 	private TaxonomyServicesApi taxonomyService;
+	private Boolean isListPageFlow;
 
 	public ObservationBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
 			String bulkUsergroupIds, String bulkSpeciesGroupId, String bulkRecoSuggestion, String bulkTraits,
@@ -124,7 +125,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			ObjectMapper objectMapper, IntegratorServicesApi integratorService, ESUpdate esUpdate,
 			TraitsServiceApi traitService, RecommendationService recoService, CommonProfile profile,
 			ObservationService observationService, ActivityServiceApi activityService,
-			TaxonomyServicesApi taxonomyService) {
+			TaxonomyServicesApi taxonomyService, Boolean isListPageFlow) {
 		super();
 		this.selectAll = selectAll;
 		this.bulkAction = bulkAction;
@@ -159,6 +160,7 @@ public class ObservationBulkMappingThread implements Runnable {
 		this.observationService = observationService;
 		this.activityService = activityService;
 		this.taxonomyService = taxonomyService;
+		this.isListPageFlow = isListPageFlow != null ? isListPageFlow : false;
 	}
 
 	@Override
@@ -550,9 +552,17 @@ public class ObservationBulkMappingThread implements Runnable {
 
 			List<Long> obsIds = ugObsList.stream().map(item -> item.getObservationId()).collect(Collectors.toList());
 			String observationList = StringUtils.join(obsIds, ',');
-			ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
-			Thread esThreadUpdate = new Thread(updateThread);
-			esThreadUpdate.start();
+
+			// Route to appropriate ES upload method based on source flow
+			if (Boolean.TRUE.equals(isListPageFlow)) {
+				// List page flow: use new endpoint that preserves null values
+				esUpdate.esBulkUploadObservations(observationList);
+			} else {
+				// Datatable flow: use existing thread-based approach
+				ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
+				Thread esThreadUpdate = new Thread(updateThread);
+				esThreadUpdate.start();
+			}
 
 		}
 	}

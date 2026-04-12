@@ -62,63 +62,22 @@ public class ESUpdate {
 			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 			if (!ESObservationList.isEmpty()) {
 
-				// DEBUG: Log all observation IDs to check for duplicates
-				logger.info("DEBUG: All observation IDs in list (total {}): {}",
-					ESObservationList.size(),
-					ESObservationList.stream().map(d -> d.getObservation_id()).collect(Collectors.toList()));
-
-				// CRITICAL FIX: Remove duplicates - SQL query returns multiple rows per observation
-				// Use LinkedHashMap to preserve order and keep first occurrence
+				// Remove duplicates - SQL query returns multiple rows per observation
 				Map<Long, ObservationESDocument> uniqueObservations = new java.util.LinkedHashMap<>();
 				for (ObservationESDocument doc : ESObservationList) {
 					uniqueObservations.putIfAbsent(doc.getObservation_id(), doc);
 				}
 				ESObservationList = new java.util.ArrayList<>(uniqueObservations.values());
-				logger.info("DEBUG: After deduplication, unique documents: {}", ESObservationList.size());
-
-				// DEBUG: Log first document before conversion
-				logger.info("DEBUG: First ObservationESDocument before Map conversion:");
-				ObservationESDocument firstDoc = ESObservationList.get(0);
-				logger.info("  observation_id: {}", firstDoc.getObservation_id());
-				logger.info("  location field type: {}", firstDoc.getLocation() != null ? firstDoc.getLocation().getClass().getName() : "null");
-				logger.info("  location value: {}", firstDoc.getLocation());
-				logger.info("  max_voted_reco field type: {}", firstDoc.getMax_voted_reco() != null ? firstDoc.getMax_voted_reco().getClass().getName() : "null");
-				logger.info("  user_group_observations field type: {}", firstDoc.getUser_group_observations() != null ? firstDoc.getUser_group_observations().getClass().getName() : "null");
-
-				// Get first observation ID for debug logging (must be final for lambda)
-				final Long firstObsId = ESObservationList.isEmpty() ? null : ESObservationList.get(0).getObservation_id();
 
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 					om.setDateFormat(df);
 					try {
-						// Serialize to JSON string first (respects serialization inclusion settings)
-						// Then deserialize to Map (preserves all fields including nulls)
+						// Serialize to JSON string then deserialize to Map
 						String jsonString = om.writeValueAsString(s);
-
-						// DEBUG: Check if null fields are in the JSON string
-						if (firstObsId != null && s.getObservation_id().equals(firstObsId)) {
-							logger.info("DEBUG: JSON string contains 'max_voted_reco': {}", jsonString.contains("max_voted_reco"));
-							logger.info("DEBUG: JSON string contains 'all_reco_vote': {}", jsonString.contains("all_reco_vote"));
-							logger.info("DEBUG: JSON string contains 'profile_pic': {}", jsonString.contains("profile_pic"));
-							int startIdx = jsonString.indexOf("\"max_voted_reco\"");
-							if (startIdx >= 0) {
-								logger.info("DEBUG: max_voted_reco in JSON: {}", jsonString.substring(startIdx, Math.min(startIdx + 50, jsonString.length())));
-							}
-						}
-
 						@SuppressWarnings("unchecked")
 						Map<String, Object> doc = om.readValue(jsonString, Map.class);
 						doc.putIfAbsent("id", s.getObservation_id());
-
-						// DEBUG: Check if null fields are in the Map
-						if (firstObsId != null && s.getObservation_id().equals(firstObsId)) {
-							logger.info("DEBUG: Map contains 'max_voted_reco' key: {}", doc.containsKey("max_voted_reco"));
-							logger.info("DEBUG: Map contains 'all_reco_vote' key: {}", doc.containsKey("all_reco_vote"));
-							logger.info("DEBUG: Map contains 'profile_pic' key: {}", doc.containsKey("profile_pic"));
-							logger.info("DEBUG: Map max_voted_reco value: {}", doc.get("max_voted_reco"));
-						}
-
 						return doc;
 					} catch (Exception e) {
 						logger.error("Error converting ObservationESDocument to Map: {}", e.getMessage());
@@ -126,15 +85,6 @@ public class ESUpdate {
 					}
 				}).collect(Collectors.toList());
 
-				// DEBUG: Log first Map after conversion
-				logger.info("DEBUG: First Map after conversion:");
-				Map<String, Object> firstMap = bulkEsDoc.get(0);
-				logger.info("  id: {}", firstMap.get("id"));
-				logger.info("  observation_id: {}", firstMap.get("observation_id"));
-				logger.info("  location field type: {}", firstMap.get("location") != null ? firstMap.get("location").getClass().getName() : "null");
-				logger.info("  location value: {}", firstMap.get("location"));
-
-				// Pass the List<Map> directly to bulkUpload - no need to serialize to JSON string
 				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						bulkEsDoc);
 				System.out.println("--------------completed-------------observationId");
@@ -143,6 +93,43 @@ public class ESUpdate {
 
 		} catch (ApiException e) {
 			logger.error("ERROR in esBulkUpload: ", e);
+		}
+	}
+
+	/**
+	 * Bulk upload observations using new endpoint that accepts JSON string directly
+	 * This preserves null values during serialization
+	 * Used for list page bulk post/unpost operations
+	 */
+	public void esBulkUploadObservations(String observationIds) {
+		System.out.println("--------------------observation es Bulk Upload (Observations) Started---------" + observationIds);
+		try {
+			List<ObservationESDocument> ESObservationList;
+
+			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
+			if (!ESObservationList.isEmpty()) {
+
+				// Remove duplicates
+				Map<Long, ObservationESDocument> uniqueObservations = new java.util.LinkedHashMap<>();
+				for (ObservationESDocument doc : ESObservationList) {
+					uniqueObservations.putIfAbsent(doc.getObservation_id(), doc);
+				}
+				ESObservationList = new java.util.ArrayList<>(uniqueObservations.values());
+
+				// Serialize directly to JSON string (preserves null values with ALWAYS inclusion)
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+				om.setDateFormat(df);
+				String jsonArray = om.writeValueAsString(ESObservationList);
+
+				// Call NEW endpoint that accepts String directly (no Map conversion)
+				esService.bulkUploadObservations(ObservationIndex.INDEX.getValue(),
+						ObservationIndex.TYPE.getValue(), jsonArray);
+
+				System.out.println("--------------completed-------------observationId");
+			}
+
+		} catch (Exception e) {
+			logger.error("ERROR in esBulkUploadObservations: ", e);
 		}
 	}
 

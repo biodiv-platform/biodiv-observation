@@ -587,7 +587,7 @@ public class ObservationController {
 						ugService, index, type, geoAggregationField, geoAggegationPrecision, onlyFilteredAggregation,
 						termsAggregationField, geoShapeFilterField, null, null, view, esService,
 						observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, objectMapper, integratorService,
-						esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+						esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService, true);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
