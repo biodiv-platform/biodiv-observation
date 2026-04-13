@@ -121,10 +121,16 @@ public class ESUpdate {
 				om.setDateFormat(df);
 				String jsonArray = om.writeValueAsString(ESObservationList);
 
+				// Debug: Log first 500 chars of JSON being sent
+				System.out.println("DEBUG: JSON being sent to ES (first 500 chars): " +
+					(jsonArray.length() > 500 ? jsonArray.substring(0, 500) + "..." : jsonArray));
+
 				// Call NEW endpoint that accepts String directly (no Map conversion)
-				esService.bulkUploadObservations(ObservationIndex.INDEX.getValue(),
+				List<MapQueryResponse> response = esService.bulkUploadObservations(ObservationIndex.INDEX.getValue(),
 						ObservationIndex.TYPE.getValue(), jsonArray);
 
+				// Debug: Log response
+				System.out.println("DEBUG: ES bulk upload response: " + response);
 				System.out.println("--------------completed-------------observationId");
 			}
 
