@@ -93,9 +93,7 @@ public class ESUpdate {
 					logger.info("  location value: {}", firstMap.get("location"));
 				}
 
-				String json = om.writeValueAsString(bulkEsDoc);
-
-				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(), json);
+				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(), bulkEsDoc);
 
 				System.out.println("--------------completed-------------observationId");
 			}
