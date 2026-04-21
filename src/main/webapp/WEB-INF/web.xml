@@ -10,6 +10,17 @@
 	<listener>
 		<listener-class>com.strandls.observation.ObservationServeletContextListener</listener-class>
 	</listener>
+
+	<!-- HMAC Signature Filter - Must come BEFORE GuiceFilter -->
+	<filter>
+		<filter-name>HMACSignatureFilter</filter-name>
+		<filter-class>com.strandls.observation.filter.HMACSignatureFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>HMACSignatureFilter</filter-name>
+		<url-pattern>/v1/observation/*</url-pattern>
+	</filter-mapping>
+
 	<filter>
 		<filter-name>GuiceFilter</filter-name>
 		<filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
