@@ -33,16 +33,29 @@ public class HMACSignatureFilter implements Filter {
      * Add more patterns here to protect additional endpoints
      */
     private static final String[] PROTECTED_ENDPOINTS = {
-        "/v1/observation/list/"
+        "/api/v1/observation/list/"
     };
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("=================================================");
+        System.out.println("HMAC Signature Filter initialized");
+        System.out.println("Protected endpoints: " + String.join(", ", PROTECTED_ENDPOINTS));
+        System.out.println("Signature validity: 5 minutes");
+        System.out.println("Secret rotation: 15 minutes");
+
+        // Print the secret on startup
+        String secret = HMACRequestSigning.getBaseSecret();
+        System.out.println("HMAC Base Secret: " + secret);
+        System.out.println("Secret Length: " + secret.length());
+        System.out.println("=================================================");
+
         logger.info("=================================================");
         logger.info("HMAC Signature Filter initialized");
         logger.info("Protected endpoints: {}", String.join(", ", PROTECTED_ENDPOINTS));
         logger.info("Signature validity: 5 minutes");
         logger.info("Secret rotation: 15 minutes");
+        logger.info("HMAC Base Secret: {}", secret);
         logger.info("=================================================");
     }
 
@@ -56,6 +69,9 @@ public class HMACSignatureFilter implements Filter {
         String requestURI = httpRequest.getRequestURI();
         String method = httpRequest.getMethod();
 
+        // DEBUG: Print every request that comes through this filter
+        System.out.println("[FILTER DEBUG] Request received: " + method + " " + requestURI);
+
         // Check if this endpoint requires HMAC verification
         boolean requiresVerification = false;
         for (String pattern : PROTECTED_ENDPOINTS) {
@@ -67,9 +83,12 @@ public class HMACSignatureFilter implements Filter {
 
         if (!requiresVerification) {
             // Not a protected endpoint, proceed without verification
+            System.out.println("[FILTER DEBUG] Not a protected endpoint, skipping verification");
             chain.doFilter(request, response);
             return;
         }
+
+        System.out.println("[FILTER DEBUG] Protected endpoint detected, verifying HMAC...");
 
         // Handle OPTIONS preflight requests (CORS)
         if ("OPTIONS".equalsIgnoreCase(method)) {
@@ -97,6 +116,15 @@ public class HMACSignatureFilter implements Filter {
 
         // ===== TESTING: Print HMAC secret key for verification =====
         String currentSecret = HMACRequestSigning.getBaseSecret();
+
+        // Print to both System.out (always visible) and logger
+        System.out.println("================================================");
+        System.out.println("[HMAC SECRET TEST] IP: " + clientIP);
+        System.out.println("[HMAC SECRET TEST] Secret Key: " + currentSecret);
+        System.out.println("[HMAC SECRET TEST] Secret Length: " + currentSecret.length());
+        System.out.println("[HMAC SECRET TEST] URI: " + requestURI);
+        System.out.println("================================================");
+
         logger.info("[HMAC SECRET TEST] IP: {} | Secret Key: {} | Length: {} | URI: {}",
             clientIP, currentSecret, currentSecret.length(), requestURI);
         // ============================================================

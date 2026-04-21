@@ -18,7 +18,7 @@
 	</filter>
 	<filter-mapping>
 		<filter-name>HMACSignatureFilter</filter-name>
-		<url-pattern>/v1/observation/*</url-pattern>
+		<url-pattern>/api/v1/observation/*</url-pattern>
 	</filter-mapping>
 
 	<filter>
