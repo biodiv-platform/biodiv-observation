@@ -45,6 +45,14 @@ public class HMACRequestSigning {
     }
 
     /**
+     * Get the base secret key for testing/debugging purposes
+     * WARNING: Remove this method in production or restrict access
+     */
+    public static String getBaseSecret() {
+        return BASE_SECRET;
+    }
+
+    /**
      * Generate current signing secret (time-based rotation)
      * Secrets rotate every 15 minutes based on current time window
      */

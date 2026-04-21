@@ -95,6 +95,12 @@ public class HMACSignatureFilter implements Filter {
         // Build parameter map from query string
         Map<String, String> params = buildParamMap(httpRequest);
 
+        // ===== TESTING: Print HMAC secret key for verification =====
+        String currentSecret = HMACRequestSigning.getBaseSecret();
+        logger.info("[HMAC SECRET TEST] IP: {} | Secret Key: {} | Length: {} | URI: {}",
+            clientIP, currentSecret, currentSecret.length(), requestURI);
+        // ============================================================
+
         // Log request details for debugging (remove in production)
         if (logger.isDebugEnabled()) {
             logger.debug("Request verification - IP: {}, Timestamp: {}, Params: {}",
