@@ -58,41 +58,48 @@ public class ESUpdate {
 	public void esBulkUpload(String observationIds) {
 		System.out.println("--------------------observation es Bulk Upload Started---------" + observationIds);
 		try {
-			List<ObservationESDocument> ESObservationList;
+			List<ObservationESDocument> ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 
-			ESObservationList = constructESDocument.getESDocumentStub(observationIds);
 			if (!ESObservationList.isEmpty()) {
 
-				// Remove duplicates - SQL query returns multiple rows per observation
+				logger.info("DEBUG: All observation IDs in list (total {}): {}", ESObservationList.size(),
+						ESObservationList.stream().map(d -> d.getObservation_id()).collect(Collectors.toList()));
+
+				// Deduplicate by observation_id
 				Map<Long, ObservationESDocument> uniqueObservations = new java.util.LinkedHashMap<>();
 				for (ObservationESDocument doc : ESObservationList) {
 					uniqueObservations.putIfAbsent(doc.getObservation_id(), doc);
 				}
 				ESObservationList = new java.util.ArrayList<>(uniqueObservations.values());
 
+				logger.info("DEBUG: After deduplication, unique documents: {}", ESObservationList.size());
+
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 					om.setDateFormat(df);
-					try {
-						// Serialize to JSON string then deserialize to Map
-						String jsonString = om.writeValueAsString(s);
-						@SuppressWarnings("unchecked")
-						Map<String, Object> doc = om.readValue(jsonString, Map.class);
-						doc.putIfAbsent("id", s.getObservation_id());
-						return doc;
-					} catch (Exception e) {
-						logger.error("Error converting ObservationESDocument to Map: {}", e.getMessage());
-						throw new RuntimeException(e);
-					}
+
+					@SuppressWarnings("unchecked")
+					Map<String, Object> doc = om.convertValue(s, Map.class);
+					doc.putIfAbsent("id", s.getObservation_id());
+					return doc;
 				}).collect(Collectors.toList());
 
-				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
-						bulkEsDoc);
-				System.out.println("--------------completed-------------observationId");
+				if (!bulkEsDoc.isEmpty()) {
+					Map<String, Object> firstMap = bulkEsDoc.get(0);
+					logger.info("DEBUG: First Map after conversion:");
+					logger.info("  id: {}", firstMap.get("id"));
+					logger.info("  observation_id: {}", firstMap.get("observation_id"));
+					logger.info("  location field type: {}",
+							firstMap.get("location") != null ? firstMap.get("location").getClass().getName() : "null");
+					logger.info("  location value: {}", firstMap.get("location"));
+				}
 
+				esService.bulkUpload(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(), bulkEsDoc);
+
+				System.out.println("--------------completed-------------observationId");
 			}
 
-		} catch (ApiException e) {
+		} catch (Exception e) {
 			logger.error("ERROR in esBulkUpload: ", e);
 		}
 	}
