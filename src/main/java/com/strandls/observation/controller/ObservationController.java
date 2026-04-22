@@ -537,6 +537,8 @@ public class ObservationController {
 					taxonId, recoName, rank, tahsil, district, state, tags, publicationGrade, authorVoted, dataSetName,
 					dataTableName, geoEntity, dataTableId);
 
+			System.out.println(traitParams);
+
 			if ((view.equalsIgnoreCase("csv_download") || view.equalsIgnoreCase("resources_csv_download"))
 					&& !authorId.isEmpty() && request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
