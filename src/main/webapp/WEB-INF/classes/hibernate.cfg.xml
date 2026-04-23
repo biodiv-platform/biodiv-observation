@@ -8,7 +8,6 @@
 		<property name="hibernate.connection.password">postgres123</property>
 		<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/biodiv</property>
 
-		<property name="connection_pool_size">1</property>
 
 		<property name="hbm2ddl.auto">update</property>
 
