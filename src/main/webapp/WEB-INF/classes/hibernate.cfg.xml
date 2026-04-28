@@ -16,17 +16,25 @@
 		<property name="hibernate.current_session_context_class">thread</property>
 		<property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
 
-		<!-- Maximum waiting time for a connection from the pool -->
-		<property name="hibernate.hikari.connectionTimeout">55000</property>
+		<!-- HikariCP Configuration - Tier 1 (High-Traffic) -->
 
-		<!-- Minimum number of ideal connections in the pool -->
-		<property name="hibernate.hikari.minimumIdle">5</property>
+		<!-- Connection pool size -->
+		<property name="hibernate.hikari.minimumIdle">8</property>
+		<property name="hibernate.hikari.maximumPoolSize">40</property>
 
-		<!-- Maximum number of actual connection in the pool -->
-		<property name="hibernate.hikari.maximumPoolSize">150</property>
+		<!-- Connection timeout -->
+		<property name="hibernate.hikari.connectionTimeout">30000</property>
 
-		<!-- Maximum time that a connection is allowed to sit ideal in the pool -->
-		<property name="hibernate.hikari.idleTimeout">10000</property>
+		<!-- Idle connection management -->
+		<property name="hibernate.hikari.idleTimeout">600000</property>
+		<property name="hibernate.hikari.maxLifetime">1800000</property>
+
+		<!-- Connection health -->
+		<property name="hibernate.hikari.validationTimeout">5000</property>
+		<property name="hibernate.hikari.connectionTestQuery">SELECT 1</property>
+
+		<!-- Leak detection (for debugging connection leaks) -->
+		<property name="hibernate.hikari.leakDetectionThreshold">60000</property>
 
 		<property name="hibernate.jdbc.lob.non_contextual_creation">true</property>
 		
