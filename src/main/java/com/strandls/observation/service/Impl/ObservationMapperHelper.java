@@ -625,6 +625,13 @@ public class ObservationMapperHelper {
 			String geoPrivacyTraitsValue = properties.getProperty("geoPrivacyValues");
 			in.close();
 
+			if (geoPrivacyTraitsValue == null || geoPrivacyTraitsValue.trim().isEmpty()
+					|| geoPrivacyTraitsValue.trim().equalsIgnoreCase("NA")) {
+				logger.info("Skipping geo-privacy update: geoPrivacyValues is not configured (value: {})",
+						geoPrivacyTraitsValue);
+				return;
+			}
+
 			List<Long> geoPrivateTaxonId = traitsServiceApi.getTaxonListByValueId(geoPrivacyTraitsValue);
 
 			for (Observation observation : observationList) {
