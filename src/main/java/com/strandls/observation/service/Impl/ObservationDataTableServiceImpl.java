@@ -224,6 +224,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
+			ex.printStackTrace();
 		}
 
 		return null;

@@ -318,6 +318,7 @@ public class ObservationUtilityFunctions {
 				: false;
 		try {
 			requestAuthHeader = tokenGenerator.generate(userService.getUser(userId.toString()));
+			logger.info("Token generated for userId: {}", userId);
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
 			Row dataRow = observationData.getDataRow();
 
@@ -328,6 +329,7 @@ public class ObservationUtilityFunctions {
 					isVerified = Boolean.parseBoolean(verifiedCell.getStringCellValue());
 				}
 			}
+			logger.info("Checking for isVerified");
 
 			if (fieldMapping.get("user") != null) {
 				Cell userCell = dataRow.getCell(fieldMapping.get("user"), MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -344,6 +346,7 @@ public class ObservationUtilityFunctions {
 					}
 				}
 			}
+			logger.info("Checking for user");
 
 			observation = mapper.creationObservationMapping(userId, requestAuthHeader, fieldMapping, dataRow,
 					observationData.getDataTable(), observationData.getSpeciesGroupList(),

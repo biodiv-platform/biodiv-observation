@@ -111,6 +111,8 @@ public class ObservationBulkUploadThread implements Runnable {
 				if (isEmptyRow(dataRow)) {
 					break;
 				}
+				
+				logger.info("Processing row number: {}", dataRow.getRowNum());
 
 				ObservationUtilityFunctions obUtil = new ObservationUtilityFunctions();
 				ObservationBulkData data = new ObservationBulkData(observationBulkData.getColumns(), dataRow, request,
@@ -122,6 +124,9 @@ public class ObservationBulkUploadThread implements Runnable {
 						observationDao, userService, data, myImageUpload, tokenGenerator, userGroup, userId);
 				if (obsId != null) {
 					observationIds.add(obsId);
+					logger.info("Success - obsId: {}", obsId);
+			    } else {
+			        logger.error("FAILED for row: {}", dataRow.getRowNum());
 				}
 
 				if (observationIds.size() >= 200) {
@@ -146,11 +151,13 @@ public class ObservationBulkUploadThread implements Runnable {
 					dataTableService.updateDataTable(dataTable);
 				} catch (Exception e) {
 					logger.error(e.getMessage());
+					e.printStackTrace();
 				}
 
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 
 	}

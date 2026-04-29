@@ -132,6 +132,7 @@ public class ObservationBulkMapperHelper {
 					geoPrivacy = geoPrivacyCell.getBooleanCellValue();
 				}
 			}
+			logger.info("Geoprivacyinfo");
 
 			SpeciesGroup speciesGroup = null;
 			if (fieldMapping.get("sGroup") != null) {
@@ -152,6 +153,7 @@ public class ObservationBulkMapperHelper {
 				speciesGroup = new SpeciesGroup();
 				speciesGroup.setId(Long.parseLong(dataTable.getTaxonomicCoverageGroupIds().split(",")[0].trim()));
 			}
+			logger.info("speciesGroupInfo");
 
 			Date fromDate = null;
 			Date toDate = null;
@@ -214,6 +216,7 @@ public class ObservationBulkMapperHelper {
 				fromDate = dataTable.getTemporalCoverageFromDate();
 				toDate = dataTable.getTemporalCoverageToDate();
 			}
+			logger.info("From date and to date");
 
 			String observedAt = "";
 			if (fieldMapping.get("observedAt") != null) {
@@ -228,6 +231,8 @@ public class ObservationBulkMapperHelper {
 			} else {
 				observedAt = dataTable.getGeographicalCoveragePlaceName();
 			}
+			
+			logger.info("Observed at info");
 
 			String locationScale = "APPROXIMATE";
 			if (fieldMapping.get("locationScale") != null) {
@@ -238,6 +243,8 @@ public class ObservationBulkMapperHelper {
 					locationScale = locationScaleCell.getStringCellValue();
 				}
 			}
+			
+			logger.info("location scale");
 
 			Double latitude = null;
 			Double longitude = null;
@@ -269,6 +276,8 @@ public class ObservationBulkMapperHelper {
 				throw new ObservationInputException("Observation latitude/longitude not within bounds");
 
 			}
+			
+			logger.info("Observationcoverage");
 			String dateAccuracy = "ACCURATE";
 			if (fieldMapping.get("dateAccuracy") != null) {
 				Cell dateAccuracyCell = dataRow.getCell(fieldMapping.get("dateAccuracy"),
@@ -282,6 +291,7 @@ public class ObservationBulkMapperHelper {
 			} else {
 				dateAccuracy = dataTable.getTemporalCoverageDateAccuracy();
 			}
+			logger.info("Date accuracy");
 
 			String notes = null;
 			if (fieldMapping.get("notes") != null) {
@@ -291,6 +301,7 @@ public class ObservationBulkMapperHelper {
 					notes = notesCell.getStringCellValue();
 				}
 			}
+			logger.info("notes");
 
 			String checklistString = null;
 			if (!checklistAnnotation.isEmpty()) {
@@ -315,6 +326,7 @@ public class ObservationBulkMapperHelper {
 				}
 
 			}
+			logger.info("checklist");
 
 			Geometry topology = null;
 			if (latitude != null && longitude != null) {
@@ -326,6 +338,8 @@ public class ObservationBulkMapperHelper {
 				Coordinate c = new Coordinate(lat, lon);
 				topology = geofactory.createPoint(c);
 			}
+			
+			logger.info("topology");
 
 			observation.setAuthorId(userId);
 			observation.setIsShowable(true);
@@ -364,10 +378,13 @@ public class ObservationBulkMapperHelper {
 			observation.setChecklistAnnotations(checklistString);// from data set
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
 			observation.setIsVerified(isVerified);
+			observation.setLastRevised(new Date());
 			observation = observationDAO.save(observation);
 			if (observation != null) {
 				logActivities.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(),
 						"observation", null, "Observation created", null);
+			} else {
+				logger.info("Couldn't create observation");
 			}
 			return observation;
 
