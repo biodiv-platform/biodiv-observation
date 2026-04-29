@@ -19,14 +19,14 @@
 		<!-- HikariCP Configuration - Tier 1 (High-Traffic) -->
 
 		<!-- Connection pool size -->
-		<property name="hibernate.hikari.minimumIdle">3</property>
-		<property name="hibernate.hikari.maximumPoolSize">40</property>
+		<property name="hibernate.hikari.minimumIdle">5</property>
+		<property name="hibernate.hikari.maximumPoolSize">60</property>
 
 		<!-- Connection timeout -->
 		<property name="hibernate.hikari.connectionTimeout">30000</property>
 
 		<!-- Idle connection management -->
-		<property name="hibernate.hikari.idleTimeout">60000</property>
+		<property name="hibernate.hikari.idleTimeout">120000</property>
 		<property name="hibernate.hikari.maxLifetime">1800000</property>
 
 		<!-- Connection health -->
