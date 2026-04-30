@@ -226,32 +226,32 @@ public class ObservationController {
 
 	}
 
-	@GET
-	@Path(ApiConstants.SHOW + "/{observationId}")
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Find Observation by ID", description = "Returns the complete Observation with all the specification", responses = {
-			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ShowData.class))),
-			@ApiResponse(responseCode = "404", description = "Observation not found", content = @Content(schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "400", description = "Invalid ID", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response show(
-			@Parameter(description = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {
-
-		Long obvId;
-		try {
-			obvId = Long.parseLong(id);
-			ShowData show = observationService.findById(obvId);
-
-			if (show != null)
-				return Response.status(Status.OK).entity(show).build();
-			else
-				return Response.status(Status.NOT_FOUND).build();
-
-		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).build();
-		}
-
-	}
+//	@GET
+//	@Path(ApiConstants.SHOW + "/{observationId}")
+//	@Consumes(MediaType.TEXT_PLAIN)
+//	@Produces(MediaType.APPLICATION_JSON)
+//	@Operation(summary = "Find Observation by ID", description = "Returns the complete Observation with all the specification", responses = {
+//			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ShowData.class))),
+//			@ApiResponse(responseCode = "404", description = "Observation not found", content = @Content(schema = @Schema(implementation = String.class))),
+//			@ApiResponse(responseCode = "400", description = "Invalid ID", content = @Content(schema = @Schema(implementation = String.class))) })
+//	public Response show(
+//			@Parameter(description = "ID of Show that needs to be fetched", required = true) @PathParam("observationId") String id) {
+//
+//		Long obvId;
+//		try {
+//			obvId = Long.parseLong(id);
+//			ShowData show = observationService.findById(obvId);
+//
+//			if (show != null)
+//				return Response.status(Status.OK).entity(show).build();
+//			else
+//				return Response.status(Status.NOT_FOUND).build();
+//
+//		} catch (Exception e) {
+//			return Response.status(Status.BAD_REQUEST).build();
+//		}
+//
+//	}
 
 	@POST
 	@Path(ApiConstants.CREATE)
