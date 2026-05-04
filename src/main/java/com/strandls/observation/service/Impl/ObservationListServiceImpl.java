@@ -835,10 +835,22 @@ public class ObservationListServiceImpl implements ObservationListService {
 
 			aggregationStatsResponse.setCountPerDay(countPerDay);
 		} else if (statsFilter.split("\\|")[0].equals("min")) {
-			Map<String, Long> min_agg = getAggregationValue(mapAggStatsResponse.get(statsFilter));
-			List<String> keyList = new ArrayList<>(min_agg.keySet());
-			aggregationStatsResponse.setMinDate(Collections.min(keyList));
-			aggregationStatsResponse.setmaxDate(Collections.max(keyList));
+			// 1. Safely retrieve the aggregation result
+			AggregationResponse aggResponse = mapAggStatsResponse.get(statsFilter);
+			Map<String, Long> min_agg = getAggregationValue(aggResponse);
+
+			// 2. Check if the map is null or empty before proceeding
+			if (min_agg != null && !min_agg.isEmpty()) {
+				List<String> keyList = new ArrayList<>(min_agg.keySet());
+
+				// 3. Only call min/max if the list has elements
+				aggregationStatsResponse.setMinDate(Collections.min(keyList));
+				aggregationStatsResponse.setmaxDate(Collections.max(keyList));
+			} else {
+				// 4. Handle the empty case gracefully
+				aggregationStatsResponse.setMinDate(null);
+				aggregationStatsResponse.setmaxDate(null);
+			}
 		} else if (statsFilter.equals("observedOn")) {
 			Map<String, Long> observedOnAgg = getAggregationValue(mapAggStatsResponse.get("group_by_observed"));
 			Map<String, List<Map<String, Object>>> groupByMonth = new LinkedHashMap<>();
