@@ -40,7 +40,6 @@ import com.strandls.observation.es.util.ObservationUtilityFunctions;
 import com.strandls.observation.es.util.PublicationGrade;
 import com.strandls.observation.pojo.DatatableUserGroupUpdateData;
 import com.strandls.observation.pojo.DownloadLog;
-import com.strandls.observation.pojo.EsLocationListParams;
 import com.strandls.observation.pojo.ListPagePermissions;
 import com.strandls.observation.pojo.MapAggregationResponse;
 import com.strandls.observation.pojo.MapAggregationStatsResponse;
@@ -430,9 +429,8 @@ public class ObservationController {
 		}
 	}
 
-	@POST
+	@GET
 	@Path(ApiConstants.LIST + "/{index}/{type}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(summary = "Fetch observations based on filter", description = "Returns a list of observations based on the filters", responses = {
 			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = ObservationListData.class))),
@@ -466,7 +464,7 @@ public class ObservationController {
 			@DefaultValue("list") @QueryParam("view") String view, @QueryParam("rank") String rank,
 			@QueryParam("tahsil") String tahsil, @QueryParam("district") String district,
 			@QueryParam("state") String state, @QueryParam("geoEntity") String geoEntity,
-			@QueryParam("tags") String tags, @Parameter(description = "location") EsLocationListParams location,
+			@QueryParam("tags") String tags, @DefaultValue("") @QueryParam("location") String location,
 			@QueryParam("geoShapeFilterField") String geoShapeFilterField,
 			@QueryParam("nestedField") String nestedField, @QueryParam("publicationgrade") String publicationGrade,
 			@DefaultValue("0") @QueryParam("lifelistoffset") Integer lifeListOffset,
@@ -520,14 +518,13 @@ public class ObservationController {
 			mapSearchParams.setSortType(SortTypeEnum.DESC);
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
 
-			String loc = location.getLocation();
-			if (loc != null) {
-				if (loc.contains("/")) {
-					String[] locationArray = loc.split("/");
+			if (location != null && !location.isEmpty()) {
+				if (location.contains("/")) {
+					String[] locationArray = location.split("/");
 					List<List<MapGeoPoint>> multiPolygonPoint = esUtility.multiPolygonGenerator(locationArray);
 					mapBoundsParams.setMultipolygon(multiPolygonPoint);
 				} else {
-					mapBoundsParams.setPolygon(esUtility.polygonGenerator(loc));
+					mapBoundsParams.setPolygon(esUtility.polygonGenerator(location));
 				}
 			}
 
