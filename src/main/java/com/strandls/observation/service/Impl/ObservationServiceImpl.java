@@ -204,67 +204,96 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Override
 	public ShowData findById(Long id) {
+		logger.info("Starting findById for observation ID: {}", id);
 
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
-
 		Properties properties = new Properties();
 		try {
-			properties.load(in);
+			if (in != null) {
+				properties.load(in);
+			} else {
+				logger.warn("config.properties not found in classpath");
+			}
 		} catch (IOException e) {
-			logger.error(e.getMessage());
+			logger.error("Error loading config.properties: {}", e.getMessage(), e);
 		}
 
-		List<FactValuePair> facts;
-		List<ResourceData> observationResource;
-		List<UserGroupIbp> userGroups;
+		// Initialize variables
+		List<FactValuePair> facts = null;
+		List<ResourceData> observationResource = null;
+		List<UserGroupIbp> userGroups = null;
 		List<CustomFieldObservationData> customField = null;
-		ObservationLocationInfo layerInfo;
+		ObservationLocationInfo layerInfo = null;
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
-		List<FlagShow> flag = new ArrayList<FlagShow>();
-		List<Tags> tags;
-		List<Featured> fetaured;
-		UserIbp userInfo;
-		List<RecoIbp> allRecoVotes = null;
+		List<FlagShow> flag = new ArrayList<>();
+		List<Tags> tags = null;
+		List<Featured> fetaured = null;
+		UserIbp userInfo = null;
 		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
-		Observation observation = observationDao.findById(id);
 		DataTableWkt dataTable = null;
-		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
+		Map<String, Object> checkListAnnotation = new HashMap<>();
+
+		Observation observation = observationDao.findById(id);
+
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
-				in.close();
-				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
-				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
-					authorScore = score.getRecord().get(0).get("details");
+				if (in != null)
+					in.close();
+
+				// 1. Check ES Service (Suspect for 403)
+				logger.debug("Fetching user score for author: {}", observation.getAuthorId());
+				try {
+					UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
+					if (score != null && score.getRecord() != null && !score.getRecord().isEmpty()) {
+						authorScore = score.getRecord().get(0).get("details");
+					}
+				} catch (Exception e) {
+					logger.error("Failed to fetch user score from ES: {}", e.getMessage());
 				}
+
+				// 2. Check DataTable Service
 				if (observation.getDataTableId() != null) {
+					logger.debug("Fetching DataTable info for ID: {}", observation.getDataTableId());
 					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
 				}
+
+				// 3. Trait and Resource Services (Suspect for 403)
+				logger.debug("Fetching traits and resources for observation: {}", id);
 				facts = traitService.getFacts("species.participation.Observation", id.toString());
 				observationResource = resourceService.getImageResource("observation", id.toString());
 				userGroups = userGroupService.getObservationUserGroup(id.toString());
 				customField = cfService.getObservationCustomFields(id.toString());
 
+				// 4. Layer Service (Suspect for 403 - uses lat/lon)
+				logger.debug("Fetching layer info for Lat: {}, Lon: {}", observation.getLatitude(),
+						observation.getLongitude());
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
-				if (observation.getFlagCount() > 0)
-					flag = utilityServices.getFlagByObjectType("observation", id.toString());
+
+				// 5. Utility and User Services
 				tags = utilityServices.getTags("observation", id.toString());
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
+
+				// 6. Reco/Taxon services
 				if (observation.getMaxVotedRecoId() != null) {
+					logger.debug("Fetching Reco details for RecoId: {}", observation.getMaxVotedRecoId());
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
 							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
-					allRecoVotes = recoService.allRecoVote(id);
+					List<RecoIbp> allRecoVotes = recoService.allRecoVote(id);
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 
+				// 7. Update Visit Count
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
 
+				// 8. Geo-Privacy and Annotations
 				if (observation.getGeoPrivacy()) {
+					logger.info("Applying geo-privacy for observation {}", id);
 					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
 							observation.getLongitude());
 					observation.setLatitude(latlon.get("lat"));
@@ -277,17 +306,24 @@ public class ObservationServiceImpl implements ObservationService {
 							});
 				}
 
+				// 9. Final ES call (Suspect for 403)
+				logger.debug("Fetching nearby observations for observation {}", id);
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
+
+				logger.info("Successfully retrieved ShowData for observation {}", id);
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
 						observationNearBy, dataTable, checkListAnnotation, activityCount);
+
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("CRITICAL FAILURE in findById for ID {}: {}", id, e.getMessage(), e);
 			}
+		} else {
+			logger.warn("Observation with ID {} not found or is deleted", id);
 		}
 		return null;
 	}
@@ -947,23 +983,23 @@ public class ObservationServiceImpl implements ObservationService {
 						&& observationUpdate.getResources().isEmpty()) {
 					throw new ObservationInputException("Observation Resources not found");
 				}
-//				location data
+				// location data
 				observation.setPlaceName(observationUpdate.getObservedAt());
 				observation.setReverseGeocodedName(observationUpdate.getReverseGeocoded());
 				observation.setLocationScale(observationUpdate.getLocationScale());
 				observation.setLatitude(observationUpdate.getLatitude());
 				observation.setLongitude(observationUpdate.getLongitude());
 				observation.setGeoPrivacy(observationUpdate.getHidePreciseLocation());
-//				notes
+				// notes
 				observation.setNotes(observationUpdate.getNotes());
-//				date data
+				// date data
 				observation.setFromDate(observationUpdate.getObservedOn());
 				observation.setToDate(observationUpdate.getObservedOn());
 				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
 				observation.setLastRevised(new Date());
 				observation.setChecklistAnnotations(observationUpdate.getChecklistAnnotations());
 				observation.setBasisOfRecord(observationUpdate.getBasisOfRecord());
-//				resource data
+				// resource data
 
 				List<Resource> resources = observationUpdate.getResources() != null
 						? observationHelper.createResourceMapping(request, userId, observationUpdate.getResources())
@@ -974,17 +1010,17 @@ public class ObservationServiceImpl implements ObservationService {
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
-//					calculate reprImageof observation
+					// calculate reprImageof observation
 					observation = observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
 
-//				---------GEO PRIVACY CHECK------------
+				// ---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
-//				------------BG rules-----------------
+				// ------------BG rules-----------------
 				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
 				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
 						observationId.toString());
@@ -1025,12 +1061,12 @@ public class ObservationServiceImpl implements ObservationService {
 			Long userId = Long.parseLong(profile.getId());
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
-//				notes data
+				// notes data
 				editData.setNotes(observation.getNotes());
-//				Date data
+				// Date data
 				editData.setDateAccuracy(observation.getDateAccuracy());
 				editData.setObservedOn(observation.getFromDate());
-//				location data
+				// location data
 				editData.setObservedAt(observation.getPlaceName());
 				editData.setReverseGeocoded(observation.getReverseGeocodedName());
 				editData.setLocationScale(observation.getLocationScale());
@@ -1041,7 +1077,7 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setBasisOfRecord(observation.getBasisOfRecord());
 				editData.setDataTableId(observation.getDataTableId());
 
-//				resources Data
+				// resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
 						observationId.toString());
 				if (resourceData != null && !resourceData.isEmpty()) {
