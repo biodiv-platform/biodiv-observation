@@ -76,13 +76,13 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private ObservationDAO observationDao;
-	
+
 	@Inject
 	private ObservationService observationService;
-	
+
 	@Inject
 	private RecommendationDao recoDao;
-	
+
 	@Inject
 	private RecommendationVoteDao recoVoteDao;
 
@@ -143,10 +143,10 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private IntegratorServicesApi integratorService;
-	
+
 	@Inject
 	private ActivityServiceApi activityService;
-	
+
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
 
@@ -202,11 +202,14 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 				System.out.println("DEBUG: Opened workbook");
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
-				System.out.println("DEBUG: Got traits list, size: " + (traitsList != null ? traitsList.size() : "null"));
+				System.out
+						.println("DEBUG: Got traits list, size: " + (traitsList != null ? traitsList.size() : "null"));
 				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup("");
-				System.out.println("DEBUG: Got userGroup list, size: " + (userGroupIbpList != null ? userGroupIbpList.size() : "null"));
+				System.out.println("DEBUG: Got userGroup list, size: "
+						+ (userGroupIbpList != null ? userGroupIbpList.size() : "null"));
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
-				System.out.println("DEBUG: Got license list, size: " + (licenseList != null ? licenseList.size() : "null"));
+				System.out.println(
+						"DEBUG: Got license list, size: " + (licenseList != null ? licenseList.size() : "null"));
 
 				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
 						.collect(Collectors.toList());
@@ -264,6 +267,8 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	@Override
 	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
 			Integer offset) {
+		logger.info("Fetching DataTable details for ID: {}, limit: {}, offset: {}", dataTableId, limit, offset);
+
 		Map<String, String> authorScore = null;
 		DataTableWkt dataTable = null;
 		UserIbp user = null;
@@ -273,36 +278,65 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 		ObservationLocationInfo locationInfo = null;
 		ObservationDatatableList observationList = null;
 		ShowObervationDataTable dataTableRes = new ShowObervationDataTable();
+
+		// Add auth headers
 		dataTableService = headers.addDataTableHeaders(dataTableService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
 		try {
+			// 1. Fetch Core DataTable Info
 			dataTable = dataTableService.showDataTable(dataTableId.toString());
-
 			if (dataTable == null) {
+				logger.warn("DataTable not found for ID: {}", dataTableId);
 				return null;
 			}
+
+			// 2. Fetch Associated Data
 			userId = dataTable.getUploaderId();
+			logger.debug("DataTable uploader ID: {}", userId);
+
 			user = userService.getUserIbp(userId.toString());
 			userGroups = userGroupService.getObservationUserGroup(dataTableId.toString());
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
 			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
-			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
-			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
-					dataTable.getGeographicalCoverageLongitude().toString());
+
+			// 3. The Suspect Call: User Score (Wrapped to prevent total failure)
+			try {
+				logger.debug("Attempting to fetch user score for userId: {}", userId);
+				UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
+				if (score != null && score.getRecord() != null && !score.getRecord().isEmpty()) {
+					authorScore = score.getRecord().get(0).get("details");
+					dataTableRes.setAuthorScore(authorScore);
+				}
+			} catch (Exception e) {
+				// This is where your French HTML error is caught!
+				logger.error("NON-FATAL ERROR: Failed to fetch user score for uploader {}. Error: {}", userId,
+						e.getMessage());
+			}
+
+			// 4. Layer Info
+			try {
+				logger.debug("Fetching layer info for DataTable: {}", dataTableId);
+				locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
+						dataTable.getGeographicalCoverageLongitude().toString());
+				dataTableRes.setLayerInfo(locationInfo);
+			} catch (Exception e) {
+				logger.error("Failed to fetch layer info: {}", e.getMessage());
+			}
+
+			// 5. Populate Result Object
 			dataTableRes.setAuthorInfo(user);
-			dataTableRes.setLayerInfo(null);
-			dataTableRes.setObservationList(observationList.getObservationList());
-			dataTableRes.setLayerInfo(locationInfo);
+			dataTableRes.setObservationList(observationList != null ? observationList.getObservationList() : null);
 			dataTableRes.setUserGroups(userGroups);
 			dataTableRes.setDatatable(dataTable);
 			dataTableRes.setCount(count);
-			if (score.getRecord() != null && !score.getRecord().isEmpty()) {
-				authorScore = score.getRecord().get(0).get("details");
-				dataTableRes.setAuthorScore(authorScore);
-			}
+
+			logger.info("Successfully assembled DataTable response for ID: {}", dataTableId);
 			return dataTableRes;
+
 		} catch (Exception er) {
-			logger.error(er.getMessage());
+			// This catches total failures (like the Database or DataTable service being
+			// down)
+			logger.error("FATAL ERROR in showObservatioDataTable for ID {}: {}", dataTableId, er.getMessage(), er);
 		}
 
 		return null;
@@ -530,17 +564,21 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds,null,null, null, null, userGroupService, null, null, null,
-					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao,recoVoteDao, request, headers, om, integratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, null, null, null, userGroupService,
+					null, null, null, null, true, null, null, null, null, "bulkMapping", esService,
+					observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, om,
+					integratorService, esUpdate, traitService, recoService, profile, observationService,
+					activityService, taxonomyService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds,null,null, null, null, userGroupService, null, null,
-					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao,recoDao, recoVoteDao, request, headers, om, integratorService, esUpdate, traitService, recoService, profile, observationService, activityService, taxonomyService);
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, null, null, null,
+					userGroupService, null, null, null, null, true, null, null, null, null, "bulkMapping", esService,
+					observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, om,
+					integratorService, esUpdate, traitService, recoService, profile, observationService,
+					activityService, taxonomyService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();
