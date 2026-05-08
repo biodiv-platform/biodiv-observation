@@ -46,7 +46,6 @@ public class ShowData implements Serializable {
 	private List<Tags> tags;
 	private List<Featured> fetaured;
 	private UserIbp authorInfo;
-	private Map<String, String> authorScore;
 	private List<AllRecoSugguestions> allRecoVotes;
 	private List<ObservationNearBy> observationNearBy;
 	private DataTableWkt dataTable;
@@ -73,7 +72,6 @@ public class ShowData implements Serializable {
 	 * @param tags
 	 * @param fetaured
 	 * @param authorInfo
-	 * @param authorScore
 	 * @param allRecoVotes
 	 * @param observationNearBy
 	 * @param activityCount
@@ -81,9 +79,9 @@ public class ShowData implements Serializable {
 	public ShowData(Observation observation, List<FactValuePair> factValuePair, List<ResourceData> observationResource,
 			List<UserGroupIbp> userGroups, List<CustomFieldObservationData> customField,
 			ObservationLocationInfo layerInfo, ObservationInfo esLayerInfo, RecoIbp recoIbp, List<FlagShow> flag,
-			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, Map<String, String> authorScore,
-			List<AllRecoSugguestions> allRecoVotes, List<ObservationNearBy> observationNearBy, DataTableWkt dataTable,
-			Map<String, Object> checkListAnnotation, Integer activityCount) {
+			List<Tags> tags, List<Featured> fetaured, UserIbp authorInfo, List<AllRecoSugguestions> allRecoVotes,
+			List<ObservationNearBy> observationNearBy, DataTableWkt dataTable, Map<String, Object> checkListAnnotation,
+			Integer activityCount) {
 		super();
 		this.observation = observation;
 		this.factValuePair = factValuePair;
@@ -97,7 +95,6 @@ public class ShowData implements Serializable {
 		this.tags = tags;
 		this.fetaured = fetaured;
 		this.authorInfo = authorInfo;
-		this.authorScore = authorScore;
 		this.allRecoVotes = allRecoVotes;
 		this.observationNearBy = observationNearBy;
 		this.dataTable = dataTable;
@@ -199,14 +196,6 @@ public class ShowData implements Serializable {
 
 	public void setAuthorInfo(UserIbp authorInfo) {
 		this.authorInfo = authorInfo;
-	}
-
-	public Map<String, String> getAuthorScore() {
-		return authorScore;
-	}
-
-	public void setAuthorScore(Map<String, String> authorScore) {
-		this.authorScore = authorScore;
 	}
 
 	public List<AllRecoSugguestions> getAllRecoVotes() {

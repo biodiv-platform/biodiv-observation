@@ -1,7 +1,6 @@
 package com.strandls.observation.pojo;
 
 import java.util.List;
-import java.util.Map;
 
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
@@ -23,7 +22,6 @@ public class ShowObervationDataTable {
 	private List<UserGroupIbp> userGroups;
 	private ObservationLocationInfo layerInfo;
 	private UserIbp authorInfo;
-	private Map<String, String> authorScore;
 	private List<ObservationDataTableShow> observationList;
 	private Long count;
 
@@ -34,16 +32,14 @@ public class ShowObervationDataTable {
 	 * @param userGroups
 	 * @param layerInfo
 	 * @param authorInfo
-	 * @param authorScore
 	 */
 	public ShowObervationDataTable(DataTableWkt datatable, List<UserGroupIbp> userGroups,
-			ObservationLocationInfo layerInfo, UserIbp authorInfo, Map<String, String> authorScore, Long count) {
+			ObservationLocationInfo layerInfo, UserIbp authorInfo, Long count) {
 		super();
 		this.datatable = datatable;
 		this.userGroups = userGroups;
 		this.layerInfo = layerInfo;
 		this.authorInfo = authorInfo;
-		this.authorScore = authorScore;
 		this.count = count;
 	}
 
@@ -81,14 +77,6 @@ public class ShowObervationDataTable {
 
 	public void setAuthorInfo(UserIbp authorInfo) {
 		this.authorInfo = authorInfo;
-	}
-
-	public Map<String, String> getAuthorScore() {
-		return authorScore;
-	}
-
-	public void setAuthorScore(Map<String, String> authorScore) {
-		this.authorScore = authorScore;
 	}
 
 	public List<ObservationDataTableShow> getObservationList() {
