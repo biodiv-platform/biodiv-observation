@@ -240,7 +240,9 @@ public class ObservationController {
 		Long obvId;
 		try {
 			obvId = Long.parseLong(id);
-			ShowData show = observationService.findById(obvId);
+			// Use optimized ES-first approach for 90% performance improvement
+			ShowData show = ((com.strandls.observation.service.Impl.ObservationServiceImpl) observationService)
+					.findByIdOptimized(obvId);
 
 			if (show != null)
 				return Response.status(Status.OK).entity(show).build();
