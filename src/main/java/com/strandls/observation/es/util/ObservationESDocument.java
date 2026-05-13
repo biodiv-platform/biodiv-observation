@@ -340,6 +340,20 @@ public class ObservationESDocument {
 		this.location = location;
 	}
 
+	/**
+	 * Convenience method to get latitude without exposing Location object
+	 */
+	public Double getLocationLat() {
+		return location != null ? location.getLat() : null;
+	}
+
+	/**
+	 * Convenience method to get longitude without exposing Location object
+	 */
+	public Double getLocationLon() {
+		return location != null ? location.getLon() : null;
+	}
+
 	public LocationInformation getLocation_information() {
 		return location_information;
 	}
