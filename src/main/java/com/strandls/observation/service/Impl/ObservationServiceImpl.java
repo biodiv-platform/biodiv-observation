@@ -375,18 +375,20 @@ public class ObservationServiceImpl implements ObservationService {
 			List<java.util.concurrent.CompletableFuture<?>> futures = new ArrayList<>();
 
 			// Layer info (not in ES)
-			layerInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-				try {
-					return layerService.getLayerInfo(
-						String.valueOf(observation.getLatitude()),
-						String.valueOf(observation.getLongitude())
-					);
-				} catch (Exception e) {
-					logger.warn("Failed to fetch layer info for observation {}", id, e);
-					return null;
-				}
-			});
-			futures.add(layerInfoFuture);
+			if (observation.getLatitude() != null && observation.getLongitude() != null) {
+				layerInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+					try {
+						return layerService.getLayerInfo(
+							String.valueOf(observation.getLatitude()),
+							String.valueOf(observation.getLongitude())
+						);
+					} catch (Exception e) {
+						logger.warn("Failed to fetch layer info for observation {}", id, e);
+						return null;
+					}
+				});
+				futures.add(layerInfoFuture);
+			}
 
 			// Activity count (not in ES)
 			activityCountFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
@@ -400,15 +402,17 @@ public class ObservationServiceImpl implements ObservationService {
 			futures.add(activityCountFuture);
 
 			// User info (partial in ES, fetch full details)
-			userInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-				try {
-					return userService.getUserIbp(observation.getAuthorId().toString());
-				} catch (Exception e) {
-					logger.warn("Failed to fetch user info for observation {}", id, e);
-					return null;
-				}
-			});
-			futures.add(userInfoFuture);
+			if (observation.getAuthorId() != null) {
+				userInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+					try {
+						return userService.getUserIbp(observation.getAuthorId().toString());
+					} catch (Exception e) {
+						logger.warn("Failed to fetch user info for observation {}", id, e);
+						return null;
+					}
+				});
+				futures.add(userInfoFuture);
+			}
 
 			// Data table (if exists)
 			if (observation.getDataTableId() != null) {
@@ -424,20 +428,22 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			// Nearby observations (could be in ES, but might need fresh query)
-			nearbyFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-				try {
-					return esService.getNearByObservation(
-						ObservationIndex.INDEX.getValue(),
-						ObservationIndex.TYPE.getValue(),
-						observation.getLatitude().toString(),
-						observation.getLongitude().toString()
-					);
-				} catch (Exception e) {
-					logger.warn("Failed to fetch nearby observations for observation {}", id, e);
-					return new ArrayList<>();
-				}
-			});
-			futures.add(nearbyFuture);
+			if (observation.getLatitude() != null && observation.getLongitude() != null) {
+				nearbyFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+					try {
+						return esService.getNearByObservation(
+							ObservationIndex.INDEX.getValue(),
+							ObservationIndex.TYPE.getValue(),
+							observation.getLatitude().toString(),
+							observation.getLongitude().toString()
+						);
+					} catch (Exception e) {
+						logger.warn("Failed to fetch nearby observations for observation {}", id, e);
+						return new ArrayList<>();
+					}
+				});
+				futures.add(nearbyFuture);
+			}
 
 			// ES layer info (if max voted reco exists)
 			if (observation.getMaxVotedRecoId() != null) {
