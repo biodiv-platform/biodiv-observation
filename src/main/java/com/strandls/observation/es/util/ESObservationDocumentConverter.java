@@ -35,6 +35,9 @@ public class ESObservationDocumentConverter {
             return null;
         }
 
+        logger.debug("Converting ES document to Observation - id: {}, authorId: {}, lat: {}, lon: {}",
+            esDoc.getObservation_id(), esDoc.getAuthor_id(), esDoc.getLocationLat(), esDoc.getLocationLon());
+
         Observation obs = new Observation();
         obs.setId(esDoc.getObservation_id());
         obs.setAuthorId(esDoc.getAuthor_id());
@@ -53,11 +56,9 @@ public class ESObservationDocumentConverter {
         obs.setDataTableId(esDoc.getData_table_id());
         obs.setDatasetId(esDoc.getDataset_id());
 
-        // Location
-        if (esDoc.getLocation() != null) {
-            obs.setLatitude(esDoc.getLocation().getLat());
-            obs.setLongitude(esDoc.getLocation().getLon());
-        }
+        // Location - use convenience methods to avoid accessing inner class
+        obs.setLatitude(esDoc.getLocationLat());
+        obs.setLongitude(esDoc.getLocationLon());
 
         // Dates
         obs.setFromDate(esDoc.getFrom_date());
