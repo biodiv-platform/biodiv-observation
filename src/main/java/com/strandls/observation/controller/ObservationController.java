@@ -201,7 +201,7 @@ public class ObservationController {
 
 	@Inject
 	private ActivityServiceApi activityService;
-	
+
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
 
@@ -241,18 +241,15 @@ public class ObservationController {
 		try {
 			obvId = Long.parseLong(id);
 			// Use optimized ES-first approach for 90% performance improvement
-			ShowData show = ((com.strandls.observation.service.Impl.ObservationServiceImpl) observationService)
-					.findByIdOptimized(obvId);
-
-			if (show != null)
+			ShowData show = observationService.findByIdOptimized(obvId);
+			if (show != null) {
 				return Response.status(Status.OK).entity(show).build();
-			else
+			} else {
 				return Response.status(Status.NOT_FOUND).build();
-
+			}
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
-
 	}
 
 	@POST
