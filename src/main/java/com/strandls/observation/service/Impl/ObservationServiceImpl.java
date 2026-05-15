@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.pac4j.core.profile.CommonProfile;
@@ -47,6 +50,9 @@ import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.ObservationDownloadLogDAO;
 import com.strandls.observation.dao.RecommendationVoteDao;
+import com.strandls.observation.es.util.ESObservationDocumentConverter;
+import com.strandls.observation.es.util.ObservationESDocument;
+import com.strandls.observation.es.util.ObservationESFetcher;
 import com.strandls.observation.es.util.ObservationIndex;
 import com.strandls.observation.es.util.ObservationListElasticMapping;
 import com.strandls.observation.es.util.RabbitMQProducer;
@@ -203,7 +209,7 @@ public class ObservationServiceImpl implements ObservationService {
 	private ObservationCreateService observationCreateService;
 
 	@Inject
-	private com.strandls.observation.es.util.ObservationESFetcher observationESFetcher;
+	private ObservationESFetcher observationESFetcher;
 
 	@Override
 	public ShowData findById(Long id) {
@@ -296,15 +302,15 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	/**
-	 * OPTIMIZED VERSION: Fetches observation data from Elasticsearch first
-	 * This dramatically reduces service calls from 15+ to 2-3
-	 * Expected improvement: 90% reduction in response time
+	 * OPTIMIZED VERSION: Fetches observation data from Elasticsearch first This
+	 * dramatically reduces service calls from 15+ to 2-3 Expected improvement: 90%
+	 * reduction in response time
 	 */
 	public ShowData findByIdOptimized(Long id) {
 		try {
 			// 1. Fetch full observation from Elasticsearch (single fast call)
 			logger.debug("Fetching observation {} from ES", id);
-			com.strandls.observation.es.util.ObservationESDocument esDoc = observationESFetcher.fetchObservationDocument(id);
+			ObservationESDocument esDoc = observationESFetcher.fetchObservationDocument(id);
 
 			if (esDoc == null) {
 				logger.debug("Observation {} not found in ES, falling back to database", id);
@@ -315,7 +321,7 @@ public class ObservationServiceImpl implements ObservationService {
 			incrementVisitCountAsync(id);
 
 			// 3. Convert ES document to Observation entity
-			Observation observation = com.strandls.observation.es.util.ESObservationDocumentConverter.toObservation(esDoc);
+			Observation observation = ESObservationDocumentConverter.toObservation(esDoc);
 
 			if (observation == null) {
 				logger.warn("Failed to convert ES document to Observation for id {}", id);
@@ -324,45 +330,34 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// 4. Handle geo-privacy
 			if (esDoc.getGeo_privacy() != null && esDoc.getGeo_privacy()) {
-				Map<String, Double> latlon = observationHelper.getRandomLatLong(
-					esDoc.getLocationLat(),
-					esDoc.getLocationLon()
-				);
+				Map<String, Double> latlon = observationHelper.getRandomLatLong(esDoc.getLocationLat(),
+						esDoc.getLocationLon());
 				observation.setLatitude(latlon.get("lat"));
 				observation.setLongitude(latlon.get("lon"));
 			}
 
 			// 5. Convert ES data to domain POJOs (all from ES - no service calls!)
-			List<com.strandls.traits.pojo.FactValuePair> facts =
-				com.strandls.observation.es.util.ESObservationDocumentConverter.toFactValuePairList(
-					com.strandls.observation.es.util.ESObservationDocumentConverter.safeList(esDoc.getFacts())
-				);
+			List<FactValuePair> facts = ESObservationDocumentConverter
+					.toFactValuePairList(ESObservationDocumentConverter.safeList(esDoc.getFacts()));
 
-			List<com.strandls.resource.pojo.ResourceData> observationResource =
-				com.strandls.observation.es.util.ESObservationDocumentConverter.toResourceDataList(
-					com.strandls.observation.es.util.ESObservationDocumentConverter.safeList(esDoc.getObservation_resource())
-				);
+			List<ResourceData> observationResource = ESObservationDocumentConverter
+					.toResourceDataList(ESObservationDocumentConverter.safeList(esDoc.getObservation_resource()));
 
-			List<RecoIbp> allRecoVotes =
-				com.strandls.observation.es.util.ESObservationDocumentConverter.toRecoIbpList(
-					com.strandls.observation.es.util.ESObservationDocumentConverter.safeList(esDoc.getAll_reco_vote())
-				);
+			List<RecoIbp> allRecoVotes = ESObservationDocumentConverter
+					.toRecoIbpList(ESObservationDocumentConverter.safeList(esDoc.getAll_reco_vote()));
 
-			List<AllRecoSugguestions> recoAggregated =
-				com.strandls.observation.es.util.ESObservationDocumentConverter.aggregateRecoSuggestions(allRecoVotes);
+			List<AllRecoSugguestions> recoAggregated = ESObservationDocumentConverter
+					.aggregateRecoSuggestions(allRecoVotes);
 
-			RecoIbp reco = com.strandls.observation.es.util.ESObservationDocumentConverter.toMainRecoIbp(
-				esDoc.getMax_voted_reco(),
-				esDoc.getAll_reco_vote(),
-				id
-			);
+			RecoIbp reco = ESObservationDocumentConverter.toMainRecoIbp(esDoc.getMax_voted_reco(),
+					esDoc.getAll_reco_vote(), id);
 
 			// 6. ES document already has typed lists! No conversion needed
-			List<com.strandls.utility.pojo.Tags> tags = new ArrayList<>();
-			List<com.strandls.utility.pojo.FlagShow> flags = new ArrayList<>();
-			List<com.strandls.userGroup.pojo.CustomFieldObservationData> customField = new ArrayList<>();
-			List<com.strandls.userGroup.pojo.UserGroupIbp> userGroups = new ArrayList<>();
-			List<com.strandls.userGroup.pojo.Featured> featured = new ArrayList<>();
+			List<Tags> tags = new ArrayList<>();
+			List<FlagShow> flags = new ArrayList<>();
+			List<CustomFieldObservationData> customField = new ArrayList<>();
+			List<UserGroupIbp> userGroups = new ArrayList<>();
+			List<Featured> featured = new ArrayList<>();
 
 			// TODO: Map ES inner classes to domain POJOs if needed
 			// For now, these will be empty lists until mapping is implemented
@@ -371,33 +366,30 @@ public class ObservationServiceImpl implements ObservationService {
 			Map<String, Object> checkListAnnotation = new HashMap<>();
 			if (esDoc.getChecklist_annotation() != null && !esDoc.getChecklist_annotation().isEmpty()) {
 				try {
-					checkListAnnotation = objectMapper.readValue(
-						esDoc.getChecklist_annotation(),
-						new TypeReference<Map<String, Object>>() {}
-					);
+					checkListAnnotation = objectMapper.readValue(esDoc.getChecklist_annotation(),
+							new TypeReference<Map<String, Object>>() {
+							});
 				} catch (Exception e) {
 					logger.warn("Failed to parse checklist annotations for observation {}", id, e);
 				}
 			}
 
 			// 8. Fetch ONLY the data NOT available in ES (parallel execution)
-			java.util.concurrent.CompletableFuture<ObservationLocationInfo> layerInfoFuture = null;
-			java.util.concurrent.CompletableFuture<Integer> activityCountFuture = null;
-			java.util.concurrent.CompletableFuture<UserIbp> userInfoFuture = null;
-			java.util.concurrent.CompletableFuture<com.strandls.dataTable.pojo.DataTableWkt> dataTableFuture = null;
-			java.util.concurrent.CompletableFuture<List<com.strandls.esmodule.pojo.ObservationNearBy>> nearbyFuture = null;
-			java.util.concurrent.CompletableFuture<ObservationInfo> esLayerInfoFuture = null;
+			CompletableFuture<ObservationLocationInfo> layerInfoFuture = null;
+			CompletableFuture<Integer> activityCountFuture = null;
+			CompletableFuture<UserIbp> userInfoFuture = null;
+			CompletableFuture<DataTableWkt> dataTableFuture = null;
+			CompletableFuture<List<ObservationNearBy>> nearbyFuture = null;
+			CompletableFuture<ObservationInfo> esLayerInfoFuture = null;
 
-			List<java.util.concurrent.CompletableFuture<?>> futures = new ArrayList<>();
+			List<CompletableFuture<?>> futures = new ArrayList<>();
 
 			// Layer info (not in ES)
 			if (observation.getLatitude() != null && observation.getLongitude() != null) {
-				layerInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+				layerInfoFuture = CompletableFuture.supplyAsync(() -> {
 					try {
-						return layerService.getLayerInfo(
-							String.valueOf(observation.getLatitude()),
-							String.valueOf(observation.getLongitude())
-						);
+						return layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
+								String.valueOf(observation.getLongitude()));
 					} catch (Exception e) {
 						logger.warn("Failed to fetch layer info for observation {}", id, e);
 						return null;
@@ -407,7 +399,7 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			// Activity count (not in ES)
-			activityCountFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+			activityCountFuture = CompletableFuture.supplyAsync(() -> {
 				try {
 					return activityService.getActivityCount("observation", id.toString());
 				} catch (Exception e) {
@@ -419,7 +411,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// User info (partial in ES, fetch full details)
 			if (observation.getAuthorId() != null) {
-				userInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+				userInfoFuture = CompletableFuture.supplyAsync(() -> {
 					try {
 						return userService.getUserIbp(observation.getAuthorId().toString());
 					} catch (Exception e) {
@@ -432,7 +424,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// Data table (if exists)
 			if (observation.getDataTableId() != null) {
-				dataTableFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+				dataTableFuture = CompletableFuture.supplyAsync(() -> {
 					try {
 						return dataTableService.showDataTable(observation.getDataTableId().toString());
 					} catch (Exception e) {
@@ -445,14 +437,11 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// Nearby observations (could be in ES, but might need fresh query)
 			if (observation.getLatitude() != null && observation.getLongitude() != null) {
-				nearbyFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+				nearbyFuture = CompletableFuture.supplyAsync(() -> {
 					try {
-						return esService.getNearByObservation(
-							ObservationIndex.INDEX.getValue(),
-							ObservationIndex.TYPE.getValue(),
-							observation.getLatitude().toString(),
-							observation.getLongitude().toString()
-						);
+						return esService.getNearByObservation(ObservationIndex.INDEX.getValue(),
+								ObservationIndex.TYPE.getValue(), observation.getLatitude().toString(),
+								observation.getLongitude().toString());
 					} catch (Exception e) {
 						logger.warn("Failed to fetch nearby observations for observation {}", id, e);
 						return new ArrayList<>();
@@ -463,14 +452,10 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// ES layer info (if max voted reco exists)
 			if (observation.getMaxVotedRecoId() != null) {
-				esLayerInfoFuture = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+				esLayerInfoFuture = CompletableFuture.supplyAsync(() -> {
 					try {
-						return esService.getObservationInfo(
-							ObservationIndex.INDEX.getValue(),
-							ObservationIndex.TYPE.getValue(),
-							observation.getMaxVotedRecoId().toString(),
-							true
-						);
+						return esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
+								ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
 					} catch (Exception e) {
 						logger.warn("Failed to fetch ES layer info for observation {}", id, e);
 						return null;
@@ -481,10 +466,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 			// 9. Wait for all service calls (max 3 seconds timeout)
 			try {
-				java.util.concurrent.CompletableFuture.allOf(
-					futures.toArray(new java.util.concurrent.CompletableFuture[0])
-				).get(3, java.util.concurrent.TimeUnit.SECONDS);
-			} catch (java.util.concurrent.TimeoutException e) {
+				CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(3, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
 				logger.warn("Timeout waiting for service calls for observation {}", id);
 			} catch (Exception e) {
 				logger.error("Error waiting for service calls for observation {}", id, e);
@@ -494,45 +477,29 @@ public class ObservationServiceImpl implements ObservationService {
 			ObservationLocationInfo layerInfo = safeGet(layerInfoFuture);
 			Integer activityCount = safeGet(activityCountFuture);
 			UserIbp userInfo = safeGet(userInfoFuture);
-			com.strandls.dataTable.pojo.DataTableWkt dataTable = dataTableFuture != null ? safeGet(dataTableFuture) : null;
-			List<com.strandls.esmodule.pojo.ObservationNearBy> observationNearBy = safeGet(nearbyFuture);
+			DataTableWkt dataTable = dataTableFuture != null ? safeGet(dataTableFuture) : null;
+			List<ObservationNearBy> observationNearBy = safeGet(nearbyFuture);
 			ObservationInfo esLayerInfo = esLayerInfoFuture != null ? safeGet(esLayerInfoFuture) : null;
 
 			// 11. Build and return ShowData
 			logger.debug("Successfully built ShowData for observation {} using ES-first approach", id);
-			return new ShowData(
-				observation,
-				facts,
-				observationResource,
-				userGroups,
-				customField,
-				layerInfo,
-				esLayerInfo,
-				reco,
-				flags,
-				tags,
-				featured,
-				userInfo,
-				recoAggregated,
-				observationNearBy,
-				dataTable,
-				checkListAnnotation,
-				activityCount
-			);
+			return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
+					esLayerInfo, reco, flags, tags, featured, userInfo, recoAggregated, observationNearBy, dataTable,
+					checkListAnnotation, activityCount);
 
 		} catch (Exception e) {
 			logger.error("Error in optimized findById for observation {}, falling back to original method", id, e);
-			//return findById(id); // Fallback to original method
+			// return findById(id); // Fallback to original method
 			return null;
 		}
 	}
 
 	/**
-	 * Async increment visit count (non-blocking)
-	 * This removes write latency from the critical path
+	 * Async increment visit count (non-blocking) This removes write latency from
+	 * the critical path
 	 */
 	private void incrementVisitCountAsync(Long observationId) {
-		java.util.concurrent.CompletableFuture.runAsync(() -> {
+		CompletableFuture.runAsync(() -> {
 			try {
 				Observation obs = observationDao.findById(observationId);
 				if (obs != null) {
@@ -550,7 +517,7 @@ public class ObservationServiceImpl implements ObservationService {
 	/**
 	 * Safely get value from CompletableFuture with graceful error handling
 	 */
-	private <T> T safeGet(java.util.concurrent.CompletableFuture<T> future) {
+	private <T> T safeGet(CompletableFuture<T> future) {
 		try {
 			return future != null ? future.get() : null;
 		} catch (Exception e) {

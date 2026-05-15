@@ -155,4 +155,8 @@ public interface ObservationService {
 			Long observationId, com.strandls.observation.pojo.Resources resourcesUpdatedInfo);
 
 	public Activity removeObservationComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
+	
+	public ShowData findByIdOptimized(Long id);
+	
+	
 }
