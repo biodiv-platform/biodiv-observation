@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -120,6 +122,7 @@ import com.strandls.utility.pojo.Tags;
 import com.strandls.utility.pojo.TagsMapping;
 import com.strandls.utility.pojo.TagsMappingData;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -210,6 +213,17 @@ public class ObservationServiceImpl implements ObservationService {
 
 	@Inject
 	private ObservationESFetcher observationESFetcher;
+
+	// Dedicated thread pool for async operations in findByIdOptimized
+	// This prevents thread starvation and provides better control over concurrency
+	private final ExecutorService observationExecutor = Executors.newFixedThreadPool(
+			10, // Pool size - adjust based on load testing
+			r -> {
+				Thread t = new Thread(r);
+				t.setName("observation-async-" + t.getId());
+				t.setDaemon(true); // Daemon threads don't prevent JVM shutdown
+				return t;
+			});
 
 	@Override
 	public ShowData findById(Long id) {
@@ -394,7 +408,7 @@ public class ObservationServiceImpl implements ObservationService {
 						logger.warn("Failed to fetch layer info for observation {}", id, e);
 						return null;
 					}
-				});
+				}, observationExecutor);
 				futures.add(layerInfoFuture);
 			}
 
@@ -406,7 +420,7 @@ public class ObservationServiceImpl implements ObservationService {
 					logger.warn("Failed to fetch activity count for observation {}", id, e);
 					return 0;
 				}
-			});
+			}, observationExecutor);
 			futures.add(activityCountFuture);
 
 			// User info (partial in ES, fetch full details)
@@ -418,7 +432,7 @@ public class ObservationServiceImpl implements ObservationService {
 						logger.warn("Failed to fetch user info for observation {}", id, e);
 						return null;
 					}
-				});
+				}, observationExecutor);
 				futures.add(userInfoFuture);
 			}
 
@@ -431,7 +445,7 @@ public class ObservationServiceImpl implements ObservationService {
 						logger.warn("Failed to fetch data table for observation {}", id, e);
 						return null;
 					}
-				});
+				}, observationExecutor);
 				futures.add(dataTableFuture);
 			}
 
@@ -446,7 +460,7 @@ public class ObservationServiceImpl implements ObservationService {
 						logger.warn("Failed to fetch nearby observations for observation {}", id, e);
 						return new ArrayList<>();
 					}
-				});
+				}, observationExecutor);
 				futures.add(nearbyFuture);
 			}
 
@@ -460,7 +474,7 @@ public class ObservationServiceImpl implements ObservationService {
 						logger.warn("Failed to fetch ES layer info for observation {}", id, e);
 						return null;
 					}
-				});
+				}, observationExecutor);
 				futures.add(esLayerInfoFuture);
 			}
 
@@ -511,18 +525,55 @@ public class ObservationServiceImpl implements ObservationService {
 				logger.warn("Failed to increment visit count for observation {}", observationId, e);
 				// Fail silently - visit count is not critical
 			}
-		});
+		}, observationExecutor);
 	}
 
 	/**
 	 * Safely get value from CompletableFuture with graceful error handling
+	 * Uses non-blocking approach to prevent waiting beyond the main timeout
 	 */
 	private <T> T safeGet(CompletableFuture<T> future) {
+		// Return null if future is null or not completed yet
+		if (future == null || !future.isDone()) {
+			if (future != null && !future.isDone()) {
+				// Attempt to cancel incomplete futures to free resources
+				future.cancel(true);
+			}
+			return null;
+		}
+
 		try {
-			return future != null ? future.get() : null;
+			// getNow() is non-blocking - returns immediately since isDone() is true
+			return future.getNow(null);
 		} catch (Exception e) {
 			logger.warn("Error getting value from future", e);
 			return null;
+		}
+	}
+
+	/**
+	 * Shutdown hook for graceful executor cleanup
+	 * Called automatically when the service is destroyed
+	 */
+	@PreDestroy
+	public void shutdownExecutor() {
+		logger.info("Shutting down observation async executor...");
+		observationExecutor.shutdown();
+		try {
+			// Wait for existing tasks to complete (max 30 seconds)
+			if (!observationExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+				logger.warn("Executor did not terminate in time, forcing shutdown");
+				observationExecutor.shutdownNow();
+				// Wait a bit more for tasks to respond to interruption
+				if (!observationExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+					logger.error("Executor did not terminate after forced shutdown");
+				}
+			}
+			logger.info("Observation async executor shut down successfully");
+		} catch (InterruptedException e) {
+			logger.error("Interrupted while waiting for executor shutdown", e);
+			observationExecutor.shutdownNow();
+			Thread.currentThread().interrupt();
 		}
 	}
 
