@@ -37,7 +37,6 @@ import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
-import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
@@ -205,15 +204,6 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public ShowData findById(Long id) {
 
-		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
-
-		Properties properties = new Properties();
-		try {
-			properties.load(in);
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
-
 		List<FactValuePair> facts;
 		List<ResourceData> observationResource;
 		List<UserGroupIbp> userGroups;
@@ -226,18 +216,12 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
-		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
 		DataTableWkt dataTable = null;
 		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
-				in.close();
-				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
-				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
-					authorScore = score.getRecord().get(0).get("details");
-				}
 				if (observation.getDataTableId() != null) {
 					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
 				}
@@ -283,8 +267,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy, dataTable, checkListAnnotation, activityCount);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy, dataTable,
+						checkListAnnotation, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
@@ -698,8 +682,7 @@ public class ObservationServiceImpl implements ObservationService {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
-			userGroupService = headers.addUserGroupHeader(userGroupService,
-					requestAuthHeader);
+			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
 			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -717,8 +700,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			} else {
 				if (taxonList.trim().length() != 0) {
-					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
-							requestAuthHeader);
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
