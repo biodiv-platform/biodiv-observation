@@ -389,6 +389,11 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			// 8. Fetch ONLY the data NOT available in ES (parallel execution)
+			// NOTE: We still make 2 additional ES queries here:
+			// - nearbyObservation: Geo-spatial query to find OTHER observations near this location
+			// - esLayerInfo: Aggregated species statistics across ALL observations (not just this one)
+			// These CANNOT be embedded in the observation document and require separate queries
+			// TODO: Consider deferring these to separate API endpoints for even faster initial load
 			CompletableFuture<ObservationLocationInfo> layerInfoFuture = null;
 			CompletableFuture<Integer> activityCountFuture = null;
 			CompletableFuture<UserIbp> userInfoFuture = null;
@@ -449,7 +454,8 @@ public class ObservationServiceImpl implements ObservationService {
 				futures.add(dataTableFuture);
 			}
 
-			// Nearby observations (could be in ES, but might need fresh query)
+			// Nearby observations - SEPARATE ES geo-spatial query (cannot be in this observation's document)
+			// This queries OTHER observations within geographic proximity
 			if (observation.getLatitude() != null && observation.getLongitude() != null) {
 				nearbyFuture = CompletableFuture.supplyAsync(() -> {
 					try {
@@ -464,7 +470,8 @@ public class ObservationServiceImpl implements ObservationService {
 				futures.add(nearbyFuture);
 			}
 
-			// ES layer info (if max voted reco exists)
+			// ES layer info - SEPARATE ES aggregation query (species-level statistics across ALL observations)
+			// This fetches frequency, distribution, and other aggregated data for the species
 			if (observation.getMaxVotedRecoId() != null) {
 				esLayerInfoFuture = CompletableFuture.supplyAsync(() -> {
 					try {
