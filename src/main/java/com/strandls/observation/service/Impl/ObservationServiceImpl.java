@@ -204,6 +204,8 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public ShowData findById(Long id) {
 
+		logger.info("Starting findById for observation id={}", id);
+
 		List<FactValuePair> facts;
 		List<ResourceData> observationResource;
 		List<UserGroupIbp> userGroups;
@@ -211,68 +213,146 @@ public class ObservationServiceImpl implements ObservationService {
 		ObservationLocationInfo layerInfo;
 		ObservationInfo esLayerInfo = null;
 		RecoIbp reco = null;
-		List<FlagShow> flag = new ArrayList<FlagShow>();
+		List<FlagShow> flag = new ArrayList<>();
 		List<Tags> tags;
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
 		List<AllRecoSugguestions> recoaggregated = null;
-		Observation observation = observationDao.findById(id);
-		DataTableWkt dataTable = null;
-		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
-		if (observation != null && observation.getIsDeleted() != true) {
-			try {
-				if (observation.getDataTableId() != null) {
-					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
-				}
-				facts = traitService.getFacts("species.participation.Observation", id.toString());
-				observationResource = resourceService.getImageResource("observation", id.toString());
-				userGroups = userGroupService.getObservationUserGroup(id.toString());
-				customField = cfService.getObservationCustomFields(id.toString());
 
+		Observation observation = observationDao.findById(id);
+
+		logger.info("Observation fetched: {}", observation != null ? observation.getId() : "NULL");
+
+		DataTableWkt dataTable = null;
+		Map<String, Object> checkListAnnotation = new HashMap<>();
+
+		if (observation != null && !Boolean.TRUE.equals(observation.getIsDeleted())) {
+
+			try {
+
+				if (observation.getDataTableId() != null) {
+					logger.info("Fetching data table {}", observation.getDataTableId());
+					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
+					logger.info("Data table fetched");
+				}
+
+				logger.info("Fetching facts");
+				facts = traitService.getFacts("species.participation.Observation", id.toString());
+				logger.info("Facts count={}", facts != null ? facts.size() : 0);
+
+				logger.info("Fetching resources");
+				observationResource = resourceService.getImageResource("observation", id.toString());
+				logger.info("Resource count={}", observationResource != null ? observationResource.size() : 0);
+
+				logger.info("Fetching user groups");
+				userGroups = userGroupService.getObservationUserGroup(id.toString());
+				logger.info("User groups count={}", userGroups != null ? userGroups.size() : 0);
+
+				logger.info("Fetching custom fields");
+				customField = cfService.getObservationCustomFields(id.toString());
+				logger.info("Custom fields count={}", customField != null ? customField.size() : 0);
+
+				logger.info("Fetching layer info");
 				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
 						String.valueOf(observation.getLongitude()));
-				if (observation.getFlagCount() > 0)
+				logger.info("Layer info fetched");
+
+				if (observation.getFlagCount() > 0) {
+					logger.info("Fetching flags");
 					flag = utilityServices.getFlagByObjectType("observation", id.toString());
+					logger.info("Flags count={}", flag.size());
+				}
+
+				logger.info("Fetching tags");
 				tags = utilityServices.getTags("observation", id.toString());
+				logger.info("Tags count={}", tags != null ? tags.size() : 0);
+
+				logger.info("Fetching user info for author={}", observation.getAuthorId());
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
+
+				logger.info("Fetching featured entries");
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
+				logger.info("Featured count={}", fetaured != null ? fetaured.size() : 0);
+
 				if (observation.getMaxVotedRecoId() != null) {
+
+					logger.info("Fetching recommendation {}", observation.getMaxVotedRecoId());
+
 					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
+
+					logger.info("Fetching ES observation info");
+
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
 							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
+
+					logger.info("Fetching recommendation votes");
+
 					allRecoVotes = recoService.allRecoVote(id);
+
+					logger.info("Aggregating recommendations");
+
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 
+				logger.info("Updating visit count");
 				observation.setVisitCount(observation.getVisitCount() + 1);
 				observationDao.update(observation);
 
-				if (observation.getGeoPrivacy()) {
+				if (Boolean.TRUE.equals(observation.getGeoPrivacy())) {
+					logger.info("Applying geo privacy");
+
 					Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
 							observation.getLongitude());
+
 					observation.setLatitude(latlon.get("lat"));
 					observation.setLongitude(latlon.get("lon"));
 				}
 
 				if (observation.getChecklistAnnotations() != null && !observation.getChecklistAnnotations().isEmpty()) {
+
+					logger.info("Parsing checklist annotations");
+
 					checkListAnnotation = objectMapper.readValue(observation.getChecklistAnnotations(),
 							new TypeReference<Map<String, Object>>() {
 							});
 				}
 
+				logger.info("Fetching nearby observations");
+
 				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
 						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
 						observation.getLatitude().toString(), observation.getLongitude().toString());
 
+				logger.info("Nearby observations count={}", observationNearBy != null ? observationNearBy.size() : 0);
+
+				logger.info("Fetching activity count");
+
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
+
+				logger.info("Activity count={}", activityCount);
+
+				logger.info("Successfully returning ShowData for id={}", id);
+
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy, dataTable,
 						checkListAnnotation, activityCount);
+
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+
+				logger.error("Error while fetching observation id={}", id, e);
+
+				Throwable root = e;
+				while (root.getCause() != null) {
+					root = root.getCause();
+				}
+
+				logger.error("Root cause: {}", root.getMessage(), root);
 			}
+		} else {
+			logger.warn("Observation not found or deleted. id={}", id);
 		}
+
 		return null;
 	}
 
