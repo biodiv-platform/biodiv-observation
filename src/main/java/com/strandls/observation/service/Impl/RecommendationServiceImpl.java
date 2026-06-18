@@ -983,8 +983,34 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	public void handleTaxonByName(TaxonomyUpdateData message) {
 
-		Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
-		if (message.getOldName() != message.getName()) {
+		if (message.getTransferSynonymIds()!=null) {
+			List<Long> transferRecoIds = new ArrayList<>();
+			for (Long synonymId: message.getTransferSynonymIds()) {
+				Recommendation recommendation = recoDao.findRecoByTaxonId(synonymId, true);
+				if (recommendation!=null) {
+					recommendation.setAcceptedNameId(message.getNewId());
+					recommendation = recoDao.update(recommendation);
+					if (recommendation.getAcceptedNameId().equals(message.getNewId())) {
+						transferRecoIds.add(recommendation.getId());
+					}
+				}
+			}
+			message.setTransferRecoIds(transferRecoIds);
+		}
+		else if (message.getDeleteRecoIds() != null) {
+			List<Long> deleteRecoIds = new ArrayList<>();
+			for (Long deleteId: message.getDeleteRecoIds()) {
+				Recommendation recommendation = recoDao.findRecoByTaxonId(deleteId, true);
+				recommendation.setTaxonConceptId(null);
+				recommendation.setAcceptedNameId(null);
+				if (recommendation.getTaxonConceptId()==null && recommendation.getAcceptedNameId()==null) {
+					deleteRecoIds.add(deleteId);
+				}
+			}
+			message.setDeleteRecoIds(deleteRecoIds);
+		}
+		else if (message.getOldName() != message.getName()) {
+			Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
 			recommendation.setName(message.getName());
 			recommendation.setLowercaseName(message.getName().toLowerCase());
 			recommendation.setCanonicalName(message.getCanonicalForm());
