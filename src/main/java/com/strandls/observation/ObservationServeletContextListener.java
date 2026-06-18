@@ -144,6 +144,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 			try {
 				injector.getInstance(RabbitMQConsumer.class).elasticUpdate();
+				injector.getInstance(RabbitMQConsumer.class).listenToTaxonomyEvents();
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}

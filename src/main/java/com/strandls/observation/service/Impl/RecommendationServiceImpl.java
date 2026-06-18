@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.RecoVoteActivity;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
 import com.strandls.observation.dao.RecommendationVoteDao;
@@ -88,6 +90,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Inject
 	private UserServiceApi userService;
+
+	@Inject
+	private EsServicesApi esServicesApi;
 
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
@@ -973,6 +978,28 @@ public class RecommendationServiceImpl implements RecommendationService {
 				}
 
 			}
+		}
+	}
+
+	public void handleTaxonByName(TaxonomyUpdateData message) {
+
+		Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
+		if (message.getOldName() != message.getName()) {
+			recommendation.setName(message.getName());
+			recommendation.setLowercaseName(message.getName().toLowerCase());
+			recommendation.setCanonicalName(message.getCanonicalForm());
+			recommendation = recoDao.update(recommendation);
+			if (recommendation != null) {
+				message.setRecoId(recommendation.getId());
+				message.setScientificName(recommendation.getName());
+			}
+		}
+		try {
+			esServicesApi.updateObservation(message);
+		} catch (com.strandls.esmodule.ApiException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}
 	}
 

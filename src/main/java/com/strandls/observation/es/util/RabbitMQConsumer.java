@@ -3,9 +3,12 @@
  */
 package com.strandls.observation.es.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DeliverCallback;
+import com.strandls.esmodule.pojo.TaxonomyUpdateData;
+import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 
 import jakarta.inject.Inject;
 
@@ -16,12 +19,18 @@ import jakarta.inject.Inject;
 public class RabbitMQConsumer {
 
 	private final static String OBSERVATION_QUEUE = "observationQueue";
+	private static final String TAXONOMY_QUEUE = "taxonomyQueue";
 
 	@Inject
 	private ESUpdate esUpdate;
+	
+	@Inject
+	private RecommendationServiceImpl recoService;
 
 	@Inject
 	private Channel channel;
+	
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public void elasticUpdate() throws Exception {
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -40,5 +49,21 @@ public class RabbitMQConsumer {
 		channel.basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
+	
+	 public void listenToTaxonomyEvents() throws Exception {
+	        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+	            String message = new String(delivery.getBody(), "UTF-8");
+	            System.out.println("----[TAXONOMY EVENT]----");
+	            System.out.println("Received: " + message);
+	            TaxonomyUpdateData event = objectMapper.readValue(message,  TaxonomyUpdateData.class); 
+	            
+	            // handle the event — call your observation service
+	            //observationService.handleTaxonomyUpdate(message);
+	            recoService.handleTaxonByName(event);
+	            
+	        };
+
+	        channel.basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {});
+	    }
 
 }
