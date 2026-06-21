@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.pac4j.core.profile.CommonProfile;
@@ -983,11 +984,41 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	public void handleTaxonByName(TaxonomyUpdateData message) {
 
-		if (message.getTransferSynonymIds()!=null) {
+		if (message.getStatus() != null) {
+			Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
+			if (recommendation != null) {
+				// FIX 1: Use .equals() instead of == for String comparison
+				if ("ACCEPTED".equals(message.getStatus())) {
+					recommendation.setAcceptedNameId(message.getTargetId());
+				} else {
+					recommendation.setAcceptedNameId(message.getNewId());
+				}
+				// FIX 2: Moved update outside if/else to avoid duplication; null check guards
+				// both branches
+				recommendation = recoDao.update(recommendation);
+				message.setRecoId(recommendation.getId());
+			}
+		}
+
+		if (message.getBulkIds() != null) {
+			List<Long> deleteRecoIds = new ArrayList<>();
+			List<Recommendation> recos = recoDao.findByTaxonIds(message.getBulkIds());
+			for (Recommendation reco : recos) {
+				reco.setTaxonConceptId(null);
+				reco.setAcceptedNameId(null);
+				reco = recoDao.update(reco);
+				if (reco.getTaxonConceptId() == null && reco.getAcceptedNameId() == null) {
+					deleteRecoIds.add(reco.getId());
+				}
+			}
+			message.setDeleteRecoIds(deleteRecoIds);
+		}
+
+		if (message.getTransferSynonymIds() != null) {
 			List<Long> transferRecoIds = new ArrayList<>();
-			for (Long synonymId: message.getTransferSynonymIds()) {
+			for (Long synonymId : message.getTransferSynonymIds()) {
 				Recommendation recommendation = recoDao.findRecoByTaxonId(synonymId, true);
-				if (recommendation!=null) {
+				if (recommendation != null) {
 					recommendation.setAcceptedNameId(message.getNewId());
 					recommendation = recoDao.update(recommendation);
 					if (recommendation.getAcceptedNameId().equals(message.getNewId())) {
@@ -997,29 +1028,40 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 			message.setTransferRecoIds(transferRecoIds);
 		}
-		else if (message.getDeleteRecoIds() != null) {
+
+		if (message.getDeleteRecoIds() != null) {
 			List<Long> deleteRecoIds = new ArrayList<>();
-			for (Long deleteId: message.getDeleteRecoIds()) {
+			for (Long deleteId : message.getDeleteRecoIds()) {
+				// FIX 3: Added null check before dereferencing recommendation
 				Recommendation recommendation = recoDao.findRecoByTaxonId(deleteId, true);
-				recommendation.setTaxonConceptId(null);
-				recommendation.setAcceptedNameId(null);
-				if (recommendation.getTaxonConceptId()==null && recommendation.getAcceptedNameId()==null) {
-					deleteRecoIds.add(deleteId);
+				if (recommendation != null) {
+					recommendation.setTaxonConceptId(null);
+					recommendation.setAcceptedNameId(null);
+					recommendation = recoDao.update(recommendation);
+					if (recommendation.getTaxonConceptId() == null && recommendation.getAcceptedNameId() == null) {
+						deleteRecoIds.add(deleteId);
+					}
 				}
 			}
 			message.setDeleteRecoIds(deleteRecoIds);
 		}
-		else if (message.getOldName() != message.getName()) {
+
+		// FIX 4: Use .equals() instead of != for String comparison; also guard against
+		// null
+		if (!Objects.equals(message.getOldName(), message.getName())) {
 			Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
-			recommendation.setName(message.getName());
-			recommendation.setLowercaseName(message.getName().toLowerCase());
-			recommendation.setCanonicalName(message.getCanonicalForm());
-			recommendation = recoDao.update(recommendation);
+			// FIX 5: Null check before dereferencing recommendation
 			if (recommendation != null) {
+				recommendation.setName(message.getName());
+				recommendation.setLowercaseName(message.getName().toLowerCase());
+				recommendation.setCanonicalName(message.getCanonicalForm());
+				recommendation = recoDao.update(recommendation);
+				// Note: removed redundant null check (update result was already assigned above)
 				message.setRecoId(recommendation.getId());
 				message.setScientificName(recommendation.getName());
 			}
 		}
+
 		try {
 			esServicesApi.updateObservation(message);
 		} catch (com.strandls.esmodule.ApiException e) {
