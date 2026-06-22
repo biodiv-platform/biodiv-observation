@@ -982,67 +982,65 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 	}
 
-	public void handleTaxonByName(TaxonomyUpdateData message) {
+	public void handleTaxonByName(TaxonomyUpdateData updateData) {
 
-		if (message.getStatus() != null) {
-			Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
+		// Update status db propagation
+		if (updateData.getStatus() != null) {
+			Recommendation recommendation = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
 			if (recommendation != null) {
-				// FIX 1: Use .equals() instead of == for String comparison
-				if ("ACCEPTED".equals(message.getStatus())) {
-					recommendation.setAcceptedNameId(message.getTargetId());
+				if ("ACCEPTED".equals(updateData.getStatus())) {
+					recommendation.setAcceptedNameId(updateData.getTargetId());
 				} else {
-					recommendation.setAcceptedNameId(message.getNewId());
+					recommendation.setAcceptedNameId(updateData.getNewId());
 				}
-				// FIX 2: Moved update outside if/else to avoid duplication; null check guards
-				// both branches
 				recommendation = recoDao.update(recommendation);
-				message.setRecoId(recommendation.getId());
+				updateData.setRecoId(recommendation.getId());
 			}
 		}
 
-		if (message.getBulkIds() != null) {
-			List<Long> deleteRecoIds = new ArrayList<>();
-			List<Recommendation> recos = recoDao.findByTaxonIds(message.getBulkIds());
+		// Update db for bulk merge
+		if (updateData.getBulkIds() != null && updateData.getNewId() != null) {
+			List<Long> transferRecoIds = new ArrayList<>();
+			List<Recommendation> recos = recoDao.findByTaxonIds(updateData.getBulkIds());
 			for (Recommendation reco : recos) {
-				reco.setTaxonConceptId(null);
-				reco.setAcceptedNameId(null);
+				reco.setTaxonConceptId(updateData.getNewId());
+				reco.setAcceptedNameId(updateData.getNewId());
 				reco = recoDao.update(reco);
 				if (reco.getTaxonConceptId() == null && reco.getAcceptedNameId() == null) {
-					deleteRecoIds.add(reco.getId());
+					transferRecoIds.add(reco.getId());
 				}
 			}
-			message.setDeleteRecoIds(deleteRecoIds);
-			List<Long> transferRecoIds = new ArrayList<>();
-			List<Recommendation> transferRecos = recoDao.findByAcceptedNameIds(message.getBulkIds());
-			for (Recommendation transferReco: transferRecos) {
-				transferReco.setAcceptedNameId(message.getNewId());
+			List<Recommendation> transferRecos = recoDao.findByAcceptedNameIds(updateData.getBulkIds());
+			for (Recommendation transferReco : transferRecos) {
+				transferReco.setAcceptedNameId(updateData.getNewId());
 				transferReco = recoDao.update(transferReco);
-				if (transferReco.getAcceptedNameId().equals(message.getNewId())) {
+				if (transferReco.getAcceptedNameId().equals(updateData.getNewId())) {
 					transferRecoIds.add(transferReco.getId());
 				}
 			}
-			message.setTransferRecoIds(transferRecoIds);
+			updateData.setTransferRecoIds(transferRecoIds);
 		}
 
-		if (message.getTransferSynonymIds() != null) {
+		// Update db for transfer synonyms
+		if (updateData.getTransferSynonymIds() != null) {
 			List<Long> transferRecoIds = new ArrayList<>();
-			for (Long synonymId : message.getTransferSynonymIds()) {
+			for (Long synonymId : updateData.getTransferSynonymIds()) {
 				Recommendation recommendation = recoDao.findRecoByTaxonId(synonymId, true);
 				if (recommendation != null) {
-					recommendation.setAcceptedNameId(message.getNewId());
+					recommendation.setAcceptedNameId(updateData.getNewId());
 					recommendation = recoDao.update(recommendation);
-					if (recommendation.getAcceptedNameId().equals(message.getNewId())) {
+					if (recommendation.getAcceptedNameId().equals(updateData.getNewId())) {
 						transferRecoIds.add(recommendation.getId());
 					}
 				}
 			}
-			message.setTransferRecoIds(transferRecoIds);
+			updateData.setTransferRecoIds(transferRecoIds);
 		}
 
-		if (message.getDeleteRecoIds() != null) {
+		// Update db for delete
+		if (updateData.getDeleteRecoIds() != null) {
 			List<Long> deleteRecoIds = new ArrayList<>();
-			for (Long deleteId : message.getDeleteRecoIds()) {
-				// FIX 3: Added null check before dereferencing recommendation
+			for (Long deleteId : updateData.getDeleteRecoIds()) {
 				Recommendation recommendation = recoDao.findRecoByTaxonId(deleteId, true);
 				if (recommendation != null) {
 					recommendation.setTaxonConceptId(null);
@@ -1053,29 +1051,27 @@ public class RecommendationServiceImpl implements RecommendationService {
 					}
 				}
 			}
-			message.setDeleteRecoIds(deleteRecoIds);
+			updateData.setDeleteRecoIds(deleteRecoIds);
 		}
 
-		// FIX 4: Use .equals() instead of != for String comparison; also guard against
-		// null
-		if (!Objects.equals(message.getOldName(), message.getName())) {
-			Recommendation recommendation = recoDao.findRecoByTaxonId(message.getTargetId(), true);
-			// FIX 5: Null check before dereferencing recommendation
+		// Update db for name change
+		if (!Objects.equals(updateData.getOldName(), updateData.getName())) {
+			Recommendation recommendation = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
 			if (recommendation != null) {
-				recommendation.setName(message.getName());
-				recommendation.setLowercaseName(message.getName().toLowerCase());
-				recommendation.setCanonicalName(message.getCanonicalForm());
+				recommendation.setName(updateData.getName());
+				recommendation.setLowercaseName(updateData.getName().toLowerCase());
+				recommendation.setCanonicalName(updateData.getCanonicalForm());
 				recommendation = recoDao.update(recommendation);
-				// Note: removed redundant null check (update result was already assigned above)
-				message.setRecoId(recommendation.getId());
-				message.setScientificName(recommendation.getName());
+				updateData.setRecoId(recommendation.getId());
+				updateData.setScientificName(recommendation.getName());
 			}
 		}
 
 		try {
-			esServicesApi.updateObservation(message);
+			// Propagating to observation index
+			esServicesApi.updateObservation(updateData);
 		} catch (com.strandls.esmodule.ApiException e) {
-			e.printStackTrace();
+			logger.error("Exception in es update: {}", e.getMessage(), e);
 		} catch (Exception e) {
 			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}

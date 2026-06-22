@@ -23,13 +23,13 @@ public class RabbitMQConsumer {
 
 	@Inject
 	private ESUpdate esUpdate;
-	
+
 	@Inject
 	private RecommendationServiceImpl recoService;
 
 	@Inject
 	private Channel channel;
-	
+
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public void elasticUpdate() throws Exception {
@@ -49,21 +49,19 @@ public class RabbitMQConsumer {
 		channel.basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
-	
-	 public void listenToTaxonomyEvents() throws Exception {
-	        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-	            String message = new String(delivery.getBody(), "UTF-8");
-	            System.out.println("----[TAXONOMY EVENT]----");
-	            System.out.println("Received: " + message);
-	            TaxonomyUpdateData event = objectMapper.readValue(message,  TaxonomyUpdateData.class); 
-	            
-	            // handle the event — call your observation service
-	            //observationService.handleTaxonomyUpdate(message);
-	            recoService.handleTaxonByName(event);
-	            
-	        };
 
-	        channel.basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {});
-	    }
+	public void listenToTaxonomyEvents() throws Exception {
+		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+			String message = new String(delivery.getBody(), "UTF-8");
+			System.out.println("----[OBSERVATION TAXONOMY EVENT]----");
+			System.out.println("Received: " + message);
+			TaxonomyUpdateData event = objectMapper.readValue(message, TaxonomyUpdateData.class);
+			recoService.handleTaxonByName(event);
+
+		};
+
+		channel.basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {
+		});
+	}
 
 }

@@ -137,39 +137,39 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		return result;
 
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Recommendation> findByTaxonIds(List<Long> taxonIds) {
-	    String qry = "from Recommendation where isScientificName = true and taxonConceptId in :taxonIds";
-	    Session session = sessionFactory.openSession();
-	    List<Recommendation> result = null;
-	    try {
-	        Query<Recommendation> query = session.createQuery(qry);
-	        query.setParameter("taxonIds", taxonIds);
-	        result = query.getResultList();
-	    } catch (Exception e) {
-	        logger.error(e.getMessage());
-	    } finally {
-	        session.close();
-	    }
-	    return result;
+		String qry = "from Recommendation where isScientificName = true and taxonConceptId in :taxonIds";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("taxonIds", taxonIds);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Recommendation> findByAcceptedNameIds(List<Long> taxonIds) {
-	    String qry = "from Recommendation where isScientificName = true and acceptedNameId in :taxonIds";
-	    Session session = sessionFactory.openSession();
-	    List<Recommendation> result = null;
-	    try {
-	        Query<Recommendation> query = session.createQuery(qry);
-	        query.setParameter("taxonIds", taxonIds);
-	        result = query.getResultList();
-	    } catch (Exception e) {
-	        logger.error(e.getMessage());
-	    } finally {
-	        session.close();
-	    }
-	    return result;
+		String qry = "from Recommendation where isScientificName = true and acceptedNameId in :taxonIds";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("taxonIds", taxonIds);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
 	}
 
 }

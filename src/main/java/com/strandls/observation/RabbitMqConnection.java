@@ -25,8 +25,8 @@ public class RabbitMqConnection {
 	private final Logger logger = LoggerFactory.getLogger(RabbitMqConnection.class);
 	private final static String OBSERVATION_QUEUE = "observationQueue";
 	private final static String ROUTING_OBSERVATION = "observation";
-	
-	public static final String TAXONOMY_QUEUE       = "taxonomyQueue";
+
+	public static final String TAXONOMY_QUEUE = "taxonomyQueue";
 	public static final String TAXONOMY_ROUTING_KEY = "taxonomy.updated";
 
 	public final static String EXCHANGE_BIODIV;
