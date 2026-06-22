@@ -1012,6 +1012,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 				}
 			}
 			message.setDeleteRecoIds(deleteRecoIds);
+			List<Long> transferRecoIds = new ArrayList<>();
+			List<Recommendation> transferRecos = recoDao.findByAcceptedNameIds(message.getBulkIds());
+			for (Recommendation transferReco: transferRecos) {
+				transferReco.setAcceptedNameId(message.getNewId());
+				transferReco = recoDao.update(transferReco);
+				if (transferReco.getAcceptedNameId().equals(message.getNewId())) {
+					transferRecoIds.add(transferReco.getId());
+				}
+			}
+			message.setTransferRecoIds(transferRecoIds);
 		}
 
 		if (message.getTransferSynonymIds() != null) {
