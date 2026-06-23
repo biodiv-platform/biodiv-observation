@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,18 +179,35 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		if (recos == null || recos.isEmpty()) {
 			return Collections.emptyList();
 		}
-		Session session = sessionFactory.getCurrentSession();
+
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
 		try {
+			tx = session.beginTransaction();
+
 			List<Recommendation> saved = new ArrayList<>(recos.size());
-			for (Recommendation reco : recos) {
-				saved.add((Recommendation) session.merge(reco));
+			for (int i = 0; i < recos.size(); i++) {
+				saved.add(session.merge(recos.get(i)));
+
+				// Flush + clear every 50 rows to avoid OOM on large batches
+				if (i % 50 == 0) {
+					session.flush();
+					session.clear();
+				}
 			}
 
 			session.flush();
+			tx.commit();
 			return saved;
+
 		} catch (Exception e) {
+			if (tx != null && tx.isActive()) {
+				tx.rollback();
+			}
 			logger.error("Failed to batch update recommendations: {}", e.getMessage(), e);
 			throw new RuntimeException("updateAll failed", e);
+		} finally {
+			session.close();
 		}
 	}
 
