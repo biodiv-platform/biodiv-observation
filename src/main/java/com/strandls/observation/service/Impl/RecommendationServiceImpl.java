@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -983,98 +984,132 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	public void handleTaxonByName(TaxonomyUpdateData updateData) {
-
-		// Update status db propagation
 		if (updateData.getStatus() != null) {
-			Recommendation recommendation = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
-			if (recommendation != null) {
-				if ("ACCEPTED".equals(updateData.getStatus())) {
-					recommendation.setAcceptedNameId(updateData.getTargetId());
-				} else {
-					recommendation.setAcceptedNameId(updateData.getNewId());
-				}
-				recommendation = recoDao.update(recommendation);
-				updateData.setRecoId(recommendation.getId());
-			}
+			handleStatusUpdate(updateData);
 		}
 
-		// Update db for bulk merge
+		List<Long> allTransferRecoIds = new ArrayList<>();
+
 		if (updateData.getBulkIds() != null && updateData.getNewId() != null) {
-			List<Long> transferRecoIds = new ArrayList<>();
-			List<Recommendation> recos = recoDao.findByTaxonIds(updateData.getBulkIds());
-			for (Recommendation reco : recos) {
-				reco.setTaxonConceptId(updateData.getNewId());
-				reco.setAcceptedNameId(updateData.getNewId());
-				reco = recoDao.update(reco);
-				if (reco.getTaxonConceptId() == null && reco.getAcceptedNameId() == null) {
-					transferRecoIds.add(reco.getId());
-				}
-			}
-			List<Recommendation> transferRecos = recoDao.findByAcceptedNameIds(updateData.getBulkIds());
-			for (Recommendation transferReco : transferRecos) {
-				transferReco.setAcceptedNameId(updateData.getNewId());
-				transferReco = recoDao.update(transferReco);
-				if (transferReco.getAcceptedNameId().equals(updateData.getNewId())) {
-					transferRecoIds.add(transferReco.getId());
-				}
-			}
-			updateData.setTransferRecoIds(transferRecoIds);
+			allTransferRecoIds.addAll(handleBulkMerge(updateData));
 		}
 
-		// Update db for transfer synonyms
 		if (updateData.getTransferSynonymIds() != null) {
-			List<Long> transferRecoIds = new ArrayList<>();
-			for (Long synonymId : updateData.getTransferSynonymIds()) {
-				Recommendation recommendation = recoDao.findRecoByTaxonId(synonymId, true);
-				if (recommendation != null) {
-					recommendation.setAcceptedNameId(updateData.getNewId());
-					recommendation = recoDao.update(recommendation);
-					if (recommendation.getAcceptedNameId().equals(updateData.getNewId())) {
-						transferRecoIds.add(recommendation.getId());
-					}
-				}
-			}
-			updateData.setTransferRecoIds(transferRecoIds);
+			allTransferRecoIds.addAll(handleTransferSynonyms(updateData));
 		}
 
-		// Update db for delete
+		if (!allTransferRecoIds.isEmpty()) {
+			updateData.setTransferRecoIds(allTransferRecoIds);
+		}
+
 		if (updateData.getDeleteRecoIds() != null) {
-			List<Long> deleteRecoIds = new ArrayList<>();
-			for (Long deleteId : updateData.getDeleteRecoIds()) {
-				Recommendation recommendation = recoDao.findRecoByTaxonId(deleteId, true);
-				if (recommendation != null) {
-					recommendation.setTaxonConceptId(null);
-					recommendation.setAcceptedNameId(null);
-					recommendation = recoDao.update(recommendation);
-					if (recommendation.getTaxonConceptId() == null && recommendation.getAcceptedNameId() == null) {
-						deleteRecoIds.add(deleteId);
-					}
-				}
-			}
-			updateData.setDeleteRecoIds(deleteRecoIds);
+			handleDelete(updateData);
 		}
 
-		// Update db for name change
 		if (!Objects.equals(updateData.getOldName(), updateData.getName())) {
-			Recommendation recommendation = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
-			if (recommendation != null) {
-				recommendation.setName(updateData.getName());
-				recommendation.setLowercaseName(updateData.getName().toLowerCase());
-				recommendation.setCanonicalName(updateData.getCanonicalForm());
-				recommendation = recoDao.update(recommendation);
-				updateData.setRecoId(recommendation.getId());
-				updateData.setScientificName(recommendation.getName());
-			}
+			handleNameChange(updateData);
 		}
 
 		try {
-			// Propagating to observation index
 			esServicesApi.updateObservation(updateData);
 		} catch (com.strandls.esmodule.ApiException e) {
 			logger.error("Exception in es update: {}", e.getMessage(), e);
 		} catch (Exception e) {
 			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}
+	}
+
+	private void handleStatusUpdate(TaxonomyUpdateData updateData) {
+		Recommendation reco = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
+		if (reco == null)
+			return;
+
+		Long acceptedNameId = "ACCEPTED".equals(updateData.getStatus()) ? updateData.getTargetId()
+				: updateData.getNewId();
+		reco.setAcceptedNameId(acceptedNameId);
+
+		reco = recoDao.update(reco);
+		updateData.setRecoId(reco.getId());
+	}
+
+	private List<Long> handleBulkMerge(TaxonomyUpdateData updateData) {
+		List<Long> transferRecoIds = new ArrayList<>();
+
+		List<Recommendation> recos = recoDao.findByTaxonIds(updateData.getBulkIds());
+		for (Recommendation reco : recos) {
+			reco.setTaxonConceptId(updateData.getNewId());
+			reco.setAcceptedNameId(updateData.getNewId());
+		}
+		List<Recommendation> savedRecos = recoDao.updateAll(recos);
+		for (Recommendation saved : savedRecos) {
+			if (updateData.getNewId().equals(saved.getTaxonConceptId())
+					&& updateData.getNewId().equals(saved.getAcceptedNameId())) {
+				transferRecoIds.add(saved.getId());
+			}
+		}
+
+		List<Recommendation> transferRecos = recoDao.findByAcceptedNameIds(updateData.getBulkIds());
+		for (Recommendation reco : transferRecos) {
+			reco.setAcceptedNameId(updateData.getNewId());
+		}
+		List<Recommendation> savedTransfers = recoDao.updateAll(transferRecos);
+		for (Recommendation saved : savedTransfers) {
+			if (updateData.getNewId().equals(saved.getAcceptedNameId())) {
+				transferRecoIds.add(saved.getId());
+			}
+		}
+
+		return transferRecoIds;
+	}
+
+	private List<Long> handleTransferSynonyms(TaxonomyUpdateData updateData) {
+		List<Recommendation> recos = updateData.getTransferSynonymIds().stream()
+				.map(id -> recoDao.findRecoByTaxonId(id, true)).filter(Objects::nonNull).collect(Collectors.toList());
+
+		for (Recommendation reco : recos) {
+			reco.setAcceptedNameId(updateData.getNewId());
+		}
+
+		List<Long> transferRecoIds = new ArrayList<>();
+		List<Recommendation> saved = recoDao.updateAll(recos); // single round-trip
+		for (Recommendation reco : saved) {
+			if (updateData.getNewId().equals(reco.getAcceptedNameId())) {
+				transferRecoIds.add(reco.getId());
+			}
+		}
+		return transferRecoIds;
+	}
+
+	private void handleDelete(TaxonomyUpdateData updateData) {
+		List<Recommendation> recos = updateData.getDeleteRecoIds().stream()
+				.map(id -> recoDao.findRecoByTaxonId(id, true)).filter(Objects::nonNull).collect(Collectors.toList());
+
+		for (Recommendation reco : recos) {
+			reco.setTaxonConceptId(null);
+			reco.setAcceptedNameId(null);
+		}
+
+		List<Recommendation> saved = recoDao.updateAll(recos);
+
+		List<Long> successfulDeleteIds = saved.stream()
+				.filter(r -> r.getTaxonConceptId() == null && r.getAcceptedNameId() == null).map(Recommendation::getId)
+				.collect(Collectors.toList());
+
+		updateData.setDeleteRecoIds(successfulDeleteIds);
+	}
+
+	private void handleNameChange(TaxonomyUpdateData updateData) {
+		Recommendation reco = recoDao.findRecoByTaxonId(updateData.getTargetId(), true);
+		if (reco == null)
+			return;
+
+		reco.setName(updateData.getName());
+		reco.setLowercaseName(updateData.getName().toLowerCase());
+		reco.setCanonicalName(updateData.getCanonicalForm());
+
+		reco = recoDao.update(reco);
+		updateData.setRecoId(reco.getId());
+		updateData.setScientificName(reco.getName());
 	}
 
 }

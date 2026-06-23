@@ -3,6 +3,8 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -156,13 +158,13 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Recommendation> findByAcceptedNameIds(List<Long> taxonIds) {
-		String qry = "from Recommendation where isScientificName = true and acceptedNameId in :taxonIds";
+	public List<Recommendation> findByAcceptedNameIds(List<Long> acceptedIds) {
+		String qry = "from Recommendation where isScientificName = true and acceptedNameId in :acceptedIds";
 		Session session = sessionFactory.openSession();
 		List<Recommendation> result = null;
 		try {
 			Query<Recommendation> query = session.createQuery(qry);
-			query.setParameter("taxonIds", taxonIds);
+			query.setParameter("acceptedIds", acceptedIds);
 			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -170,6 +172,25 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 			session.close();
 		}
 		return result;
+	}
+
+	public List<Recommendation> updateAll(List<Recommendation> recos) {
+		if (recos == null || recos.isEmpty()) {
+			return Collections.emptyList();
+		}
+		Session session = sessionFactory.getCurrentSession();
+		try {
+			List<Recommendation> saved = new ArrayList<>(recos.size());
+			for (Recommendation reco : recos) {
+				saved.add((Recommendation) session.merge(reco));
+			}
+
+			session.flush();
+			return saved;
+		} catch (Exception e) {
+			logger.error("Failed to batch update recommendations: {}", e.getMessage(), e);
+			throw new RuntimeException("updateAll failed", e);
+		}
 	}
 
 }
