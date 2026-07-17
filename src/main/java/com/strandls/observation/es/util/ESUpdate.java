@@ -97,27 +97,33 @@ public class ESUpdate {
 
 	public void updateESInstance(String observationId) {
 		try {
-			System.out.println("--------------------observation es Update---------");
-			System.out.println();
-			System.out.println("------started----------");
-			System.out.println("Observation getting UPDATED to elastic, ID:" + observationId);
+			System.out.println("Observation sync starting for ID: " + observationId);
 			List<ObservationESDocument> result = constructESDocument.getESDocumentStub(observationId);
-//			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-//			om.setDateFormat(df);
+
+			// CHECK IF DELETED (Empty result means is_deleted IS TRUE in Postgres)
+			if (result == null || result.isEmpty()) {
+				System.out.println(
+						"Observation is deleted in DB. Deleting from Elastic Search Index, ID: " + observationId);
+
+				MapQueryResponse response = esService.delete(ObservationIndex.INDEX.getValue(),
+						ObservationIndex.TYPE.getValue(), observationId);
+
+				System.out.println("Delete Result: " + (response != null ? response.getResult() : "Success"));
+				return;
+			}
+
+			// Standard Update Path for Active Observations
 			String resultString = om.writeValueAsString(result.get(0));
 			MapDocument doc = new MapDocument();
 			doc.setDocument(resultString);
+
 			MapQueryResponse response = esService.create(ObservationIndex.INDEX.getValue(),
 					ObservationIndex.TYPE.getValue(), observationId, doc);
-			System.out.println();
-			System.out.println();
-			System.out.println("-----------updated----------");
-			System.out.println(response.getResult());
-			System.out.println("--------------completed-------------observationId :" + observationId);
+
+			System.out.println("Updated ES successfully for Observation ID: " + observationId);
+
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("Error executing ES update/delete for observation ID " + observationId, e);
 		}
-
 	}
-
 }

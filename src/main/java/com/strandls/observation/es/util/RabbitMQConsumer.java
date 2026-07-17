@@ -25,18 +25,13 @@ public class RabbitMQConsumer {
 
 	public void elasticUpdate() throws Exception {
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-			String message = new String(delivery.getBody(), "UTF-8");
-			BasicProperties properties = delivery.getProperties();
-			String updateType = properties.getType();
-			System.out.println("----[RABBIT MQ CONSUMER]---");
-			System.out.println("consuming observation Id :" + message);
-			System.out.println("Updating :" + updateType);
-
-			ESUpdateThread updateThread = new ESUpdateThread(esUpdate, message);
-			Thread thread = new Thread(updateThread);
-			thread.start();
-
-		};
+		    String message = new String(delivery.getBody(), "UTF-8");
+		    BasicProperties properties = delivery.getProperties();
+		    String updateType = properties.getType();
+		    System.out.println("[CONSUMED] obsId=" + message + " type=" + updateType + " t=" + System.currentTimeMillis());
+		    ESUpdateThread updateThread = new ESUpdateThread(esUpdate, message);
+		    new Thread(updateThread).start();
+		};	
 		channel.basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
