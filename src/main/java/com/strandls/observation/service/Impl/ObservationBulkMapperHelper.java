@@ -119,7 +119,8 @@ public class ObservationBulkMapperHelper {
 	@SuppressWarnings("deprecation")
 	public Observation creationObservationMapping(Long userId, String requestAuthHeader,
 			Map<String, Integer> fieldMapping, Row dataRow, DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList,
-			Map<String, Integer> checklistAnnotation, Boolean isVerified, String basisOfRecord) {
+			Map<String, Integer> checklistAnnotation, Boolean isVerified, Boolean allowExternalPublishing,
+			String basisOfRecord) {
 		try {
 			Boolean geoPrivacy = Boolean.FALSE;
 			Observation observation = new Observation();
@@ -363,6 +364,7 @@ public class ObservationBulkMapperHelper {
 			observation.setChecklistAnnotations(checklistString);// from data set
 			observation.setDatasetId(null);// null for nrml case only used in GBIF
 			observation.setIsVerified(isVerified);
+			observation.setAllowExternalPublishing(allowExternalPublishing);// same value as isVerified
 			observation = observationDAO.save(observation);
 			if (observation != null) {
 				logActivities.LogActivity(requestAuthHeader, null, observation.getId(), observation.getId(),
