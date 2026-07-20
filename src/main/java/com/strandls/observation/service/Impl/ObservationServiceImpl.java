@@ -1012,6 +1012,7 @@ public class ObservationServiceImpl implements ObservationService {
 //				Date data
 				editData.setDateAccuracy(observation.getDateAccuracy());
 				editData.setObservedOn(observation.getFromDate());
+				editData.setAllowExternalPublishing(observation.getAllowExternalPublishing());
 //				location data
 				editData.setObservedAt(observation.getPlaceName());
 				editData.setReverseGeocoded(observation.getReverseGeocodedName());
@@ -1023,7 +1024,7 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setBasisOfRecord(observation.getBasisOfRecord());
 				editData.setDataTableId(observation.getDataTableId());
 
-//				resources Data
+//				resources Data	
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
 						observationId.toString());
 				if (resourceData != null && !resourceData.isEmpty()) {
