@@ -929,23 +929,24 @@ public class ObservationServiceImpl implements ObservationService {
 						&& observationUpdate.getResources().isEmpty()) {
 					throw new ObservationInputException("Observation Resources not found");
 				}
-//				location data
+				// location data
 				observation.setPlaceName(observationUpdate.getObservedAt());
 				observation.setReverseGeocodedName(observationUpdate.getReverseGeocoded());
 				observation.setLocationScale(observationUpdate.getLocationScale());
 				observation.setLatitude(observationUpdate.getLatitude());
 				observation.setLongitude(observationUpdate.getLongitude());
 				observation.setGeoPrivacy(observationUpdate.getHidePreciseLocation());
-//				notes
+				observation.setAllowExternalPublishing(observationUpdate.getAllowExternalPublishing());
+				// notes
 				observation.setNotes(observationUpdate.getNotes());
-//				date data
+				// date data
 				observation.setFromDate(observationUpdate.getObservedOn());
 				observation.setToDate(observationUpdate.getObservedOn());
 				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
 				observation.setLastRevised(new Date());
 				observation.setChecklistAnnotations(observationUpdate.getChecklistAnnotations());
 				observation.setBasisOfRecord(observationUpdate.getBasisOfRecord());
-//				resource data
+				// resource data
 
 				List<Resource> resources = observationUpdate.getResources() != null
 						? observationHelper.createResourceMapping(request, userId, observationUpdate.getResources())
@@ -956,17 +957,17 @@ public class ObservationServiceImpl implements ObservationService {
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
-//					calculate reprImageof observation
+					// calculate reprImageof observation
 					observation = observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
 
-//				---------GEO PRIVACY CHECK------------
+				// ---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
-//				------------BG rules-----------------
+				// ------------BG rules-----------------
 				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
 				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
 						observationId.toString());
@@ -1007,13 +1008,13 @@ public class ObservationServiceImpl implements ObservationService {
 			Long userId = Long.parseLong(profile.getId());
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
-//				notes data
+				// notes data
 				editData.setNotes(observation.getNotes());
-//				Date data
+				// Date data
 				editData.setDateAccuracy(observation.getDateAccuracy());
 				editData.setObservedOn(observation.getFromDate());
 				editData.setAllowExternalPublishing(observation.getAllowExternalPublishing());
-//				location data
+				// location data
 				editData.setObservedAt(observation.getPlaceName());
 				editData.setReverseGeocoded(observation.getReverseGeocodedName());
 				editData.setLocationScale(observation.getLocationScale());
@@ -1024,7 +1025,7 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setBasisOfRecord(observation.getBasisOfRecord());
 				editData.setDataTableId(observation.getDataTableId());
 
-//				resources Data	
+				// resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
 						observationId.toString());
 				if (resourceData != null && !resourceData.isEmpty()) {
