@@ -432,7 +432,7 @@ public class ESUtility {
 		for (int i = 0; i < points.length; i = i + 2) {
 			MapGeoPoint geoPoint = new MapGeoPoint();
 			geoPoint.setLat(points[i + 1]);
-			geoPoint.setLon(points[i]);
+			geoPoint.setLon(points[i]);	
 			polygon.add(geoPoint);
 		}
 		return polygon;

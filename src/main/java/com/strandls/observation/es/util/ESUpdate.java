@@ -75,11 +75,18 @@ public class ESUpdate {
 				List<Map<String, Object>> bulkEsDoc = ESObservationList.stream().map(s -> {
 					SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 					om.setDateFormat(df);
-
+					try {
+						// Serialize to JSON string then deserialize to Map
+						String jsonString = om.writeValueAsString(s);
+	
 					@SuppressWarnings("unchecked")
-					Map<String, Object> doc = om.convertValue(s, Map.class);
-					doc.putIfAbsent("id", s.getObservation_id());
-					return doc;
+						Map<String, Object> doc = om.readValue(jsonString, Map.class);
+						doc.putIfAbsent("id", s.getObservation_id());
+						return doc;
+					} catch (Exception e) {
+						logger.error("Error converting ObservationESDocument to Map: {}", e.getMessage());
+						throw new RuntimeException(e);
+					}
 				}).collect(Collectors.toList());
 
 				if (!bulkEsDoc.isEmpty()) {

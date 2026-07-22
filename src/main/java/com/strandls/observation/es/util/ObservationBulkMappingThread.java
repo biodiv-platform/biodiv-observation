@@ -642,7 +642,7 @@ public class ObservationBulkMappingThread implements Runnable {
 					if (permission.getValidatePermissionTaxon() != null)
 						permissionList = permission.getValidatePermissionTaxon();
 					if (permissionList.contains(recoSet.getTaxonId())) {
-						if (!(observation.getIsLocked()) && count==0) {
+						if (!(observation.getIsLocked()) && count == 0) {
 							Recommendation scientificNameReco = new Recommendation();
 							List<Recommendation> scientificNameRecoList = new ArrayList<Recommendation>();
 							List<Recommendation> commonNameRecoList = new ArrayList<Recommendation>();
@@ -714,7 +714,7 @@ public class ObservationBulkMappingThread implements Runnable {
 								observation.setLastRevised(new Date());
 								observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
 								observationDao.update(observation);
-								count = count+1;
+								count = count + 1;
 								RecoVoteActivity rvActivity = new RecoVoteActivity();
 
 								if (recoSet.getTaxonId() != null) {
@@ -765,7 +765,7 @@ public class ObservationBulkMappingThread implements Runnable {
 			}
 		}
 	}
-	
+
 	private UniqueRecoVote mapToUniqueRecoVote(RecommendationVote recommendationVote, Recommendation reco) {
 
 		UniqueRecoVote uniqueRecoVote = new UniqueRecoVote();
@@ -792,7 +792,7 @@ public class ObservationBulkMappingThread implements Runnable {
 
 		return uniqueRecoVote;
 	}
-	
+
 	private UniqueRecoVote updateToUniqueRecoVote(UniqueRecoVote originalRecoVote, UniqueRecoVote uniqueRecoVote) {
 		if (uniqueRecoVote.getIsCommonName())
 			originalRecoVote.setIsCommonName(true);
@@ -814,13 +814,14 @@ public class ObservationBulkMappingThread implements Runnable {
 			try {
 				if (observation.getIsLocked()) {
 					Recommendation recoSet = recoDao.findById(observation.getMaxVotedRecoId());
-					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader, profile,
-							observation.getId().toString(), userId, recoSet.getTaxonConceptId().toString());
+					ObservationUserPermission permission = observationService.getUserPermissions(requestAuthHeader,
+							profile, observation.getId().toString(), userId, recoSet.getTaxonConceptId().toString());
 					List<Long> permissionList = new ArrayList<Long>();
 					if (permission.getValidatePermissionTaxon() != null)
 						permissionList = permission.getValidatePermissionTaxon();
 					if (permissionList.contains(recoSet.getTaxonConceptId())) {
-						List<RecommendationVote> recoVoteList = recoVoteDao.findRecoVoteOnObservation(observation.getId());
+						List<RecommendationVote> recoVoteList = recoVoteDao
+								.findRecoVoteOnObservation(observation.getId());
 						if (!(recoVoteList.isEmpty())) {
 							Map<Long, UniqueRecoVote> uniqueRecoVotes = new HashMap<Long, UniqueRecoVote>();
 
@@ -844,14 +845,14 @@ public class ObservationBulkMappingThread implements Runnable {
 								}
 							}
 							if (maxRecoVote != null) {
-							observation.setIsLocked(false);	
-							observation.setMaxVotedRecoId(maxRecoVote.getRecoId());
-							observation.setLastRevised(new Date());
-							observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
-							observationDao.update(observation);
+								observation.setIsLocked(false);
+								observation.setMaxVotedRecoId(maxRecoVote.getRecoId());
+								observation.setLastRevised(new Date());
+								observation.setNoOfIdentifications(recoVoteDao.findRecoVoteCount(observation.getId()));
+								observationDao.update(observation);
 							}
 						}
-						
+
 						String description = "";
 
 						RecoVoteActivity rvActivity = new RecoVoteActivity();
@@ -866,12 +867,12 @@ public class ObservationBulkMappingThread implements Runnable {
 											? taxonomyDefinition.getItalicisedForm()
 											: taxonomyDefinition.getNormalizedForm();
 
-						}
-						else {
+						} else {
 							scientificName = recoSet.getName();
 						}
-						List<RecommendationVote> recoVotes = recoVoteDao.findByRecommendationId(observation.getId(), observation.getMaxVotedRecoId());
-						
+						List<RecommendationVote> recoVotes = recoVoteDao.findByRecommendationId(observation.getId(),
+								observation.getMaxVotedRecoId());
+
 						for (RecommendationVote recoVote : recoVotes) {
 							if (recoVote.getCommonNameRecoId() != null) {
 								String tempName = recoDao.findById(recoVote.getCommonNameRecoId()).getName();
@@ -881,7 +882,7 @@ public class ObservationBulkMappingThread implements Runnable {
 						}
 						if (!(commonName.isEmpty()))
 							commonName = commonName.substring(0, commonName.length() - 2);
-						
+
 						rvActivity.setScientificName(scientificName);
 						rvActivity.setCommonName(commonName);
 						rvActivity.setGivenName(scientificName);
@@ -901,7 +902,7 @@ public class ObservationBulkMappingThread implements Runnable {
 						} catch (ApiException e) {
 							logger.error(e.getMessage());
 						}
-						
+
 						List<Long> obsIds = obsList.stream().map(item -> item.getId()).collect(Collectors.toList());
 						String observationList = StringUtils.join(obsIds, ',');
 						ESBulkUploadThread updateThread = new ESBulkUploadThread(esUpdate, observationList);
@@ -909,10 +910,10 @@ public class ObservationBulkMappingThread implements Runnable {
 						esThreadUpdate.start();
 					}
 				}
-			} catch(Exception e) {
+			} catch (Exception e) {
 				logger.error(e.getMessage());
-				}
 			}
+		}
 	}
 
 }

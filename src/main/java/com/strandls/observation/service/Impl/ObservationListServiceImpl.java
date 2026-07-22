@@ -1247,4 +1247,4 @@ public class ObservationListServiceImpl implements ObservationListService {
 		return result;
 	}
 
-}
+}	

@@ -79,7 +79,7 @@ public class ShowObervationDataTable {
 		this.authorInfo = authorInfo;
 	}
 
-	public List<ObservationDataTableShow> getObservationList() {
+	public List<ObservationDataTableShow> getObservationList() {	
 		return observationList;
 	}
 

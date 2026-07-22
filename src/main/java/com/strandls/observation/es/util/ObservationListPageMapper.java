@@ -12,6 +12,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
@@ -214,6 +216,7 @@ public class ObservationListPageMapper {
 	}
 
 	@JsonProperty("all_reco_vote")
+	@JsonSetter(nulls = Nulls.SET)
 	private void unpackAllReco(List<All_reco_vote> allRecoVote) {
 		List<AllRecoSugguestions> list = new ArrayList<>();
 		if (allRecoVote != null) {
