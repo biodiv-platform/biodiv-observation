@@ -1657,6 +1657,8 @@ class Max_voted_reco {
 	private String rank;
 	private String taxonstatus;
 	private String italicised_form;
+	private String accepted_name_id;
+	private String accepted_name;
 
 	/**
 	 * 
@@ -1675,7 +1677,7 @@ class Max_voted_reco {
 	 * @param italicised_form
 	 */
 	public Max_voted_reco(Long id, List<Common_names> common_names, List<Hierarchy> hierarchy, String scientific_name,
-			String rank, String taxonstatus, String italicised_form) {
+			String rank, String taxonstatus, String italicised_form, String accepted_name_id, String accepted_name) {
 		super();
 		this.id = id;
 		this.common_names = common_names;
@@ -1684,6 +1686,8 @@ class Max_voted_reco {
 		this.rank = rank;
 		this.taxonstatus = taxonstatus;
 		this.italicised_form = italicised_form;
+		this.accepted_name_id = accepted_name_id;
+		this.accepted_name = accepted_name;
 	}
 
 	public Long getId() {
@@ -1740,6 +1744,22 @@ class Max_voted_reco {
 
 	public void setItalicised_form(String italicised_form) {
 		this.italicised_form = italicised_form;
+	}
+
+	public String getAccepted_name_id() {
+		return accepted_name_id;
+	}
+
+	public void setAccepted_name_id(String accepted_name_id) {
+		this.accepted_name_id = accepted_name_id;
+	}
+
+	public String getAccepted_name() {
+		return accepted_name;
+	}
+
+	public void setAccepted_name(String accepted_name) {
+		this.accepted_name = accepted_name;
 	}
 
 }

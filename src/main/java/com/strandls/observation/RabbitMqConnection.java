@@ -26,6 +26,9 @@ public class RabbitMqConnection {
 	private final static String OBSERVATION_QUEUE = "observationQueue";
 	private final static String ROUTING_OBSERVATION = "observation";
 
+	public static final String TAXONOMY_QUEUE = "taxonomyQueue";
+	public static final String TAXONOMY_ROUTING_KEY = "taxonomy.updated";
+
 	public final static String EXCHANGE_BIODIV;
 
 	public static final String MAIL_QUEUE;
@@ -67,6 +70,8 @@ public class RabbitMqConnection {
 		channel.queueBind(OBSERVATION_QUEUE, EXCHANGE_BIODIV, ROUTING_OBSERVATION);
 		channel.queueDeclare(MAIL_QUEUE, false, false, false, null);
 		channel.queueBind(MAIL_QUEUE, EXCHANGE_BIODIV, MAIL_ROUTING_KEY);
+		channel.queueDeclare(TAXONOMY_QUEUE, false, false, false, null);
+		channel.queueBind(TAXONOMY_QUEUE, EXCHANGE_BIODIV, TAXONOMY_ROUTING_KEY);
 
 		return channel;
 

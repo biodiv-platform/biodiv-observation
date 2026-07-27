@@ -194,7 +194,7 @@ public class ObservationListPageMapper {
 			RecoIbp ri = new RecoIbp(cn.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
-					null, null, null, null, maxVoted.getTaxonstatus(), null);
+					null, null, null, null, maxVoted.getTaxonstatus(), null, maxVoted.getAccepted_name());
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {
 				for (Hierarchy h : maxVoted.getHierarchy()) {
@@ -205,7 +205,7 @@ public class ObservationListPageMapper {
 			if ("SYNONYM".equalsIgnoreCase(maxVoted.getTaxonstatus()) && recoShow.getAllRecoVotes() != null) {
 				for (AllRecoSugguestions ar : recoShow.getAllRecoVotes()) {
 					if (ar.getScientificName() != null
-							&& ar.getScientificName().equalsIgnoreCase(maxVoted.getScientific_name())) {
+							&& ar.getScientificName().equalsIgnoreCase(maxVoted.getItalicised_form())) {
 						taxonId = ar.getTaxonId();
 					}
 				}
