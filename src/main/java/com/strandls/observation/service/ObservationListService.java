@@ -58,4 +58,6 @@ public interface ObservationListService {
 			String termsAggregationField, String geoShapeFilterField);
 
 	public ObservationDataByUser getCountPerDay(String userId);
+
+	public Map<String, Object> getObservationList(Integer offset, Integer max, String authorId);
 }

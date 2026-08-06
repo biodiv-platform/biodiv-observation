@@ -15,7 +15,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 /**
@@ -71,6 +70,7 @@ public class Observation implements Serializable {
 	private Long dataTableId;
 	private String dateAccuracy;
 	private Boolean isVerified;
+	private Boolean allowExternalPublishing;
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -443,6 +443,15 @@ public class Observation implements Serializable {
 
 	public void setIsVerified(Boolean isVerified) {
 		this.isVerified = isVerified;
+	}
+
+	@Column(name = "allow_external_publishing", columnDefinition = "boolean default true")
+	public Boolean getAllowExternalPublishing() {
+		return allowExternalPublishing;
+	}
+
+	public void setAllowExternalPublishing(Boolean allowExternalPublishing) {
+		this.allowExternalPublishing = allowExternalPublishing;
 	}
 
 }

@@ -62,7 +62,7 @@ public class ObservationListMinimalData {
 			RecoIbp reco = new RecoIbp(commonNameBuilder.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
-					null, null, null, null, maxVoted.getTaxonstatus(), null);
+					null, null, null, null, maxVoted.getTaxonstatus(), null, maxVoted.getAccepted_name());
 
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {

@@ -317,6 +317,9 @@ public class ObservationUtilityFunctions {
 		String resourceAuthHeader = requestAuthHeader;
 		Boolean isVerified = Boolean.TRUE.equals(observationData.getIsVerified()) ? observationData.getIsVerified()
 				: false;
+		Boolean allowExternalPublishing = Boolean.TRUE.equals(observationData.getAllowExternalPublishing())
+				? observationData.getAllowExternalPublishing()
+				: false;
 		try {
 			requestAuthHeader = tokenGenerator.generate(userService.getUser(userId.toString()));
 			Map<String, Integer> fieldMapping = observationData.getFieldMapping();
@@ -327,6 +330,14 @@ public class ObservationUtilityFunctions {
 						MissingCellPolicy.RETURN_BLANK_AS_NULL);
 				if (verifiedCell != null) {
 					isVerified = Boolean.parseBoolean(verifiedCell.getStringCellValue());
+				}
+			}
+
+			if (fieldMapping.get("allowExternalPublishing") != null) {
+				Cell allowExternalPublishingCell = dataRow.getCell(fieldMapping.get("allowExternalPublishing"),
+						MissingCellPolicy.RETURN_BLANK_AS_NULL);
+				if (allowExternalPublishingCell != null) {
+					allowExternalPublishing = Boolean.parseBoolean(allowExternalPublishingCell.getStringCellValue());
 				}
 			}
 
@@ -348,7 +359,8 @@ public class ObservationUtilityFunctions {
 
 			observation = mapper.creationObservationMapping(userId, requestAuthHeader, fieldMapping, dataRow,
 					observationData.getDataTable(), observationData.getSpeciesGroupList(),
-					observationData.getChecklistAnnotaion(), isVerified, observationData.getBasisOfRecord());
+					observationData.getChecklistAnnotaion(), isVerified, allowExternalPublishing,
+					observationData.getBasisOfRecord());
 			if (observation != null) {
 				mapper.createObservationResource(resourceAuthHeader, dataRow, fieldMapping,
 						observationData.getLicenses(), userId, observation, myImageUpload);

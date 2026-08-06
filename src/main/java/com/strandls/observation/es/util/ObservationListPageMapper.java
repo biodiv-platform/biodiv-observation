@@ -12,6 +12,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.strandls.observation.pojo.AllRecoSugguestions;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.RecoShow;
@@ -192,7 +194,7 @@ public class ObservationListPageMapper {
 			RecoIbp ri = new RecoIbp(cn.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
-					null, null, null, null, maxVoted.getTaxonstatus(), null);
+					null, null, null, null, maxVoted.getTaxonstatus(), null, maxVoted.getAccepted_name());
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {
 				for (Hierarchy h : maxVoted.getHierarchy()) {
@@ -203,7 +205,7 @@ public class ObservationListPageMapper {
 			if ("SYNONYM".equalsIgnoreCase(maxVoted.getTaxonstatus()) && recoShow.getAllRecoVotes() != null) {
 				for (AllRecoSugguestions ar : recoShow.getAllRecoVotes()) {
 					if (ar.getScientificName() != null
-							&& ar.getScientificName().equalsIgnoreCase(maxVoted.getScientific_name())) {
+							&& ar.getScientificName().equalsIgnoreCase(maxVoted.getItalicised_form())) {
 						taxonId = ar.getTaxonId();
 					}
 				}
@@ -214,6 +216,7 @@ public class ObservationListPageMapper {
 	}
 
 	@JsonProperty("all_reco_vote")
+	@JsonSetter(nulls = Nulls.SET)
 	private void unpackAllReco(List<All_reco_vote> allRecoVote) {
 		List<AllRecoSugguestions> list = new ArrayList<>();
 		if (allRecoVote != null) {

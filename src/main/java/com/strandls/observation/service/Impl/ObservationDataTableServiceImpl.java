@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.dataTable.ApiException;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
@@ -26,7 +27,6 @@ import com.strandls.dataTable.pojo.BulkDTO;
 import com.strandls.dataTable.pojo.DataTableWkt;
 import com.strandls.dataTable.pojo.UserGroupCreateDatatable;
 import com.strandls.esmodule.controllers.EsServicesApi;
-import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.integrator.controllers.IntegratorServicesApi;
@@ -34,6 +34,8 @@ import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 import com.strandls.observation.Headers;
 import com.strandls.observation.dao.ObservationDAO;
+import com.strandls.observation.dao.RecommendationDao;
+import com.strandls.observation.dao.RecommendationVoteDao;
 import com.strandls.observation.dto.ObservationBulkDTO;
 import com.strandls.observation.es.util.ESUpdate;
 import com.strandls.observation.es.util.ObservationBulkMappingThread;
@@ -43,6 +45,7 @@ import com.strandls.observation.pojo.ObservationDatatableList;
 import com.strandls.observation.pojo.RecoIbp;
 import com.strandls.observation.pojo.ShowObervationDataTable;
 import com.strandls.observation.service.ObservationDataTableService;
+import com.strandls.observation.service.ObservationService;
 import com.strandls.observation.util.DataTableMappingField;
 import com.strandls.observation.util.ObservationBulkUploadThread;
 import com.strandls.observation.util.ObservationDeleteThread;
@@ -50,6 +53,7 @@ import com.strandls.observation.util.TokenGenerator;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.TraitsValuePair;
@@ -71,6 +75,15 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 
 	@Inject
 	private ObservationDAO observationDao;
+
+	@Inject
+	private ObservationService observationService;
+
+	@Inject
+	private RecommendationDao recoDao;
+
+	@Inject
+	private RecommendationVoteDao recoVoteDao;
 
 	@Inject
 	private TraitsServiceApi traitService;
@@ -130,6 +143,12 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	@Inject
 	private IntegratorServicesApi integratorService;
 
+	@Inject
+	private ActivityServiceApi activityService;
+
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
+
 	@Override
 	public Long observationBulkUpload(HttpServletRequest request, ObservationBulkDTO observationBulkData) {
 		System.out.println("DEBUG: Starting observationBulkUpload");
@@ -182,11 +201,14 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			try (XSSFWorkbook workbook = new XSSFWorkbook(new File(sheetDirectory))) {
 				System.out.println("DEBUG: Opened workbook");
 				List<TraitsValuePair> traitsList = traitService.getAllTraits();
-				System.out.println("DEBUG: Got traits list, size: " + (traitsList != null ? traitsList.size() : "null"));
+				System.out
+						.println("DEBUG: Got traits list, size: " + (traitsList != null ? traitsList.size() : "null"));
 				List<UserGroupIbp> userGroupIbpList = userGroupService.getAllUserGroup("");
-				System.out.println("DEBUG: Got userGroup list, size: " + (userGroupIbpList != null ? userGroupIbpList.size() : "null"));
+				System.out.println("DEBUG: Got userGroup list, size: "
+						+ (userGroupIbpList != null ? userGroupIbpList.size() : "null"));
 				List<License> licenseList = licenseControllerApi.getAllLicenses();
-				System.out.println("DEBUG: Got license list, size: " + (licenseList != null ? licenseList.size() : "null"));
+				System.out.println(
+						"DEBUG: Got license list, size: " + (licenseList != null ? licenseList.size() : "null"));
 
 				List<Long> accpectedList = userGroupIbpList.stream().map(s -> Long.parseLong(s.getId().toString()))
 						.collect(Collectors.toList());
@@ -244,7 +266,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 	@Override
 	public ShowObervationDataTable showObservatioDataTable(HttpServletRequest request, Long dataTableId, Integer limit,
 			Integer offset) {
-		Map<String, String> authorScore = null;
 		DataTableWkt dataTable = null;
 		UserIbp user = null;
 		Long count = null;
@@ -266,7 +287,6 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			userGroups = userGroupService.getObservationUserGroup(dataTableId.toString());
 			observationList = fetchAllObservationByDataTableId(dataTableId, limit, offset);
 			count = observationDao.getObservationCountForDatatable(dataTableId.toString());
-			UserScore score = esService.getUserScore("eaf", "er", userId.toString(), "f");
 			locationInfo = layerService.getLayerInfo(dataTable.getGeographicalCoverageLatitude().toString(),
 					dataTable.getGeographicalCoverageLongitude().toString());
 			dataTableRes.setAuthorInfo(user);
@@ -276,10 +296,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			dataTableRes.setUserGroups(userGroups);
 			dataTableRes.setDatatable(dataTable);
 			dataTableRes.setCount(count);
-			if (score.getRecord() != null && !score.getRecord().isEmpty()) {
-				authorScore = score.getRecord().get(0).get("details");
-				dataTableRes.setAuthorScore(authorScore);
-			}
+
 			return dataTableRes;
 		} catch (Exception er) {
 			logger.error(er.getMessage());
@@ -460,6 +477,7 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 			Long dataTableId, List<Long> userGroupList, String bulkAction) {
 
 		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			UserGroupCreateDatatable usergroups = new UserGroupCreateDatatable();
 			usergroups.setUserGroupIds(userGroupList);
 			List<Long> list = new ArrayList<>();
@@ -509,17 +527,21 @@ public class ObservationDataTableServiceImpl implements ObservationDataTableServ
 					.collect(Collectors.joining(","));
 
 			ObservationBulkMappingThread bulkPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, userGroupService, null, null, null,
-					null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, integratorService, esUpdate, traitService);
+					"ugBulkPosting", bulkObservationIds, bulkPostUsergroupIds, null, null, null, null, userGroupService,
+					null, null, null, null, true, null, null, null, null, "bulkMapping", esService,
+					observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, om,
+					integratorService, esUpdate, traitService, recoService, profile, observationService,
+					activityService, taxonomyService);
 
 			Thread groupPostingThread = new Thread(bulkPostMappingThread);
 			groupPostingThread.start();
 
 			ObservationBulkMappingThread bulkUnpostPostMappingThread = new ObservationBulkMappingThread(false,
-					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, userGroupService, null, null,
-					null, null, true, null, null, null, null, "bulkMapping", esService, observationMapperHelper,
-					observationDao, request, headers, om, integratorService, esUpdate, traitService);
+					"ugBulkUnPosting", bulkObservationIds, bulkUnpostUsergroupIds, null, null, null, null,
+					userGroupService, null, null, null, null, true, null, null, null, null, "bulkMapping", esService,
+					observationMapperHelper, observationDao, recoDao, recoVoteDao, request, headers, om,
+					integratorService, esUpdate, traitService, recoService, profile, observationService,
+					activityService, taxonomyService);
 
 			Thread groupUnpostingThread = new Thread(bulkUnpostPostMappingThread);
 			groupUnpostingThread.start();

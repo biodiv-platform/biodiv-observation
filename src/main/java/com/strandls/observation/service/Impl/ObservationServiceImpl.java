@@ -37,7 +37,6 @@ import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MaxVotedRecoFreq;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationNearBy;
-import com.strandls.esmodule.pojo.UserScore;
 import com.strandls.integrator.controllers.IntegratorServicesApi;
 import com.strandls.integrator.pojo.CheckFilterRule;
 import com.strandls.integrator.pojo.UserGroupObvRuleData;
@@ -205,15 +204,6 @@ public class ObservationServiceImpl implements ObservationService {
 	@Override
 	public ShowData findById(Long id) {
 
-		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
-
-		Properties properties = new Properties();
-		try {
-			properties.load(in);
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
-
 		List<FactValuePair> facts;
 		List<ResourceData> observationResource;
 		List<UserGroupIbp> userGroups;
@@ -226,18 +216,12 @@ public class ObservationServiceImpl implements ObservationService {
 		List<Featured> fetaured;
 		UserIbp userInfo;
 		List<RecoIbp> allRecoVotes = null;
-		Map<String, String> authorScore = null;
 		List<AllRecoSugguestions> recoaggregated = null;
 		Observation observation = observationDao.findById(id);
 		DataTableWkt dataTable = null;
 		Map<String, Object> checkListAnnotation = new HashMap<String, Object>();
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
-				in.close();
-				UserScore score = esService.getUserScore("eaf", "er", observation.getAuthorId().toString(), "f");
-				if (score.getRecord() != null && !score.getRecord().isEmpty()) {
-					authorScore = score.getRecord().get(0).get("details");
-				}
 				if (observation.getDataTableId() != null) {
 					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
 				}
@@ -283,8 +267,8 @@ public class ObservationServiceImpl implements ObservationService {
 
 				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
-						esLayerInfo, reco, flag, tags, fetaured, userInfo, authorScore, recoaggregated,
-						observationNearBy, dataTable, checkListAnnotation, activityCount);
+						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy, dataTable,
+						checkListAnnotation, activityCount);
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}
@@ -686,20 +670,19 @@ public class ObservationServiceImpl implements ObservationService {
 	}
 
 	@Override
-	public ObservationUserPermission getUserPermissions(HttpServletRequest request, CommonProfile profile,
+	public ObservationUserPermission getUserPermissions(String requestAuthHeader, CommonProfile profile,
 			String observationId, Long userId, String taxonList) throws Exception {
 		try {
 			List<UserGroupIbp> associatedUserGroup = userGroupService.getObservationUserGroup(observationId);
 			List<Long> validateAllowed = new ArrayList<Long>();
 			List<UserGroupIbp> allowedUserGroup = new ArrayList<UserGroupIbp>();
 			List<Long> userGroupFeatureRole = new ArrayList<Long>();
-			userService = headers.addUserHeaders(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			userService = headers.addUserHeaders(userService, requestAuthHeader);
 			Follow follow = userService.getFollowByObject("observation", observationId);
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 			List<SpeciesPermission> speciesPermissions = speciesGroupService.getSpeciesPermission();
 
-			userGroupService = headers.addUserGroupHeader(userGroupService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
+			userGroupService = headers.addUserGroupHeader(userGroupService, requestAuthHeader);
 			UserGroupPermissions userGroupPermission = userGroupService.getUserGroupObservationPermission();
 
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
@@ -717,8 +700,7 @@ public class ObservationServiceImpl implements ObservationService {
 
 			} else {
 				if (taxonList.trim().length() != 0) {
-					taxonomyService = headers.addTaxonomyHeader(taxonomyService,
-							request.getHeader(HttpHeaders.AUTHORIZATION));
+					taxonomyService = headers.addTaxonomyHeader(taxonomyService, requestAuthHeader);
 					List<TaxonTree> taxonTree = taxonomyTreeService.getTaxonTree(taxonList);
 					validateAllowed = ValidatePermission(taxonTree, speciesPermissions);
 
@@ -747,7 +729,7 @@ public class ObservationServiceImpl implements ObservationService {
 				}
 			}
 
-			cfService = headers.addCFHeaders(cfService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			cfService = headers.addCFHeaders(cfService, requestAuthHeader);
 			List<CustomFieldPermission> cfPermission = cfService.getCustomFieldPermission(observationId);
 
 			ObservationUserPermission permission = new ObservationUserPermission(validateAllowed, allowedUserGroup,
@@ -947,23 +929,24 @@ public class ObservationServiceImpl implements ObservationService {
 						&& observationUpdate.getResources().isEmpty()) {
 					throw new ObservationInputException("Observation Resources not found");
 				}
-//				location data
+				// location data
 				observation.setPlaceName(observationUpdate.getObservedAt());
 				observation.setReverseGeocodedName(observationUpdate.getReverseGeocoded());
 				observation.setLocationScale(observationUpdate.getLocationScale());
 				observation.setLatitude(observationUpdate.getLatitude());
 				observation.setLongitude(observationUpdate.getLongitude());
 				observation.setGeoPrivacy(observationUpdate.getHidePreciseLocation());
-//				notes
+				observation.setAllowExternalPublishing(observationUpdate.getAllowExternalPublishing());
+				// notes
 				observation.setNotes(observationUpdate.getNotes());
-//				date data
+				// date data
 				observation.setFromDate(observationUpdate.getObservedOn());
 				observation.setToDate(observationUpdate.getObservedOn());
 				observation.setDateAccuracy(observationUpdate.getDateAccuracy());
 				observation.setLastRevised(new Date());
 				observation.setChecklistAnnotations(observationUpdate.getChecklistAnnotations());
 				observation.setBasisOfRecord(observationUpdate.getBasisOfRecord());
-//				resource data
+				// resource data
 
 				List<Resource> resources = observationUpdate.getResources() != null
 						? observationHelper.createResourceMapping(request, userId, observationUpdate.getResources())
@@ -974,17 +957,17 @@ public class ObservationServiceImpl implements ObservationService {
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 					resources = resourceService.updateResources("OBSERVATION", String.valueOf(observation.getId()),
 							resources);
-//					calculate reprImageof observation
+					// calculate reprImageof observation
 					observation = observationHelper.updateObservationResourceCount(observation, resources);
 
 				}
 				observationDao.update(observation);
 
-//				---------GEO PRIVACY CHECK------------
+				// ---------GEO PRIVACY CHECK------------
 				List<Observation> observationList = new ArrayList<Observation>();
 				observationList.add(observation);
 				updateGeoPrivacy(observationList);
-//				------------BG rules-----------------
+				// ------------BG rules-----------------
 				UserGroupObvRuleData ugObvFilterData = getUGObvRuleData(observation);
 				List<FactValuePair> traits = traitService.getFacts("species.participation.Observation",
 						observationId.toString());
@@ -1025,12 +1008,13 @@ public class ObservationServiceImpl implements ObservationService {
 			Long userId = Long.parseLong(profile.getId());
 			Observation observation = observationDao.findById(observationId);
 			if (observation.getAuthorId().equals(userId) || userRoles.contains("ROLE_ADMIN")) {
-//				notes data
+				// notes data
 				editData.setNotes(observation.getNotes());
-//				Date data
+				// Date data
 				editData.setDateAccuracy(observation.getDateAccuracy());
 				editData.setObservedOn(observation.getFromDate());
-//				location data
+				editData.setAllowExternalPublishing(observation.getAllowExternalPublishing());
+				// location data
 				editData.setObservedAt(observation.getPlaceName());
 				editData.setReverseGeocoded(observation.getReverseGeocodedName());
 				editData.setLocationScale(observation.getLocationScale());
@@ -1041,7 +1025,7 @@ public class ObservationServiceImpl implements ObservationService {
 				editData.setBasisOfRecord(observation.getBasisOfRecord());
 				editData.setDataTableId(observation.getDataTableId());
 
-//				resources Data
+				// resources Data
 				List<ResourceData> resourceData = resourceService.getImageResource("observation",
 						observationId.toString());
 				if (resourceData != null && !resourceData.isEmpty()) {

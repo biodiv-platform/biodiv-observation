@@ -33,6 +33,7 @@ public class DataTableHelper {
 		dataTableDto.setBasisOfData(observationBulkData.getBasisOfData());
 		dataTableDto.setBasisOfRecord(observationBulkData.getBasisOfRecord());
 		dataTableDto.setIsVerified(observationBulkData.getIsVerified());
+		dataTableDto.setAllowExternalPublishing(observationBulkData.getAllowExternalPublishing());
 		dataTableDto.setFieldMapping(String.join(",", observationBulkData.getColumns().keySet()));
 		dataTableDto.setUserFileId(1L);
 		return dataTableDto;

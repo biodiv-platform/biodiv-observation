@@ -50,6 +50,7 @@ public class ObservationBulkDTO {
 
 	// other fields related to bulk upload
 	private Boolean isVerified;
+	private Boolean allowExternalPublishing;
 	private Long dataset;
 	private String filename;
 	private Long languageId;
@@ -280,6 +281,14 @@ public class ObservationBulkDTO {
 		this.isVerified = isVerified;
 	}
 
+	public Boolean getAllowExternalPublishing() {
+		return allowExternalPublishing;
+	}
+
+	public void setAllowExternalPublishing(Boolean allowExternalPublishing) {
+		this.allowExternalPublishing = allowExternalPublishing;
+	}
+
 	public Map<String, Integer> getChecklistAnnotation() {
 		return checklistAnnotation;
 	}
@@ -311,4 +320,5 @@ public class ObservationBulkDTO {
 	public void setUserGroup(String userGroup) {
 		this.userGroup = userGroup;
 	}
+
 }
