@@ -24,18 +24,20 @@ public class ObservationBulkData {
 	private final List<UserGroupIbp> userGroupsList;
 	private final List<License> licenses;
 	private final Boolean isVerified;
+	private final Boolean allowExternalPublishing;
 	private final String basisOfRecord;
 
 	public ObservationBulkData(Map<String, Integer> fieldMapping, Row dataRow, HttpServletRequest request,
 			DataTableWkt dataTable, List<SpeciesGroup> speciesGroupList, List<TraitsValuePair> pairs,
 			List<UserGroupIbp> userGroupsList, List<License> licenses, Boolean isVerified,
-			Map<String, Integer> checklistAnnotaion, String basisOfRecord) {
+			Boolean allowExternalPublishing, Map<String, Integer> checklistAnnotaion, String basisOfRecord) {
 		this.fieldMapping = fieldMapping;
 		this.checklistAnnotaion = checklistAnnotaion;
 		this.dataRow = dataRow;
 		this.request = request;
 		this.dataTable = dataTable;
 		this.isVerified = isVerified;
+		this.allowExternalPublishing = allowExternalPublishing;
 		this.speciesGroupList = speciesGroupList;
 		this.pairs = pairs;
 		this.userGroupsList = userGroupsList;
@@ -79,6 +81,10 @@ public class ObservationBulkData {
 		return isVerified;
 	}
 
+	public Boolean getAllowExternalPublishing() {
+		return allowExternalPublishing;
+	}
+
 	public Map<String, Integer> getChecklistAnnotaion() {
 		return checklistAnnotaion;
 	}
@@ -86,4 +92,5 @@ public class ObservationBulkData {
 	public String getBasisOfRecord() {
 		return basisOfRecord;
 	}
+
 }

@@ -3,10 +3,13 @@
  */
 package com.strandls.observation.dao;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +139,76 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		}
 		return result;
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Recommendation> findByTaxonIds(List<Long> taxonIds) {
+		String qry = "from Recommendation where isScientificName = true and taxonConceptId in :taxonIds";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("taxonIds", taxonIds);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Recommendation> findByAcceptedNameIds(List<Long> acceptedIds) {
+		String qry = "from Recommendation where isScientificName = true and acceptedNameId in :acceptedIds";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("acceptedIds", acceptedIds);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	public List<Recommendation> updateAll(List<Recommendation> recos) {
+		if (recos == null || recos.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+
+			List<Recommendation> saved = new ArrayList<>(recos.size());
+			for (int i = 0; i < recos.size(); i++) {
+				saved.add(session.merge(recos.get(i)));
+
+				// Flush + clear every 50 rows to avoid OOM on large batches
+				if (i % 50 == 0) {
+					session.flush();
+					session.clear();
+				}
+			}
+
+			session.flush();
+			tx.commit();
+			return saved;
+
+		} catch (Exception e) {
+			if (tx != null && tx.isActive()) {
+				tx.rollback();
+			}
+			logger.error("Failed to batch update recommendations: {}", e.getMessage(), e);
+			throw new RuntimeException("updateAll failed", e);
+		} finally {
+			session.close();
+		}
 	}
 
 }

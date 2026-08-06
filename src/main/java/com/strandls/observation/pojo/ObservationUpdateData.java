@@ -17,6 +17,7 @@ public class ObservationUpdateData {
 //	------Date Data----------
 	private String dateAccuracy;
 	private Date observedOn;
+	private Boolean allowExternalPublishing;
 
 //	-----Location Data--------
 	private String observedAt;
@@ -43,6 +44,7 @@ public class ObservationUpdateData {
 	 * @param dateAccuracy
 	 * @param observedOn
 	 * @param observedAt
+	 * @param allowExternalPublishing
 	 * @param reverseGeocoded
 	 * @param locationScale
 	 * @param latitude
@@ -53,13 +55,15 @@ public class ObservationUpdateData {
 	 * @param dataTableId
 	 */
 	public ObservationUpdateData(List<ResourceDataObs> resources, String notes, String dateAccuracy, Date observedOn,
-			String observedAt, String reverseGeocoded, String locationScale, Double latitude, Double longitude,
-			String basisOfRecord, String checklistAnnotations, Boolean hidePreciseLocation, Long dataTableId) {
+			String observedAt, Boolean allowExternalPublishing, String reverseGeocoded, String locationScale,
+			Double latitude, Double longitude, String basisOfRecord, String checklistAnnotations,
+			Boolean hidePreciseLocation, Long dataTableId) {
 		super();
 		this.resources = resources;
 		this.notes = notes;
 		this.dateAccuracy = dateAccuracy;
 		this.observedOn = observedOn;
+		this.setAllowExternalPublishing(allowExternalPublishing);
 		this.observedAt = observedAt;
 		this.reverseGeocoded = reverseGeocoded;
 		this.locationScale = locationScale;
@@ -173,6 +177,14 @@ public class ObservationUpdateData {
 
 	public void setDataTableId(Long dataTableId) {
 		this.dataTableId = dataTableId;
+	}
+
+	public Boolean getAllowExternalPublishing() {
+		return allowExternalPublishing;
+	}
+
+	public void setAllowExternalPublishing(Boolean allowExternalPublishing) {
+		this.allowExternalPublishing = allowExternalPublishing;
 	}
 
 }
