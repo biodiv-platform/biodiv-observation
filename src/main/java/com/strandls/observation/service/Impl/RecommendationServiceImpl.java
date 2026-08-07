@@ -200,7 +200,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	 * recommendation_vote/recommendation again.
 	 */
 	private RecoIbp buildRecoIbp(Long recoId, List<RecommendationVote> allVotesOnObservation,
-			Map<Long, Recommendation> recoCache) {
+			Map<Long, Recommendation> recoCache) throws com.strandls.taxonomy.ApiException {
 
 		Long speciesId = null;
 		String commonName = "";
@@ -250,7 +250,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	 * map, instead of querying recommendation once per vote.
 	 */
 	private List<RecoIbp> buildAllRecoVotes(List<RecommendationVote> allVotesOnObservation,
-			Map<Long, Recommendation> recoCache) {
+			Map<Long, Recommendation> recoCache) throws ApiException, com.strandls.taxonomy.ApiException {
 		List<RecoIbp> allRecoVotes = new ArrayList<RecoIbp>();
 		for (RecommendationVote recoVote : allVotesOnObservation) {
 			Long speciesId = null;
