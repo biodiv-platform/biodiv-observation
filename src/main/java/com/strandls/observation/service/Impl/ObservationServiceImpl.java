@@ -61,6 +61,7 @@ import com.strandls.observation.pojo.ObservationUpdateData;
 import com.strandls.observation.pojo.ObservationUserPageInfo;
 import com.strandls.observation.pojo.ObservationUserPermission;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoNameAndVotes;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.Resources;
 import com.strandls.observation.pojo.ShowData;
@@ -238,10 +239,12 @@ public class ObservationServiceImpl implements ObservationService {
 				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
 				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
 				if (observation.getMaxVotedRecoId() != null) {
-					reco = recoService.fetchRecoName(id, observation.getMaxVotedRecoId());
+					RecoNameAndVotes recoNameAndVotes = recoService.fetchRecoNameAndAllVotes(id,
+							observation.getMaxVotedRecoId());
+					reco = recoNameAndVotes.getReco();
 					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
 							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
-					allRecoVotes = recoService.allRecoVote(id);
+					allRecoVotes = recoNameAndVotes.getAllRecoVotes();
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
 

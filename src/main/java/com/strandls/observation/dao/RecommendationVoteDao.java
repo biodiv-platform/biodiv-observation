@@ -71,21 +71,20 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	public int findRecoVoteCount(Long obvId) {
-		String qry = "from RecommendationVote where observationId = :obvId";
+		String qry = "select count(id) from RecommendationVote where observationId = :obvId";
 		Session session = sessionFactory.openSession();
-		Integer recoVoteCount = 0;
+		Long recoVoteCount = 0L;
 		try {
-			Query<RecommendationVote> query = session.createQuery(qry);
+			Query<Long> query = session.createQuery(qry, Long.class);
 			query.setParameter("obvId", obvId);
-			recoVoteCount = query.getResultList().size();
+			recoVoteCount = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}
-		return recoVoteCount;
+		return recoVoteCount.intValue();
 	}
 
 	@SuppressWarnings("unchecked")
