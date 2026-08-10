@@ -50,6 +50,23 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public List<Recommendation> findByIdList(List<Long> idList) {
+		String qry = "from Recommendation where id in :idList";
+		Session session = sessionFactory.openSession();
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("idList", idList);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
 	public Recommendation findRecoByTaxonId(Long taxonId, Boolean isScientific) {
 
 		String qry = "from Recommendation where taxonConceptId = :taxonId and isScientificName = :isScientific";

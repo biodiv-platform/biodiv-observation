@@ -10,6 +10,7 @@ import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.observation.pojo.RecoCreate;
 import com.strandls.observation.pojo.RecoIbp;
+import com.strandls.observation.pojo.RecoNameAndVotes;
 import com.strandls.observation.pojo.RecoSet;
 import com.strandls.observation.pojo.RecoShow;
 import com.strandls.observation.pojo.Recommendation;
@@ -28,6 +29,14 @@ public interface RecommendationService {
 	public RecoIbp fetchByRecoId(Long recoId);
 
 	public RecoIbp fetchRecoName(Long obvId, Long recoId);
+
+	/**
+	 * Combined equivalent of calling {@link #fetchRecoName(Long, Long)} and
+	 * {@link #allRecoVote(Long)} for the same observation, but fetches
+	 * recommendation_vote (and the related Recommendation rows) only once instead
+	 * of once per method.
+	 */
+	public RecoNameAndVotes fetchRecoNameAndAllVotes(Long obvId, Long recoId);
 
 	public Long createRecoVote(HttpServletRequest request, Long userId, Long observationId, Long taxonId,
 			RecoCreate recoCreate, Boolean creataObservation);
