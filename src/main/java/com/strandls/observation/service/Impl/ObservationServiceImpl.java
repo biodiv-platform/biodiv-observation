@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.pac4j.core.profile.CommonProfile;
@@ -127,6 +128,15 @@ public class ObservationServiceImpl implements ObservationService {
 
 	private final Logger logger = LoggerFactory.getLogger(ObservationServiceImpl.class);
 
+	private <T> T safeCall(Long id, String serviceCall, T fallback, Callable<T> callable) {
+		try {
+			return callable.call();
+		} catch (Exception e) {
+			logger.error("findById(id={}): {} failed", id, serviceCall, e);
+			return fallback;
+		}
+	}
+
 	@Inject
 	private LogActivities logActivity;
 
@@ -224,26 +234,38 @@ public class ObservationServiceImpl implements ObservationService {
 		if (observation != null && observation.getIsDeleted() != true) {
 			try {
 				if (observation.getDataTableId() != null) {
-					dataTable = dataTableService.showDataTable(observation.getDataTableId().toString());
+					dataTable = safeCall(id, "dataTableService.showDataTable", (DataTableWkt) null,
+							() -> dataTableService.showDataTable(observation.getDataTableId().toString()));
 				}
-				facts = traitService.getFacts("species.participation.Observation", id.toString());
-				observationResource = resourceService.getImageResource("observation", id.toString());
-				userGroups = userGroupService.getObservationUserGroup(id.toString());
-				customField = cfService.getObservationCustomFields(id.toString());
+				facts = safeCall(id, "traitService.getFacts", new ArrayList<FactValuePair>(),
+						() -> traitService.getFacts("species.participation.Observation", id.toString()));
+				observationResource = safeCall(id, "resourceService.getImageResource", new ArrayList<ResourceData>(),
+						() -> resourceService.getImageResource("observation", id.toString()));
+				userGroups = safeCall(id, "userGroupService.getObservationUserGroup", new ArrayList<UserGroupIbp>(),
+						() -> userGroupService.getObservationUserGroup(id.toString()));
+				customField = safeCall(id, "cfService.getObservationCustomFields",
+						new ArrayList<CustomFieldObservationData>(), () -> cfService.getObservationCustomFields(id.toString()));
 
-				layerInfo = layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
-						String.valueOf(observation.getLongitude()));
+				layerInfo = safeCall(id, "layerService.getLayerInfo", (ObservationLocationInfo) null,
+						() -> layerService.getLayerInfo(String.valueOf(observation.getLatitude()),
+								String.valueOf(observation.getLongitude())));
 				if (observation.getFlagCount() > 0)
-					flag = utilityServices.getFlagByObjectType("observation", id.toString());
-				tags = utilityServices.getTags("observation", id.toString());
-				userInfo = userService.getUserIbp(observation.getAuthorId().toString());
-				fetaured = userGroupService.getAllFeatured("species.participation.Observation", id.toString());
+					flag = safeCall(id, "utilityServices.getFlagByObjectType", new ArrayList<FlagShow>(),
+							() -> utilityServices.getFlagByObjectType("observation", id.toString()));
+				tags = safeCall(id, "utilityServices.getTags", new ArrayList<Tags>(),
+						() -> utilityServices.getTags("observation", id.toString()));
+				userInfo = safeCall(id, "userService.getUserIbp", (UserIbp) null,
+						() -> userService.getUserIbp(observation.getAuthorId().toString()));
+				fetaured = safeCall(id, "userGroupService.getAllFeatured", new ArrayList<Featured>(),
+						() -> userGroupService.getAllFeatured("species.participation.Observation", id.toString()));
 				if (observation.getMaxVotedRecoId() != null) {
-					RecoNameAndVotes recoNameAndVotes = recoService.fetchRecoNameAndAllVotes(id,
-							observation.getMaxVotedRecoId());
+					RecoNameAndVotes recoNameAndVotes = safeCall(id, "recoService.fetchRecoNameAndAllVotes",
+							new RecoNameAndVotes(null, new ArrayList<RecoIbp>()),
+							() -> recoService.fetchRecoNameAndAllVotes(id, observation.getMaxVotedRecoId()));
 					reco = recoNameAndVotes.getReco();
-					esLayerInfo = esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
-							ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true);
+					esLayerInfo = safeCall(id, "esService.getObservationInfo", (ObservationInfo) null,
+							() -> esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
+									ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true));
 					allRecoVotes = recoNameAndVotes.getAllRecoVotes();
 					recoaggregated = aggregateAllRecoSuggestions(allRecoVotes);
 				}
@@ -264,11 +286,13 @@ public class ObservationServiceImpl implements ObservationService {
 							});
 				}
 
-				List<ObservationNearBy> observationNearBy = esService.getNearByObservation(
-						ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
-						observation.getLatitude().toString(), observation.getLongitude().toString());
+				List<ObservationNearBy> observationNearBy = safeCall(id, "esService.getNearByObservation",
+						new ArrayList<ObservationNearBy>(),
+						() -> esService.getNearByObservation(ObservationIndex.INDEX.getValue(), ObservationIndex.TYPE.getValue(),
+								observation.getLatitude().toString(), observation.getLongitude().toString()));
 
-				Integer activityCount = activityService.getActivityCount("observation", observation.getId().toString());
+				Integer activityCount = safeCall(id, "activityService.getActivityCount", 0,
+						() -> activityService.getActivityCount("observation", observation.getId().toString()));
 				return new ShowData(observation, facts, observationResource, userGroups, customField, layerInfo,
 						esLayerInfo, reco, flag, tags, fetaured, userInfo, recoaggregated, observationNearBy, dataTable,
 						checkListAnnotation, activityCount);
