@@ -18,7 +18,7 @@ import com.strandls.utility.pojo.Tags;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ObservationCreate {
 
-//	----Core Observation Data-------
+	// ----Core Observation Data-------
 	private Long sGroup;
 	private Boolean helpIdentify;
 	private Date createdOn;
@@ -30,8 +30,9 @@ public class ObservationCreate {
 	private String protocol;
 	private String basisOfRecords;
 	private Long obsvLanguageId;
+	private Boolean allowExternalPublishing;
 
-//	-----Location Data--------
+	// -----Location Data--------
 	private String observedAt;
 	private String reverseGeocoded;
 	private String locationScale;
@@ -41,21 +42,21 @@ public class ObservationCreate {
 	private String degMinSec;
 	private Boolean hidePreciseLocation;
 
-//	-----Traits Data---------
+	// -----Traits Data---------
 	private Map<String, List<Long>> factValuePairs;
-//	traitId:[valueId list] pattern
+	// traitId:[valueId list] pattern
 	private Map<String, List<String>> factValueStringPairs;
 
-//	-----Notes and tags-------
+	// -----Notes and tags-------
 	private String notes;
 	private List<Tags> tags;
 
-//	-----User Group Data-----
+	// -----User Group Data-----
 	private List<Long> userGroupId;
 
-//	-----Resource Data--------
+	// -----Resource Data--------
 	private List<ResourceDataObs> resources;
-//	-----GETTERS AND SETTERS----
+	// -----GETTERS AND SETTERS----
 
 	public Long getsGroup() {
 		return sGroup;
@@ -143,6 +144,13 @@ public class ObservationCreate {
 
 	public void setObsvLanguageId(Long obsvLanguageId) {
 		this.obsvLanguageId = obsvLanguageId;
+	}
+
+	public Boolean getAllowExternalPublishing() {
+		return allowExternalPublishing;
+	}
+	public void setAllowExternalPublishing(Boolean allowExternalPublishing) {
+		this.allowExternalPublishing = allowExternalPublishing;
 	}
 
 	public String getObservedAt() {
