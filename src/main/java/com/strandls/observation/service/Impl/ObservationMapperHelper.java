@@ -175,6 +175,7 @@ public class ObservationMapperHelper {
 			observation.setFlagCount(0);// during creation it should be 0
 			observation.setGeoPrivacy(observationData.getHidePreciseLocation());
 			observation.setIsDeleted(false);
+			observation.setAllowExternalPublishing(observationData.getAllowExternalPublishing());
 			observation.setLastRevised(new Date());// initially same as date of creation of object
 													// later
 													// when updated
@@ -274,7 +275,7 @@ public class ObservationMapperHelper {
 
 	}
 
-//	Scientific name has a taxonId
+	// Scientific name has a taxonId
 	private Map<String, Long> scientificNameExists(RecoData recoData) {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
@@ -298,7 +299,7 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
-//	COMMON NAME LOGIC IMPLEMENTED
+	// COMMON NAME LOGIC IMPLEMENTED
 	private Long commonNameMapper(String commonName, Long languageId) {
 
 		Recommendation resultCommonName = recoDao.findByCommonName(commonName, languageId);
@@ -309,7 +310,7 @@ public class ObservationMapperHelper {
 
 	}
 
-//	scientific Name DON'T have a taxonId
+	// scientific Name DON'T have a taxonId
 	private Map<String, Long> scientificNameNotExists(RecoData recoData) throws Exception {
 		Map<String, Long> result = new HashMap<String, Long>();
 		try {
@@ -355,7 +356,7 @@ public class ObservationMapperHelper {
 		return result;
 	}
 
-//	PRIORITY 1 : taxonId == accpetedNameId
+	// PRIORITY 1 : taxonId == accpetedNameId
 	private Map<String, Long> taxonIdEqualsAccpetedNameId(List<Recommendation> recommendations,
 			String providedSciName) {
 
@@ -378,7 +379,7 @@ public class ObservationMapperHelper {
 			return fullNameSearch(filteredList, providedSciName);
 	}
 
-//	PRIORITY 2 :CHECKS IF TAXON ID EXISTS IF YES PICK IT ELSE SERACH FULL NAME
+	// PRIORITY 2 :CHECKS IF TAXON ID EXISTS IF YES PICK IT ELSE SERACH FULL NAME
 	private Map<String, Long> taxonIdExists(List<Recommendation> recommendations, String providedSciName) {
 		Map<String, Long> result = new HashMap<String, Long>();
 		List<Recommendation> filteredList = new ArrayList<Recommendation>();
@@ -399,8 +400,9 @@ public class ObservationMapperHelper {
 			return fullNameSearch(filteredList, providedSciName);
 	}
 
-//	PRIORITY 3
-//	DOES A FULL NAME SEARCH IF MATCHED SENT WITH FLAG 0 , IF NOT SEND 1st ID AND FLAG 1
+	// PRIORITY 3
+	// DOES A FULL NAME SEARCH IF MATCHED SENT WITH FLAG 0 , IF NOT SEND 1st ID AND
+	// FLAG 1
 	private Map<String, Long> fullNameSearch(List<Recommendation> recommendations, String providedSciName) {
 
 		Map<String, Long> result = new HashMap<String, Long>();
@@ -509,7 +511,7 @@ public class ObservationMapperHelper {
 
 	}
 
-//	GETS A RANDOM LAT,LON WITH LOWER LIMIT AS 5KM AND UPPER LIMIT AS 25KM
+	// GETS A RANDOM LAT,LON WITH LOWER LIMIT AS 5KM AND UPPER LIMIT AS 25KM
 	public Map<String, Double> getRandomLatLong(Double lat, Double lon) {
 
 		Map<String, Double> latlon = new HashMap<String, Double>();
@@ -640,7 +642,8 @@ public class ObservationMapperHelper {
 			// Skip geo-privacy processing if value is NA, null, or empty
 			if (geoPrivacyTraitsValue == null || geoPrivacyTraitsValue.trim().isEmpty()
 					|| geoPrivacyTraitsValue.trim().equalsIgnoreCase("NA")) {
-				logger.info("Skipping geo-privacy update: geoPrivacyValues is not configured (value: {})", geoPrivacyTraitsValue);
+				logger.info("Skipping geo-privacy update: geoPrivacyValues is not configured (value: {})",
+						geoPrivacyTraitsValue);
 				return;
 			}
 
@@ -648,7 +651,9 @@ public class ObservationMapperHelper {
 			try {
 				Long.parseLong(geoPrivacyTraitsValue.trim());
 			} catch (NumberFormatException e) {
-				logger.error("Invalid geoPrivacyValues configuration: '{}' is not a valid number. Skipping geo-privacy update.", geoPrivacyTraitsValue);
+				logger.error(
+						"Invalid geoPrivacyValues configuration: '{}' is not a valid number. Skipping geo-privacy update.",
+						geoPrivacyTraitsValue);
 				return;
 			}
 
