@@ -23,7 +23,7 @@
 		<property name="hibernate.hikari.maximumPoolSize">40</property>
 
 		<!-- Connection timeout -->
-		<property name="hibernate.hikari.connectionTimeout">30000</property>
+		<property name="hibernate.hikari.connectionTimeout">3000</property>
 
 		<!-- Idle connection management -->
 		<property name="hibernate.hikari.idleTimeout">600000</property>
