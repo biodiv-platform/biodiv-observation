@@ -252,7 +252,8 @@ public class ObservationServiceImpl implements ObservationService {
 					new ArrayList<FactValuePair>(),
 					() -> traitService.getFacts("species.participation.Observation", id.toString()));
 			CompletableFuture<List<ResourceData>> resourceF = callAsync(id, "resourceService.getImageResource",
-					new ArrayList<ResourceData>(), () -> resourceService.getImageResource("observation", id.toString()));
+					new ArrayList<ResourceData>(),
+					() -> resourceService.getImageResource("observation", id.toString()));
 			CompletableFuture<List<UserGroupIbp>> userGroupsF = callAsync(id,
 					"userGroupService.getObservationUserGroup", new ArrayList<UserGroupIbp>(),
 					() -> userGroupService.getObservationUserGroup(id.toString()));
@@ -287,8 +288,7 @@ public class ObservationServiceImpl implements ObservationService {
 						new RecoNameAndVotes(null, new ArrayList<RecoIbp>()),
 						() -> recoService.fetchRecoNameAndAllVotes(id, observation.getMaxVotedRecoId()));
 				CompletableFuture<ObservationInfo> esLayerInfoF = callAsync(id, "esService.getObservationInfo",
-						(ObservationInfo) null,
-						() -> esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
+						(ObservationInfo) null, () -> esService.getObservationInfo(ObservationIndex.INDEX.getValue(),
 								ObservationIndex.TYPE.getValue(), observation.getMaxVotedRecoId().toString(), true));
 
 				CompletableFuture.allOf(dataTableF, factsF, resourceF, userGroupsF, customFieldF, layerInfoF, flagF,
@@ -304,7 +304,7 @@ public class ObservationServiceImpl implements ObservationService {
 			}
 
 			observation.setVisitCount(observation.getVisitCount() + 1);
-			observationDao.update(observation);
+			// observationDao.update(observation);
 
 			if (observation.getGeoPrivacy()) {
 				Map<String, Double> latlon = observationHelper.getRandomLatLong(observation.getLatitude(),
@@ -320,10 +320,10 @@ public class ObservationServiceImpl implements ObservationService {
 						});
 			}
 
-			return new ShowData(observation, factsF.join(), resourceF.join(), userGroupsF.join(),
-					customFieldF.join(), layerInfoF.join(), esLayerInfo, reco, flagF.join(), tagsF.join(),
-					featuredF.join(), userInfoF.join(), recoaggregated, nearByF.join(), dataTableF.join(),
-					checkListAnnotation, activityCountF.join());
+			return new ShowData(observation, factsF.join(), resourceF.join(), userGroupsF.join(), customFieldF.join(),
+					layerInfoF.join(), esLayerInfo, reco, flagF.join(), tagsF.join(), featuredF.join(),
+					userInfoF.join(), recoaggregated, nearByF.join(), dataTableF.join(), checkListAnnotation,
+					activityCountF.join());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}

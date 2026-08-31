@@ -104,6 +104,26 @@ public class RecommendationVoteDao extends AbstractDAO<RecommendationVote, Long>
 		return recoVoteList;
 	}
 
+	/**
+	 * Same as {@link #findRecoVoteOnObservation(Long)} but runs on a
+	 * caller-provided session instead of opening its own, so callers that need
+	 * to combine this with other queries can do so on a single pooled
+	 * connection.
+	 */
+	@SuppressWarnings("unchecked")
+	public List<RecommendationVote> findRecoVoteOnObservation(Session session, Long obvId) {
+		String qry = "from RecommendationVote where observationId = :obvId";
+		List<RecommendationVote> recoVoteList = new ArrayList<RecommendationVote>();
+		try {
+			Query<RecommendationVote> query = session.createQuery(qry);
+			query.setParameter("obvId", obvId);
+			recoVoteList = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return recoVoteList;
+	}
+
 	@SuppressWarnings("unchecked")
 	public RecommendationVote findRecoVoteIdByRecoId(Long observaitonId, Long userId, Long scientificNameId,
 			Long commonNameId) {

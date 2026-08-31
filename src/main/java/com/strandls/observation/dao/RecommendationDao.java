@@ -66,6 +66,25 @@ public class RecommendationDao extends AbstractDAO<Recommendation, Long> {
 		return result;
 	}
 
+	/**
+	 * Same as {@link #findByIdList(List)} but runs on a caller-provided session
+	 * instead of opening its own, so callers that need to combine this with
+	 * other queries can do so on a single pooled connection.
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Recommendation> findByIdList(Session session, List<Long> idList) {
+		String qry = "from Recommendation where id in :idList";
+		List<Recommendation> result = null;
+		try {
+			Query<Recommendation> query = session.createQuery(qry);
+			query.setParameter("idList", idList);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
 	@SuppressWarnings("unchecked")
 	public Recommendation findRecoByTaxonId(Long taxonId, Boolean isScientific) {
 
