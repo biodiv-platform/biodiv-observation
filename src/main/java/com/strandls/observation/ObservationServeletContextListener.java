@@ -21,7 +21,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -38,13 +37,12 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.integrator.controllers.IntegratorServicesApi;
-import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.LayerServiceApi;
 import com.strandls.observation.controller.ObservationControllerModule;
 import com.strandls.observation.dao.ObservationDAOModule;
@@ -93,19 +91,19 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					configuration = configuration.configure();
 					SessionFactory sessionFactory = configuration.buildSessionFactory();
 
-//					Rabbit MQ initialisation
-					RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
-					Channel channel = null;
+//					Rabbit MQ initialisation: one long-lived Connection for the app;
+//					channels are handed out per-thread via RabbitChannelProvider instead
+//					of sharing a single Channel across every producer/consumer thread.
+					RabbitMqConnection rabbitMqConnection = new RabbitMqConnection();
+					Connection rabbitConnection = null;
 					try {
-						channel = rabbitConnetion.setRabbitMQConnetion();
+						rabbitConnection = rabbitMqConnection.connect();
 					} catch (Exception e) {
-						logger.error(e.getMessage());
+						logger.error("Failed to establish RabbitMQ connection", e);
 					}
 
-					System.out.println("before binding");
-					bind(Channel.class).toInstance(channel);
-					System.out.println("after channel binding");
-					RabbitMQProducer producer = new RabbitMQProducer(channel);
+					bind(Connection.class).toInstance(rabbitConnection);
+					bind(RabbitChannelProvider.class).in(Scopes.SINGLETON);
 					Map<String, String> props = new HashMap<String, String>();
 					props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
 					props.put("jersey.config.server.provider.packages", "com");
@@ -123,7 +121,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 
 					bind(SessionFactory.class).toInstance(sessionFactory);
 					bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
-					bind(RabbitMQProducer.class).toInstance(producer);
 					bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 					bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 					bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
@@ -141,7 +138,6 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					bind(Headers.class).in(Scopes.SINGLETON);
 					bind(ServletContainer.class).in(Scopes.SINGLETON);
 					bind(TokenGenerator.class).in(Scopes.SINGLETON);
-					bind(RabbitMQProducer.class).toInstance(producer);
 					serve("/api/*").with(ServletContainer.class, props);
 
 				}
@@ -217,12 +213,16 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		SessionFactory sessionFactory = injector.getInstance(SessionFactory.class);
 		sessionFactory.close();
 
-		Channel channel = injector.getInstance(Channel.class);
+		Connection rabbitConnection = injector.getInstance(Connection.class);
 		try {
-			channel.getConnection().close();
-			channel.close();
-		} catch (IOException | TimeoutException e) {
-			logger.error(e.getMessage());
+			// Closing the connection cascades to close every channel opened from
+			// it (both the consumer's dedicated channel and every per-thread
+			// producer channel handed out by RabbitChannelProvider).
+			if (rabbitConnection != null && rabbitConnection.isOpen()) {
+				rabbitConnection.close();
+			}
+		} catch (IOException e) {
+			logger.error("Error closing RabbitMQ connection", e);
 		}
 
 		super.contextDestroyed(servletContextEvent);

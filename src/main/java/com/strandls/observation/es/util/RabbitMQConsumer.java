@@ -6,6 +6,7 @@ package com.strandls.observation.es.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
@@ -28,9 +29,20 @@ public class RabbitMQConsumer {
 	private RecommendationServiceImpl recoService;
 
 	@Inject
-	private Channel channel;
+	private Connection connection;
+
+	// Dedicated to consuming only, never touched by publisher code, so it is
+	// safe for basicConsume's own dispatch thread(s) to own exclusively.
+	private Channel consumerChannel;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	private synchronized Channel getConsumerChannel() throws Exception {
+		if (consumerChannel == null || !consumerChannel.isOpen()) {
+			consumerChannel = connection.createChannel();
+		}
+		return consumerChannel;
+	}
 
 	public void elasticUpdate() throws Exception {
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -46,7 +58,7 @@ public class RabbitMQConsumer {
 			thread.start();
 
 		};
-		channel.basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
+		getConsumerChannel().basicConsume(OBSERVATION_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
 
@@ -60,7 +72,7 @@ public class RabbitMQConsumer {
 
 		};
 
-		channel.basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {
+		getConsumerChannel().basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {
 		});
 	}
 
