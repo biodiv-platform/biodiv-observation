@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Recoverable;
+import com.rabbitmq.client.RecoveryListener;
 import com.strandls.observation.util.PropertyFileUtil;
 
 /**
@@ -45,6 +48,8 @@ public class RabbitMqConnection {
 	private static final long INITIAL_BACKOFF_MILLIS = 2000L;
 	private static final long MAX_BACKOFF_MILLIS = 30000L;
 
+	private static final AtomicInteger THREAD_COUNTER = new AtomicInteger();
+
 	static {
 		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
 		EXCHANGE_BIODIV = properties.getProperty("rabbitmq_exchange");
@@ -73,6 +78,21 @@ public class RabbitMqConnection {
 								factory.getPort(), cause.getMessage());
 					}
 				});
+				if (connection instanceof Recoverable) {
+					((Recoverable) connection).addRecoveryListener(new RecoveryListener() {
+						@Override
+						public void handleRecovery(Recoverable recoverable) {
+							logger.info("RabbitMQ connection to {}:{} recovered successfully", factory.getHost(),
+									factory.getPort());
+						}
+
+						@Override
+						public void handleRecoveryStarted(Recoverable recoverable) {
+							logger.warn("RabbitMQ connection to {}:{} attempting automatic recovery...",
+									factory.getHost(), factory.getPort());
+						}
+					});
+				}
 				logger.info("Connected to RabbitMQ at {}:{} (attempt {}/{})", factory.getHost(), factory.getPort(),
 						attempt, MAX_CONNECT_ATTEMPTS);
 				declareTopology(connection);
@@ -124,6 +144,15 @@ public class RabbitMqConnection {
 		factory.setNetworkRecoveryInterval(5000);
 		factory.setConnectionTimeout(10000);
 		factory.setRequestedHeartbeat(30);
+
+		// Daemon + clearly named so a leaked thread (e.g. surviving a webapp
+		// redeploy) never blocks JVM/Tomcat shutdown and is easy to spot in a
+		// thread dump instead of showing up as an anonymous rabbitmq-client thread.
+		factory.setThreadFactory(runnable -> {
+			Thread thread = new Thread(runnable, "rabbitmq-observation-" + THREAD_COUNTER.incrementAndGet());
+			thread.setDaemon(true);
+			return thread;
+		});
 
 		return factory;
 	}

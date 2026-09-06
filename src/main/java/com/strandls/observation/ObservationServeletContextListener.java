@@ -37,6 +37,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.dataTable.controllers.DataTableServiceApi;
@@ -214,15 +215,14 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 		sessionFactory.close();
 
 		Connection rabbitConnection = injector.getInstance(Connection.class);
-		try {
-			// Closing the connection cascades to close every channel opened from
-			// it (both the consumer's dedicated channel and every per-thread
-			// producer channel handed out by RabbitChannelProvider).
-			if (rabbitConnection != null && rabbitConnection.isOpen()) {
-				rabbitConnection.close();
-			}
-		} catch (IOException e) {
-			logger.error("Error closing RabbitMQ connection", e);
+		if (rabbitConnection != null) {
+			// abort() (unlike close()) forces the connection down immediately and
+			// cancels any in-flight/scheduled automatic-recovery attempt, and never
+			// throws. A graceful close() was observed leaving the client's own
+			// background recovery thread alive past contextDestroyed(), which then
+			// crashed trying to use this webapp's classloader after Tomcat had
+			// already stopped it (surfacing as a redeploy/reload memory leak).
+			rabbitConnection.abort(AMQP.REPLY_SUCCESS, "context destroyed", 5000);
 		}
 
 		super.contextDestroyed(servletContextEvent);
