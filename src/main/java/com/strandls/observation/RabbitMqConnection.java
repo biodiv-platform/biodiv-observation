@@ -61,8 +61,11 @@ public class RabbitMqConnection {
 	 * Opens the single application-wide connection, retrying with backoff if
 	 * the broker isn't reachable yet, and declares the exchange/queue
 	 * topology once. The returned connection has automatic recovery enabled,
-	 * so it will reconnect (and re-declare topology) on its own if the
-	 * network drops later.
+	 * so the connection and any open channels reconnect on their own if the
+	 * network drops later - but topology recovery is deliberately left to us
+	 * (see the recovery listener below) rather than the client's built-in
+	 * mechanism, which ties recorded declarations to the specific channel
+	 * that made them and cannot redeclare them once that channel is closed.
 	 */
 	public Connection connect() throws IOException, TimeoutException {
 
@@ -82,8 +85,14 @@ public class RabbitMqConnection {
 					((Recoverable) connection).addRecoveryListener(new RecoveryListener() {
 						@Override
 						public void handleRecovery(Recoverable recoverable) {
-							logger.info("RabbitMQ connection to {}:{} recovered successfully", factory.getHost(),
-									factory.getPort());
+							logger.info("RabbitMQ connection to {}:{} recovered; redeclaring topology",
+									factory.getHost(), factory.getPort());
+							try {
+								declareTopology(connection);
+								logger.info("RabbitMQ topology redeclared successfully after recovery");
+							} catch (IOException e) {
+								logger.error("Failed to redeclare RabbitMQ topology after recovery", e);
+							}
 						}
 
 						@Override
@@ -136,11 +145,15 @@ public class RabbitMqConnection {
 		factory.setUsername(rabbitmqUsername);
 		factory.setPassword(rabbitmqPassword);
 
-		// Explicit even though these are the client defaults: reconnect and
-		// re-declare exchanges/queues/bindings/consumers automatically if the
-		// connection drops after startup.
+		// Reconnect (and recover already-open channels) automatically if the
+		// connection drops after startup. Topology recovery is deliberately
+		// OFF: the client's built-in version ties recorded exchanges/queues/
+		// bindings/consumers to the channel that declared them, and silently
+		// fails to redeclare them if that channel was ever closed. We redeclare
+		// topology ourselves via the recovery listener below instead (and
+		// RabbitMQConsumer re-subscribes its own consumers the same way).
 		factory.setAutomaticRecoveryEnabled(true);
-		factory.setTopologyRecoveryEnabled(true);
+		factory.setTopologyRecoveryEnabled(false);
 		factory.setNetworkRecoveryInterval(5000);
 		factory.setConnectionTimeout(10000);
 		factory.setRequestedHeartbeat(30);
