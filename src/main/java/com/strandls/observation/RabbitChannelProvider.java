@@ -45,11 +45,18 @@ public class RabbitChannelProvider {
 			try {
 				channel = connection.createChannel();
 				threadLocalChannel.set(channel);
-				logger.debug("Opened RabbitMQ channel for thread {}", Thread.currentThread().getName());
+				// TEMPORARY (info, for verifying per-thread channel reuse) - revert to
+				// the single debug line below once confirmed.
+				logger.info("Opened NEW channel #{} for thread {}", channel.getChannelNumber(),
+						Thread.currentThread().getName());
 			} catch (IOException e) {
 				throw new UncheckedIOException(
 						"Failed to open RabbitMQ channel for thread " + Thread.currentThread().getName(), e);
 			}
+		} else {
+			// TEMPORARY (info, for verifying per-thread channel reuse) - remove once confirmed.
+			logger.info("Reusing channel #{} for thread {}", channel.getChannelNumber(),
+					Thread.currentThread().getName());
 		}
 		return channel;
 	}
