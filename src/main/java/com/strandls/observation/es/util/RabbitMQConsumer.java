@@ -26,6 +26,8 @@ public class RabbitMQConsumer {
 
 	private final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
+	private static final String SERVICE_NAME = "biodiv-observation";
+
 	private final static String OBSERVATION_QUEUE = "observationQueue";
 	private static final String TAXONOMY_QUEUE = "taxonomyQueue";
 
@@ -68,9 +70,9 @@ public class RabbitMQConsumer {
 					try {
 						elasticUpdate();
 						listenToTaxonomyEvents();
-						logger.info("Re-subscribed RabbitMQ consumers after connection recovery");
+						logger.info("[{}] Re-subscribed RabbitMQ consumers after connection recovery", SERVICE_NAME);
 					} catch (Exception e) {
-						logger.error("Failed to re-subscribe RabbitMQ consumers after recovery", e);
+						logger.error("[{}] Failed to re-subscribe RabbitMQ consumers after recovery", SERVICE_NAME, e);
 					}
 				}
 

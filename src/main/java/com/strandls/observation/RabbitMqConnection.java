@@ -44,6 +44,11 @@ public class RabbitMqConnection {
 	public static final String MAIL_QUEUE;
 	public static final String MAIL_ROUTING_KEY;
 
+	// Identifies this microservice in the broker's connection list and in every
+	// connection/recovery log line, so logs from different services are easy to
+	// tell apart when they all point at the same RabbitMQ host.
+	private static final String SERVICE_NAME = "biodiv-observation";
+
 	private static final int MAX_CONNECT_ATTEMPTS = 5;
 	private static final long INITIAL_BACKOFF_MILLIS = 2000L;
 	private static final long MAX_BACKOFF_MILLIS = 30000L;
@@ -74,53 +79,56 @@ public class RabbitMqConnection {
 		long backoff = INITIAL_BACKOFF_MILLIS;
 		for (int attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; attempt++) {
 			try {
-				Connection connection = factory.newConnection("biodiv-observation");
+				Connection connection = factory.newConnection(SERVICE_NAME);
 				connection.addShutdownListener(cause -> {
 					if (!cause.isInitiatedByApplication()) {
-						logger.error("RabbitMQ connection to {}:{} closed unexpectedly: {}", factory.getHost(),
-								factory.getPort(), cause.getMessage());
+						logger.error("[{}] RabbitMQ connection to {}:{} closed unexpectedly: {}", SERVICE_NAME,
+								factory.getHost(), factory.getPort(), cause.getMessage());
 					}
 				});
 				if (connection instanceof Recoverable) {
 					((Recoverable) connection).addRecoveryListener(new RecoveryListener() {
 						@Override
 						public void handleRecovery(Recoverable recoverable) {
-							logger.info("RabbitMQ connection to {}:{} recovered; redeclaring topology",
-									factory.getHost(), factory.getPort());
+							logger.info("[{}] RabbitMQ connection to {}:{} recovered; redeclaring topology",
+									SERVICE_NAME, factory.getHost(), factory.getPort());
 							try {
 								declareTopology(connection);
-								logger.info("RabbitMQ topology redeclared successfully after recovery");
+								logger.info("[{}] RabbitMQ topology redeclared successfully after recovery",
+										SERVICE_NAME);
 							} catch (IOException e) {
-								logger.error("Failed to redeclare RabbitMQ topology after recovery", e);
+								logger.error("[{}] Failed to redeclare RabbitMQ topology after recovery", SERVICE_NAME,
+										e);
 							}
 						}
 
 						@Override
 						public void handleRecoveryStarted(Recoverable recoverable) {
-							logger.warn("RabbitMQ connection to {}:{} attempting automatic recovery...",
-									factory.getHost(), factory.getPort());
+							logger.warn("[{}] RabbitMQ connection to {}:{} attempting automatic recovery...",
+									SERVICE_NAME, factory.getHost(), factory.getPort());
 						}
 					});
 				}
-				logger.info("Connected to RabbitMQ at {}:{} (attempt {}/{})", factory.getHost(), factory.getPort(),
-						attempt, MAX_CONNECT_ATTEMPTS);
+				logger.info("[{}] Connected to RabbitMQ at {}:{} (attempt {}/{})", SERVICE_NAME, factory.getHost(),
+						factory.getPort(), attempt, MAX_CONNECT_ATTEMPTS);
 				declareTopology(connection);
 				return connection;
 			} catch (IOException | TimeoutException e) {
 				if (attempt == MAX_CONNECT_ATTEMPTS) {
-					logger.error("Could not connect to RabbitMQ at {}:{} after {} attempts", factory.getHost(),
-							factory.getPort(), MAX_CONNECT_ATTEMPTS);
+					logger.error("[{}] Could not connect to RabbitMQ at {}:{} after {} attempts", SERVICE_NAME,
+							factory.getHost(), factory.getPort(), MAX_CONNECT_ATTEMPTS);
 					throw e;
 				}
-				logger.warn("RabbitMQ connection attempt {}/{} failed ({}); retrying in {} ms", attempt,
-						MAX_CONNECT_ATTEMPTS, e.getMessage(), backoff);
+				logger.warn("[{}] RabbitMQ connection attempt {}/{} failed ({}); retrying in {} ms", SERVICE_NAME,
+						attempt, MAX_CONNECT_ATTEMPTS, e.getMessage(), backoff);
 				sleep(backoff);
 				backoff = Math.min(backoff * 2, MAX_BACKOFF_MILLIS);
 			}
 		}
 
 		// Unreachable: the loop above always either returns or throws on the last attempt.
-		throw new IOException("Failed to connect to RabbitMQ after " + MAX_CONNECT_ATTEMPTS + " attempts");
+		throw new IOException(
+				"[" + SERVICE_NAME + "] Failed to connect to RabbitMQ after " + MAX_CONNECT_ATTEMPTS + " attempts");
 	}
 
 	private ConnectionFactory buildConnectionFactory() throws IOException {
@@ -162,7 +170,7 @@ public class RabbitMqConnection {
 		// redeploy) never blocks JVM/Tomcat shutdown and is easy to spot in a
 		// thread dump instead of showing up as an anonymous rabbitmq-client thread.
 		factory.setThreadFactory(runnable -> {
-			Thread thread = new Thread(runnable, "rabbitmq-observation-" + THREAD_COUNTER.incrementAndGet());
+			Thread thread = new Thread(runnable, "rabbitmq-" + SERVICE_NAME + "-" + THREAD_COUNTER.incrementAndGet());
 			thread.setDaemon(true);
 			return thread;
 		});
