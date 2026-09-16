@@ -100,7 +100,7 @@ public class ObservationServeletContextListener extends GuiceServletContextListe
 					try {
 						rabbitConnection = rabbitMqConnection.connect();
 					} catch (Exception e) {
-						logger.error("Failed to establish RabbitMQ connection", e);
+						logger.error("[biodiv-observation] Failed to establish RabbitMQ connection", e);
 					}
 
 					bind(Connection.class).toInstance(rabbitConnection);
