@@ -8,13 +8,13 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.Channel;
 import com.strandls.mail_utility.model.EnumModel.DOWNLOAD_MAIL;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
 import com.strandls.mail_utility.model.EnumModel.INFO_FIELDS;
 import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.mail_utility.util.JsonUtil;
+import com.strandls.observation.RabbitChannelProvider;
 import com.strandls.observation.RabbitMqConnection;
 import com.strandls.observation.service.MailService;
 import com.strandls.observation.util.PropertyFileUtil;
@@ -28,7 +28,7 @@ public class MailServiceImpl implements MailService {
 	private final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 
 	@Inject
-	private Channel channel;
+	private RabbitChannelProvider channelProvider;
 
 	@Inject
 	private UserServiceApi userServiceApi;
@@ -54,7 +54,7 @@ public class MailServiceImpl implements MailService {
 			Map<String, Object> mData = new HashMap<String, Object>();
 			mData.put(INFO_FIELDS.TYPE.getAction(), MAIL_TYPE.DOWNLOAD_MAIL.getAction());
 			mData.put(INFO_FIELDS.RECIPIENTS.getAction(), Arrays.asList(data));
-			RabbitMQProducer producer = new RabbitMQProducer(channel);
+			RabbitMQProducer producer = new RabbitMQProducer(channelProvider.get());
 			if (user.getEmail() != null && !user.getEmail().isEmpty()) {
 				producer.produceMail(RabbitMqConnection.EXCHANGE_BIODIV, RabbitMqConnection.MAIL_ROUTING_KEY, null,
 						JsonUtil.mapToJSON(mData));
