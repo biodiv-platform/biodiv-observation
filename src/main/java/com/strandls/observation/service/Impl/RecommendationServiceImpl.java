@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.RecoVoteActivity;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateData;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateRequest;
 import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.dao.ObservationDAO;
 import com.strandls.observation.dao.RecommendationDao;
@@ -1082,6 +1084,37 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		try {
 			esServicesApi.updateObservation(updateData);
+		} catch (com.strandls.esmodule.ApiException e) {
+			logger.error("Exception in es update: {}", e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
+		}
+	}
+
+	public void handleBulkTaxonUpdate(TaxonomyBulkUpdateRequest updateData) {
+		List<Recommendation> recos = recoDao.findByTaxonIds(updateData.getRecoIds());
+		Map<Long, Recommendation> recoMapping = new HashMap<>();
+		List<Long> recoIds = new ArrayList<>();
+		for (Recommendation reco : recos) {
+			recoMapping.put(reco.getTaxonConceptId(), reco);
+		}
+		for (TaxonomyBulkUpdateData update : updateData.getUpdates()) {
+			if (recoMapping.containsKey(update.getTargetId())) {
+				Recommendation reco = recoMapping.get(update.getTargetId());
+				if (update.getName() != null) {
+					reco.setName(update.getName());
+					reco.setLowercaseName(update.getName().toLowerCase());
+					reco.setCanonicalName(update.getCanonicalForm());
+
+					reco = recoDao.update(reco);
+					update.setScientificName(reco.getName());
+				}
+				update.setRecoId(recoMapping.get(update.getTargetId()).getId());
+				recoIds.add(recoMapping.get(update.getTargetId()).getId());
+			}
+		}
+		try {
+			esServicesApi.updateBulkObservation(updateData);
 		} catch (com.strandls.esmodule.ApiException e) {
 			logger.error("Exception in es update: {}", e.getMessage(), e);
 		} catch (Exception e) {

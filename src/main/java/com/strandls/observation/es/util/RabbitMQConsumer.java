@@ -5,7 +5,7 @@ package com.strandls.observation.es.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -13,6 +13,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Recoverable;
 import com.rabbitmq.client.RecoveryListener;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateRequest;
 import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.service.Impl.RecommendationServiceImpl;
 
@@ -102,14 +103,21 @@ public class RabbitMQConsumer {
 	}
 
 	public void listenToTaxonomyEvents() throws Exception {
-		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-			String message = new String(delivery.getBody(), "UTF-8");
-			System.out.println("----[OBSERVATION TAXONOMY EVENT]----");
-			System.out.println("Received: " + message);
-			TaxonomyUpdateData event = objectMapper.readValue(message, TaxonomyUpdateData.class);
-			recoService.handleTaxonByName(event);
+	    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+	        String message = new String(delivery.getBody(), "UTF-8");
+	        System.out.println("----[OBSERVATION TAXONOMY EVENT]----");
+	        System.out.println("Received: " + message);
 
-		};
+	        JsonNode node = objectMapper.readTree(message);
+
+	        if (node.has("updates")) {
+	            TaxonomyBulkUpdateRequest bulkRequest = objectMapper.readValue(message, TaxonomyBulkUpdateRequest.class);
+	            recoService.handleBulkTaxonUpdate(bulkRequest);
+	        } else {
+	            TaxonomyUpdateData event = objectMapper.readValue(message, TaxonomyUpdateData.class);
+	            recoService.handleTaxonByName(event);
+	        }
+	    };
 
 		getConsumerChannel().basicConsume(TAXONOMY_QUEUE, true, deliverCallback, consumerTag -> {
 		});
