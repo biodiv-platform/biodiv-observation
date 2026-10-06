@@ -197,8 +197,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	/**
-	 * Builds the RecoIbp for a single recoId given the observation's full vote
-	 * list and a pre-fetched Recommendation lookup map, instead of querying
+	 * Builds the RecoIbp for a single recoId given the observation's full vote list
+	 * and a pre-fetched Recommendation lookup map, instead of querying
 	 * recommendation_vote/recommendation again.
 	 */
 	private RecoIbp buildRecoIbp(Long recoId, List<RecommendationVote> allVotesOnObservation,
@@ -266,8 +266,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
 				scientificName = (taxonomyDefinition.getItalicisedForm() != null
-						&& !taxonomyDefinition.getItalicisedForm().isEmpty())
-								? taxonomyDefinition.getItalicisedForm()
+						&& !taxonomyDefinition.getItalicisedForm().isEmpty()) ? taxonomyDefinition.getItalicisedForm()
 								: taxonomyDefinition.getNormalizedForm();
 
 			} else {
@@ -1108,6 +1107,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 					reco = recoDao.update(reco);
 					update.setScientificName(reco.getName());
+				}
+				if (update.getStatus() != null) {
+					Long acceptedNameId = "ACCEPTED".equals(update.getStatus()) ? update.getTargetId()
+							: update.getNewId();
+					reco.setAcceptedNameId(acceptedNameId);
+
+					reco = recoDao.update(reco);
 				}
 				update.setRecoId(recoMapping.get(update.getTargetId()).getId());
 				recoIds.add(recoMapping.get(update.getTargetId()).getId());
