@@ -1115,6 +1115,11 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 					reco = recoDao.update(reco);
 				}
+				else if (update.getNewId()!=null) {
+					reco.setAcceptedNameId(update.getNewId());
+					
+					reco = recoDao.update(reco);
+				}
 				update.setRecoId(recoMapping.get(update.getTargetId()).getId());
 				recoIds.add(recoMapping.get(update.getTargetId()).getId());
 			}
