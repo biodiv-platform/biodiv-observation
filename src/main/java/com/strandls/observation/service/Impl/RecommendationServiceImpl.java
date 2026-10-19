@@ -4,9 +4,11 @@
 package com.strandls.observation.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1091,7 +1093,22 @@ public class RecommendationServiceImpl implements RecommendationService {
 	}
 
 	public void handleBulkTaxonUpdate(TaxonomyBulkUpdateRequest updateData) {
-		List<Recommendation> recos = recoDao.findByTaxonIds(updateData.getRecoIds());
+		Set<Long> taxonIds = new LinkedHashSet<>();
+		List<TaxonomyBulkUpdateData> newUpdates = new ArrayList<>();
+		List<Long> newIds = new ArrayList<>();
+		if (updateData.getRecoIds() != null) {
+			taxonIds.addAll(updateData.getRecoIds());
+		}
+		if (updateData.getUpdates() != null) {
+			for (TaxonomyBulkUpdateData update : updateData.getUpdates()) {
+				if (update.getTransferSynonymIds() != null) {
+					update.getTransferSynonymIds().stream().filter(Objects::nonNull).forEach(taxonIds::add);
+				}
+			}
+		}
+
+		List<Recommendation> recos = taxonIds.isEmpty() ? Collections.emptyList()
+				: recoDao.findByTaxonIds(new ArrayList<>(taxonIds));
 		Map<Long, Recommendation> recoMapping = new HashMap<>();
 		List<Long> recoIds = new ArrayList<>();
 		for (Recommendation reco : recos) {
@@ -1114,15 +1131,34 @@ public class RecommendationServiceImpl implements RecommendationService {
 					reco.setAcceptedNameId(acceptedNameId);
 
 					reco = recoDao.update(reco);
-				}
-				else if (update.getNewId()!=null) {
+
+					if (update.getTransferSynonymIds() != null) {
+						for (Long syn : update.getTransferSynonymIds()) {
+
+							if (recoMapping.containsKey(syn)) {
+								Recommendation transferReco = recoMapping.get(syn);
+								transferReco.setAcceptedNameId(update.getNewId());
+								transferReco = recoDao.update(transferReco);
+								TaxonomyBulkUpdateData newUpdate = new TaxonomyBulkUpdateData();
+								newUpdate.setTargetId(syn);
+								newUpdate.setNewId(update.getNewId());
+								newUpdate.setRecoId(transferReco.getId());
+								newUpdates.add(newUpdate);
+								newIds.add(syn);
+							}
+
+						}
+
+					}
+				} else if (update.getNewId() != null) {
 					reco.setAcceptedNameId(update.getNewId());
-					
+
 					reco = recoDao.update(reco);
 				}
 				update.setRecoId(recoMapping.get(update.getTargetId()).getId());
 				recoIds.add(recoMapping.get(update.getTargetId()).getId());
 			}
+			
 		}
 		try {
 			esServicesApi.updateBulkObservation(updateData);
