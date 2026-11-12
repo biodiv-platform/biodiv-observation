@@ -59,10 +59,21 @@ public class ObservationListMinimalData {
 					commonNameBuilder.setLength(commonNameBuilder.length() - 2); // Remove last ||
 			}
 
+			Long acceptedNameId = null;
+			if (maxVoted.getAccepted_name_id() != null && !maxVoted.getAccepted_name_id().isEmpty()
+					&& !"null".equalsIgnoreCase(maxVoted.getAccepted_name_id())) {
+				try {
+					acceptedNameId = Long.parseLong(maxVoted.getAccepted_name_id());
+				} catch (NumberFormatException e) {
+					acceptedNameId = null;
+				}
+			}
+
 			RecoIbp reco = new RecoIbp(commonNameBuilder.toString(),
 					maxVoted.getItalicised_form() != null ? maxVoted.getItalicised_form()
 							: maxVoted.getScientific_name(),
-					null, null, null, null, maxVoted.getTaxonstatus(), null, maxVoted.getAccepted_name());
+					null, null, null, null, maxVoted.getTaxonstatus(), null, maxVoted.getAccepted_name(),
+					acceptedNameId);
 
 			Long taxonId = null;
 			if (maxVoted.getHierarchy() != null) {

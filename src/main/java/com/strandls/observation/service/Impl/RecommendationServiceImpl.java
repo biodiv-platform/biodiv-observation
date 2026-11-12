@@ -127,7 +127,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 			UserIbp user = userService.getUserIbp(recoVote.getAuthorId().toString());
 
-			ibpData = new RecoIbp(givenName, scientificName, null, speciesId, null, null, null, user, null);
+			ibpData = new RecoIbp(givenName, scientificName, null, speciesId, null, null, null, user, null, null);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -157,7 +157,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 				scientificName = reco.getName();
 			}
 
-			RecoIbp recoIbp = new RecoIbp(null, scientificName, taxonId, speciesId, null, null, null, null, null);
+			RecoIbp recoIbp = new RecoIbp(null, scientificName, taxonId, speciesId, null, null, null, null, null,
+					null);
 			return recoIbp;
 
 		} catch (Exception e) {
@@ -242,7 +243,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 			commonName = commonName.substring(0, commonName.length() - 2);
 
 		return new RecoIbp(commonName, scientificName, taxonId, speciesId, breadCrumb, recoVoteCount, status, null,
-				null);
+				null, null);
 	}
 
 	/**
@@ -276,7 +277,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 				commonName = recoCache.get(recoVote.getCommonNameRecoId()).getName();
 			}
 
-			allRecoVotes.add(new RecoIbp(commonName, scientificName, taxon, speciesId, null, null, null, user, null));
+			allRecoVotes
+					.add(new RecoIbp(commonName, scientificName, taxon, speciesId, null, null, null, user, null, null));
 		}
 		return allRecoVotes;
 	}

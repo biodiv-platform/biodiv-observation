@@ -23,6 +23,7 @@ public class RecoIbp {
 	private String status;
 	private UserIbp userIbp;
 	private String acceptedName;
+	private Long acceptedNameId;
 
 	/**
 	 * 
@@ -40,9 +41,11 @@ public class RecoIbp {
 	 * @param recoVoteCount
 	 * @param status
 	 * @param userIbp
+	 * @param acceptedName
+	 * @param acceptedNameId
 	 */
 	public RecoIbp(String commonName, String scientificName, Long taxonId, Long speciesId, List<BreadCrumb> breadCrumbs,
-			Integer recoVoteCount, String status, UserIbp userIbp, String acceptedName) {
+			Integer recoVoteCount, String status, UserIbp userIbp, String acceptedName, Long acceptedNameId) {
 		super();
 		this.commonName = commonName;
 		this.scientificName = scientificName;
@@ -53,6 +56,7 @@ public class RecoIbp {
 		this.status = status;
 		this.userIbp = userIbp;
 		this.acceptedName = acceptedName;
+		this.acceptedNameId = acceptedNameId;
 	}
 
 	public String getCommonName() {
@@ -125,6 +129,14 @@ public class RecoIbp {
 
 	public void setAcceptedName(String acceptedName) {
 		this.acceptedName = acceptedName;
+	}
+
+	public Long getAcceptedNameId() {
+		return acceptedNameId;
+	}
+
+	public void setAcceptedNameId(Long acceptedNameId) {
+		this.acceptedNameId = acceptedNameId;
 	}
 
 }
