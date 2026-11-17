@@ -14,6 +14,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +83,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Inject
 	private RecommendationDao recoDao;
+
+	@Inject
+	private SessionFactory sessionFactory;
 
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
@@ -173,6 +178,21 @@ public class RecommendationServiceImpl implements RecommendationService {
 	 * all of them in a single batched query instead of one query per vote.
 	 */
 	private Map<Long, Recommendation> batchFetchRecommendations(List<RecommendationVote> votes, Long extraRecoId) {
+		Session session = sessionFactory.openSession();
+		try {
+			return batchFetchRecommendations(session, votes, extraRecoId);
+		} finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Same as {@link #batchFetchRecommendations(List, Long)} but runs on a
+	 * caller-provided session, so it can be combined with other queries on a
+	 * single pooled connection instead of each opening its own.
+	 */
+	private Map<Long, Recommendation> batchFetchRecommendations(Session session, List<RecommendationVote> votes,
+			Long extraRecoId) {
 		Set<Long> ids = new HashSet<Long>();
 		if (extraRecoId != null)
 			ids.add(extraRecoId);
@@ -185,7 +205,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		Map<Long, Recommendation> recoMap = new HashMap<Long, Recommendation>();
 		if (ids.isEmpty())
 			return recoMap;
-		List<Recommendation> recoList = recoDao.findByIdList(new ArrayList<Long>(ids));
+		List<Recommendation> recoList = recoDao.findByIdList(session, new ArrayList<Long>(ids));
 		if (recoList != null) {
 			for (Recommendation reco : recoList) {
 				recoMap.put(reco.getId(), reco);
@@ -216,7 +236,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 		Integer recoVoteCount = allVotesOnObservation.size();
 		Recommendation reco = recoCache.get(recoId);
-		if (reco.getTaxonConceptId() != null) {
+		if (reco == null) {
+			logger.error("buildRecoIbp: recommendation id={} missing from batch-fetched cache", recoId);
+		} else if (reco.getTaxonConceptId() != null) {
 
 			TaxonomyDefinition taxonomyDefinition = taxonomyService
 					.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
@@ -233,9 +255,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		for (RecommendationVote recoVote : recoVotes) {
 			if (recoVote.getCommonNameRecoId() != null) {
-				String tempName = recoCache.get(recoVote.getCommonNameRecoId()).getName();
-				if (!commonName.contains(tempName))
-					commonName = commonName + tempName + "||";
+				Recommendation commonReco = recoCache.get(recoVote.getCommonNameRecoId());
+				if (commonReco != null) {
+					String tempName = commonReco.getName();
+					if (!commonName.contains(tempName))
+						commonName = commonName + tempName + "||";
+				}
 			}
 		}
 		if (!(commonName.isEmpty()))
@@ -259,7 +284,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Long taxon = null;
 			UserIbp user = userService.getUserIbp(recoVote.getAuthorId().toString());
 			Recommendation reco = recoCache.get(recoVote.getRecommendationId());
-			if (reco.getTaxonConceptId() != null) {
+			if (reco == null) {
+				logger.error("buildAllRecoVotes: recommendation id={} missing from batch-fetched cache",
+						recoVote.getRecommendationId());
+			} else if (reco.getTaxonConceptId() != null) {
 				taxon = reco.getTaxonConceptId();
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(reco.getTaxonConceptId().toString());
@@ -273,7 +301,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 			}
 
 			if (recoVote.getCommonNameRecoId() != null) {
-				commonName = recoCache.get(recoVote.getCommonNameRecoId()).getName();
+				Recommendation commonNameReco = recoCache.get(recoVote.getCommonNameRecoId());
+				if (commonNameReco != null) {
+					commonName = commonNameReco.getName();
+				}
 			}
 
 			allRecoVotes.add(new RecoIbp(commonName, scientificName, taxon, speciesId, null, null, null, user, null));
@@ -297,15 +328,18 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 	@Override
 	public RecoNameAndVotes fetchRecoNameAndAllVotes(Long obvId, Long recoId) {
+		Session session = sessionFactory.openSession();
 		try {
-			List<RecommendationVote> allVotes = recoVoteDao.findRecoVoteOnObservation(obvId);
-			Map<Long, Recommendation> recoCache = batchFetchRecommendations(allVotes, recoId);
+			List<RecommendationVote> allVotes = recoVoteDao.findRecoVoteOnObservation(session, obvId);
+			Map<Long, Recommendation> recoCache = batchFetchRecommendations(session, allVotes, recoId);
 			RecoIbp reco = buildRecoIbp(recoId, allVotes, recoCache);
 			List<RecoIbp> allRecoVotes = buildAllRecoVotes(allVotes, recoCache);
 			return new RecoNameAndVotes(reco, allRecoVotes);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 
 		return null;
