@@ -36,6 +36,10 @@
 		<!-- Leak detection (for debugging connection leaks) -->
 		<property name="hibernate.hikari.leakDetectionThreshold">60000</property>
 
+		<!-- Live pool metrics via JMX (see connected via VisualVM) -->
+		<property name="hibernate.hikari.registerMbeans">true</property>
+		<property name="hibernate.hikari.poolName">observation-pool</property>
+
 		<property name="hibernate.jdbc.lob.non_contextual_creation">true</property>
 		
 		<property name="hibernate.id.db_structure_naming_strategy">legacy</property>
