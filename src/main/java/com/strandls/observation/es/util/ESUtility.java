@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -320,7 +321,24 @@ public class ESUtility {
 		values.forEach(item -> list.add(assignOrMatchPhrase(key, item.toString())));
 	}
 
+	// Accepts yyyy-MM-dd with an optional time part (e.g. 2020-01-01T00:00:00Z) or epoch millis
+	private static final Pattern VALID_ES_DATE = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}.*|\\d{10,})$");
+
+	/**
+	 * Returns the date unchanged if ES can parse it, otherwise null. Clients
+	 * sometimes send values like "undefined-12-31T00:00:00Z"; passing those to ES
+	 * makes the whole search fail with "all shards failed".
+	 */
+	private String sanitizeDate(String key, String date) {
+		if (date == null || VALID_ES_DATE.matcher(date).matches())
+			return date;
+		logger.debug("Ignoring invalid date '{}' for {}", date, key);
+		return null;
+	}
+
 	private void handleDateRanges(List<MapAndRangeQuery> list, String key, String min, String max) {
+		min = sanitizeDate(key, min);
+		max = sanitizeDate(key, max);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String today = sdf.format(new Date());
 		if (min != null || max != null) {
