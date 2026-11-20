@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -318,6 +319,18 @@ public class ESUtility {
 	private void addOrMatchPhraseList(List<MapOrMatchPhraseQuery> list, String key, String rawValues) {
 		List<Object> values = cSTSOT(rawValues);
 		values.forEach(item -> list.add(assignOrMatchPhrase(key, item.toString())));
+	}
+
+	// yyyy-MM-dd with an optional time part (e.g. 2020-01-01T00:00:00Z), or epoch millis
+	private static final Pattern VALID_ES_DATE = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}.*|\\d{10,})$");
+
+	/**
+	 * True if the date is absent or in a format ES can parse. Clients sometimes
+	 * send values like "undefined-12-31T00:00:00Z", which make the whole ES search
+	 * fail with "all shards failed".
+	 */
+	public static boolean isValidDate(String date) {
+		return date == null || VALID_ES_DATE.matcher(date).matches();
 	}
 
 	private void handleDateRanges(List<MapAndRangeQuery> list, String key, String min, String max) {

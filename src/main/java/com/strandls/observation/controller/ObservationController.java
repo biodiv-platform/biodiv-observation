@@ -490,6 +490,11 @@ public class ObservationController {
 
 		try {
 
+			// Reject before querying: ES would fail every search and aggregation for this request anyway
+			if (!ESUtility.isValidDate(minDate) || !ESUtility.isValidDate(maxDate)
+					|| !ESUtility.isValidDate(createdOnMinDate) || !ESUtility.isValidDate(createdOnMaxDate))
+				return Response.status(Status.BAD_REQUEST).entity("Invalid date filter").build();
+
 			if (max > 50)
 				max = 50;
 

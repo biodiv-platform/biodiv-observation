@@ -75,7 +75,8 @@ public class LatchThreadWorker extends Thread {
 			else
 				mapResponse.put(filter, response);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("Aggregation failed for filter={} namedAgg={} index={}: {}", filter, namedAgg, index,
+					e.getMessage());
 		} finally {
 			latch.countDown();
 		}
